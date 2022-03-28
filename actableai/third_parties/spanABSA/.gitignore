@@ -1,0 +1,7 @@
+.ipynb_checkpoints/
+__pycache__/
+absa/__pycache__/
+bert/__pycache__/
+out/*
+bert/bert-base-uncased/*
+.vscode/

@@ -1,0 +1,3 @@
+[submodule "third_parties/autogluon"]
+	path = third_parties/autogluon
+	url = git@github.com:awslabs/autogluon.git

@@ -1,0 +1,2 @@
+class UnrecognizedError(TypeError):
+    pass

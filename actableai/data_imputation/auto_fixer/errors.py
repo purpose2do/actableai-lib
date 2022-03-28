@@ -1,0 +1,2 @@
+class EmptyTrainDataException(Exception):
+    pass
