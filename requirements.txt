@@ -128,8 +128,8 @@ python-rapidjson==1.4
 pytz==2021.1
 PyWavelets==1.1.1
 PyYAML==5.4.1
-ray[tune]==1.9.1
-ray[default]==1.9.1
+ray[tune]==1.11.0
+ray[default]==1.11.0
 redis==3.5.3
 regex==2021.7.6
 requests==2.26.0
