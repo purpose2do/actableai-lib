@@ -21,8 +21,13 @@ jobs:
           - {runs-on: ubuntu-20.04, python-version: 3.7}
 
     steps:
+    - uses: webfactory/ssh-agent@v0.5.4
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
     - uses: actions/checkout@v2
       with:
+        ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
         submodules: recursive
 
     - name: Install ubuntu dependencies
