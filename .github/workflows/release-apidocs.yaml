@@ -1,0 +1,90 @@
+name: Release API Docs
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: [self-hosted]
+    steps:
+      - uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v2
+        with:
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          submodules: recursive
+
+      # Setup gcloud CLI
+      - uses: google-github-actions/setup-gcloud@v0
+        with:
+          version: '290.0.1'
+          service_account_key: ${{ secrets.GKE_SA }}
+          project_id: ${{ secrets.GKE_PROJECT }}
+
+      # Configure Docker to use the gcloud command-line tool as a credential
+      # helper for authentication
+      - run: |-
+          gcloud auth configure-docker europe-west2-docker.pkg.dev
+
+      - name: Build and Push API docs image
+        env:
+          IMAGE: actableai/actableai-api-docs
+          TAG: ${{ steps.get_version.outputs.tag }}
+        run: |-
+          docker build \
+          --tag "europe-west2-docker.pkg.dev/$PROJECT_ID/$IMAGE:$TAG" -f docs.Dockerfile .
+          docker push "europe-west2-docker.pkg.dev/$PROJECT_ID/$IMAGE:$TAG"
+
+  deploy:
+    name: Deploy
+    runs-on: docker-hosted
+    needs: build
+    env:
+      NAMESPACE: prod
+    steps:
+      - name: cleanup #https://github.com/actions/checkout/issues/211
+        run: |
+          sudo chown -R runner:runner $GITHUB_WORKSPACE
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Setup gcloud CLI
+      - uses: google-github-actions/setup-gcloud@v0
+        with:
+          version: '290.0.1'
+          service_account_key: ${{ secrets.GKE_SA }}
+          project_id: ${{ secrets.GKE_PROJECT }}
+
+      # Configure Docker to use the gcloud command-line tool as a credential
+      # helper for authentication
+      - run: |-
+          gcloud auth configure-docker europe-west2-docker.pkg.dev
+      # Get the GKE credentials so we can deploy to the cluster
+      - run: |-
+          gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
+      - name: Setup git-secret
+        id: setup-gitsecret
+        run: |
+          git secret reveal -f
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=tag::${GITHUB_REF/refs\/tags\//}
+
+      - name: Deploy API docs
+        env:
+          IMAGE: actableai/actableai-api-docs
+          TAG: ${{ steps.get_version.outputs.tag }}
+          HELM_WORKSPACE: ${{ github.workspace }}/deploy/charts
+          HELM_RELEASE_NAME: actableai-api-docs
+          HELM_CHART_NAME: actableai-api-docs
+        run: |
+          cd $HELM_WORKSPACE
+          helm upgrade --install $HELM_RELEASE_NAME $HELM_CHART_NAME \
+          --namespace ${{ env.NAMESPACE }} \
+          --values $HELM_CHART_NAME/${{ env.NAMESPACE }}.yaml \
+          --set image.repository="europe-west2-docker.pkg.dev/$PROJECT_ID/$IMAGE" \
+          --set image.tag="$TAG"
