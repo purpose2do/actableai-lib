@@ -13,6 +13,7 @@ mx_ctx = mx.cpu()
 torch_device = torch.device("cpu")
 
 # Todo: will grant public read access
+bucket = None
 
 multivariate_data_folder = 'ts_test_data/'
 if not os.path.exists(multivariate_data_folder):
