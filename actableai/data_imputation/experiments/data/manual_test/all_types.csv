@@ -1,0 +1,6 @@
+id,string,enum,percent,temperature,integer,float,timestamp,complex,number_with_tag,long_string,null,mix
+1,patient,jefferson,10%,17°C,10.0,0.25,2021-01-02,3j,41 patients,surgery patients needing hair removed from the surgical area before surgery who had hair removed using a safer method (electric clippers or hair removal cream c not a razor),,a
+2,surgery,jefferson,20%,-30°F,13.0,4.4,01/02/2021,2+4j,30patients,surgery patients who were taking heart drugs called beta blockers before coming to the hospital who were kept on the beta blockers during the period just before and after their surgery,,b
+3,hospital,houston,32 %,27 °c,30.0,5.3,2020-10-10 10:02:01,5j,partitions:12,pneumonia patients given smoking cessation advice/counseling,,1
+4,systolic,guntersville, -15% ,37 °f,11.0,11.2,01/02/2021 10:11:12,5+4j,partitions 11, 	heart failure patients given ace inhibitor or arb for left ventricular systolic dysfunction (lvsd),,2
+5,church,guntersville, -15% , 37 °f,11.0,11.2, 2021-02-01T01:02:03Z ,5+4j,partitions 11, 	pneumonia patients given the most appropriate initial antibiotic(s),,3
