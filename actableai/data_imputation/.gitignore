@@ -140,10 +140,5 @@ cython_debug/
 # IDEA
 .idea/
 
-# data
-experiments/data/
-!experiments/data/manual_test/
-!experiments/data/**/README.md
-
 # AutoGluon
 AutogluonModels*/
