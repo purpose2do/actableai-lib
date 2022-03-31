@@ -45,7 +45,7 @@ setup(
         "keras<2.5.0",
         "joblib>=0.16.0",
         "visions>=0.6.4",
-        "ray>=1.9.1",
+        "ray>=1.11.0",
         "hyperopt>=0.2.4",
         "prophet>=1.0.1",
         "rpy2>=2.9.*,<3.*",
