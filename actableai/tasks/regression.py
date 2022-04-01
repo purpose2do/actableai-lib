@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, Optional
+import pandas as pd
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
@@ -28,7 +29,9 @@ class _AAIRegressionTrainTask(AAITask):
             biased_groups,
             debiased_features,
             residuals_hyperparameters,
-            num_gpus):
+            num_gpus,
+            eval_metric,
+            ):
         """
         TODO write documentation
         """
@@ -65,7 +68,11 @@ class _AAIRegressionTrainTask(AAITask):
         df_test = df_test[features + biased_groups]
 
         # Train
-        predictor = TabularPredictor(label=target, path=model_directory, problem_type="regression")
+        predictor = TabularPredictor(label=target,
+                                     path=model_directory,
+                                     problem_type="regression",
+                                     eval_metric=eval_metric)
+
         predictor = predictor.fit(
             train_data=df_train,
             presets=presets,
@@ -146,7 +153,8 @@ class _AAIInterventionTask(AAITask):
             cate_alpha,
             presets,
             model_directory,
-            num_gpus):
+            num_gpus,
+    ):
         import numpy as np
         import pandas as pd
         from tempfile import mkdtemp
@@ -272,41 +280,106 @@ class _AAIInterventionTask(AAITask):
 
 
 class AAIRegressionTask(AAITask):
-    """
-    TODO write documentation
+    """ Regression task.
+
     """
 
     @AAITask.run_with_ray_remote(TaskType.REGRESSION)
     def run(self,
-            df,
-            target,
-            features=None,
-            biased_groups=None,
-            debiased_features=None,
-            validation_ratio=.2,
-            prediction_quantile_low=5,
-            prediction_quantile_high=95,
-            explain_samples=False,
-            model_directory=None,
-            presets="medium_quality_faster_train",
-            hyperparameters=None,
-            train_task_params=None,
-            intervention_task_params=None,
-            kfolds=1,
-            cross_validation_max_concurrency=1,
-            current_intervention_column=None,
-            new_intervention_column=None,
-            cate_alpha=None,
-            common_causes : List[str] = [],
-            causal_cv=5,
-            causal_hyperparameters=None,
-            residuals_hyperparameters=None,
-            drop_duplicates=True,
-            return_residuals=False,
-            kde_steps=10,
-            num_gpus=0):
+            df: pd.DataFrame,
+            target: str,
+            features: Optional[List[str]] = None,
+            biased_groups: Optional[List[str]] = None,
+            debiased_features: Optional[List[str]] = None,
+            eval_metric : str = "r2",
+            validation_ratio: float = .2,
+            prediction_quantile_low: int = 5,
+            prediction_quantile_high: int = 95,
+            explain_samples: bool = False,
+            model_directory: Optional[str] = None,
+            presets: str = "medium_quality_faster_train",
+            hyperparameters: Optional[dict] = None,
+            train_task_params: Optional[dict] = None,
+            intervention_task_params: Optional[dict] = None,
+            kfolds: int = 1,
+            cross_validation_max_concurrency: int = 1,
+            current_intervention_column: Optional[str] = None,
+            new_intervention_column: Optional[str] = None,
+            cate_alpha: Optional[float] = None,
+            common_causes: List[str] = [],
+            causal_cv: int = 5,
+            causal_hyperparameters: Optional[dict] = None,
+            residuals_hyperparameters: Optional[dict] = None,
+            drop_duplicates: bool = True,
+            return_residuals: bool = False,
+            kde_steps: int = 10,
+            num_gpus: int = 0):
         """
-        TODO write documentation
+        Run this regression task and return results.
+
+        Parameters
+        ----------
+        df
+            Input data frame
+        target
+            Target columns in df. If there are emtpy values in this columns, predictions will be generated for
+            these rows.
+        features
+            A list of features to be used for prediction. If None, all columns except target are used as features
+        biased_groups
+            A list of columns of groups that should be protected from biases (e.g. gender, race, age)
+        debiased_features
+            A list of proxy features that need to be debiased for protection of sensitive groups
+        eval_metric
+            Metric to be optimized during training. Possible values include 'root_mean_squared_error',
+            'mean_squared_error', 'mean_absolute_error', 'median_absolute_error', 'r2'
+        validation_ratio
+            The ratio to randomly split data for training and validation
+        prediction_quantile_low
+            Lower quantile for quantile regression (in percentage)
+        prediction_quantile_high
+            Higher quantile for quantile regression (in percentage)
+        explain_samples
+            If true, explanations for predictions in test and validation will be generated. It takes significantly
+            longer time to run.
+        model_directory
+            Destination to store trained model. If not set, a temporary folder will be created
+        presets
+            Autogluon's presets for training model. More details at
+            https://auto.gluon.ai/stable/_modules/autogluon/tabular/predictor/predictor.html#TabularPredictor.fit
+        intervention_task_params
+            Task parameters to be passed to build intervention model and predictions
+        kfolds
+            Number of folds for cross validation. If 1, train test split is used instead.
+        cross_validation_max_concurrency
+            Maximum number of Ray actors used for cross validation (each actor execute for one split)
+        current_intervention_column
+            Current values of intervention for counterfactual prediction
+        new_intervention_column
+            New values of intervention for counterfactual prediction
+        cate_alpha
+            Alpha value for CATE (conditional average treatment effect) quantiles
+        common_causes
+            List of columns to be used as common causes in causal graph of intervention model
+        causal_cv
+            Number of folds used in nuisance models in intervention model
+        causal_hyperparameters
+            Autogluon's hyperparameters used in nuisance models of counterfactual prediction
+        residuals_hyperparameters
+            Autogluon's hyperparameteres used in final model of counterfactual predictions
+        drop_duplicates
+            Whether duplicate values should be dropped before training
+        return_residuals
+            Whether residual values should be returned in counterfactual prediction
+        kde_steps
+            Steps used to generate KDE plots with debiasing
+        num_gpus
+            Number of GPUs used in nuisnace models in counterfactual prediction
+
+        Returns
+        -------
+
+
         """
         import os
         import ray
@@ -362,11 +435,12 @@ class AAIRegressionTask(AAITask):
             df,
             biased_groups,
             debiased_features,
+            eval_metric,
             prediction_quantile_low,
             prediction_quantile_high,
             presets,
             explain_samples,
-            drop_duplicates
+            drop_duplicates,
         )
         failed_checks = [
             check
@@ -436,6 +510,7 @@ class AAIRegressionTask(AAITask):
                     debiased_features=debiased_features,
                     residuals_hyperparameters=residuals_hyperparameters,
                     num_gpus=num_gpus,
+                    eval_metric=eval_metric,
                 )
         else:
             predictor, \
@@ -466,6 +541,7 @@ class AAIRegressionTask(AAITask):
                 debiased_features=debiased_features,
                 residuals_hyperparameters=residuals_hyperparameters,
                 num_gpus=num_gpus,
+                eval_metric=eval_metric,
             )
 
         # Validation

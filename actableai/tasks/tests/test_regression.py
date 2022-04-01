@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 
 from actableai.tasks.regression import AAIRegressionTask
@@ -11,6 +12,14 @@ from actableai.regression.quantile import ag_quantile_hyperparameters
 @pytest.fixture(scope="function")
 def regression_task():
     yield AAIRegressionTask(use_ray=False)
+
+
+@pytest.fixture(scope="function")
+def data():
+    yield pd.DataFrame({
+        "x": [1, 2, 3, 4, 5, None, None, 8, 9, 10] * 2,
+        "y": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2
+    })
 
 
 def run_regression_task(regression_task : AAIRegressionTask, tmp_path, *args, **kwargs):
@@ -250,6 +259,13 @@ class TestRemoteRegression:
         assert r["status"] == "FAILURE"
         assert len(r["validations"]) > 0
         assert r["validations"][0]["name"] == "IsSufficientDataChecker"
+        assert r["validations"][0]["level"] == CheckLevels.CRITICAL
+
+    def test_invalid_eval_metric(self, regression_task, tmp_path, data):
+        r = run_regression_task(regression_task, tmp_path, data, "y", eval_metric="abc")
+        assert r["status"] == "FAILURE"
+        assert len(r["validations"]) > 0
+        assert r["validations"][0]["name"] == "RegressionEvalMetricChecker"
         assert r["validations"][0]["level"] == CheckLevels.CRITICAL
 
     def test_validation_has_prediction(self, regression_task, tmp_path):

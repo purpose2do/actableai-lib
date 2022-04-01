@@ -26,7 +26,8 @@ def run_cross_validation(
     biased_groups: List[str],
     debiased_features: List[str],
     residuals_hyperparameters: Dict[str, Dict],
-    num_gpus: int
+    num_gpus: int,
+    eval_metric: str,
     ) -> Tuple[Dict, Dict, List, float, float, List, List, List]:
     """Run cross validation on Regression Task. Data is divided in kfold groups and each
     run a regression. The returned values are means or lists of values from
@@ -101,6 +102,7 @@ def run_cross_validation(
                 "debiased_features": debiased_features,
                 "residuals_hyperparameters": residuals_hyperparameters,
                 "num_gpus": num_gpus,
+                "eval_metric": eval_metric,
             }
         )
         for kfold_index, (train_index, val_index) in enumerate(kfolds_index_list)

@@ -2,7 +2,7 @@ from logging import CRITICAL
 from typing import Union
 from actableai.data_validation.checkers import *
 from actableai.causal import has_categorical_column, prepare_sanitize_data
-from actableai.data_validation.base import CheckLevels, CheckResult
+from actableai.data_validation.base import CheckLevels, CheckResult, IChecker
 
 
 class RegressionDataValidator:
@@ -12,6 +12,7 @@ class RegressionDataValidator:
                  df,
                  debiasing_features,
                  debiased_features,
+                 eval_metric="r2",
                  prediction_quantile_low=None,
                  prediction_quantile_high=None,
                  presets="medium_quality_faster_train",
@@ -21,6 +22,7 @@ class RegressionDataValidator:
             df = df.drop_duplicates(subset=features + [target])
 
         validation_results = [
+            RegressionEvalMetricChecker(level=CheckLevels.CRITICAL).check(eval_metric),
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(df, [target]),
             DoNotContainEmptyColumnsChecker(level=CheckLevels.WARNING).check(df, features),
             DoNotContainEmptyColumnsChecker(level=CheckLevels.CRITICAL).check(df, [target]),

@@ -478,3 +478,18 @@ class CheckColumnInflateLimit(IChecker):
                 level = self.level,
                 message=f"Dataset after inflation is too large. Please lower the polynomial degree or reduce the number of unique values in categorical columns."
             )
+
+
+class RegressionEvalMetricChecker(IChecker):
+    def __init__(self, level, name="RegressionEvalMetricChecker"):
+        self.name = name
+        self.level = level
+
+    def check(self, eval_metric):
+        if eval_metric not in ["root_mean_squared_error", "mean_squared_error", "mean_absolute_error",
+                               "median_absolute_error", "r2"]:
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message="Invalid eval_metric")
+
