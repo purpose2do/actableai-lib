@@ -9,6 +9,10 @@ jobs:
   build:
     runs-on: [self-hosted]
     steps:
+      - name: cleanup #https://github.com/actions/checkout/issues/211
+        run: |
+          sudo chown -R runner:runner $GITHUB_WORKSPACE
+
       - uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -33,11 +37,10 @@ jobs:
       - name: Build and Push API docs image
         env:
           IMAGE: actableai/actableai-api-docs
-          TAG: ${{ steps.get_version.outputs.tag }}
         run: |-
           docker build \
-          --tag "europe-west2-docker.pkg.dev/$PROJECT_ID/$IMAGE:$TAG" -f docs.Dockerfile .
-          docker push "europe-west2-docker.pkg.dev/$PROJECT_ID/$IMAGE:$TAG"
+          --tag "europe-west2-docker.pkg.dev/$PROJECT_ID/$IMAGE:$GITHUB_SHA" -f docs.Dockerfile .
+          docker push "europe-west2-docker.pkg.dev/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
 
   deploy:
     name: Deploy
@@ -70,9 +73,6 @@ jobs:
         id: setup-gitsecret
         run: |
           git secret reveal -f
-      - name: Get the version
-        id: get_version
-        run: echo ::set-output name=tag::${GITHUB_REF/refs\/tags\//}
 
       - name: Deploy API docs
         env:
@@ -87,4 +87,4 @@ jobs:
           --namespace ${{ env.NAMESPACE }} \
           --values $HELM_CHART_NAME/${{ env.NAMESPACE }}.yaml \
           --set image.repository="europe-west2-docker.pkg.dev/$PROJECT_ID/$IMAGE" \
-          --set image.tag="$TAG"
+          --set image.tag="$GITHUB_SHA"
