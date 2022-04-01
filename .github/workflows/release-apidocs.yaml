@@ -5,6 +5,12 @@ on:
     branches:
       - master
 
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
+  GKE_ZONE: ${{ secrets.GKE_ZONE }}
+  IMAGE: actableai/actableai-api-docs
+
 jobs:
   build:
     runs-on: [self-hosted]
@@ -76,8 +82,6 @@ jobs:
 
       - name: Deploy API docs
         env:
-          IMAGE: actableai/actableai-api-docs
-          TAG: ${{ steps.get_version.outputs.tag }}
           HELM_WORKSPACE: ${{ github.workspace }}/deploy/charts
           HELM_RELEASE_NAME: actableai-api-docs
           HELM_CHART_NAME: actableai-api-docs
