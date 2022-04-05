@@ -185,7 +185,7 @@ class _AAIInterventionTask(AAITask):
             problem_type="regression" if current_intervention_column in num_cols else "multiclass",
         )
         model_t = SKLearnWrapper(
-            X, model_t, hyperparameters=causal_hyperparameters, presets=presets,
+            model_t, hyperparameters=causal_hyperparameters, presets=presets,
             ag_args_fit={
                 "num_gpus": num_gpus,
             }
@@ -197,7 +197,7 @@ class _AAIInterventionTask(AAITask):
             problem_type="regression",
         )
         model_y = SKLearnWrapper(
-            X, model_y, hyperparameters=causal_hyperparameters, presets=presets,
+            model_y, hyperparameters=causal_hyperparameters, presets=presets,
             ag_args_fit = {
                 "num_gpus": num_gpus,
             }
