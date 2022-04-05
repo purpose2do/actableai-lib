@@ -39,8 +39,8 @@ class TestSKLearnWrapper:
         ])
         y = np.array([0, 1])
         sklw.fit(X, y)
-        sklw.ag_predictor.sample_weight is not None
-        sklw.train_data is not None
+        assert sklw.ag_predictor.sample_weight is None
+        assert sklw.train_data is not None
 
     def test_feature_importance(self):
         sklw = SKLearnWrapper(TabularPredictor('y'), ['a', 'b', 'c'], None, "best_quality", None)
@@ -51,7 +51,8 @@ class TestSKLearnWrapper:
         y = np.array([0, 1])
         sklw.fit(X, y)
         feat_imp = sklw.feature_importance()
-        feat_imp is not None
+        assert feat_imp is not None
+        assert set(feat_imp.index) == set(['a', 'b', 'c'])
 
     def test_feature_importance_no_fit(self):
         sklw = SKLearnWrapper(TabularPredictor('y'), ['a', 'b', 'c'], None, "best_quality", None)
