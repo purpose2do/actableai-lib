@@ -29,3 +29,12 @@ class TestSKLearnWrapper:
         assert sklw.ag_predictor is None
         assert sklw.presets == "best_quality"
         assert TabularPredictor is not None
+
+    def test_fit(self):
+        sklw = SKLearnWrapper(TabularPredictor('y'), ['a', 'b', 'c'], None, "best_quality", None)
+        X = np.array([
+            [0, 1, 2],
+            [0, 1, 2]
+        ])
+        y = np.array([0, 1])
+        sklw.fit(X, y)
