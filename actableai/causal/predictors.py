@@ -1,3 +1,4 @@
+from typing import List, Optional
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score
@@ -53,21 +54,26 @@ class LinearRegressionWrapper(LinearRegression):
             "sample_weight": sample_weight
         }
 
-
 class SKLearnWrapper:
     def __init__(
         self,
         ag_predictor: TabularPredictor,
-        x_w_columns=None,
-        hyperparameters=None,
-        presets="best_quality",
-        ag_args_fit=None
+        x_w_columns:Optional[List]=None,
+        hyperparameters:Optional[List]=None,
+        presets:Optional[str]="best_quality",
+        ag_args_fit:Optional[List]=None
     ):
         """Construct a sklearn wrapper object
 
         Args:
-            ag_predictor (TabularPredictor): Autogluon tabular predictor
-            hyperparameters (dict, Optional): dictionary of hyperparameters
+            ag_predictor (TabularPredictor): AutoGluon Tabular Predictor
+            x_w_columns (Optional[List], optional): Name of common_causes and effect modifiers (order matters). Defaults to None.
+            hyperparameters (Optional[List], optional): HyperParameter for TabularPredictor. Defaults to None.
+            presets (Optional[str], optional): Presets for TabularPredictor. Defaults to "best_quality".
+            ag_args_fit (Optional[List], optional): Args fit for Tabular Predictor. Defaults to None.
+
+        Raises:
+            UnsupportedPredictorType: Ensure that we only use TabularPredictor
         """
         if type(ag_predictor) is not TabularPredictor:
             raise UnsupportedPredictorType()
