@@ -29,7 +29,7 @@ class DataFrameTransformer(TransformerMixin):
     def fit_transform(self, X, y=None, x_w_columns=None, **fit_params):
         if isinstance(X, np.ndarray):
             df = pd.DataFrame(X.tolist())
-            if x_w_columns is not None:
+            if x_w_columns is not None and len(x_w_columns) != 0:
                 df.columns = x_w_columns
             return df
         if isinstance(X, list) and len(np.array(X).shape) != 2:
@@ -85,7 +85,6 @@ class SKLearnWrapper:
     def fit(self, X, y, sample_weight=None):
         label = self.ag_predictor.label
         train_data = self._df_transformer.fit_transform(X, x_w_columns=self.x_w_columns)
-        train_data.columns = self.x_w_columns
         train_data[label] = y
         train_data = TabularDataset(train_data)
         self.ag_predictor.sample_weight = sample_weight
