@@ -16,11 +16,11 @@ class TestDataFrameTransformer:
     def test_fit_transform_col_names(self):
         dft = DataFrameTransformer()
         df = dft.fit_transform(
-            np.array([[0, 1, 2]]), column_name=['a']
+            np.array([[0, 1, 2]]), x_w_columns=['a', 'b', 'c']
         )
         assert isinstance(df, pd.DataFrame)
         assert df.shape == (1, 3)
-        assert list(df.columns) == ['a']
+        assert list(df.columns) == ['a', 'b', 'c']
 
 class TestSKLearnWrapper:
     def test_init(self):
