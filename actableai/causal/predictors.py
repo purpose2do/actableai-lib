@@ -58,7 +58,7 @@ class SKLearnWrapper:
     def __init__(
         self,
         ag_predictor: TabularPredictor,
-        x_w_columns,
+        x_w_columns=None,
         hyperparameters=None,
         presets="best_quality",
         ag_args_fit=None
