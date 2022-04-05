@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from autogluon.tabular import TabularPredictor
+import pytest
 
 from actableai.causal.predictors import DataFrameTransformer, SKLearnWrapper
 
@@ -38,3 +39,19 @@ class TestSKLearnWrapper:
         ])
         y = np.array([0, 1])
         sklw.fit(X, y)
+
+    def test_feature_importance(self):
+        sklw = SKLearnWrapper(TabularPredictor('y'), ['a', 'b', 'c'], None, "best_quality", None)
+        X = np.array([
+            [0, 1, 2],
+            [0, 1, 2]
+        ])
+        y = np.array([0, 1])
+        sklw.fit(X, y)
+        feat_imp = sklw.feature_importance()
+        feat_imp is not None
+
+    def test_feature_importance_no_fit(self):
+        sklw = SKLearnWrapper(TabularPredictor('y'), ['a', 'b', 'c'], None, "best_quality", None)
+        with pytest.raises(Exception):
+            sklw.feature_importance()
