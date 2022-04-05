@@ -27,7 +27,7 @@ class TestSKLearnWrapper:
     def test_init(self):
         sklw = SKLearnWrapper(TabularPredictor('y'), ['a', 'b'], None, "best_quality", None)
         assert sklw.ag_args_fit is None
-        assert sklw.ag_predictor is None
+        assert sklw.ag_predictor is not None
         assert sklw.presets == "best_quality"
         assert TabularPredictor is not None
 
