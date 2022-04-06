@@ -147,14 +147,19 @@ class AAICausalEstimator:
         if cv == "auto":
             cv = 5
 
-        XW = W if X is None else X if W is None else np.hstack([X, W])
+        xw_col = []
+        if X is not None:
+            xw_col += list(X.columns)
+        if W is not None:
+            xw_col += list(W.columns)
+
         model_t = TabularPredictor(
             path=random_directory(model_directory),
             label=label_t,
             problem_type="multiclass" if self.has_categorical_treatment else "regression",
         )
         model_t = SKLearnWrapper(
-            XW, model_t, hyperparameters=hyperparameters, presets=presets,
+            model_t, xw_col, hyperparameters=hyperparameters, presets=presets,
             ag_args_fit={
                 "num_gpus": num_gpus,
             }
@@ -165,7 +170,7 @@ class AAICausalEstimator:
             problem_type="binary" if self.has_binary_outcome else "regression",
         )
         model_y = SKLearnWrapper(
-            XW, model_y, hyperparameters=hyperparameters, presets=presets,
+            model_y, xw_col, hyperparameters=hyperparameters, presets=presets,
             ag_args_fit = {
                 "num_gpus": num_gpus,
             }
