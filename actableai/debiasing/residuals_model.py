@@ -34,7 +34,8 @@ class ResidualsModel:
         self.model = MultilabelPredictor(
             labels=self.debiased_features,
             path=self.path,
-            consider_labels_correlation=False
+            consider_labels_correlation=False,
+            problem_types=["regression"] * len(self.debiased_features)
         )
 
 
@@ -54,19 +55,24 @@ class ResidualsModel:
             """
         X_clean = X.copy()
 
-        # Replace NaN values in categorical columns
         for column in X_clean.columns:
-            if X_clean[column].isna().sum() <= 0 or is_numeric_dtype(X_clean[column].dtype):
+            if is_numeric_dtype(X_clean[column].dtype):
                 continue
 
-            if X_clean[column].dtype.name == "category":
-                X_clean[column] = X_clean[column].cat.add_categories(["NaN"])
-                X_clean[column] = X_clean[column].cat.rename_categories({
-                    category: str(category)
-                    for category in X_clean[column].cat.categories
-                })
+            # Replace NaN values in categorical columns
+            if X_clean[column].isna().sum() > 0:
+                if X_clean[column].dtype.name == "category":
+                    X_clean[column] = X_clean[column].cat.add_categories(["NaN"])
+                    X_clean[column] = X_clean[column].cat.rename_categories({
+                        category: str(category)
+                        for category in X_clean[column].cat.categories
+                    })
 
-            X_clean[column] = X_clean[column].fillna("NaN")
+                X_clean[column] = X_clean[column].fillna("NaN")
+
+            # Transform categories into numbers
+            if X_clean[column].dtype.name == "category":
+                X_clean[column] = X_clean[column].cat.codes
 
         return X_clean
 
@@ -119,18 +125,13 @@ class ResidualsModel:
 
                 residuals_features_dict[residuals_feature] = debiased_feature
             else:
-                df_residuals[residuals_feature] = pd.Series(np.nan, index=X.index)
+                for class_label in model.get_predictor(debiased_feature).class_labels:
+                    class_residuals_feature = f"{residuals_feature}_{class_label}"
+                    df_residuals[class_residuals_feature] = (X[debiased_feature] == class_label).apply(lambda row: 1 if row else 0)
+                    df_residuals[class_residuals_feature] -= pred_proba[debiased_feature][class_label]
 
-                # Creating mask not to compute losses when we have nan values (sklearn does not like nan)
-                if not nan_mask.all():
-                    df_residuals[residuals_feature][~nan_mask] = self._per_sample_log_loss(
-                        X[debiased_feature][~nan_mask],
-                        pred_proba[debiased_feature][~nan_mask],
-                        labels=model.get_predictor(debiased_feature).class_labels
-                    )
-
-                residuals_features_dict[residuals_feature] = debiased_feature
-                categorical_residuals_count += 1
+                    residuals_features_dict[class_residuals_feature] = debiased_feature
+                    categorical_residuals_count += 1
 
         residuals_features_list = list(residuals_features_dict.keys())
         df_residuals[residuals_features_list] = df_residuals[residuals_features_list].astype(float)

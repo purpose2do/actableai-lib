@@ -67,7 +67,7 @@ class TestResidualsModel:
             "y": ['b', 'a', 'b', 'a', None, 'a', 'b', 'a', 'b', 'a'] * 2,
             "z": ['a', 'b', 'a', 'b', 'a', None, 'a', 'b', 'a', 'b'] * 2,
             "t": ['a', 'b', 'c', 'b', 'c', 'b', None, 'b', 'c', 'b'] * 2
-        })
+        }, dtype="category")
         biased_groups = ['x', 'y']
         debiased_features = ['z', 't']
         model_directory = tmp_path
