@@ -29,3 +29,6 @@ class PercentageTransformer(BaseEstimator, TransformerMixin):
         rate_checker = extracted.apply(lambda x: parsed_rate_check(x, 0.5))
         X[X.columns[~rate_checker]] = extracted[X.columns[~rate_checker]].astype(float)
         return X
+
+    def get_feature_names_out(self, input_features):
+        return input_features
