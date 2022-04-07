@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
 
 def impute_df(df, numeric_imputer=None, categorical_imputer=None):
     numeric_cols = df.select_dtypes(include=np.number).columns
@@ -16,10 +17,6 @@ def impute_df(df, numeric_imputer=None, categorical_imputer=None):
 from sklearn.base import BaseEstimator, TransformerMixin
 
 class PercentageTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, feature_names) -> None:
-        super().__init__()
-        self.feature_names=feature_names
-
     def fit_transform(self, X, y=None):
         return self.transform(X, y)
 
@@ -32,6 +29,3 @@ class PercentageTransformer(BaseEstimator, TransformerMixin):
         if not parsed_rate_check(result, X):
             return result
         return X
-
-    def get_feature_names(self):
-        return self.feature_names
