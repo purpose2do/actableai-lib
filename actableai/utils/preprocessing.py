@@ -14,19 +14,15 @@ def impute_df(df, numeric_imputer=None, categorical_imputer=None):
     if len(categorical_cols) > 0:
         df[categorical_cols] = categorical_imputer.fit_transform(df[categorical_cols])
 
-from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.compose import ColumnTransformer
+from sklearn.base import BaseEstimator, TransformerMixin, _OneToOneFeatureMixin
 
-class CustomColumnTransformer(ColumnTransformer):
-    def get_feature_names_out(self, input_features=None):
-        result = super().get_feature_names_out(input_features)
-        print(result)
-        for name, _, _ in self.transformers:
-            result = [x.replace(name + "__", "") for x in result]
-        result = [x.replace("remainder__", "") for x in result]
-        return result
+class PercentageTransformer(_OneToOneFeatureMixin, BaseEstimator, TransformerMixin):
+    """Percentage Transformer that transforms strings with percentages into floats
 
-class PercentageTransformer(BaseEstimator, TransformerMixin):
+    Args:
+        BaseEstimator (BaseEstimator): SKLearn BaseEstimator
+        TransformerMixin (TransformerMixin): SKLearn TransformerMixin
+    """
     def fit_transform(self, X, y=None):
         return self.transform(X, y)
 
@@ -35,9 +31,6 @@ class PercentageTransformer(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=None):
         return X.apply(lambda x: x.str.extract(r'^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$')[0]).astype(float)
-
-    def get_feature_names_out(self, input_features):
-        return input_features
 
     @staticmethod
     def predicate(df):
