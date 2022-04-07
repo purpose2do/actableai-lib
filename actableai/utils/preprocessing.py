@@ -12,3 +12,26 @@ def impute_df(df, numeric_imputer=None, categorical_imputer=None):
         df[numeric_cols] = numeric_imputer.fit_transform(df[numeric_cols])
     if len(categorical_cols) > 0:
         df[categorical_cols] = categorical_imputer.fit_transform(df[categorical_cols])
+
+from sklearn.base import BaseEstimator, TransformerMixin
+
+class PercentageTransformer(BaseEstimator, TransformerMixin):
+    def __init__(self, feature_names) -> None:
+        super().__init__()
+        self.feature_names=feature_names
+
+    def fit_transform(self, X, y=None):
+        return self.transform(X, y)
+
+    def fit(self, X):
+        return self
+
+    def transform(self, X, y=None):
+        parsed_rate_check = lambda x, min : x.isna().sum()[0] >= min * len(x)
+        result = X.str.extract(r'^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$')
+        if not parsed_rate_check(result, X):
+            return result
+        return X
+
+    def get_feature_names(self):
+        return self.feature_names
