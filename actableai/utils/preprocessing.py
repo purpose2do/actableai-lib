@@ -34,7 +34,7 @@ class PercentageTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        return X.apply(lambda x: x.str.extract(r'^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$')[0])
+        return X.apply(lambda x: x.str.extract(r'^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$')[0]).astype(float)
 
     def get_feature_names_out(self, input_features):
         return input_features
