@@ -32,7 +32,7 @@ class PercentageTransformer(_OneToOneFeatureMixin, BaseEstimator, TransformerMix
         return X.apply(lambda x: x.str.extract(r'^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$')[0]).astype(float)
 
     @staticmethod
-    def predicate(df):
+    def selector(df):
         obj_cols = list(df.select_dtypes(include='object').columns)
         parsed_rate_check = lambda x, min : x.isna().sum() >= min * len(x)
         extracted = df[obj_cols].apply(lambda x: x.str.extract(r'^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$')[0])
