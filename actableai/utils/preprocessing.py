@@ -34,15 +34,11 @@ class PercentageTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        parsed_rate_check = lambda x, min : x.isna().sum() >= min * len(x)
-        extracted = X.apply(lambda x: x.str.extract(r'^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$')[0])
-        rate_checker = extracted.apply(lambda x: parsed_rate_check(x, 0.5))
-        X[X.columns[~rate_checker]] = extracted[X.columns[~rate_checker]].astype(float)
-        return X
+        return X.apply(lambda x: x.str.extract(r'^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$')[0])
 
     def get_feature_names_out(self, input_features):
         return input_features
-    
+
     @staticmethod
     def predicate(df):
         obj_cols = list(df.select_dtypes(include='object').columns)
