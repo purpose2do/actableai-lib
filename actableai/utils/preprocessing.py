@@ -1,6 +1,5 @@
 import numpy as np
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OneHotEncoder
 
 def impute_df(df, numeric_imputer=None, categorical_imputer=None):
     numeric_cols = df.select_dtypes(include=np.number).columns
@@ -37,4 +36,4 @@ class PercentageTransformer(_OneToOneFeatureMixin, BaseEstimator, TransformerMix
         obj_cols = list(df.select_dtypes(include='object').columns)
         parsed_rate_check = lambda x, min : x.isna().sum() >= min * len(x)
         extracted = df[obj_cols].apply(lambda x: x.str.extract(r'^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$')[0])
-        return extracted.apply(lambda x: parsed_rate_check(x, 0.5))
+        return ~extracted.apply(lambda x: parsed_rate_check(x, 0.5))
