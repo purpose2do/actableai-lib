@@ -332,5 +332,13 @@ class TestRemoteCorrelation:
 
         r = correlation_task.run(df, "x", target_value="7")
 
+    def test_textngram(self, correlation_task):
+        df = pd.DataFrame({
+            "x": ["Hello my name is Mehdi", "Hello my name is Axen", "Hello my name is Benjamin", "is Benjamin the best ?"] * 100,
+            "y": [0, 0, 100, 100] * 100
+        })
+
+        r = correlation_task.run(df, "y")
+
         assert r["status"] == "SUCCESS"
         assert "corr" in r["data"]

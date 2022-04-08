@@ -3,6 +3,7 @@ import pandas as pd
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 
+import pandas as pd
 
 class AAICorrelationTask(AAITask):
     """Correlation Task
@@ -10,28 +11,6 @@ class AAICorrelationTask(AAITask):
     Args:
         AAITask: Base Class for tasks
     """
-
-    @staticmethod
-    def __preprocess_column_datetime(df, target_col):
-        """
-        TODO write documentation
-        """
-        import pandas as pd
-        import numpy as np
-
-        dt_df = df.select_dtypes(include=[np.datetime64])
-        for col in dt_df.columns:
-            if col == target_col:
-                df[target_col] = df[target_col].values.astype(np.int64) // 10**9
-            else:
-                df[col + "_year"] = df[col].dt.year
-                df[col + "_month"] = df[col].dt.month_name()
-                df[col + "_day"] = df[col].dt.day
-                df[col + "_day_of_week"] = df[col].dt.day_name()
-                df[col] = df[col].values.astype(np.int64) // 10**9
-
-        return df
-
     @AAITask.run_with_ray_remote(TaskType.CORRELATION)
     def run(
         self,
@@ -82,11 +61,19 @@ class AAICorrelationTask(AAITask):
         import numpy as np
         from sklearn.neighbors import KernelDensity
         from sklearn.linear_model import BayesianRidge
+        from sklearn.compose import ColumnTransformer
+        from sklearn.preprocessing import OneHotEncoder
+        from sklearn.feature_extraction.text import CountVectorizer
+        from autogluon.features import TextNgramFeatureGenerator, DatetimeFeatureGenerator
+        import nltk
+        from nltk.corpus import stopwords
+
         from actableai.stats import Stats
         from actableai.data_validation.params import CorrelationDataValidator
-        from actableai.utils import handle_boolean_features
+        from actableai.utils import is_fitted
         from actableai.data_validation.base import CheckLevels
-        from actableai.utils.sanitize import sanitize_timezone
+        from actableai.utils.preprocessing import SKLearnAGFeatureWrapperBase
+        from actableai.utils import get_type_special_no_ag
 
         if use_bonferroni:
             p_value /= len(df.columns) - 1
@@ -95,7 +82,6 @@ class AAICorrelationTask(AAITask):
 
         # To resolve any issues of acces rights make a copy
         df = df.copy()
-        df = sanitize_timezone(df)
 
         data_validation_results = CorrelationDataValidator().validate(df, target_column)
         failed_checks = [x for x in data_validation_results if x is not None]
@@ -110,9 +96,31 @@ class AAICorrelationTask(AAITask):
                 "runtime": time.time() - start,
             }
 
-        df = self.__preprocess_column_datetime(df, target_column)
-        df = handle_boolean_features(df)
-        kde_bandwidth = lambda x: max(0.5 * x.std() * (x.size ** (-0.2)), 1e-2)
+        # Type reader
+        type_specials = df.apply(get_type_special_no_ag)
+        cat_cols = list((type_specials == 'category') | (type_specials == 'boolean'))
+        text_cols = list(type_specials == 'text')
+        date_cols = list(type_specials == 'datetime')
+        og_df_col = df.columns
+        og_target_col = df.loc[:, cat_cols]
+
+        # Data Transformation
+        ct = ColumnTransformer([
+            (OneHotEncoder.__name__, OneHotEncoder(), cat_cols),
+            (
+                TextNgramFeatureGenerator.__name__,
+                SKLearnAGFeatureWrapperBase(
+                    TextNgramFeatureGenerator(
+                        vectorizer=CountVectorizer(stop_words=stopwords.words()),
+                        vectorizer_strategy='separate'
+                    )
+                ),
+                text_cols
+            ),
+            (DatetimeFeatureGenerator.__name__, SKLearnAGFeatureWrapperBase(DatetimeFeatureGenerator()), date_cols)
+        ],
+        remainder='passthrough', sparse_threshold=0, verbose_feature_names_out=False, verbose=True)
+        df = pd.DataFrame(ct.fit_transform(df).tolist(), columns=ct.get_feature_names_out())
 
         if control_columns is not None or control_values is not None:
             if len(control_columns) != len(control_values):
@@ -154,9 +162,23 @@ class AAICorrelationTask(AAITask):
         if target_value is not None:
             df[target_column] = df[target_column].astype(str)
             target_value = str(target_value)
-        corrs = Stats().corr(df, target_column, target_value, p_value=p_value)
+
+        cat_cols = []
+        gen_cat_cols = []
+        if is_fitted(ct.named_transformers_['OneHotEncoder']):
+            cat_cols = og_df_col[ct.transformers[0][2]]
+            gen_cat_cols = ct.named_transformers_['OneHotEncoder'].categories_
+        corrs = Stats().corr(
+            df,
+            target_column,
+            target_value,
+            p_value=p_value,
+            categorical_columns=cat_cols,
+            gen_categorical_columns=gen_cat_cols
+        )
         corrs = corrs[:top_k]
 
+        df = df.join(og_target_col)
         charts = []
         other = (
             lambda uniques, label: uniques[uniques != label][0]
