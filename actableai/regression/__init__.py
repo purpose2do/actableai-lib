@@ -36,6 +36,7 @@ class PolynomialLinearPredictor(AbstractModel):
         if is_train:
             degree = self._get_model_params().get("degree", 2)
             self.poly_scaler = make_pipeline(
+                SimpleImputer(strategy="mean"),
                 StandardScaler(),
                 PolynomialFeatures(degree),
             )
