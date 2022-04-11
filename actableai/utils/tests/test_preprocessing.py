@@ -60,4 +60,8 @@ class TestPercentageTransformer:
             'x': ["1.15%", "1.15%", "1.15%", "1.15"],
             'y': ["1.15%", "1.15", "1.15", "1.15"]
         })
+<<<<<<< HEAD
         assert list(PercentageTransformer.selector(df)) == ['x']
+=======
+        assert list(PercentageTransformer.selector(df)) == [True, False]
+>>>>>>> 7bfc684efc56981951669c15c8b1661f33a4479b
