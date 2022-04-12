@@ -15,9 +15,9 @@ class TestDataFrameTransformer:
         assert df.shape == (1, 3)
 
     def test_fit_transform_col_names(self):
-        dft = DataFrameTransformer()
+        dft = DataFrameTransformer(column_names=['a', 'b', 'c'])
         df = dft.fit_transform(
-            np.array([[0, 1, 2]]), x_w_columns=['a', 'b', 'c']
+            np.array([[0, 1, 2]])
         )
         assert isinstance(df, pd.DataFrame)
         assert df.shape == (1, 3)
