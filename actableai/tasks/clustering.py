@@ -166,8 +166,8 @@ class AAIClusteringTask(AAITask):
                 for anchor in anchors.get()
             ]
 
-            df["explanation"] = [
-                gen_anchor_explanation(a, df.shape[0])
+            df_train["explanation"] = [
+                gen_anchor_explanation(a, df_train.shape[0])
                 for a in anchors
             ]
 
@@ -186,14 +186,14 @@ class AAIClusteringTask(AAITask):
         points_x = x_embedded[:, 0]
         points_y = x_embedded[:, 1]
 
-        origin_dict = df.to_dict('record')
+        origin_dict = df_train.to_dict('record')
         for idx, (i, j, k, l, e) in enumerate(
             zip(points_x.tolist(), points_y.tolist(), cluster_ids, origin_dict, anchors)):
             data.append((k, {"x": i, "y": j}, l, e))
 
         res = defaultdict(list)
         for idx, (k, v, s, e) in enumerate(data):
-            res[k].append({"train": v, "column": s, "index": df.index[idx]})
+            res[k].append({"train": v, "column": s, "index": df_train.index[idx]})
 
         # Explain clusters
         clusters = [{'cluster_id': int(k), 'value': v} for k, v in res.items()]
