@@ -1,0 +1,19 @@
+#!/bin/bash
+
+ISSUES="no"
+
+for FILE in `git diff-index --name-only master`; do
+  # do not check files others than *.py
+  if [[ $FILE == *.py ]]; then
+    if ! flake8 $FILE; then
+        ISSUES="yes"
+    fi
+  fi
+done;
+
+if [[ $ISSUES == "no" ]]; then
+    exit 0
+else
+    echo "Please resolve linting issues";
+    exit 1
+fi
