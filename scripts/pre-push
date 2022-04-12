@@ -2,10 +2,12 @@
 
 ISSUES="no"
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 for FILE in `git diff-index --name-only master`; do
   # do not check files others than *.py
   if [[ $FILE == *.py ]]; then
-    if ! flake8 $FILE; then
+    if ! flake8 --config $SCRIPT_DIR/../.flake8 $FILE; then
         ISSUES="yes"
     fi
   fi
