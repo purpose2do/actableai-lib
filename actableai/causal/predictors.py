@@ -38,7 +38,7 @@ class DataFrameTransformer(TransformerMixin, BaseEstimator):
             return X.copy()
         if isinstance(X, np.ndarray):
             df = pd.DataFrame(X.tolist())
-            if self.column_names is not None:
+            if self.column_names is not None and len(self.column_names) > 0:
                 df.columns = self.column_names
             return df
         if isinstance(X, List) and len(np.array(X).shape) != 2:
