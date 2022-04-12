@@ -12,7 +12,7 @@
     <img src="images/logo.png" alt="Logo">
 
   <p align="center">
-    Automated Machine Learning and Data Science for everyone
+    Advanced Analyitcs and Data Science made easy
     <br />
     <a href="https://app.actable.ai/api-docs/genindex.html" target="_blank"><strong>Explore the docs »</strong></a>
     <br />
@@ -30,7 +30,7 @@
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
+[![Apache v2.0 License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
 <!-- TABLE OF CONTENTS -->
@@ -202,7 +202,7 @@ For any question about the ML Library feel free to send us a message :
 [issues-shield]: https://img.shields.io/github/issues/Actable-AI/actableai-lib.svg?style=for-the-badge
 [issues-url]: https://github.com/Actable-AI/actableai-lib/issues
 [license-shield]: https://img.shields.io/github/license/Actable-AI/actableai-lib.svg?style=for-the-badge
-[license-url]: https://github.com/Actable-AI/actableai-lib/blob/master/LICENSE.txt
+[license-url]: https://github.com/Actable-AI/actableai-lib/blob/master/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=256
 [linkedin-url]: https://www.linkedin.com/company/actable-ai
 [product-screenshot]: images/screenshot.png
