@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
 from unittest.mock import Mock, MagicMock
-from actableai.utils.preprocessing import  PercentageTransformer, impute_df
+from actableai.utils.preprocessing import  impute_df, PercentageTransformer
 
 @pytest.fixture(scope="function")
 def df():
@@ -60,4 +60,4 @@ class TestPercentageTransformer:
             'x': ["1.15%", "1.15%", "1.15%", "1.15"],
             'y': ["1.15%", "1.15", "1.15", "1.15"]
         })
-        assert list(PercentageTransformer.selector(df)) == [True, False]
+        assert list(PercentageTransformer.selector(df)) == ['x']
