@@ -4,6 +4,10 @@ ISSUES="no"
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
+SCRIPT_RELATIVE=".."
+if [[ $(dirname $0) == ".git/hooks" ]]; then
+  SCRIPT_RELATIVE="../.."
+fi
 
 for FILE in `git diff-index --name-only master`; do
   # do not check files others than *.py
