@@ -114,6 +114,7 @@ class SKLearnWrapper:
             ag_args_fit=self.ag_args_fit or {},
         )
         self.train_data = train_data
+        return self
 
     def feature_importance(self):
         if self.train_data is None:
