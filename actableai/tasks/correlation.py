@@ -65,7 +65,6 @@ class AAICorrelationTask(AAITask):
         from sklearn.preprocessing import OneHotEncoder
         from sklearn.feature_extraction.text import CountVectorizer
         from autogluon.features import TextNgramFeatureGenerator, DatetimeFeatureGenerator
-        import nltk
         from nltk.corpus import stopwords
 
         from actableai.stats import Stats

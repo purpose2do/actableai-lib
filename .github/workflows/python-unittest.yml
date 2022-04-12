@@ -47,6 +47,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        pip install --upgrade pip setuptools
         pip install --use-deprecated=legacy-resolver -r requirements.txt
         pip install --use-deprecated=legacy-resolver fbprophet==0.7.1
         pip install --no-deps -e .

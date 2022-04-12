@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from setuptools import Extension, setup, find_packages
+from setuptools.command.install import install
 
 libraries = []
 if os.name == 'posix':
@@ -15,6 +16,14 @@ for name in ['_tree', '_splitter', '_criterion', '_utils']:
         libraries=libraries,
         extra_compile_args=['-O3'],
     ))
+
+
+class DownloadNLTK(install):
+    def run(self):
+        super().do_egg_install()
+        import nltk
+        nltk.download('stopwords')
+
 
 setup(
     version="0.1",
@@ -59,7 +68,9 @@ setup(
         # causal
         "econml>=0.11.1",
         "dowhy>=0.6",
-        "networkx>=2.5.1"
+        "networkx>=2.5.1",
+
+        "nltk"
     ],
     setup_requires=[
         "cython>=0.23",
@@ -71,8 +82,11 @@ setup(
         "pystan>=2.19.1.1",
         "tqdm>=4.23",
         "wheel",
+        "nltk"
     ],
     include_package_data=True,
     ext_modules=extensions,
+    cmdclass={
+        DownloadNLTK.__name__: DownloadNLTK
+    }
 )
-
