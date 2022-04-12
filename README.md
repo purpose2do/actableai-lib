@@ -170,7 +170,7 @@ chmod +x scripts/setup_hooks.sh && scripts/setup_hooks.sh
 <!-- LICENSE -->
 ## License
 
-Distributed under the Apache License. See `LICENSE.txt` for more information.
+Distributed under the License Apache v2.0. See `LICENSE` file for more information.
 
 <!-- CONTACT -->
 ## Contact
