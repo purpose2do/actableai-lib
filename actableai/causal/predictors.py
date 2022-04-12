@@ -17,7 +17,7 @@ class UnsupportedProblemType(ValueError):
 
 
 class DataFrameTransformer(TransformerMixin, BaseEstimator):
-    def __init__(self, column_names) -> None:
+    def __init__(self, column_names=None) -> None:
         super().__init__()
         self.column_names = column_names
 
@@ -28,9 +28,15 @@ class DataFrameTransformer(TransformerMixin, BaseEstimator):
         if isinstance(X, pd.DataFrame):
             return X.copy()
         if isinstance(X, np.ndarray):
-            return pd.DataFrame(X.tolist(), columns=self.column_names)
+            df = pd.DataFrame(X.tolist())
+            if self.column_names is not None:
+                df.columns = self.column_names
+            return df
         if isinstance(X, List) and len(np.array(X).shape) != 2:
-            return pd.DataFrame(X, columns=self.column_names)
+            df = pd.DataFrame(X)
+            if self.column_names is not None:
+                df.columns = self.column_names
+            return df
         raise TypeError(X)
 
     def fit_transform(self, X, y=None, **fit_params):
