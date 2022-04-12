@@ -1,15 +1,9 @@
+from typing import List, Tuple
 import pandas as pd
-from functools import reduce
 
-def leaderboard_cross_val(cross_val_leaderboard):
-    # Leaderboard
-    cross_val_leaderboard = [x.sort_values('model') for x in cross_val_leaderboard]
-    only_num_vals = [x.select_dtypes('number') for x in cross_val_leaderboard]
-    mean_vals = reduce(lambda x, y: x + y, only_num_vals) / len(only_num_vals)
-    leaderboard = pd.DataFrame({
-        'model': cross_val_leaderboard[0]['model'],
-        'can_infer': cross_val_leaderboard[0]['can_infer']
-    })
-    leaderboard = leaderboard.join(mean_vals)
-    leaderboard = leaderboard.sort_values('model')
-    return leaderboard
+def leaderboard_cross_val(cross_val_leaderboard:List[pd.DataFrame]) -> pd.DataFrame:
+    conc_leaderboard = pd.concat(cross_val_leaderboard)
+    avg = conc_leaderboard.groupby('model').mean().reset_index()
+    std = conc_leaderboard.groupby('model').std().reset_index()
+    std = std.add_suffix('_std')
+    return avg.join(std)
