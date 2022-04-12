@@ -17,7 +17,16 @@ class UnsupportedProblemType(ValueError):
 
 
 class DataFrameTransformer(TransformerMixin, BaseEstimator):
-    def __init__(self, column_names=None) -> None:
+    """DataFrame Transformer to transform lists and np.ndarray in DataFrames
+
+    Args:
+        column_names (Optional[List[str]], optional): Names of the columns for
+        new DataFrame, if None the columns be RangeIndex(0, n).
+        Number of column names must be the same as the number of columns.
+        Defaults to None.
+    """
+
+    def __init__(self, column_names: Optional[List[str]] = None) -> None:
         super().__init__()
         self.column_names = column_names
 
@@ -67,10 +76,14 @@ class SKLearnWrapper:
 
         Args:
             ag_predictor (TabularPredictor): AutoGluon Tabular Predictor
-            x_w_columns (Optional[List], optional): Name of common_causes and effect modifiers (order matters). Defaults to None.
-            hyperparameters (Optional[List], optional): HyperParameter for TabularPredictor. Defaults to None.
-            presets (Optional[str], optional): Presets for TabularPredictor. Defaults to "best_quality".
-            ag_args_fit (Optional[List], optional): Args fit for Tabular Predictor. Defaults to None.
+            x_w_columns (Optional[List], optional): Name of common_causes and
+            effect modifiers (order matters). Defaults to None.
+            hyperparameters (Optional[List], optional): HyperParameter for
+            TabularPredictor. Defaults to None.
+            presets (Optional[str], optional): Presets for TabularPredictor.
+            Defaults to "best_quality".
+            ag_args_fit (Optional[List], optional): Args fit for Tabular
+            Predictor. Defaults to None.
 
         Raises:
             UnsupportedPredictorType: Ensure that we only use TabularPredictor
