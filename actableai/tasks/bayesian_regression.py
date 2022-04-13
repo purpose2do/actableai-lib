@@ -229,7 +229,7 @@ class AAIBayesianRegressionTask(AAITask):
                 "stds": np.sqrt(m.sigma_[cid, cid]),
                 "pdfs" : [x, y]
             })
-            if c in df_og_num_cols:
+            if c in orig_dummy_list:
                 # Generate a univariate model
                 df_predict = {}
                 x = np.linspace(min(df_polynomial[c]), max(df_polynomial[c]), num=predict_steps)
@@ -265,6 +265,7 @@ class AAIBayesianRegressionTask(AAITask):
             "univariate" : univariate_results,
             "multivariate" : multivariate_results
         }
+        data["computed_table"] = df_polynomial
         runtime = time.time() - start
         return {
             "status": "SUCCESS",
