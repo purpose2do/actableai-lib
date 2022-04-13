@@ -5,12 +5,14 @@ from actableai.tasks.base import AAITask
 
 import pandas as pd
 
+
 class AAICorrelationTask(AAITask):
     """Correlation Task
 
     Args:
         AAITask: Base Class for tasks
     """
+
     @AAITask.run_with_ray_remote(TaskType.CORRELATION)
     def run(
         self,
@@ -57,14 +59,16 @@ class AAICorrelationTask(AAITask):
         """
         import logging
         import time
-        import pandas as pd
         import numpy as np
         from sklearn.neighbors import KernelDensity
         from sklearn.linear_model import BayesianRidge
         from sklearn.compose import ColumnTransformer
         from sklearn.preprocessing import OneHotEncoder
         from sklearn.feature_extraction.text import CountVectorizer
-        from autogluon.features import TextNgramFeatureGenerator, DatetimeFeatureGenerator
+        from autogluon.features import (
+            TextNgramFeatureGenerator,
+            DatetimeFeatureGenerator,
+        )
         from nltk.corpus import stopwords
 
         from actableai.stats import Stats
@@ -97,29 +101,40 @@ class AAICorrelationTask(AAITask):
 
         # Type reader
         type_specials = df.apply(get_type_special_no_ag)
-        cat_cols = list((type_specials == 'category') | (type_specials == 'boolean'))
-        text_cols = list(type_specials == 'text')
-        date_cols = list(type_specials == 'datetime')
+        cat_cols = list((type_specials == "category") | (type_specials == "boolean"))
+        text_cols = list(type_specials == "text")
+        date_cols = list(type_specials == "datetime")
         og_df_col = df.columns
         og_target_col = df.loc[:, cat_cols]
 
         # Data Transformation
-        ct = ColumnTransformer([
-            (OneHotEncoder.__name__, OneHotEncoder(), cat_cols),
-            (
-                TextNgramFeatureGenerator.__name__,
-                SKLearnAGFeatureWrapperBase(
-                    TextNgramFeatureGenerator(
-                        vectorizer=CountVectorizer(stop_words=stopwords.words()),
-                        vectorizer_strategy='separate'
-                    )
+        ct = ColumnTransformer(
+            [
+                (OneHotEncoder.__name__, OneHotEncoder(), cat_cols),
+                (
+                    TextNgramFeatureGenerator.__name__,
+                    SKLearnAGFeatureWrapperBase(
+                        TextNgramFeatureGenerator(
+                            vectorizer=CountVectorizer(stop_words=stopwords.words()),
+                            vectorizer_strategy="separate",
+                        )
+                    ),
+                    text_cols,
                 ),
-                text_cols
-            ),
-            (DatetimeFeatureGenerator.__name__, SKLearnAGFeatureWrapperBase(DatetimeFeatureGenerator()), date_cols)
-        ],
-        remainder='passthrough', sparse_threshold=0, verbose_feature_names_out=False, verbose=True)
-        df = pd.DataFrame(ct.fit_transform(df).tolist(), columns=ct.get_feature_names_out())
+                (
+                    DatetimeFeatureGenerator.__name__,
+                    SKLearnAGFeatureWrapperBase(DatetimeFeatureGenerator()),
+                    date_cols,
+                ),
+            ],
+            remainder="passthrough",
+            sparse_threshold=0,
+            verbose_feature_names_out=False,
+            verbose=True,
+        )
+        df = pd.DataFrame(
+            ct.fit_transform(df).tolist(), columns=ct.get_feature_names_out()
+        )
 
         if control_columns is not None or control_values is not None:
             if len(control_columns) != len(control_values):
@@ -164,16 +179,16 @@ class AAICorrelationTask(AAITask):
 
         cat_cols = []
         gen_cat_cols = []
-        if is_fitted(ct.named_transformers_['OneHotEncoder']):
+        if is_fitted(ct.named_transformers_["OneHotEncoder"]):
             cat_cols = og_df_col[ct.transformers[0][2]]
-            gen_cat_cols = ct.named_transformers_['OneHotEncoder'].categories_
+            gen_cat_cols = ct.named_transformers_["OneHotEncoder"].categories_
         corrs = Stats().corr(
             df,
             target_column,
             target_value,
             p_value=p_value,
             categorical_columns=cat_cols,
-            gen_categorical_columns=gen_cat_cols
+            gen_categorical_columns=gen_cat_cols,
         )
         corrs = corrs[:top_k]
 
@@ -184,11 +199,12 @@ class AAICorrelationTask(AAITask):
             if uniques.size == 2
             else "others"
         )
+        kde_bandwidth = lambda x: max(0.5 * x.std() * (x.size ** (-0.2)), 1e-2)
         for corr in corrs:
             if type(corr["col"]) is list:
                 group, val = corr["col"]
 
-                df[group].fillna("NaN", inplace=True)
+                df[group].fillna("None", inplace=True)
 
                 # Categorical variable
                 if target_value is None:
