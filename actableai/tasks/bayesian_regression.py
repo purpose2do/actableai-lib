@@ -49,7 +49,6 @@ class AAIBayesianRegressionTask(AAITask):
         # To resolve any issues of acces rights make a copy
         df = df.copy()
         df = sanitize_timezone(df)
-        df_og_num_cols = list(df.select_dtypes(include="number"))
 
         data_validation_results = BayesianRegressionDataValidator().validate(
             target,
