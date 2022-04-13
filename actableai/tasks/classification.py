@@ -27,13 +27,12 @@ class _AAIClassificationTrainTask(AAITask):
         """
         TODO write documentation
         """
-        import os
         import pandas as pd
-        import numpy as np
         from autogluon.tabular import TabularPredictor
         from autogluon.features.generators import AutoMLPipelineFeatureGenerator
-        from sklearn.metrics import confusion_matrix, roc_curve, auc
         from sklearn.model_selection import train_test_split
+        from sklearn.metrics import f1_score, precision_score, recall_score, confusion_matrix, roc_curve, auc
+
         from actableai.debiasing.debiasing_model import DebiasingModel
         from actableai.utils import debiasing_feature_generator_args
 
@@ -114,6 +113,9 @@ class _AAIClassificationTrainTask(AAITask):
                 "negative_label": str(neg_label),
                 "threshold": 0.5,
             }
+            evaluate["precision_score"] = precision_score(label_val, label_pred, pos_label=pos_label)
+            evaluate["recall_score"] = recall_score(label_val, label_pred, pos_label=pos_label)
+            evaluate["f1_score"] = f1_score(label_val, label_pred, pos_label=pos_label)
 
         return predictor, important_features, evaluate, pred_prob_val, leaderboard
 

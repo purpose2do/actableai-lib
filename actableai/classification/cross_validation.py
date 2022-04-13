@@ -207,6 +207,9 @@ def run_cross_validation(classification_train_task,
         evaluate["auc_score"] = np.mean(cross_val_evaluates["auc_score"], axis=0)
         evaluate["auc_score_std_err"] = (np.std(cross_val_evaluates["auc_score"], axis=0) / sqrt_k).tolist()
         evaluate["auc_curve"] = auc_curve
+        evaluate["precision_score"] = np.mean(cross_val_evaluates["precision_score"], axis=0)
+        evaluate["recall_score"] = np.mean(cross_val_evaluates["recall_score"], axis=0)
+        evaluate["f1_score"] = np.mean(cross_val_evaluates["f1_score"], axis=0)
 
     # Create ensemble model
     ensemble_model = AverageEnsembleClassifier(cross_val_predictors)
