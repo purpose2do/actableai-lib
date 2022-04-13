@@ -49,6 +49,7 @@ class AAIBayesianRegressionTask(AAITask):
         # To resolve any issues of acces rights make a copy
         df = df.copy()
         df = sanitize_timezone(df)
+        df_og_num_cols = list(df.select_dtypes(include="number"))
 
         data_validation_results = BayesianRegressionDataValidator().validate(
             target,
@@ -228,7 +229,7 @@ class AAIBayesianRegressionTask(AAITask):
                 "stds": np.sqrt(m.sigma_[cid, cid]),
                 "pdfs" : [x, y]
             })
-            if c in orig_dummy_list:
+            if c in df_og_num_cols:
                 # Generate a univariate model
                 df_predict = {}
                 x = np.linspace(min(df_polynomial[c]), max(df_polynomial[c]), num=predict_steps)
