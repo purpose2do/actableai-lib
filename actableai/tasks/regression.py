@@ -99,7 +99,9 @@ class _AAIRegressionTrainTask(AAITask):
         evaluate = {
             "RMSE": abs(metrics["root_mean_squared_error"]),
             "R2": metrics["r2"],
-            "MAE": abs(metrics["mean_absolute_error"])
+            "MAE": abs(metrics["mean_absolute_error"]),
+            "MSE": abs(metrics["mean_squared_error"]),
+            "MEDIAN_ABSOLUTE_ERROR": abs(metrics["median_absolute_error"]),
         }
 
         explainer = None

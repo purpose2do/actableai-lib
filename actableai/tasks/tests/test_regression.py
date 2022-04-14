@@ -1076,4 +1076,17 @@ class TestDebiasing:
                     assert "y" in chart
                     assert type(chart["y"]) is list
 
-
+    def test_evaluate_has_data(self, regression_task, data, tmp_path):
+        r = run_regression_task(
+            regression_task,
+            tmp_path,
+            data,
+            target="y",
+        )
+        assert r["status"] == "SUCCESS"
+        assert "evaluate" in r["data"]
+        assert "RMSE" in r["data"]["evaluate"]
+        assert "R2" in r["data"]["evaluate"]
+        assert "MAE" in r["data"]["evaluate"]
+        assert "MSE" in r["data"]["evaluate"]
+        assert "MEDIAN_ABSOLUTE_ERROR" in r["data"]["evaluate"]
