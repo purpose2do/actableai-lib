@@ -2,7 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import wraps
-from typing import Callable, Optional, Iterable, Tuple
+from typing import Callable, Optional, Tuple
 
 import ray
 

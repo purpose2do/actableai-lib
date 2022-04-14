@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
@@ -69,10 +69,19 @@ class AAIDataImputationTask(AAITask):
         df,
         rules: Tuple[str, str] = ("", ""),
         impute_nulls: bool = True,
-        override_column_types={},
-    ):
-        """
-        TODO write documentation
+        override_column_types: Dict = {},
+    ) -> Dict:
+        """Impute the DataFrame df
+
+        Args:
+            df: DataFrame to impute
+            rules: Set of rules for imputation. Defaults to ("", "").
+            impute_nulls: Whether null, None and nan values should be imputed.
+                Defaults to True.
+            override_column_types: Columns overriden by a special type . Defaults to {}.
+
+        Returns:
+            Dict: Dictionnary of results
         """
         from actableai.data_imputation.error_detector import (
             NullDetector,

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 import pandas as pd
 
 from actableai.tasks import TaskType
@@ -12,28 +12,64 @@ class _AAIRegressionTrainTask(AAITask):
 
     @AAITask.run_with_ray_remote(TaskType.REGRESSION_TRAIN)
     def run(self,
-            explain_samples,
-            presets,
-            hyperparameters,
-            model_directory,
-            target,
-            features,
-            run_model,
-            df_train,
-            df_val,
-            df_test,
-            prediction_quantile_low,
-            prediction_quantile_high,
-            drop_duplicates,
-            run_debiasing,
-            biased_groups,
-            debiased_features,
-            residuals_hyperparameters,
-            num_gpus,
-            eval_metric,
+            explain_samples:bool,
+            presets:str,
+            hyperparameters:Dict,
+            model_directory:str,
+            target:str,
+            features:List[str],
+            run_model:bool,
+            df_train:pd.DataFrame,
+            df_val:pd.DataFrame,
+            df_test:pd.DataFrame,
+            prediction_quantile_low:int,
+            prediction_quantile_high:int,
+            drop_duplicates:bool,
+            run_debiasing:bool,
+            biased_groups:List[str],
+            debiased_features:List[str],
+            residuals_hyperparameters:Dict,
+            num_gpus:int,
+            eval_metric:Dict,
             ):
-        """
-        TODO write documentation
+        """Sub class for running a regression without cross validation
+
+        Args:
+            explain_samples: Whether we explain the samples
+            presets: Presets for AutoGluon.
+                See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
+            hyperparameters: Hyperparameters for AutoGluon.
+                See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
+            model_directory: Directory for model
+            target: Target for regression
+            features: Features used in DataFrame for regression
+            run_model: Whether the model should be run on df_test
+            df_train: DataFrame for training
+            df_val: DataFrame for validation
+            df_test: DataFrame for testing
+            prediction_quantile_low: Low quantile for prediction and validation
+            prediction_quantile_high: High quantile for prediction and validation
+            drop_duplicates: Whether we should drop duplicated rows
+            run_debiasing: Whether we should debias the data
+            biased_groups: Features that creates a bias in prediction
+            debiased_features: Features debiased w.r.t to biased_groups
+            residuals_hyperparameters: Hyperparameters for debiasing with AutoGluon.
+                See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
+            num_gpus: Number of GPUs used by AutoGluon
+            eval_metric: Evaluation metric for validation
+
+        Returns:
+            Tuple:
+                - AutoGluon's predictor
+                - List of feature importance
+                - Dictionnary of evaluation metrics
+                - Predicted values for df_val
+                - Explainer for explaining the prediction and validation
+                - Predicted values for df_test if run_model is true
+                - Lowest prediction for df_test if prediction_quantile_low is not None
+                - Highest prediction for df_test if prediction_quantile_low is not None
+                - Predicted shap values if explain_samples is true
+                - Leaderboard of the best model ran by AutoGluon
         """
         import os
         import shap
@@ -143,20 +179,40 @@ class _AAIInterventionTask(AAITask):
     @AAITask.run_with_ray_remote(TaskType.CAUSAL_INFERENCE)
     def run(
             self,
-            df,
-            df_predict,
-            target,
-            run_model,
-            current_intervention_column,
-            new_intervention_column,
-            common_causes,
-            causal_cv,
-            causal_hyperparameters,
-            cate_alpha,
-            presets,
-            model_directory,
-            num_gpus,
+            df:pd.DataFrame,
+            df_predict:pd.DataFrame,
+            target:str,
+            run_model:bool,
+            current_intervention_column:str,
+            new_intervention_column:str,
+            common_causes:List[str],
+            causal_cv:int,
+            causal_hyperparameters:Dict,
+            cate_alpha:float,
+            presets:str,
+            model_directory:str,
+            num_gpus:int,
     ):
+        """Runs an intervention on Input DataFrame
+
+        Args:
+            df: Input DataFrame
+            df_predict: DataFrame where we predicted the target
+            target: ?
+            run_model: Whether we run the model 
+            current_intervention_column: Feature before intervention
+            new_intervention_column: Feature after intervention
+            common_causes: Common causes 
+            causal_cv (int): _description_
+            causal_hyperparameters (Dict): _description_
+            cate_alpha (float): _description_
+            presets (str): _description_
+            model_directory (str): _description_
+            num_gpus (int): _description_
+
+        Returns:
+            _type_: _description_
+        """
         import numpy as np
         import pandas as pd
         from tempfile import mkdtemp
