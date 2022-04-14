@@ -53,6 +53,10 @@ class AAIForecastTask(AAITask):
             use_ray: Whether we use ray. Defaults to True.
             seed: Seed for random state. Defaults to 123.
 
+        Examples:
+            >>> df = pd.read_csv("path/to/dataframe")
+            >>> AAIForecastTask().run(df, "date_column", ["feature1", "feature2"])
+
         Returns:
             Dict: Dictionnary of results
         """

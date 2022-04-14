@@ -80,6 +80,10 @@ class AAIDataImputationTask(AAITask):
                 Defaults to True.
             override_column_types: Columns overriden by a special type . Defaults to {}.
 
+        Examples:
+            >>> df = pd.read_csv("path/to/dataframe")
+            >>> AAIDataImputationTask().run(df)
+
         Returns:
             Dict: Dictionnary of results
         """

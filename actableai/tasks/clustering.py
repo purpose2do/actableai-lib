@@ -56,6 +56,10 @@ class AAIClusteringTask(AAITask):
             alpha_k: _description_. Defaults to 0.01.
             max_train_samples: _description_. Defaults to None.
 
+        Examples:
+            >>> df = pd.read_csv("path/to/dataframe")
+            >>> AAIClusteringTask().run(df, ["feature1", "feature2", "feature3"])
+
         Returns:
             Dict: Dictionnary of results
         """

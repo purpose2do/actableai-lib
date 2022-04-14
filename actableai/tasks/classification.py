@@ -252,6 +252,10 @@ class AAIClassificationTask(AAITask):
         Raises:
             Exception: If the target has less than 2 unique values.
 
+        Examples:
+            >>> df = pd.read_csv("path/to/dataframe")
+            >>> AAIClassificationTask(df, ["feature1", "feature2", "feature3"], "target")
+
         Returns:
             Dict: Dictionnary of results
         """

@@ -70,11 +70,8 @@ class AAICorrelationTask(AAITask):
                 columns are returned. Defaults to 20.
 
         Examples:
-            >>> df = pd.DataFrame({\
-                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 5,\
-                "y": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 5
-            })
-            
+            >>> df = pd.read_csv("path/to/dataframe")
+            >>> AAICorrelationTask().run(df, ["feature1", "feature2", "feature3"], "target")
 
         Returns:
             Dict: Dictionnary of results

@@ -18,6 +18,10 @@ class AAISentimentAnalysisTask(AAITask):
             target: Target for sentiment analysis
             batch_size: Batch Size. Defaults to 32.
 
+        Examples:
+            >>> df = pd.read_csv("path/to/dataframe")
+            >>> AAISentimentAnalysisTask().run(df, "target")
+
         Returns:
             Dict: Dictionnary of results
         """
