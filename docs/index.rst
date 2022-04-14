@@ -11,6 +11,10 @@ Actable AI ML lib
 
 Main API
 ----------
+
+ActableAI maintains tasks that are the core of our Analytics.
+All the tasks and they are usage are listed in this module.
+
 .. toctree::
    :maxdepth: 2
 
@@ -19,7 +23,29 @@ Main API
 Installations
 -------------
 
-Installations
+To install ActableAI simply run
+
+.. code-block:: console
+
+   pip install actable-ai
+
+To install it from source:
+
+.. code-block:: console
+
+   git clone git@github.com:Actable-AI/actableai-lib.git --recursive
+   cd actableai-lib
+   pip install -r requirements.txt
+   pip install .
+
+To contribute as a developer (see *Contributions* section):
+
+.. code-block:: console
+
+   git clone git@github.com:Actable-AI/actableai-lib.git --recursive
+   cd actableai-lib
+   pip install -r requirements.txt
+   pip install -e .
 
 Contributions
 -------------
