@@ -199,10 +199,10 @@ class _AAIInterventionTask(AAITask):
             df: Input DataFrame
             df_predict: DataFrame where we predicted the target
             target: ?
-            run_model: Whether we run the model 
+            run_model: Whether we run the model
             current_intervention_column: Feature before intervention
             new_intervention_column: Feature after intervention
-            common_causes: Common causes 
+            common_causes: Common causes
             causal_cv (int): _description_
             causal_hyperparameters (Dict): _description_
             cate_alpha (float): _description_
