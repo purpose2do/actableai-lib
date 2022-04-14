@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 import pandas as pd
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
@@ -68,6 +68,13 @@ class AAICorrelationTask(AAITask):
                 Defaults to False.
             top_k: Limit for number of results returned. Only the best k correlated
                 columns are returned. Defaults to 20.
+
+        Examples:
+            >>> df = pd.DataFrame({\
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 5,\
+                "y": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 5
+            })
+            
 
         Returns:
             Dict: Dictionnary of results

@@ -46,6 +46,10 @@ class AAIBayesianRegressionTask(AAITask):
             normalize: If the generated features should be normalized, usefull for
                 big polymonial degree. Defaults to False.
 
+        Examples:
+            >>> df = pd.read_csv("path/to/dataframe")
+            >>> AAIBayesianRegressionTask(df, ["feature1", "feature2", "feature3"], "target")
+
         Raises:
             ValueError: Categorical exponents are not raised to any exponents.
                 ValueError if a prior is looking for an exponentiated value of a

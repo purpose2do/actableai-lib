@@ -6,16 +6,28 @@
 Actable AI ML lib
 =================
 
+Main API
+----------
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+
+   actableai.tasks
+
+Installations
+-------------
+
+Installations
+
+Contributions
+-------------
+
+.. toctree::
+   :maxdepth: 2
 
    contributing
 
-
-
-Indices and tables
-==================
+Index
+-----
 
 * :ref:`genindex`
 * :ref:`modindex`

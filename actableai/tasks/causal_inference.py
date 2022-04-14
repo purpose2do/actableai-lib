@@ -88,6 +88,15 @@ def infer_causal(
         trials (int, optional): Number of trials for hyperparameter search. Defaults to 1.
         verbose (int, optional): Verbose level from 0 to 3. Defaults to 0 (silent).
 
+    Examples:
+        >>> df = pd.read_csv("path/to/csv")
+        >>> infer_causal(
+        ...    df,
+        ...    treatments=["feature1", "feature2"],
+        ...    outcomes=["feature3", "feature4"],
+        ...    effect_modifiers=["feature5", "feature6"]
+        ... )
+
     Returns:
         dict: dictionary of estimation results
     """
