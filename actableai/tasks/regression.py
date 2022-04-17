@@ -81,7 +81,7 @@ class _AAIRegressionTrainTask(AAITask):
             feature_generator=AutoMLPipelineFeatureGenerator(**feature_generator_args)
         )
         predictor.persist_models()
-        leaderboard = predictor.leaderboard()
+        leaderboard = predictor.leaderboard(extra_info=True)
         pd.set_option("chained_assignment", "warn")
 
         important_features = []
