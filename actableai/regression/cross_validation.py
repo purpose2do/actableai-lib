@@ -183,19 +183,32 @@ def run_cross_validation(
         })
     important_features = sorted(important_features, key=lambda k: k["importance"], reverse=True)
 
+    # Legacy (TODO: to be removed)
     evaluate = {
         "RMSE": np.mean(cross_val_evaluates["RMSE"]),
         "RMSE_std_err": np.std(cross_val_evaluates["RMSE"]) / sqrt_k,
-        "R2": np.mean(cross_val_evaluates["R2"]), "R2_std_err": np.std(cross_val_evaluates["R2"]) / sqrt_k,
+        "R2": np.mean(cross_val_evaluates["R2"]),
+        "R2_std_err": np.std(cross_val_evaluates["R2"]) / sqrt_k,
         "MAE": np.mean(cross_val_evaluates["MAE"]),
         "MAE_std_err": np.std(cross_val_evaluates["MAE"]) / sqrt_k,
-        "MEDIAN_ABSOLUTE_ERROR": np.mean(cross_val_evaluates["MAE"]),
-        "MEDIAN_ABSOLUTE_ERROR_std_err": np.std(cross_val_evaluates["MAE"]) / sqrt_k,
+        "MEDIAN_ABSOLUTE_ERROR": np.mean(cross_val_evaluates["MEDIAN_ABSOLUTE_ERROR"]),
+        "MEDIAN_ABSOLUTE_ERROR_std_err": np.std(cross_val_evaluates["MEDIAN_ABSOLUTE_ERROR"]) / sqrt_k,
     }
 
     evaluate["metrics"] = pd.DataFrame({
-        "metric": evaluate.keys(),
-        "value": evaluate.values(),
+        "metric": ["Root Mean Squared Error", "R2", "Mean Absolute Error", "Median Absolute Error"],
+        "value": [
+            np.mean(cross_val_evaluates["RMSE"]),
+            np.mean(cross_val_evaluates["R2"]),
+            np.mean(cross_val_evaluates["MAE"]),
+            np.mean(cross_val_evaluates["MEDIAN_ABSOLUTE_ERROR"]),
+        ],
+        "stderr": [
+            np.std(cross_val_evaluates["RMSE"]) / sqrt_k,
+            np.std(cross_val_evaluates["R2"]) / sqrt_k,
+            np.std(cross_val_evaluates["MAE"]) / sqrt_k,
+            np.std(cross_val_evaluates["MEDIAN_ABSOLUTE_ERROR"]) / sqrt_k,
+        ],
     })
 
     predictions = []
