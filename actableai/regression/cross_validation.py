@@ -188,8 +188,15 @@ def run_cross_validation(
         "RMSE_std_err": np.std(cross_val_evaluates["RMSE"]) / sqrt_k,
         "R2": np.mean(cross_val_evaluates["R2"]), "R2_std_err": np.std(cross_val_evaluates["R2"]) / sqrt_k,
         "MAE": np.mean(cross_val_evaluates["MAE"]),
-        "MAE_std_err": np.std(cross_val_evaluates["MAE"]) / sqrt_k
+        "MAE_std_err": np.std(cross_val_evaluates["MAE"]) / sqrt_k,
+        "MEDIAN_ABSOLUTE_ERROR": np.mean(cross_val_evaluates["MAE"]),
+        "MEDIAN_ABSOLUTE_ERROR_std_err": np.std(cross_val_evaluates["MAE"]) / sqrt_k,
     }
+
+    evaluate["metrics"] = pd.DataFrame({
+        "metric": evaluate.keys(),
+        "value": evaluate.values(),
+    })
 
     predictions = []
     predict_shap_values = []

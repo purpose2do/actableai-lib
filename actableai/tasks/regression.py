@@ -103,6 +103,10 @@ class _AAIRegressionTrainTask(AAITask):
             "MSE": abs(metrics["mean_squared_error"]),
             "MEDIAN_ABSOLUTE_ERROR": abs(metrics["median_absolute_error"]),
         }
+        evaluate["metrics"] = pd.DataFrame({
+            "metric": evaluate.keys(),
+            "value": evaluate.values(),
+        })
 
         explainer = None
         if explain_samples:

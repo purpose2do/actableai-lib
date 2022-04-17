@@ -1090,3 +1090,4 @@ class TestDebiasing:
         assert "MAE" in r["data"]["evaluate"]
         assert "MSE" in r["data"]["evaluate"]
         assert "MEDIAN_ABSOLUTE_ERROR" in r["data"]["evaluate"]
+        assert "metrics" in r["data"]["evaluate"]
