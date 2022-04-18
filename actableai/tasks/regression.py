@@ -431,6 +431,16 @@ class AAIRegressionTask(AAITask):
             num_gpus: Number of GPUs used in nuisnace models in counterfactual
                 prediction. Defaults to 0.
 
+        Examples:
+            >>> import pandas as pd
+            >>> from actableai.tasks import AAIRegressionTask
+            >>> df = pd.read_csv("path/to/csv")
+            >>> result = AAIRegressionTask.run(
+            ...         df,
+            ...         'target',
+            ...         features=['col1', 'col2']
+            ...    )
+
         Returns:
             _type_: _description_
         """
