@@ -441,7 +441,7 @@ class AAIRegressionTask(AAITask):
             ... )
 
         Returns:
-            _type_: _description_
+            Dict: Dictionnary containing results.
         """
         import os
         import ray
