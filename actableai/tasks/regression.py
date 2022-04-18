@@ -433,13 +433,12 @@ class AAIRegressionTask(AAITask):
 
         Examples:
             >>> import pandas as pd
-            >>> from actableai.tasks import AAIRegressionTask
+            >>> from actableai.tasks.regression import AAIRegressionTask
             >>> df = pd.read_csv("path/to/csv")
-            >>> result = AAIRegressionTask.run(
-            ...         df,
-            ...         'target',
-            ...         features=['col1', 'col2']
-            ...    )
+            >>> result = AAIRegressionTask().run(
+            ...     df,
+            ...     'target_column',
+            ... )
 
         Returns:
             _type_: _description_
