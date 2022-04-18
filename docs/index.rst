@@ -23,7 +23,7 @@ All the tasks and they are usage are listed in this module.
 Installations
 -------------
 
-To install ActableAI simply run
+To install ActableAI simply run:
 
 .. code-block:: console
 

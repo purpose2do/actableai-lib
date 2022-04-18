@@ -372,72 +372,67 @@ class AAIRegressionTask(AAITask):
             return_residuals: bool = False,
             kde_steps: int = 10,
             num_gpus: int = 0):
-        """
-        Run this regression task and return results.
+        """Run this regression task and return results.
 
-        Parameters
-        ----------
-        df
-            Input data frame
-        target
-            Target columns in df. If there are emtpy values in this columns, predictions will be generated for
-            these rows.
-        features
-            A list of features to be used for prediction. If None, all columns except target are used as features
-        biased_groups
-            A list of columns of groups that should be protected from biases (e.g. gender, race, age)
-        debiased_features
-            A list of proxy features that need to be debiased for protection of sensitive groups
-        eval_metric
-            Metric to be optimized during training. Possible values include 'root_mean_squared_error',
-            'mean_squared_error', 'mean_absolute_error', 'median_absolute_error', 'r2'
-        validation_ratio
-            The ratio to randomly split data for training and validation
-        prediction_quantile_low
-            Lower quantile for quantile regression (in percentage)
-        prediction_quantile_high
-            Higher quantile for quantile regression (in percentage)
-        explain_samples
-            If true, explanations for predictions in test and validation will be generated. It takes significantly
-            longer time to run.
-        model_directory
-            Destination to store trained model. If not set, a temporary folder will be created
-        presets
-            Autogluon's presets for training model. More details at
-            https://auto.gluon.ai/stable/_modules/autogluon/tabular/predictor/predictor.html#TabularPredictor.fit
-        intervention_task_params
-            Task parameters to be passed to build intervention model and predictions
-        kfolds
-            Number of folds for cross validation. If 1, train test split is used instead.
-        cross_validation_max_concurrency
-            Maximum number of Ray actors used for cross validation (each actor execute for one split)
-        current_intervention_column
-            Current values of intervention for counterfactual prediction
-        new_intervention_column
-            New values of intervention for counterfactual prediction
-        cate_alpha
-            Alpha value for CATE (conditional average treatment effect) quantiles
-        common_causes
-            List of columns to be used as common causes in causal graph of intervention model
-        causal_cv
-            Number of folds used in nuisance models in intervention model
-        causal_hyperparameters
-            Autogluon's hyperparameters used in nuisance models of counterfactual prediction
-        residuals_hyperparameters
-            Autogluon's hyperparameteres used in final model of counterfactual predictions
-        drop_duplicates
-            Whether duplicate values should be dropped before training
-        return_residuals
-            Whether residual values should be returned in counterfactual prediction
-        kde_steps
-            Steps used to generate KDE plots with debiasing
-        num_gpus
-            Number of GPUs used in nuisnace models in counterfactual prediction
+        Args:
+            df: Input data frame
+            target: Target columns in df. If there are emtpy values in this columns,
+                predictions will be generated for these rows.
+            features: A list of features to be used for prediction. If None, all columns
+                except target are used as features. Defaults to None.
+            biased_groups: A list of columns of groups that should be protected from
+                biases (e.g. gender, race, age). Defaults to None.
+            debiased_features: A list of proxy features that need to be debiased for
+                protection of sensitive groups. Defaults to None.
+            eval_metric: Metric to be optimized during training. Possible values include
+                'root_mean_squared_error', 'mean_squared_error', 'mean_absolute_error',
+                'median_absolute_error', 'r2'. Defaults to "r2".
+            validation_ratio: The ratio to randomly split data for training and
+                validation. Defaults to .2.
+            prediction_quantile_low: Lower quantile for quantile regression (in
+                percentage). Defaults to 5.
+            prediction_quantile_high: Higher quantile for quantile regression
+                (in percentage). Defaults to 95.
+            explain_samples: If true, explanations for predictions in test and
+                validation will be generated. It takes significantly longer time to run.
+                Defaults to False.
+            model_directory: Destination to store trained model. If not set, a temporary
+                folder will be created. Defaults to None.
+            presets: Autogluon's presets for training model. More details at
+                https://auto.gluon.ai/stable/_modules/autogluon/tabular/predictor/predictor.html#TabularPredictor.fit.
+                Defaults to "medium_quality_faster_train".
+            hyperparameters: _description_. Defaults to None.
+            train_task_params: _description_. Defaults to None.
+            intervention_task_params: Task parameters to be passed to build intervention
+                model and predictions. Defaults to None.
+            kfolds: Number of folds for cross validation. If 1, train test split is used
+                instead.. Defaults to 1.
+            cross_validation_max_concurrency: Maximum number of Ray actors used for
+                cross validation (each actor execute for one split). Defaults to 1.
+            current_intervention_column: Current values of intervention for
+                counterfactual prediction. Defaults to None.
+            new_intervention_column: New values of intervention for counterfactual
+                prediction. Defaults to None.
+            cate_alpha: Alpha value for CATE (conditional average treatment effect)
+                quantiles. Defaults to None.
+            common_causes: List of columns to be used as common causes in causal graph
+                of intervention model. Defaults to [].
+            causal_cv: Number of folds used in nuisance models in intervention model.
+                Defaults to 5.
+            causal_hyperparameters: Autogluon's hyperparameters used in nuisance models
+                of counterfactual prediction. Defaults to None.
+            residuals_hyperparameters: Autogluon's hyperparameteres used in final model
+                of counterfactual predictions. Defaults to None.
+            drop_duplicates: Whether duplicate values should be dropped before training.
+                Defaults to True.
+            return_residuals: Whether residual values should be returned in
+                counterfactual prediction. Defaults to False.
+            kde_steps: Steps used to generate KDE plots with debiasing. Defaults to 10.
+            num_gpus: Number of GPUs used in nuisnace models in counterfactual
+                prediction. Defaults to 0.
 
-        Returns
-        -------
-
-
+        Returns:
+            _type_: _description_
         """
         import os
         import ray
