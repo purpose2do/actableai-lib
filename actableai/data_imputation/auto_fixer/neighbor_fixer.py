@@ -20,7 +20,7 @@ from actableai.causal.models import SKLearnWrapper
 
 class NeighborFixer(AutoFixer):
     def __init__(self):
-        self._imp = IterativeImputer(max_iter=2, random_state=0, verbose=2)
+        self._imp = IterativeImputer(max_iter=10, random_state=0, verbose=1)
         self.__cached_matrix_after_fit = None
 
     def fix(
