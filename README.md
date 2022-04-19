@@ -111,6 +111,10 @@ cd actableai-lib
 pip install -r requirements.txt
 pip install .
 ```
+  
+Note :
+  
+To contribute, when installing from source, run `pip install -e .` instead of `pip install .` to enable pip's developer mode.
 
 <!-- USAGE EXAMPLES -->
 ## Usage
