@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.experimental import enable_iterative_imputer  # noqa
 from sklearn.impute import IterativeImputer
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 
 from actableai.data_imputation.auto_fixer.auto_fixer import AutoFixer
 from actableai.data_imputation.auto_fixer.errors import EmptyTrainDataException
@@ -15,7 +15,6 @@ from actableai.data_imputation.auto_fixer.helper import get_df_without_error
 
 from actableai.data_imputation.error_detector import CellErrors
 from actableai.data_imputation.meta.column import RichColumnMeta
-from actableai.causal.models import SKLearnWrapper
 
 
 class NeighborFixer(AutoFixer):
