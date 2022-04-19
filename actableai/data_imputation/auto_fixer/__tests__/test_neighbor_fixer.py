@@ -61,6 +61,7 @@ def test_fix(
     mms = MagicMock()
     mms.return_value = imp
     mms.fit_transform.return_value = df_fixed_on_error
+    mms.inverse_transform.return_value = df_fixed_on_error
 
     mock_get_df_without_error.return_value = df_without_error
 
