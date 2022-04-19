@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.experimental import enable_iterative_imputer  # noqa
 from sklearn.impute import IterativeImputer
+from sklearn.preprocessing import MinMaxScaler
 
 from actableai.data_imputation.auto_fixer.auto_fixer import AutoFixer
 from actableai.data_imputation.auto_fixer.errors import EmptyTrainDataException
@@ -18,7 +19,7 @@ from actableai.data_imputation.meta.column import RichColumnMeta
 
 class NeighborFixer(AutoFixer):
     def __init__(self):
-        self._imp = IterativeImputer(max_iter=20, random_state=0)
+        self._imp = IterativeImputer(max_iter=10, random_state=0, verbose=1)
         self.__cached_matrix_after_fit = None
 
     def fix(
@@ -33,8 +34,13 @@ class NeighborFixer(AutoFixer):
 
         if self.__cached_matrix_after_fit is None:
             df_to_matrix = df.select_dtypes(exclude=["datetime"]).to_numpy()
+            scaler = MinMaxScaler()
+            df_to_matrix = scaler.fit_transform(df_to_matrix)
             self.__cached_matrix_after_fit = self._imp.fit_transform(
                 df_to_matrix
+            )
+            self.__cached_matrix_after_fit = scaler.inverse_transform(
+                self.__cached_matrix_after_fit
             )
 
         column_index_to_fix = df.select_dtypes(
