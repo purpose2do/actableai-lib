@@ -160,7 +160,7 @@ Don't forget to give the project a star! Thanks again!
 1. Create an Issue with bug or feature label
 2. Install our git hooks by running locally :
 ```sh
-chmod +x scripts/setup_hooks.sh && scripts/setup_hooks.sh
+scripts/setup_hooks.sh
 ```
 3. Create your Feature/BugFix Branch (`git checkout -b feature/AmazingFeature`)
 4. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
