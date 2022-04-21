@@ -1,8 +1,13 @@
+from typing import Tuple
 import numpy as np
 import pandas as pd
 
 from functools import reduce
 from actableai.classification.utils import leaderboard_cross_val
+from actableai.tasks.classification import (
+    _AAIClassificationTrainTask,
+    AAIClassificationTask,
+)
 
 
 class AverageEnsembleClassifier:
@@ -61,26 +66,60 @@ class AverageEnsembleClassifier:
 
 
 def run_cross_validation(
-    classification_train_task,
-    problem_type,
-    positive_label,
-    presets,
-    hyperparameters,
-    model_directory,
-    target,
-    features,
-    df_train,
-    kfolds,
-    cross_validation_max_concurrency,
-    drop_duplicates,
-    run_debiasing,
-    biased_groups,
-    debiased_features,
-    residuals_hyperparameters,
-    num_gpus,
-):
-    """
-    TODO write documentation
+    classification_train_task: _AAIClassificationTrainTask,
+    problem_type: str,
+    positive_label: str,
+    presets: dict,
+    hyperparameters: dict,
+    model_directory: str,
+    target: str,
+    features: list,
+    df_train: pd.DataFrame,
+    kfolds: int,
+    cross_validation_max_concurrency: int,
+    drop_duplicates: bool,
+    run_debiasing: bool,
+    biased_groups: list,
+    debiased_features: list,
+    residuals_hyperparameters: dict,
+    num_gpus: int,
+) -> Tuple[AverageEnsembleClassifier, list, dict, list, pd.DataFrame, pd.DataFrame]:
+    """Runs a cross validation for a classification task.
+
+    Args:
+        classification_train_task: The classification task to run cross validation on.
+        problem_type (str): The problem type. Can be either 'binary' or 'multiclass'.
+        positive_label (str): The positive label. Only used if problem_type is 'binary'.
+        presets (dict): The presets to use for AutoGluon.
+            See
+            https://auto.gluon.ai/stable/api/autogluon.task.html#autogluon.tabular.TabularPredictor.fit
+            for more information.
+        hyperparameters: The hyperparameters to use for AutoGluon.
+            See
+            https://auto.gluon.ai/stable/api/autogluon.task.html#autogluon.tabular.TabularPredictor.fit
+            for more information.
+        model_directory: The directory to store the models.
+        target: The target column.
+        features: The features columns used for training/prediction.
+        df_train: The input dataframe.
+        kfolds: The number of folds to use for cross validation.
+        cross_validation_max_concurrency: The maximum number of concurrent
+            processes to use for cross validation.
+        drop_duplicates: Whether to drop duplicates.
+        run_debiasing: Whether to run debiasing.
+        biased_groups: The groups introducing bias.
+        debiased_features: The features to debias.
+        residuals_hyperparameters: The hyperparameters to use for the debiasing model.
+        num_gpus (int): The number of GPUs to use.
+
+    Returns:
+        Tuple: Result of the cross validation.
+            - AverageEnsembleClassifier: The average ensemble classifier.
+            - list: The feature importances.
+            - dict: The evaluation metrics.
+            - list: Probabilities of the predicted classes.
+            - pd.DataFrame: The training dataframe.
+            - pd.DataFrame: The test dataframe.
     """
     import os
     import math
