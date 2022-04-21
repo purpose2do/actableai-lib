@@ -295,7 +295,6 @@ def run_cross_validation(
             ).tolist(),
             "positive_label": cross_val_precision_recall_curves["positive_label"][0],
             "negative_label": cross_val_precision_recall_curves["negative_label"][0],
-            "threshold": cross_val_precision_recall_curves["threshold"][0],
         }
 
         evaluate["auc_score"] = np.mean(cross_val_evaluates["auc_score"], axis=0)
