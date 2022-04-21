@@ -118,8 +118,8 @@ class _AAIClassificationTrainTask(AAITask):
             evaluate["recall_score"] = recall_score(label_val, label_pred, pos_label=pos_label)
             precision, recall, thresholds = precision_recall_curve(label_val, pred_prob_val[pos_label], pos_label=pos_label)
             evaluate["precision_recall_curve"] = {
-                "False Positive Rate": precision.tolist(),
-                "True Positive Rate": recall.tolist(),
+                "Precision": precision.tolist(),
+                "Recall": recall.tolist(),
                 "thresholds": thresholds.tolist(),
                 "positive_label": str(pos_label),
                 "negative_label": str(neg_label)

@@ -303,6 +303,7 @@ def run_cross_validation(
             np.std(cross_val_evaluates["auc_score"], axis=0) / sqrt_k
         ).tolist()
         evaluate["auc_curve"] = auc_curve
+        evaluate["precision_recall_curve"] = precision_recall_curve
         evaluate["precision_score"] = np.mean(
             cross_val_evaluates["precision_score"], axis=0
         )
