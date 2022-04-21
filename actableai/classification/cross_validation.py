@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 import numpy as np
 import pandas as pd
 
@@ -68,8 +68,8 @@ class AverageEnsembleClassifier:
 def run_cross_validation(
     classification_train_task: _AAIClassificationTrainTask,
     problem_type: str,
-    positive_label: str,
-    presets: dict,
+    positive_label: Optional[str],
+    presets: str,
     hyperparameters: dict,
     model_directory: str,
     target: str,
@@ -81,7 +81,7 @@ def run_cross_validation(
     run_debiasing: bool,
     biased_groups: list,
     debiased_features: list,
-    residuals_hyperparameters: dict,
+    residuals_hyperparameters: Optional[dict],
     num_gpus: int,
 ) -> Tuple[AverageEnsembleClassifier, list, dict, list, pd.DataFrame, pd.DataFrame]:
     """Runs a cross validation for a classification task.
