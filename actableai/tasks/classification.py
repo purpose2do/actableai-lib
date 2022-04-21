@@ -32,6 +32,7 @@ class _AAIClassificationTrainTask(AAITask):
         from autogluon.features.generators import AutoMLPipelineFeatureGenerator
         from sklearn.model_selection import train_test_split
         from sklearn.metrics import f1_score, precision_score, recall_score, confusion_matrix, roc_curve, auc
+        from sklearn.metrics import precision_recall_curve
 
         from actableai.debiasing.debiasing_model import DebiasingModel
         from actableai.utils import debiasing_feature_generator_args
@@ -87,7 +88,7 @@ class _AAIClassificationTrainTask(AAITask):
         perf = predictor.evaluate_predictions(y_true=label_val, y_pred=label_pred, auxiliary_metrics=True)
         pred_prob_val = predictor.predict_proba(df_val, as_multiclass=True)
 
-        evaluate = {
+        evaluate ={
             "problem_type": predictor.problem_type,
             "accuracy": perf["accuracy"]
         }
@@ -115,6 +116,14 @@ class _AAIClassificationTrainTask(AAITask):
             }
             evaluate["precision_score"] = precision_score(label_val, label_pred, pos_label=pos_label)
             evaluate["recall_score"] = recall_score(label_val, label_pred, pos_label=pos_label)
+            precision, recall, thresholds = precision_recall_curve(label_val, pred_prob_val[pos_label], pos_label=pos_label)
+            evaluate["precision_recall_curve"] = {
+                "False Positive Rate": precision.tolist(),
+                "True Positive Rate": recall.tolist(),
+                "thresholds": thresholds.tolist(),
+                "positive_label": str(pos_label),
+                "negative_label": str(neg_label)
+            }
             evaluate["f1_score"] = f1_score(label_val, label_pred, pos_label=pos_label)
 
         return predictor, important_features, evaluate, pred_prob_val, leaderboard
