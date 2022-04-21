@@ -88,7 +88,7 @@ class _AAIClassificationTrainTask(AAITask):
         perf = predictor.evaluate_predictions(y_true=label_val, y_pred=label_pred, auxiliary_metrics=True)
         pred_prob_val = predictor.predict_proba(df_val, as_multiclass=True)
 
-        evaluate ={
+        evaluate = {
             "problem_type": predictor.problem_type,
             "accuracy": perf["accuracy"]
         }
