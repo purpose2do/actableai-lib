@@ -153,7 +153,6 @@ class AAICausalEstimator:
                 https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html.
                 Defaults to 0.05.
             num_gpus: Number of GPUs to use. Defaults to 0.
-
         """
         start = time.time()
 
@@ -441,13 +440,27 @@ class AAICausalEstimator:
 
         self.total_trial_time = time.time() - start + time_total_s
 
-    def effect(self, X=None, T0=None, T1=None, alpha=0.05):
+    def effect(
+        self,
+        X: Optional[np.ndarray] = None,
+        T0: Optional[np.ndarray] = None,
+        T1: Optional[np.ndarray] = None,
+        alpha: float = 0.05,
+    ):
         """Compute heterogeneous treatment effect
 
         Args:
-            X (np.ndarray, optional): (m, d_x) matrix. Features for each sample
-            T0 (np.ndarray, optional): (m, d_t) maxtrix or vector of length m. Base treatment for each sample
-            T1 (np.ndarray, optional): (m, d_t) maxtrix or vector of length m. Target treatment for each sample
+            X: (m, d_x) matrix. Features for each sample.
+                Default to None.
+            T0: (m, d_t) maxtrix or vector of length m.
+                Base treatment for each sample. Default to None.
+            T1: (m, d_t) maxtrix or vector of length m.
+                Target treatment for each sample. Default to None.
+
+        Returns: Tuple
+            np.ndarray: (m, d_t) matrix. Estimated treatment effect.
+            np.ndarray: Lower bound of the confidence interval.
+            np.ndarray: Upper bound of the confidence interval.
         """
         if self.estimator is None:
             raise UntrainedModelException()
