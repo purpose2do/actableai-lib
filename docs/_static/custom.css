@@ -1,0 +1,6 @@
+table {
+    display: block;
+    width: fit-content !important;
+    max-width: 100%;
+    overflow: auto;
+}
