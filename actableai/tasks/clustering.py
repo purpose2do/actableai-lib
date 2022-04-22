@@ -49,12 +49,14 @@ class AAIClusteringTask(AAITask):
             init: ?. Defaults to "glorot_uniform".
             pretrain_optimizer: Optimizer for pretaining phase of autoencoder.
                 Defaults to "adam".
-            update_interval: _description_. Defaults to 30.
-            pretrain_epochs: _description_. Defaults to 300.
-            explain_max_concurrent: _description_. Defaults to 1.
-            explain_precision_threshold: _description_. Defaults to 0.8.
-            alpha_k: _description_. Defaults to 0.01.
-            max_train_samples: _description_. Defaults to None.
+            update_interval: The interval to check the stopping criterion and update the
+                cluster centers. Default to 140.
+            pretrain_epochs: Number of epochs for pretraining DEC. Defaults to 300.
+            explain_max_concurrent: Maximum number of concurrent explanations running.
+            explain_precision_threshold: Precision threshold for each explainer.
+            alpha_k: The factor to control the penalty term of the number of clusters.
+                Default to 0.01.
+            max_train_samples: Number of randomly selected rows to train the DEC.
 
         Examples:
             >>> df = pd.read_csv("path/to/dataframe")
