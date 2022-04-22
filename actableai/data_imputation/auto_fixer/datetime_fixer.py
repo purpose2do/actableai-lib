@@ -20,6 +20,16 @@ class DatetimeFixer(AutoFixer):
         all_errors: CellErrors,
         current_column: RichColumnMeta,
     ) -> FixInfoList:
+        """Fixes datetime errors.
+
+        Args:
+            df: DataFrame to fix.
+            all_errors: All errors in the dataframe.
+            current_column: Current column to fix.
+
+        Returns:
+            FixInfoList: List of fix information.
+        """
         df[current_column.name] = pd.to_datetime(df[current_column.name])
         df_to_fix = df.copy()
 

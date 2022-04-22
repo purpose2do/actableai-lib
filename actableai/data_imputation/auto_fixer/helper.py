@@ -15,6 +15,15 @@ from actableai.data_imputation.type_recon.type_detector import DfTypes
 def get_df_without_error(
     df: pd.DataFrame, errors: Union[CellErrors, ColumnErrors]
 ) -> pd.DataFrame:
+    """Return a dataframe without errors.
+
+    Args:
+        df: DataFrame with errors
+        errors: Errors to remove.
+
+    Returns:
+        pd.DataFrame: DataFrame without errors.
+    """
     indexes = set()
     for error in errors:
         indexes.add(error.index)
@@ -24,6 +33,15 @@ def get_df_without_error(
 def get_df_with_only_error(
     df: pd.DataFrame, errors: Union[CellErrors, ColumnErrors]
 ) -> pd.DataFrame:
+    """Return a dataframe with only errors.
+
+    Args:
+        df: DataFrame with errors
+        errors: Errors to remove.
+
+    Returns:
+        pd.DataFrame: DataFrame with only errors.
+    """
     indexes = set()
     for error in errors:
         indexes.add(error.index)
