@@ -264,6 +264,7 @@ class AAIBayesianRegressionTask(AAITask):
             "univariate" : univariate_results,
             "multivariate" : multivariate_results
         }
+        data["computed_table"] = df_polynomial
         runtime = time.time() - start
         return {
             "status": "SUCCESS",
