@@ -398,11 +398,16 @@ class AAIRegressionTask(AAITask):
                 Defaults to False.
             model_directory: Destination to store trained model. If not set, a temporary
                 folder will be created. Defaults to None.
-            presets: Autogluon's presets for training model. More details at
+            presets: Autogluon's presets for training model.
+                See
                 https://auto.gluon.ai/stable/_modules/autogluon/tabular/predictor/predictor.html#TabularPredictor.fit.
                 Defaults to "medium_quality_faster_train".
-            hyperparameters: _description_. Defaults to None.
-            train_task_params: _description_. Defaults to None.
+            hyperparameters: Autogluon's hyperparameters for training model.
+                See
+                https://auto.gluon.ai/stable/_modules/autogluon/tabular/predictor/predictor.html#TabularPredictor.fit.
+                Defaults to "medium_quality_faster_train".
+            train_task_params: Parameters for _AAITrainTask constructor.
+                Defaults to None.
             intervention_task_params: Task parameters to be passed to build intervention
                 model and predictions. Defaults to None.
             kfolds: Number of folds for cross validation. If 1, train test split is used
