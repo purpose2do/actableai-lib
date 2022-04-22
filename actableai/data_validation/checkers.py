@@ -12,6 +12,14 @@ class IsNumericalChecker(IChecker):
         self.level = level
 
     def check(self, series: pd.Series) -> Optional[CheckResult]:
+        """Check if the series is numerical.
+
+        Args:
+            series: Series to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         from actableai.utils import get_type_special
         data_type = get_type_special(series)
         if data_type not in ["numeric", "integer"]:
@@ -28,6 +36,14 @@ class IsCategoricalChecker(IChecker):
         self.level=level
 
     def check(self, df) -> Optional[CheckResult]:
+        """Check if the dataframe is categorical.
+
+        Args:
+            df: Dataframe to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         from actableai.utils import get_type_special
         data_type = get_type_special(df)
         if data_type not in ["category", "integer", "boolean"]:
@@ -44,6 +60,15 @@ class DoNotContainTextChecker(IChecker):
         self.level = level
 
     def check(self, df, columns) -> Optional[CheckResult]:
+        """Check if the dataframe contains text.
+
+        Args:
+            df: Dataframe to check.
+            columns: Columns to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         from actableai.utils import get_type_special
 
         text_columns = []
@@ -65,6 +90,15 @@ class DoNotContainMixedChecker(IChecker):
         self.level = level
 
     def check(self, df, columns) -> Optional[CheckResult]:
+        """Check if the dataframe contains mixed data types.
+
+        Args:
+            df: Dataframe to check.
+            columns: Columns to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         mixed_columns = []
         from actableai.utils import get_type_special
         for col in columns:
@@ -87,6 +121,14 @@ class IsDatetimeChecker(IChecker):
         self.level = level
 
     def check(self, df) -> Optional[CheckResult]:
+        """Check if the dataframe contains datetime.
+
+        Args:
+            df: Dataframe to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         from actableai.utils import get_type_special
         data_type = get_type_special(df)
         if data_type != "datetime":
@@ -102,6 +144,15 @@ class IsSufficientDataChecker(IChecker):
         self.level = level
 
     def check(self, df, n_sample) -> Optional[CheckResult]:
+        """Check if the dataframe contains enough data.
+
+        Args:
+            df: Dataframe to check.
+            n_sample: Number of samples to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         if len(df) < n_sample:
             return CheckResult(name=self.name,
                 level = self.level,
@@ -115,6 +166,14 @@ class IsValidTypeNumberOfClusterChecker(IChecker):
         self.level = level
 
     def check(self, n_cluster)-> Optional[CheckResult]:
+        """Check if the number of cluster is valid.
+
+        Args:
+            n_cluster: Number of cluster to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         if type(n_cluster) != int and n_cluster != "auto":
             return CheckResult(name=self.name,
                 level = self.level,
@@ -126,6 +185,17 @@ class IsSufficientClassSampleChecker(IChecker):
         self.level = level
 
     def check(self, df, target, validation_ratio, problem_type='classification') -> Optional[CheckResult]:
+        """Check if each category has enough data.
+
+        Args:
+            df: Dataframe to check.
+            target: Target column to check.
+            validation_ratio (_type_): _description_
+            problem_type (str, optional): _description_. Defaults to 'classification'.
+
+        Returns:
+            Optional[CheckResult]: _description_
+        """
         from actableai.utils import get_type_special
         from sklearn.model_selection import train_test_split
         from autogluon.tabular import TabularPredictor
@@ -156,6 +226,14 @@ class IsSufficientNumberOfClassChecker(IChecker):
         self.level = level
 
     def check(self, target_df) -> Optional[CheckResult]:
+        """Check if the number of classes is sufficient.
+
+        Args:
+            target_df: Target column to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         n_classes = target_df.nunique()
         if n_classes < 2:
             return CheckResult(name=self.name,
@@ -169,6 +247,15 @@ class IsValidNumberOfClusterChecker(IChecker):
         self.level = level
 
     def check(self, df, n_cluster)-> Optional[CheckResult]:
+        """Check if the number of cluster is valid against the number of rows.
+
+        Args:
+            df: Dataframe to check.
+            n_cluster: Number of cluster to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         if type(n_cluster) == int:
             n_sample = len(df)
             if len(df) < n_cluster:
@@ -185,6 +272,15 @@ class IsValidPredictionLengthChecker(IChecker):
         self.level = level
 
     def check(self, df, prediction_length)-> Optional[CheckResult]:
+        """Check if the prediction length is valid.
+
+        Args:
+            df: Dataframe to check.
+            prediction_length: Prediction length to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         n_sample = len(df)
         if prediction_length > len(df) / 5:
             return CheckResult(name=self.name,
@@ -199,6 +295,15 @@ class CategoryChecker(IChecker):
         self.level = level
 
     def check(self, df, columns)-> Optional[CheckResult]:
+        """Check if the columns are categorical.
+
+        Args:
+            df: Dataframe to check.
+            columns: Columns to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         from actableai.utils import get_type_special
         check_cols = [x for x in columns if x in df.columns]
         invalid_cols = []
@@ -218,6 +323,15 @@ class ColumnsExistChecker(IChecker):
         self.level = level
 
     def check(self, df, columns)-> Optional[CheckResult]:
+        """Check if the columns exist.
+
+        Args:
+            df: Dataframe to check.
+            columns: Columns to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         check_columns = [columns] if isinstance(columns, str) else columns
         invalid_cols = []
         for col in check_columns:
@@ -235,6 +349,17 @@ class CheckNUnique(IChecker):
         self.level = level
 
     def check(self, df : pd.DataFrame, n_unique_level : int, analytics:str='Explanation') -> Optional[CheckResult]:
+        """Check if the number of unique values is less than the threshold.
+
+        Args:
+            df: Dataframe to check.
+            n_unique_level: Threshold to check.
+            analytics: Type of analytics to use. Either 'Explanation' or
+                'Bayesian Regression'.
+
+        Returns:
+            Optional[CheckResult]: _description_
+        """
         n_unique = df.select_dtypes(include=['object']).nunique()
         if (n_unique >= n_unique_level).any():
             check_unique_column_name = list(n_unique[df.select_dtypes(include=['object']).nunique() >= n_unique_level].index)
@@ -251,6 +376,15 @@ class ColumnsInList(IChecker):
         self.level = level
 
     def check(self, columns_list, columns) -> Optional[CheckResult]:
+        """Check if the columns are in the list.
+
+        Args:
+            columns_list: List of columns to check.
+            columns: Columns to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         invalid_cols = []
 
         for col in columns:
@@ -270,6 +404,15 @@ class ColumnsNotInList(IChecker):
         self.level = level
 
     def check(self, columns_list, columns) -> Optional[CheckResult]:
+        """Check if the columns are not in the list.
+
+        Args:
+            columns_list: List of columns to check.
+            columns: Columns to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         invalid_cols = []
 
         for col in columns:
@@ -289,6 +432,15 @@ class DoNotContainEmptyColumnsChecker(IChecker):
         self.level = level
 
     def check(self, df, columns)-> Optional[CheckResult]:
+        """Check if the columns are full of NaN.
+
+        Args:
+            df: Dataframe to check.
+            columns: Columns to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         check_columns = [columns] if isinstance(columns, str) else columns
         invalid_cols = []
         for col in check_columns:
@@ -309,6 +461,15 @@ class IsSufficientValidationSampleChecker(IChecker):
         self.level = level
 
     def check(self, df, validation_ratio)-> Optional[CheckResult]:
+        """Check if the number of validation samples is greater than the threshold.
+
+        Args:
+            df: Dataframe to check.
+            validation_ratio: Threshold to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         n_valid_samples = round(df.shape[0]*validation_ratio)
         n_classes = df.nunique()
         if n_valid_samples < n_classes and n_valid_samples>0:
@@ -324,6 +485,16 @@ class CorrectAnalyticChecker(IChecker):
         self.level = level
 
     def check(self, df, problem_type, unique_threshold) -> Optional[CheckResult]:
+        """Check if you are using the correct analytic. (Classification or Regression)
+
+        Args:
+            df: Dataframe to check.
+            problem_type: Type of problem to check.
+            unique_threshold: Threshold to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         from actableai.utils import get_type_special
         data_type = get_type_special(df)
         if data_type == "integer":
@@ -341,6 +512,16 @@ class IsSufficientClassSampleForCrossValidationChecker(IChecker):
         self.level = level
 
     def check(self, df, target, kfolds) -> Optional[CheckResult]:
+        """Check if the number of validation samples is enough for cross validation.
+
+        Args:
+            df: Dataframe to check.
+            target: Target column to check.
+            kfolds: Number of folds to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         from actableai.utils import get_type_special
 
         col_type = get_type_special(df[target])
@@ -363,6 +544,14 @@ class IsValidFrequencyChecker(IChecker):
         self.level = level
 
     def check(self, df) -> Optional[CheckResult]:
+        """Check if the frequency is valid.
+
+        Args:
+            df: Dataframe to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         from actableai.timeseries.util import findFred, handle_datetime_column
         try:
             pd_date, _ = handle_datetime_column(df)
@@ -383,6 +572,14 @@ class UniqueDateTimeChecker(IChecker):
         self.level = level
 
     def check(self, dt_series) -> Optional[CheckResult]:
+        """Check if there is duplicate date time.
+
+        Args:
+            dt_series: Series to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         counts = Counter(dt_series)
         dups = dict(filter(lambda item: item[1] > 1, counts.items()))
         if len(dups)  > 0:
@@ -400,6 +597,14 @@ class DoNotContainDatetimeChecker(IChecker):
         self.level = level
 
     def check(self, df) -> Optional[CheckResult]:
+        """Check if the dataframe contains datetime column.
+
+        Args:
+            df: Dataframe to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         from actableai.utils import get_type_special
         datetime_columns = []
         for column in df.columns:
@@ -458,6 +663,16 @@ class InsufficientCategoricalRows(IChecker):
         self.level = level
 
     def check(self, df, treatment, n_rows) -> Optional[CheckResult]:
+        """Check if the number of rows is enough for categorical treatment.
+
+        Args:
+            df: Dataframe to check.
+            treatment: Treatment to check.
+            n_rows: Number of rows to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         if (df[treatment].value_counts() < n_rows).any():
             return CheckResult(
                 name=self.name,
@@ -471,6 +686,17 @@ class CheckColumnInflateLimit(IChecker):
         self.level = level
 
     def check(self, df: pd.DataFrame, features: List[str], polynomial_degree: int, n_columns: int) -> Optional[CheckResult]:
+        """Check if the number of columns is not too large for the polynomial degree.
+
+        Args:
+            df: Dataframe to check.
+            features: Features to check.
+            polynomial_degree: Polynomial degree for expansion.
+            n_columns: Limit number of columns.
+
+        Returns:
+            Optional[CheckResult]: _description_
+        """
         df_polynomial, _ = expand_polynomial_categorical(df[features], polynomial_degree, False)
         if df_polynomial.shape[1] > n_columns:
             return CheckResult(
@@ -485,7 +711,15 @@ class RegressionEvalMetricChecker(IChecker):
         self.name = name
         self.level = level
 
-    def check(self, eval_metric):
+    def check(self, eval_metric: str) -> Optional[CheckResult]:
+        """Check if the eval metric is valid for regression.
+
+        Args:
+            eval_metric: Eval metric to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
         if eval_metric not in ["root_mean_squared_error", "mean_squared_error", "mean_absolute_error",
                                "median_absolute_error", "r2"]:
             return CheckResult(
