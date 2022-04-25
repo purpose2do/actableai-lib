@@ -24,29 +24,27 @@ for name in ["_tree", "_splitter", "_criterion", "_utils"]:
     )
 
 
+def post_install():
+    import nltk
+
+    nltk.download("stopwords")
+
+
 class CustomInstallCommand(install):
     def run(self):
         install.run(self)
-        import nltk
-
-        nltk.download("stopwords")
-
+        post_install()
 
 class CustomDevelopCommand(develop):
     def run(self):
         develop.run(self)
-        import nltk
-
-        nltk.download("stopwords")
+        post_install()
 
 
 class CustomEggInfoCommand(egg_info):
     def run(self):
         egg_info.run(self)
-        import nltk
-
-        nltk.download("stopwords")
-
+        post_install()
 
 setup(
     version="0.1",
