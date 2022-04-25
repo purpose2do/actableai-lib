@@ -17,13 +17,8 @@ class Stats(object):
     def _is_categorical(self, df, column):
         return not self._is_numeric(df, column)
 
-    def corr(
-        self,
-        df: pd.DataFrame,
-        target_col: str,
-        target_value: Optional[str] = None,
-        p_value: float = 0.05,
-    ) -> list:
+    def corr(self, df:pd.DataFrame, target_col:str, target_value:Optional[str]=None, p_value:float=0.05,
+        categorical_columns:List[Optional]=None, gen_categorical_columns:List[Optional]=None) -> list:
         """Calculate correlation between target and all other columns.
 
         Args:
