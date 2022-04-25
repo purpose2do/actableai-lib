@@ -18,6 +18,11 @@ from actableai.data_imputation.meta.column import RichColumnMeta
 
 
 class NeighborFixer(AutoFixer):
+    """Simple imputer using IterativeImputer
+
+    Args:
+        AutoFixer: AutoFixer Abstract class
+    """
     def __init__(self):
         self._imp = IterativeImputer(max_iter=10, random_state=0, verbose=1)
         self.__cached_matrix_after_fit = None
@@ -28,6 +33,19 @@ class NeighborFixer(AutoFixer):
         all_errors: CellErrors,
         current_column: RichColumnMeta,
     ) -> FixInfoList:
+        """Fixes errors.
+
+        Args:
+            df: DataFrame to fix.
+            all_errors: All errors in the dataframe.
+            current_column: Current column to fix.
+
+        Raises:
+            EmptyTrainDataException: If the DataFrame only contains errors.
+
+        Returns:
+            FixInfoList: List of fix information.
+        """
         df_to_train = get_df_without_error(df, all_errors[current_column.name])
         if df_to_train.empty:
             raise EmptyTrainDataException()

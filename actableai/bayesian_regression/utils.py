@@ -15,7 +15,9 @@ def expand_polynomial_categorical(feature_data:pd.DataFrame, polynomial_degree:i
         normalize (bool): If we want the Data to be normalized
 
     Returns:
-        Tuple[pd.DataFrame, List[str]]: New DataFrame with generated features, Names of OneHotEncoded variables
+        Tuple:
+            - pd.DataFrame: New DataFrame with generated features
+            - List[str]: Names of OneHotEncoded variables
     """
     if normalize:
         df_num = feature_data.select_dtypes(include='number')

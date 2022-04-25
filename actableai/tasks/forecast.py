@@ -1,6 +1,8 @@
+from typing import Dict, List
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 
+import pandas as pd
 
 class AAIForecastTask(AAITask):
     """
@@ -9,23 +11,55 @@ class AAIForecastTask(AAITask):
 
     @AAITask.run_with_ray_remote(TaskType.FORECAST)
     def run(self,
-            df,
-            date_column,
-            predicted_columns,
-            prediction_length,
-            RAY_CPU_PER_TRIAL=3,
-            RAY_GPU_PER_TRIAL=0,
-            RAY_MAX_CONCURRENT=3,
-            epochs="auto",
-            num_cells="auto",
-            num_layers="auto",
-            dropout_rate="auto",
-            learning_rate="auto",
-            trials=1,
-            univariate_model_params=None,
-            multivariate_model_params=None,
-            use_ray=True,
-            seed=123):
+            df:pd.DataFrame,
+            date_column:str,
+            predicted_columns:List[str],
+            prediction_length:int,
+            RAY_CPU_PER_TRIAL:int=3,
+            RAY_GPU_PER_TRIAL:int=0,
+            RAY_MAX_CONCURRENT:int=3,
+            epochs:str="auto",
+            num_cells:str="auto",
+            num_layers:str="auto",
+            dropout_rate:str="auto",
+            learning_rate:str="auto",
+            trials:int=1,
+            univariate_model_params:List=None,
+            multivariate_model_params:List=None,
+            use_ray:bool=True,
+            seed:int=123) -> Dict:
+        """Runs a time-series forecasting on input DataFrame
+
+        Args:
+            df: Input DataFrame
+            date_column: Column with datetime values
+            predicted_columns: Column on which we want a forecast
+            prediction_length: Length of the forecast
+            RAY_CPU_PER_TRIAL: Number of CPU per ray trials. Defaults to 3.
+            RAY_GPU_PER_TRIAL: Number of GPU per ray trials. Defaults to 0.
+            RAY_MAX_CONCURRENT: Maximum number of concurrent ray actors. Defaults to 3.
+            epochs: Number of epochs for the forecaster. More means a better result but
+                takes more time to run. Defaults to "auto".
+            num_cells: _description_. Defaults to "auto".
+            num_layers: Number of layers for the forecaster. More means a better result
+                but takes more time to run. Defaults to "auto".
+            dropout_rate: Dropout rate for the forecaster. Defaults to "auto".
+            learning_rate: Learning rate for the forecaster. Defaults to "auto".
+            trials: Number of trials for ray. Defaults to 1.
+            univariate_model_params: List of params for building the univariate
+                forecaster. Defaults to None.
+            multivariate_model_params: List of params for building the multivariate
+                forecaster. Defaults to None. Defaults to None.
+            use_ray: Whether we use ray. Defaults to True.
+            seed: Seed for random state. Defaults to 123.
+
+        Examples:
+            >>> df = pd.read_csv("path/to/dataframe")
+            >>> AAIForecastTask().run(df, "date_column", ["feature1", "feature2"])
+
+        Returns:
+            Dict: Dictionnary of results
+        """
         import time
         import torch
         import mxnet as mx

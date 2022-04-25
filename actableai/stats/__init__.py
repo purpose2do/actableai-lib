@@ -1,3 +1,4 @@
+from typing import Optional
 import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
@@ -5,6 +6,8 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.neighbors import KernelDensity
 
 class Stats(object):
+    """Class handling calculation of correlation and decorrelation of features.
+    """
 
     def __init__(self):
         pass
@@ -15,12 +18,22 @@ class Stats(object):
     def _is_categorical(self, df, column):
         return not self._is_numeric(df, column)
 
-    def corr(self, df, target_col, target_value=None, p_value=0.05):
-        """ Return correlations of target_col and other columns in a dataframe. Categorical values are converted using
-        one-hot-encoding.
+    def corr(self, df:pd.DataFrame, target_col:str, target_value:Optional[str]=None, p_value:float=0.05) -> list:
+        """Calculate correlation between target and all other columns.
 
-        @return a Pandas dataframe whose index is column names and columns are correlation and p-values respectively.
+        Args:
+            df: DataFrame containing the target column and other columns.
+            target_col: Name of the target column.
+            target_value: Value of the target column if categorical.
+                Defaults to None.
+            p_value: P-value threshold for significance. Defaults to 0.05.
 
+        Raises:
+            ValueError: If target_col is not in df.columns or (target_col is
+                categorical and target_value is not in df[target_col].unique()).
+
+        Returns:
+            list: List containing the correlation between the target and all
         """
         categorical_columns = df.columns[df.dtypes == object]
         train_df = df[categorical_columns].fillna('NaN')
@@ -59,14 +72,25 @@ class Stats(object):
         return re
 
     def decorrelate(self, df, target_col, control_col, target_value=None, control_value=None, kde_steps="auto",
-                    corr_max=0.05, pval_max=0.05, kde_steps_=10):
-        """ Re-sample df to de-correlate target_col and control_col.
+                    corr_max=0.05, pval_max=0.05, kde_steps_=10) -> list:
+        """Re-sample df to de-correlate target_col and control_col.
 
-        @kde_step: this is used to compute KDE bandwidth. Higher kde_steps leads to better decorrelation but samples
-        with smaller size. Set kde_steps as "auto" to search for the smaller value where correlation is insignificant.
+        Args:
+            df: Input DataFrame.
+            target_col: Name of the target column.
+            control_col: Name of the control column.
+            target_value: Value of the target column if categorical. Defaults to None.
+            control_value: Value of the control column if categorical. Defaults to None.
+            kde_steps: used to compute KDE bandwidth. Higher kde_steps leads to better
+                decorrelation but samples with smaller size. Set kde_steps as "auto" to
+                search for the smaller value where correlation is insignificant.
+            corr_max: Correlation threshold for significance. Defaults to 0.05.
+            pval_max: P-value threshold for significance. Defaults to 0.05.
+            kde_steps_: Used to compute KDE bandwidth. Higher kde_steps_ leads to better
+                decorrelation but samples with smaller size. Defaults to 10.
 
-        @return the sampled indices.
-
+        Returns:
+            list: Sampled indices.
         """
         if kde_steps != "auto":
             kde_steps_ = kde_steps
@@ -146,4 +170,3 @@ class Stats(object):
                                        corr_max=corr_max, pval_max=pval_max, kde_steps_=kde_steps_)
                 df.drop(columns=["__corr_tmp__"], inplace=True)
                 return id_
-

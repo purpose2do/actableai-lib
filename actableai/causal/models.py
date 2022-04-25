@@ -1,5 +1,6 @@
 import time
 from itertools import product
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -39,6 +40,7 @@ from actableai.regression import PolynomialLinearPredictor
 
 from autogluon.tabular import TabularPredictor
 
+
 class UntrainedModelException(ValueError):
     pass
 
@@ -52,10 +54,21 @@ class UnsupportedTargetUnitsIVMethods(ValueError):
 
 
 class AAICausalEstimator:
-    def __init__(self, model_params=None, scorer=None,
-                 has_categorical_treatment=False, has_binary_outcome=False):
+    def __init__(
+        self,
+        model_params: Optional[dict] = None,
+        scorer: Optional[list] = None,
+        has_categorical_treatment: bool = False,
+        has_binary_outcome: bool = False,
+    ):
         """Construct an AAICausalEstimator object
-        Args: model_params (list, optional): list of BaseCausalEstimatorParams objects. Defaults to None.
+
+        Args:
+            model_params: List of BaseCausalEstimatorParams objects. Defaults to None.
+            scorer: _description_. Defaults to None.
+            has_categorical_treatment: Whether the treatment is categorical.
+                Defaults to False.
+            has_binary_outcome: Whether the outcome is binary. Defaults to False.
         """
         self.model_params = (
             {params.MODEL_NAME: params for params in model_params}
@@ -71,48 +84,75 @@ class AAICausalEstimator:
         self.has_binary_outcome = has_binary_outcome
 
     def fit(
-            self,
-            Y,
-            T,
-            X=None,
-            W=None,
-            Z=None,
-            label_t="t",
-            label_y="y",
-            target_units="ate",
-            validation_ratio=.2,
-            trials=3,
-            tune_params=None,
-            max_concurrent=None,
-            scheduler=None,
-            stopper=None,
-            cv="auto",
-            feature_importance=False,
-            model_directory=None,
-            hyperparameters="auto",
-            presets="medium_quality_faster_train",
-            random_state=None,
-            mc_iters="auto",
-            remove_outliers=True,
-            contamination=0.05,
-            num_gpus=0,
+        self,
+        Y: np.ndarray,
+        T: np.ndarray,
+        X: Optional[np.ndarray] = None,
+        W: np.ndarray = None,
+        Z: np.ndarray = None,
+        label_t: str = "t",
+        label_y: str = "y",
+        target_units: str = "ate",
+        validation_ratio: float = 0.2,
+        trials: int = 3,
+        tune_params=None,
+        max_concurrent=None,
+        scheduler=None,
+        stopper=None,
+        cv: str = "auto",
+        feature_importance: bool = False,
+        model_directory: Optional[str] = None,
+        hyperparameters: Union[dict, str] = "auto",
+        presets: str = "medium_quality_faster_train",
+        random_state: Optional[int] = None,
+        mc_iters: str = "auto",
+        remove_outliers: bool = True,
+        contamination: float = 0.05,
+        num_gpus: int = 0,
     ):
         """Function fits a causal model with a single deterministic model.
 
         Args:
-            Y (np.ndarray): (n × d_y) matrix or vector of length n. Outcomes for each sample
-            T (np.ndarray): (n × d_t) matrix or vector of length n. Treatments for each sample
-            X (np.ndarray, optional): (n × d_x) matrix. Defaults to None. Features for each sample
-            W (np.ndarray, optional): (n × d_w) matrix. Defaults to None. Controls for each sample
-            Z (np.ndarray, optional): (n × d_z) matrix. Defaults to None. Instruments for each sample
-            target_units (str, optional): either "ate", "att" or "atc". Default to "ate"
-            test_size (float): test size in percent. Defaults to 20
-            trials (int, optional): number of trials for hyperparameter tuning experiment
-            tune_params (dict, optional): dictionary of tune parameters
-            max_concurrent (int, optional): max concurcent
-            scheduler (object, optional): tune scheduler object
-            stopper (object, optional): tune stopper object
-
+            Y: (n × d_y) matrix or vector of length n. Outcomes for each sample
+            T: (n × d_t) matrix or vector of length n. Treatments for each sample
+            X: (n × d_x) matrix. Defaults to None. Features for each sample
+            W: (n × d_w) matrix. Defaults to None. Controls for each sample
+            Z: (n × d_z) matrix. Defaults to None. Instruments for each sample
+            label_t: _description_. Defaults to "t".
+            label_y: _description_. Defaults to "y".
+            target_units: either "ate", "att" or "atc". Default to "ate"
+            validation_ratio: _description_. Defaults to 0.2.
+            trials: number of trials for hyperparameter tuning experiment
+            tune_params: dictionary of tune parameters
+            max_concurrent: max concurcent
+            scheduler: tune scheduler object
+            stopper: tune stopper object
+            cv: Number of cross validation fold. Defaults to "auto".
+            feature_importance: Whether the feature importance are computed.
+                Defaults to False.
+            model_directory: Directory to save AutoGluon model
+                See
+                https://auto.gluon.ai/stable/api/autogluon.task.html#autogluon.tabular.TabularPredictor.fit
+                Defaults to None.
+            hyperparameters: Hyperparameters for AutoGluon model.
+                See
+                https://auto.gluon.ai/stable/api/autogluon.task.html#autogluon.tabular.TabularPredictor.fit
+                Defaults to "auto".
+            presets: Presets for Autogluon Model. Defaults to
+                "medium_quality_faster_train".
+            random_state: Random State for LinearDML. See
+                https://econml.azurewebsites.net/_autosummary/econml.dml.LinearDML.html#econml.dml.LinearDML
+                Defaults to None.
+            mc_iters: Random State for LinearDML. See
+                https://econml.azurewebsites.net/_autosummary/econml.dml.LinearDML.html#econml.dml.LinearDML
+                Defaults to "auto".
+            remove_outliers (bool, optional): Whether we remove outliers.
+                Defaults to True.
+            contamination: Contamination parameter for removing outliers.
+                See
+                https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html.
+                Defaults to 0.05.
+            num_gpus: Number of GPUs to use. Defaults to 0.
         """
         start = time.time()
 
@@ -135,9 +175,7 @@ class AAICausalEstimator:
                     cv = 10
                 hyperparameters = {
                     "LR": {},
-                    PolynomialLinearPredictor: [
-                        { "degree": 2 }
-                    ],
+                    PolynomialLinearPredictor: [{"degree": 2}],
                 }
             else:
                 hyperparameters = autogluon_hyperparameters()
@@ -156,13 +194,18 @@ class AAICausalEstimator:
         model_t = TabularPredictor(
             path=random_directory(model_directory),
             label=label_t,
-            problem_type="multiclass" if self.has_categorical_treatment else "regression",
+            problem_type="multiclass"
+            if self.has_categorical_treatment
+            else "regression",
         )
         model_t = SKLearnWrapper(
-            model_t, xw_col, hyperparameters=hyperparameters, presets=presets,
+            model_t,
+            xw_col,
+            hyperparameters=hyperparameters,
+            presets=presets,
             ag_args_fit={
                 "num_gpus": num_gpus,
-            }
+            },
         )
         model_y = TabularPredictor(
             path=random_directory(model_directory),
@@ -170,10 +213,13 @@ class AAICausalEstimator:
             problem_type="binary" if self.has_binary_outcome else "regression",
         )
         model_y = SKLearnWrapper(
-            model_y, xw_col, hyperparameters=hyperparameters, presets=presets,
-            ag_args_fit = {
+            model_y,
+            xw_col,
+            hyperparameters=hyperparameters,
+            presets=presets,
+            ag_args_fit={
                 "num_gpus": num_gpus,
-            }
+            },
         )
         self.estimator = LinearDML(
             model_y=model_y,
@@ -193,8 +239,10 @@ class AAICausalEstimator:
             if W is not None:
                 df_ = np.hstack([df_, W])
             df_ = pd.DataFrame(df_)
-            outlier_clf = sklearn_canonical_pipeline(df_, IsolationForest(contamination=contamination))
-            is_inline = outlier_clf.fit_predict(df_)==1
+            outlier_clf = sklearn_canonical_pipeline(
+                df_, IsolationForest(contamination=contamination)
+            )
+            is_inline = outlier_clf.fit_predict(df_) == 1
             Y, T = Y[is_inline], T[is_inline]
             if X is not None:
                 X = X[is_inline]
@@ -208,16 +256,24 @@ class AAICausalEstimator:
             # Only run feature importance for first mc_iter to speed it up
             for _, m in enumerate(self.estimator.models_t[0]):
                 importances.append(m.feature_importance())
-            self.model_t_feature_importances = sum(importances)/cv
-            self.model_t_feature_importances["stderr"] = self.model_t_feature_importances["stddev"] /np.sqrt(cv)
-            self.model_t_feature_importances.sort_values(["importance"], ascending=False, inplace=True)
+            self.model_t_feature_importances = sum(importances) / cv
+            self.model_t_feature_importances[
+                "stderr"
+            ] = self.model_t_feature_importances["stddev"] / np.sqrt(cv)
+            self.model_t_feature_importances.sort_values(
+                ["importance"], ascending=False, inplace=True
+            )
 
             importances = []
             for _, m in enumerate(self.estimator.models_y[0]):
                 importances.append(m.feature_importance())
-            self.model_y_feature_importances = sum(importances)/cv
-            self.model_y_feature_importances["stderr"] = self.model_y_feature_importances["stddev"] /np.sqrt(cv)
-            self.model_y_feature_importances.sort_values(["importance"], ascending=False, inplace=True)
+            self.model_y_feature_importances = sum(importances) / cv
+            self.model_y_feature_importances[
+                "stderr"
+            ] = self.model_y_feature_importances["stddev"] / np.sqrt(cv)
+            self.model_y_feature_importances.sort_values(
+                ["importance"], ascending=False, inplace=True
+            )
 
         self.total_trial_time = time.time() - start
 
@@ -229,7 +285,7 @@ class AAICausalEstimator:
         W=None,
         Z=None,
         target_units="ate",
-        validation_ratio=.2,
+        validation_ratio=0.2,
         trials=3,
         tune_params=None,
         max_concurrent=None,
@@ -256,7 +312,8 @@ class AAICausalEstimator:
         """
         # fit different causal estimators with train data
         id_train, id_val = train_test_split(
-            np.arange(Y.shape[0]), test_size=validation_ratio,
+            np.arange(Y.shape[0]),
+            test_size=validation_ratio,
         )
         if X is not None:
             X_train, X_val = X[id_train], X[id_val]
@@ -365,7 +422,11 @@ class AAICausalEstimator:
             self.estimator.fit(Y, T, X=X, Z=Z)
         else:
             # DoWhy wrapper only support single treatment case
-            if (not self.is_multiple_treatments) and (X is not None) and (W is not None):
+            if (
+                (not self.is_multiple_treatments)
+                and (X is not None)
+                and (W is not None)
+            ):
                 self.estimator = temp_estimator.dowhy
                 # refit with entire dataset
                 self.estimator.fit(Y, T, X=X, W=W, target_units=target_units)
@@ -379,13 +440,27 @@ class AAICausalEstimator:
 
         self.total_trial_time = time.time() - start + time_total_s
 
-    def effect(self, X=None, T0=None, T1=None, alpha=0.05):
+    def effect(
+        self,
+        X: Optional[np.ndarray] = None,
+        T0: Optional[np.ndarray] = None,
+        T1: Optional[np.ndarray] = None,
+        alpha: float = 0.05,
+    ):
         """Compute heterogeneous treatment effect
 
         Args:
-            X (np.ndarray, optional): (m, d_x) matrix. Features for each sample
-            T0 (np.ndarray, optional): (m, d_t) maxtrix or vector of length m. Base treatment for each sample
-            T1 (np.ndarray, optional): (m, d_t) maxtrix or vector of length m. Target treatment for each sample
+            X: (m, d_x) matrix. Features for each sample.
+                Default to None.
+            T0: (m, d_t) maxtrix or vector of length m.
+                Base treatment for each sample. Default to None.
+            T1: (m, d_t) maxtrix or vector of length m.
+                Target treatment for each sample. Default to None.
+
+        Returns: Tuple
+            np.ndarray: (m, d_t) matrix. Estimated treatment effect.
+            np.ndarray: Lower bound of the confidence interval.
+            np.ndarray: Upper bound of the confidence interval.
         """
         if self.estimator is None:
             raise UntrainedModelException()
@@ -398,7 +473,9 @@ class AAICausalEstimator:
             if (T0 is not None) and (T1 is not None):
                 effect = self.estimator.effect(X=X, T0=T0, T1=T1)
                 if type(self.estimator) not in [DeepIV]:
-                    lb, ub = self.estimator.effect_interval(X=X, T0=T0, T1=T1, alpha=alpha)
+                    lb, ub = self.estimator.effect_interval(
+                        X=X, T0=T0, T1=T1, alpha=alpha
+                    )
             else:
                 effect = self.estimator.effect(X=X)
                 if type(self.estimator) not in [DeepIV]:
@@ -407,10 +484,14 @@ class AAICausalEstimator:
             if (T0 is not None) and (T1 is not None):
                 effect = self.estimator.const_marginal_effect(X=X, T0=T0, T1=T1)
                 if type(self.estimator) not in [DeepIV]:
-                    lb, ub = self.estimator.const_marginal_effect_interval(X=X, T0=T0, T1=T1, alpha=alpha)
+                    lb, ub = self.estimator.const_marginal_effect_interval(
+                        X=X, T0=T0, T1=T1, alpha=alpha
+                    )
             else:
                 effect = self.estimator.const_marginal_effect(X=X)
                 if type(self.estimator) not in [DeepIV]:
-                    lb, ub = self.estimator.const_marginal_effect_interval(X=X, alpha=alpha)
+                    lb, ub = self.estimator.const_marginal_effect_interval(
+                        X=X, alpha=alpha
+                    )
 
         return effect, lb, ub

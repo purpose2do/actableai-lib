@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
@@ -11,20 +11,25 @@ from actableai.tasks.classification import (
 
 
 class AverageEnsembleClassifier:
-    """
-    TODO write documentation
-    """
 
     def __init__(self, predictors):
-        """
-        TODO write documentation
+        """Constructor for AverageEnsembleClassifier.
+
+        Args:
+            predictors: List of predictors.
         """
         self.predictors = predictors
         self.class_labels = predictors[0].class_labels
 
-    def _predict_proba(self, X, *args, **kwargs):
-        """
-        TODO write documentation
+    def _predict_proba(self, X:pd.DataFrame, *args, **kwargs) -> List[np.ndarray]:
+        """Predict probabilities for each predictor for each class for each sample.
+
+        Args:
+            X: DataFrame with features.
+
+        Returns:
+            List[np.ndarray]: List of probabilities for each predictor for each class
+                for each sample.
         """
         predictors_results = []
 
@@ -33,9 +38,13 @@ class AverageEnsembleClassifier:
 
         return predictors_results
 
-    def predict(self, X):
-        """
-        TODO write documentation
+    def predict(self, X) -> pd.Series:
+        """Predicts the class for each sample in X.
+        Args:
+            X: DataFrame with features.
+
+        Returns:
+            pd.Series: Predicted class for each sample.
         """
         predictors_results = self._predict_proba(X)
         pred_probas = np.mean(predictors_results, axis=0).tolist()
@@ -51,16 +60,19 @@ class AverageEnsembleClassifier:
         return pd.Series(pred_labels)
 
     def predict_proba(self, X, *args, **kwargs):
-        """
-        TODO write documentation
+        """Predict probabilities for each predictor for each class for each sample.
+
+        Args:
+            X: DataFrame with features.
+
+        Returns:
+            List[np.ndarray]: List of probabilities for each predictor for each class
         """
         predictors_results = self._predict_proba(X, *args, **kwargs)
         return sum(predictors_results) / len(predictors_results)
 
     def unpersist_models(self):
-        """
-        TODO write documentation
-        """
+        """Unpersists all models in the ensemble."""
         for predictor in self.predictors:
             predictor.unpersist_models()
 
