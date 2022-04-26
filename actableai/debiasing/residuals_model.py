@@ -1,9 +1,9 @@
 import numpy as np
 import os
 import pandas as pd
-from autogluon.core.utils.loaders import load_pkl
-from autogluon.core.utils.savers import save_pkl
-from autogluon.core.utils.utils import setup_outputdir
+from autogluon.common.loaders import load_pkl
+from autogluon.common.savers import save_pkl
+from autogluon.common.utils.utils import setup_outputdir
 from pandas.api.types import is_numeric_dtype
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.utils import check_array, check_consistent_length
@@ -71,7 +71,7 @@ class ResidualsModel:
 
         return X_clean
 
-    def fit(self, X, hyperparameters=None, presets=None):
+    def fit(self, X, hyperparameters=None, presets=None, ag_args_fit=None):
         """
         TODO write documentation
         """
@@ -84,6 +84,7 @@ class ResidualsModel:
             presets=presets,
             refit_full="all",
             keep_only_best=True,
+            ag_args_fit=ag_args_fit,
         )
         pd.set_option("chained_assignment", "warn")
 

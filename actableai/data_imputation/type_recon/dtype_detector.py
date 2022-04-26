@@ -116,7 +116,7 @@ class ObjectDetector(DtypeDetector):
             return False
 
     def __get_type_special(self) -> str:
-        from autogluon.core.features.infer_types import (
+        from autogluon.common.features.infer_types import (
             check_if_datetime_as_object_feature,
             check_if_nlp_feature,
         )

@@ -143,7 +143,7 @@ def handle_datetime_column(
         - Parsed pandas series.
         - Data type of the parsed series ["datetime", "others"].
     """
-    from pandas._libs.tslibs.parsing import _guess_datetime_format
+    from pandas._libs.tslibs.parsing import guess_datetime_format
 
     if pd.api.types.is_datetime64_ns_dtype(series):
         return series, "datetime"
@@ -152,8 +152,8 @@ def handle_datetime_column(
     unique_formats = (
         pd.concat(
             [
-                series.astype(str).apply(_guess_datetime_format, dayfirst=False),
-                series.astype(str).apply(_guess_datetime_format, dayfirst=True),
+                series.astype(str).apply(guess_datetime_format, dayfirst=False),
+                series.astype(str).apply(guess_datetime_format, dayfirst=True),
             ]
         )
         .value_counts()

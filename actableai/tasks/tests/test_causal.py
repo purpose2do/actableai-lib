@@ -326,7 +326,7 @@ class TestRemoteCausal:
             common_causes,
         ) = single_cont_treatment_dataset
         pd_table[outcomes] = np.random.choice(
-            ["A", "B", "C"], size=len(pd_table), replace=True
+            ["A", "B", "C"], size=(len(pd_table), len(outcomes)), replace=True
         )
 
         model_params = [LinearDMLSingleContTreatmentParams()]

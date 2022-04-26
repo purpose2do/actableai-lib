@@ -65,12 +65,12 @@ class _AAIRegressionTrainTask(AAITask):
             Tuple:
                 - AutoGluon's predictor
                 - List of feature importance
-                - Dictionnary of evaluation metrics
+                - Dictionary of evaluation metrics
                 - Predicted values for df_val
                 - Explainer for explaining the prediction and validation
                 - Predicted values for df_test if run_model is true
                 - Lowest prediction for df_test if prediction_quantile_low is not None
-                - Highest prediction for df_test if prediction_quantile_low is not None
+                - Highest prediction for df_test if prediction_quantile_high is not None
                 - Predicted shap values if explain_samples is true
                 - Leaderboard of the best model ran by AutoGluon
         """
@@ -83,8 +83,8 @@ class _AAIRegressionTrainTask(AAITask):
         from actableai.debiasing.debiasing_model import DebiasingModel
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
 
-        ag_args_fit = {}
-        feature_generator_args = {}
+        ag_args_fit = {"drop_unique": False}
+        feature_generator_args = {"pre_drop_useless": False, "post_generators": []}
         if run_debiasing:
             ag_args_fit["drop_duplicates"] = drop_duplicates
             ag_args_fit["label"] = target
@@ -96,22 +96,35 @@ class _AAIRegressionTrainTask(AAITask):
             ag_args_fit["hyperparameters_non_residuals"] = hyperparameters
             ag_args_fit["presets_non_residuals"] = presets
 
-            feature_generator_args = debiasing_feature_generator_args()
+            feature_generator_args = {
+                **feature_generator_args,
+                **debiasing_feature_generator_args(),
+            }
 
             hyperparameters = {DebiasingModel: {}}
 
+        ag_args_fit["num_cpus"] = 1
         ag_args_fit["num_gpus"] = num_gpus
 
         df_train = df_train[features + biased_groups + [target]]
         df_val = df_val[features + biased_groups + [target]]
         df_test = df_test[features + biased_groups]
 
+        quantile_levels = None
+        if prediction_quantile_low is not None and prediction_quantile_high is not None:
+            quantile_levels = [
+                prediction_quantile_low / 100,
+                0.5,
+                prediction_quantile_high / 100,
+            ]
+
         # Train
         predictor = TabularPredictor(
             label=target,
             path=model_directory,
-            problem_type="regression",
+            problem_type="regression" if quantile_levels is None else "quantile",
             eval_metric=eval_metric,
+            quantile_levels=quantile_levels,
         )
 
         predictor = predictor.fit(
@@ -140,62 +153,81 @@ class _AAIRegressionTrainTask(AAITask):
         pd.set_option("chained_assignment", "warn")
 
         important_features = []
-        for feature, importance in predictor.feature_importance(df_train)[
-            "importance"
-        ].iteritems():
-            if feature in biased_groups:
-                continue
+        if quantile_levels is None:
+            for feature, importance in predictor.feature_importance(df_train)[
+                "importance"
+            ].iteritems():
+                if feature in biased_groups:
+                    continue
 
-            important_features.append({"feature": feature, "importance": importance})
+                important_features.append(
+                    {"feature": feature, "importance": importance}
+                )
 
         y_pred = predictor.predict(df_val)
         metrics = predictor.evaluate_predictions(
             y_true=df_val[target], y_pred=y_pred, auxiliary_metrics=True
         )
 
-        # Legacy (TODO: to be removed)
-        evaluate = {
-            "RMSE": abs(metrics["root_mean_squared_error"]),
-            "R2": metrics["r2"],
-            "MAE": abs(metrics["mean_absolute_error"]),
-            "MSE": abs(metrics["mean_squared_error"]),
-            "MEDIAN_ABSOLUTE_ERROR": abs(metrics["median_absolute_error"]),
-        }
-
-        evaluate["metrics"] = pd.DataFrame(
-            {
-                "metric": [
-                    "Root Mean Squared Error",
-                    "R2",
-                    "Mean Absolute Error",
-                    "Median Absolute Error",
-                ],
-                "value": [
-                    abs(metrics["root_mean_squared_error"]),
-                    metrics["r2"],
-                    abs(metrics["mean_absolute_error"]),
-                    abs(metrics["median_absolute_error"]),
-                ],
+        if quantile_levels is None:
+            # Legacy (TODO: to be removed)
+            evaluate = {
+                "RMSE": abs(metrics["root_mean_squared_error"]),
+                "R2": metrics["r2"],
+                "MAE": abs(metrics["mean_absolute_error"]),
+                "MSE": abs(metrics["mean_squared_error"]),
+                "MEDIAN_ABSOLUTE_ERROR": abs(metrics["median_absolute_error"]),
             }
-        )
 
-        predictions = []
-        prediction_low = []
-        prediction_high = []
-        predict_shap_values = []
+            evaluate["metrics"] = pd.DataFrame(
+                {
+                    "metric": [
+                        "Root Mean Squared Error",
+                        "R2",
+                        "Mean Absolute Error",
+                        "Median Absolute Error",
+                    ],
+                    "value": [
+                        abs(metrics["root_mean_squared_error"]),
+                        metrics["r2"],
+                        abs(metrics["mean_absolute_error"]),
+                        abs(metrics["median_absolute_error"]),
+                    ],
+                }
+            )
+        else:
+            # Legacy (TODO: to be removed)
+            evaluate = {
+                "PINBALL_LOSS": metrics["pinball_loss"],
+            }
+
+            evaluate["metrics"] = pd.DataFrame(
+                {
+                    "metric": [
+                        "Pinball Loss",
+                    ],
+                    "value": [
+                        metrics["pinball_loss"],
+                    ],
+                }
+            )
+
+        predictions = None
+        prediction_low = None
+        prediction_high = None
+        predict_shap_values = None
         if run_model:
             if explain_samples:
                 predict_shap_values = explainer.shap_values(df_test)
 
-            predictions = predictor.predict(df_test).tolist()
-            if prediction_quantile_low is not None:
-                prediction_low = predictor.predict(
-                    df_test, quantile=prediction_quantile_low
-                )
-            if prediction_quantile_high is not None:
-                prediction_high = predictor.predict(
-                    df_test, quantile=prediction_quantile_high
-                )
+            full_predictions = predictor.predict(df_test)
+
+            if quantile_levels is None:
+                predictions = full_predictions
+            else:
+                predictions = full_predictions[0.5]
+                predictions_low = full_predictions[prediction_quantile_low / 100]
+                predictions_high = full_predictions[prediction_quantile_high / 100]
 
         return (
             predictor,
@@ -204,8 +236,8 @@ class _AAIRegressionTrainTask(AAITask):
             y_pred,
             explainer,
             predictions,
-            prediction_low,
-            prediction_high,
+            predictions_low,
+            predictions_high,
             predict_shap_values,
             leaderboard,
         )
@@ -311,7 +343,6 @@ class AAIRegressionTask(AAITask):
         from scipy.stats import spearmanr
         from sklearn.model_selection import train_test_split
         from sklearn.neighbors import KernelDensity
-        from actableai.regression.quantile import ag_quantile_hyperparameters
         from actableai.utils import (
             memory_efficient_hyperparameters,
             explanation_hyperparameters,
@@ -342,11 +373,6 @@ class AAIRegressionTask(AAITask):
             train_task_params = {}
 
         run_debiasing = len(biased_groups) > 0 and len(debiased_features) > 0
-
-        if prediction_quantile_low is not None or prediction_quantile_high is not None:
-            hyperparameters = ag_quantile_hyperparameters(
-                prediction_quantile_low, prediction_quantile_high
-            )
 
         # Pre process data
         df = df.fillna(np.nan)
@@ -379,6 +405,9 @@ class AAIRegressionTask(AAITask):
                 ],
                 "runtime": time.time() - start,
             }
+
+        if prediction_quantile_low is not None and prediction_quantile_high is not None:
+            eval_metric = "pinball_loss"
 
         if hyperparameters is None:
             if explain_samples:
@@ -480,15 +509,12 @@ class AAIRegressionTask(AAITask):
         # Validation
         eval_shap_values = []
         if kfolds <= 1:
-            df_val[target + "_predicted"] = y_pred
-            if prediction_quantile_low is not None:
-                df_val[target + "_low"] = predictor.predict(
-                    df_val, quantile=prediction_quantile_low
-                )
-            if prediction_quantile_high is not None:
-                df_val[target + "_high"] = predictor.predict(
-                    df_val, quantile=prediction_quantile_high
-                )
+            if prediction_quantile_low is None or prediction_quantile_high is None:
+                df_val[target + "_predicted"] = y_pred
+            else:
+                df_val[target + "_predicted"] = y_pred[0.5]
+                df_val[target + "_low"] = y_pred[prediction_quantile_low / 100]
+                df_val[target + "_high"] = y_pred[prediction_quantile_high / 100]
 
             # FIXME this should not be done, but we need this for now so we can return the models
             predictor.persist_models()

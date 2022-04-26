@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import time
 from autogluon.tabular import TabularPredictor
+from autogluon.features.generators import AutoMLPipelineFeatureGenerator
 from econml.dml import DML, CausalForestDML, NonParamDML, SparseLinearDML, LinearDML
 from econml.drlearner import DRLearner
 from econml.iv.nnet import DeepIV
@@ -202,7 +203,11 @@ class AAICausalEstimator:
             presets=presets,
             ag_args_fit={
                 "num_gpus": num_gpus,
+                "drop_unique": False,
             },
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                pre_drop_useless=False, post_generators=[]
+            ),
         )
         model_y = TabularPredictor(
             path=random_directory(model_directory),
@@ -216,7 +221,11 @@ class AAICausalEstimator:
             presets=presets,
             ag_args_fit={
                 "num_gpus": num_gpus,
+                "drop_unique": False,
             },
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                pre_drop_useless=False, post_generators=[]
+            ),
         )
         self.estimator = LinearDML(
             model_y=model_y,

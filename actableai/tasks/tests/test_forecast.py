@@ -560,7 +560,9 @@ class TestTimeSeries:
             date_range_kwargs={"min_periods": 30, "max_periods": 60},
         )
 
-        df[target_columns] = np_rng.choice(["a", "b", "c"], size=len(df))
+        df[target_columns] = np_rng.choice(
+            ["a", "b", "c"], size=(len(df), len(target_columns))
+        )
 
         results = forecast_task.run(
             df,

@@ -53,13 +53,11 @@ def preprocess_dataset(df):
 
 
 def get_type_special(X: pd.Series) -> str:
-    from autogluon.core.features.infer_types import (
+    from autogluon.common.features.infer_types import (
         check_if_datetime_as_object_feature,
         check_if_nlp_feature,
     )
     from pandas.api.types import is_numeric_dtype, is_datetime64_any_dtype, infer_dtype
-
-    # from autogluon.core.utils import infer_problem_type
     import numpy as np
 
     type_special = "unknown"

@@ -25,7 +25,7 @@ def test_run_cross_validation():
         leaderboard,
     ) = run_cross_validation(
         classification_train_task=task,
-        problem_type="multiclass",
+        problem_type="binary",
         explain_samples=False,
         positive_label=None,
         kfolds=5,

@@ -3,6 +3,7 @@ import pandas as pd
 from autogluon.core.constants import REGRESSION, QUANTILE
 from autogluon.core.models.abstract.abstract_model import AbstractModel
 from autogluon.tabular import TabularPredictor
+from autogluon.features.generators import AutoMLPipelineFeatureGenerator
 from copy import deepcopy
 from uuid import uuid4
 
@@ -20,6 +21,7 @@ class DebiasingModel(AbstractModel):
         TODO write documentation
         """
         super().__init__(**kwargs)
+        self.initialize()
 
         self.models_fit = False
 
@@ -107,6 +109,7 @@ class DebiasingModel(AbstractModel):
             train_data,
             hyperparameters=self.hyperparameters_residuals,
             presets=self.presets_residuals,
+            ag_args_fit=self.params_aux,
         )
 
     def _fit_non_residuals(self, train_data, tuning_data=None):
@@ -128,6 +131,7 @@ class DebiasingModel(AbstractModel):
             tuning_data=tuning_data,
             hyperparameters=self.hyperparameters_non_residuals,
             presets=self.presets_non_residuals,
+            ag_args_fit=self.params_aux,
         )
 
     def _fit(self, X, y, X_val=None, y_val=None, **kwargs):
@@ -197,6 +201,10 @@ class DebiasingModel(AbstractModel):
             tuning_data=final_tuning_data,
             hyperparameters=hyperparameters_final,
             presets=self.presets_final,
+            ag_args_fit=self.params_aux,
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                pre_drop_useless=False, post_generators=[]
+            ),
         )
 
         self.models_fit = True

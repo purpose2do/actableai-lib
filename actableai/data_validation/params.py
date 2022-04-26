@@ -67,8 +67,17 @@ class RegressionDataValidator:
         explain_samples=False,
         drop_duplicates=True,
     ):
+        use_quantiles = (
+            prediction_quantile_low is not None and prediction_quantile_high is not None
+        )
+
         validation_results = [
-            RegressionEvalMetricChecker(level=CheckLevels.CRITICAL).check(eval_metric),
+            RegressionEvalMetricChecker(
+                level=CheckLevels.CRITICAL if not use_quantiles else CheckLevels.WARNING
+            ).check(
+                eval_metric,
+                use_quantiles=use_quantiles,
+            ),
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
                 df, features + [target]
             ),

@@ -97,8 +97,8 @@ class _AAIClassificationTrainTask(AAITask):
         from actableai.utils import debiasing_feature_generator_args
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
 
-        ag_args_fit = {}
-        feature_generator_args = {}
+        ag_args_fit = {"drop_unique": False}
+        feature_generator_args = {"pre_drop_useless": False, "post_generators": []}
         if run_debiasing:
             ag_args_fit["drop_duplicates"] = drop_duplicates
             ag_args_fit["label"] = target
@@ -110,10 +110,14 @@ class _AAIClassificationTrainTask(AAITask):
             ag_args_fit["hyperparameters_non_residuals"] = hyperparameters
             ag_args_fit["presets_non_residuals"] = presets
 
-            feature_generator_args = debiasing_feature_generator_args()
+            feature_generator_args = {
+                **feature_generator_args,
+                **debiasing_feature_generator_args(),
+            }
 
             hyperparameters = {DebiasingModel: {}}
 
+        ag_args_fit["num_cpus"] = 1
         ag_args_fit["num_gpus"] = num_gpus
 
         df_train = df_train[features + biased_groups + [target]]

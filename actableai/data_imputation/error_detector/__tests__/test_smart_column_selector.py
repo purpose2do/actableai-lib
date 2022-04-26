@@ -19,6 +19,7 @@ stub_path = "actableai.data_imputation.error_detector.smart_column_selector"
 
 
 class TestDistanceToCenter:
+    @pytest.fixture(autouse=True)
     def setup(self):
         self._selector = SmartErrorCellSelector()
 
@@ -176,6 +177,7 @@ class TestDistanceToCenter:
 
 
 class TestFindColumnsWithUniqValue:
+    @pytest.fixture(autouse=True)
     def setup(self):
         self._selector = SmartErrorCellSelector()
 
@@ -224,19 +226,24 @@ class TestFindColumnsWithUniqValue:
 
 
 class TestFindActualErrorColumn:
-    @patch(f"{stub_path}.CorrelationCalculator")
-    def setup(self, mock_correlation_calculator_mod):
-        mock_most_correlate_columns = MagicMock()
-        mock_distance_to_center = MagicMock()
-        mock_correlation_calculator = MagicMock()
-        mock_correlation_calculator_mod.return_value = mock_correlation_calculator
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        with patch(
+            f"{stub_path}.CorrelationCalculator"
+        ) as mock_correlation_calculator_mod:
+            mock_most_correlate_columns = MagicMock()
+            mock_distance_to_center = MagicMock()
+            mock_correlation_calculator = MagicMock()
+            mock_correlation_calculator_mod.return_value = mock_correlation_calculator
 
-        self._selector = SmartErrorCellSelector()
-        self._selector.reset()
-        mock_correlation_calculator.most_correlate_columns = mock_most_correlate_columns
-        self._selector._distance_to_center = mock_distance_to_center
-        self._most_correlate_columns = mock_most_correlate_columns
-        self._distance_to_center = mock_distance_to_center
+            self._selector = SmartErrorCellSelector()
+            self._selector.reset()
+            mock_correlation_calculator.most_correlate_columns = (
+                mock_most_correlate_columns
+            )
+            self._selector._distance_to_center = mock_distance_to_center
+            self._most_correlate_columns = mock_most_correlate_columns
+            self._distance_to_center = mock_distance_to_center
 
     def test_find_when_one_cell_is_empty(self):
         df = pd.DataFrame({"a": [1, 2, np.nan], "b": [1, 2, 3]})
@@ -263,9 +270,7 @@ class TestFindActualErrorColumn:
             CellError("b", 2, ErrorType.INVALID),
         ]
 
-    def test_find_distance_column_all_columns_get_distance_to_center_are_inf(
-        self,
-    ):
+    def test_find_distance_column_all_columns_get_distance_to_center_are_inf(self):
         mock_find_columns_with_uniq_value = MagicMock()
         mock_find_columns_with_uniq_value.return_value = set("a")
         self._selector._find_columns_with_uniq_value = mock_find_columns_with_uniq_value
@@ -286,9 +291,7 @@ class TestFindActualErrorColumn:
             CellError("b", 0, ErrorType.INVALID),
         ]
 
-    def test_find_distance_column_only_one_column_get_distance_to_center_is_inf(
-        self,
-    ):
+    def test_find_distance_column_only_one_column_get_distance_to_center_is_inf(self):
         mock_find_columns_with_uniq_value = MagicMock()
         mock_find_columns_with_uniq_value.return_value = set("a")
         self._selector._find_columns_with_uniq_value = mock_find_columns_with_uniq_value
