@@ -23,7 +23,8 @@ class _AAIClassificationTrainTask(AAITask):
             biased_groups,
             debiased_features,
             residuals_hyperparameters,
-            num_gpus):
+            num_gpus,
+            eval_metric):
         """
         TODO write documentation
         """
@@ -59,7 +60,12 @@ class _AAIClassificationTrainTask(AAITask):
         df_val = df_val[features + biased_groups + [target]]
 
         # Start training
-        predictor = TabularPredictor(label=target, problem_type=problem_type, path=model_directory)
+        predictor = TabularPredictor(
+            label=target,
+            problem_type=problem_type,
+            path=model_directory,
+            eval_metric=eval_metric)
+
         predictor = predictor.fit(
             train_data=df_train,
             hyperparameters=hyperparameters,
@@ -84,12 +90,19 @@ class _AAIClassificationTrainTask(AAITask):
 
         label_val = df_val[target]
         label_pred = predictor.predict(df_val)
-        perf = predictor.evaluate_predictions(y_true=label_val, y_pred=label_pred, auxiliary_metrics=True)
+        perf = predictor.evaluate_predictions(
+            y_true=label_val, y_pred=label_pred, auxiliary_metrics=True, detailed_report=False)
         pred_prob_val = predictor.predict_proba(df_val, as_multiclass=True)
 
         evaluate = {
+            # TODO: to be removed (legacy)
             "problem_type": predictor.problem_type,
-            "accuracy": perf["accuracy"]
+            "accuracy": perf["accuracy"],
+
+            "metrics": pd.DataFrame({
+                "metric": perf.keys(),
+                "value": perf.values(),
+            })
         }
         evaluate["labels"] = predictor.class_labels
         evaluate["confusion_matrix"] = confusion_matrix(
@@ -143,7 +156,8 @@ class AAIClassificationTask(AAITask):
             cross_validation_max_concurrency=1,
             residuals_hyperparameters=None,
             drop_duplicates=True,
-            num_gpus=0):
+            num_gpus=0,
+            eval_metric="accuracy"):
         """
         TODO write documentation
         """
@@ -274,6 +288,7 @@ class AAIClassificationTask(AAITask):
                 debiased_features=debiased_features,
                 residuals_hyperparameters=residuals_hyperparameters,
                 num_gpus=num_gpus,
+                eval_metric=eval_metric,
             )
         else:
             predictor, important_features, evaluate, pred_prob_val, leaderboard = classification_train_task.run(
@@ -292,6 +307,7 @@ class AAIClassificationTask(AAITask):
                 debiased_features=debiased_features,
                 residuals_hyperparameters=residuals_hyperparameters,
                 num_gpus=num_gpus,
+                eval_metric=eval_metric,
             )
 
         if not use_cross_validation:
