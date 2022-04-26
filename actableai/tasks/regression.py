@@ -117,7 +117,7 @@ class _AAIRegressionTrainTask(AAITask):
             feature_generator=AutoMLPipelineFeatureGenerator(**feature_generator_args)
         )
         predictor.persist_models()
-        leaderboard = predictor.leaderboard()
+        leaderboard = predictor.leaderboard(extra_info=True)
         pd.set_option("chained_assignment", "warn")
 
         important_features = []
@@ -132,6 +132,8 @@ class _AAIRegressionTrainTask(AAITask):
 
         y_pred = predictor.predict(df_val)
         metrics = predictor.evaluate_predictions(y_true=df_val[target], y_pred=y_pred, auxiliary_metrics=True)
+
+        # Legacy (TODO: to be removed)
         evaluate = {
             "RMSE": abs(metrics["root_mean_squared_error"]),
             "R2": metrics["r2"],
@@ -139,6 +141,16 @@ class _AAIRegressionTrainTask(AAITask):
             "MSE": abs(metrics["mean_squared_error"]),
             "MEDIAN_ABSOLUTE_ERROR": abs(metrics["median_absolute_error"]),
         }
+
+        evaluate["metrics"] = pd.DataFrame({
+            "metric": ["Root Mean Squared Error", "R2", "Mean Absolute Error", "Median Absolute Error"],
+            "value": [
+                abs(metrics["root_mean_squared_error"]),
+                metrics["r2"],
+                abs(metrics["mean_absolute_error"]),
+                abs(metrics["median_absolute_error"]),
+            ],
+        })
 
         explainer = None
         if explain_samples:

@@ -31,6 +31,7 @@ class _AAIClassificationTrainTask(AAITask):
         debiased_features: List[str],
         residuals_hyperparameters: Dict,
         num_gpus: int,
+        eval_metric: str,
     ) -> Tuple[TabularPredictor, List, Dict, object, pd.DataFrame]:
         """Runs a sub Classification Task for cross-validation.
 
@@ -61,6 +62,7 @@ class _AAIClassificationTrainTask(AAITask):
                 TabularPredictor
                 See https://auto.gluon.ai/stable/api/autogluon.task.html#autogluon.tabular.TabularPredictor
             num_gpus: Number of gpus used by AutoGluon
+            eval_metric: Metric to be optimized for.
 
         Returns:
             Tuple[object, object, object, object, object]: Return results for
@@ -111,8 +113,11 @@ class _AAIClassificationTrainTask(AAITask):
 
         # Start training
         predictor = TabularPredictor(
-            label=target, problem_type=problem_type, path=model_directory
-        )
+            label=target,
+            problem_type=problem_type,
+            path=model_directory,
+            eval_metric=eval_metric)
+
         predictor = predictor.fit(
             train_data=df_train,
             hyperparameters=hyperparameters,
@@ -137,13 +142,18 @@ class _AAIClassificationTrainTask(AAITask):
         label_val = df_val[target]
         label_pred = predictor.predict(df_val)
         perf = predictor.evaluate_predictions(
-            y_true=label_val, y_pred=label_pred, auxiliary_metrics=True
-        )
+            y_true=label_val, y_pred=label_pred, auxiliary_metrics=True, detailed_report=False)
         pred_prob_val = predictor.predict_proba(df_val, as_multiclass=True)
 
         evaluate = {
+            # TODO: to be removed (legacy)
             "problem_type": predictor.problem_type,
             "accuracy": perf["accuracy"],
+
+            "metrics": pd.DataFrame({
+                "metric": perf.keys(),
+                "value": perf.values(),
+            })
         }
         evaluate["labels"] = predictor.class_labels
         evaluate["confusion_matrix"] = confusion_matrix(
@@ -213,6 +223,7 @@ class AAIClassificationTask(AAITask):
         residuals_hyperparameters: Optional[Dict] = None,
         drop_duplicates: bool = True,
         num_gpus: int = 0,
+        eval_metric: str = "accuracy",
     ) -> Dict:
         """Run this classification task and return results.
 
@@ -248,6 +259,11 @@ class AAIClassificationTask(AAITask):
             drop_duplicates: Whether duplicate values should be dropped before training.
                 Defaults to True.
             num_gpus: Number of gpus used for training. Defaults to 0.
+            eval_metric: Metric to be optimized for. Possible values include ‘accuracy’, ‘balanced_accuracy’, ‘f1’, 
+                ‘f1_macro’, ‘f1_micro’, ‘f1_weighted’, ‘roc_auc’, ‘roc_auc_ovo_macro’, ‘average_precision’, 
+                ‘precision’, ‘precision_macro’, ‘precision_micro’, ‘precision_weighted’, ‘recall’, ‘recall_macro’, 
+                ‘recall_micro’, ‘recall_weighted’, ‘log_loss’, ‘pac_score’.
+                Defaults to "accuracy".            
 
         Raises:
             Exception: If the target has less than 2 unique values.
@@ -395,6 +411,7 @@ class AAIClassificationTask(AAITask):
                 debiased_features=debiased_features,
                 residuals_hyperparameters=residuals_hyperparameters,
                 num_gpus=num_gpus,
+                eval_metric=eval_metric,
             )
         else:
             (
@@ -419,6 +436,7 @@ class AAIClassificationTask(AAITask):
                 debiased_features=debiased_features,
                 residuals_hyperparameters=residuals_hyperparameters,
                 num_gpus=num_gpus,
+                eval_metric=eval_metric,
             )
 
         if not use_cross_validation:
