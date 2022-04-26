@@ -23,6 +23,13 @@ class ValidationStatus():
 
 class CheckResult():
     def __init__(self, name: str, message: str, level: str):
+        """Result of a check.
+
+        Args:
+            name: Name of the check.
+            message: Message of the check.
+            level: Level of the check.
+        """
         self.message = message
         self.name = name
         self.level = level

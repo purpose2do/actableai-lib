@@ -9,10 +9,12 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 
 class UnsupportedPredictorType(ValueError):
+    """Raised when the predictor type is not supported."""
     pass
 
 
 class UnsupportedProblemType(ValueError):
+    """Raised when the problem type is not supported."""
     pass
 
 

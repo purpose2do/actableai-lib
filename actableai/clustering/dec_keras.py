@@ -10,6 +10,7 @@ Author:
     Xifeng Guo. 2017.1.30
 """
 from time import time
+from turtle import st
 import numpy as np
 import tensorflow.keras.backend as K
 from tensorflow.keras.layers import Layer, InputSpec
@@ -19,22 +20,31 @@ from tensorflow.keras.optimizers import SGD
 from tensorflow.keras import callbacks
 from tensorflow.keras.initializers import VarianceScaling
 from sklearn.cluster import KMeans
-from actableai.clustering import metrics, KMeans_pick_k
 import ray
 
+from typing import List, Tuple
+
+from actableai.clustering import metrics, KMeans_pick_k
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 
 
-def autoencoder(dims, act='relu', init='glorot_uniform'):
+def autoencoder(dims:List[int], act:str='relu', init:str='glorot_uniform')-> Tuple[Model, Model, Model]:
     """
     Fully connected auto-encoder model, symmetric.
     Arguments:
-        dims: list of number of units in each layer of encoder. dims[0] is input dim, dims[-1] is units in hidden layer.
-            The decoder is symmetric with encoder. So number of layers of the auto-encoder is 2*len(dims)-1
+        dims: list of number of units in each layer of encoder. dims[0] is input dim,
+            dims[-1] is units in hidden layer.
+            The decoder is symmetric with encoder. So number of layers of the
+                auto-encoder is 2*len(dims)-1
         act: activation, not applied to Input, Hidden and Output layers
+        init: Initialization for weights.
+            See https://keras.io/initializers/
     return:
-        (ae_model, encoder_model), Model of autoencoder and model of encoder
+        Tuple [Model, Model, Model]:
+            - Auto-Encoder model
+            - Encoder model. To get latent representation of input data.
+            - Decoder model. To reconstruct input data from latent representation.
     """
     n_stacks = len(dims) - 1
     # input
@@ -73,21 +83,23 @@ class ClusteringLayer(Layer):
     Clustering layer converts input sample (feature) to soft label, i.e. a vector that represents the probability of the
     sample belonging to each cluster. The probability is calculated with student's t-distribution.
 
-    # Example
-    ```
+    Example:
         model.add(ClusteringLayer(n_clusters=10))
-    ```
-    # Arguments
-        n_clusters: number of clusters.
-        weights: list of Numpy array with shape `(n_clusters, n_features)` witch represents the initial cluster centers.
-        alpha: parameter in Student's t-distribution. Default to 1.0.
-    # Input shape
+
+    Input shape:
         2D tensor with shape: `(n_samples, n_features)`.
-    # Output shape
+    Output shape:
         2D tensor with shape: `(n_samples, n_clusters)`.
     """
 
     def __init__(self, n_clusters, weights=None, alpha=1.0, **kwargs):
+        """Constructor
+
+        Args:
+            n_clusters: number of clusters.
+            weights: (n_clusters, n_features) represents the initial cluster centers.
+            alpha: parameter in Student's t-distribution. Default to 1.0.
+        """
         if 'input_shape' not in kwargs and 'input_dim' in kwargs:
             kwargs['input_shape'] = (kwargs.pop('input_dim'),)
         super(ClusteringLayer, self).__init__(**kwargs)
@@ -131,13 +143,29 @@ class ClusteringLayer(Layer):
 
 class DEC(object):
     def __init__(self,
-                 dims,
-                 n_clusters="auto",
-                 alpha=1.0,
-                 init='glorot_uniform',
-                 auto_num_clusters_min=2,
-                 auto_num_clusters_max=20,
-                 alpha_k=0.01):
+                 dims:List,
+                 n_clusters:str="auto",
+                 alpha:float=1.0,
+                 init:str='glorot_uniform',
+                 auto_num_clusters_min:int=2,
+                 auto_num_clusters_max:int=20,
+                 alpha_k:float=0.01):
+        """Deep Embedded Clustering implementation.
+
+        Args:
+            dims: list of number of units in each layer of encoder.
+            n_clusters: Number of clusters. If n_clusters is set to be 'auto',
+                then it will be determined automatically by the algorithm.
+            alpha: Parameter in Student's t-distribution. Default to 1.0.
+            init: Initialization for weights.
+                See https://keras.io/initializers/
+            auto_num_clusters_min: The minimum number of clusters to be determined
+                automatically. Default to 2.
+            auto_num_clusters_max: The maximum number of clusters to be determined
+                automatically. Default to 20.
+            alpha_k: The factor to control the penalty term of the number of clusters.
+                Default to 0.01.
+        """
 
         super(DEC, self).__init__()
 
@@ -153,7 +181,21 @@ class DEC(object):
         self.auto_num_clusters_max = auto_num_clusters_max
         self.alpha_k = alpha_k
 
-    def pretrain(self, x, optimizer='adam', epochs=200, batch_size=256):
+    def pretrain(
+        self,
+        x:np.ndarray,
+        optimizer:str='adam',
+        epochs:int=200,
+        batch_size:int=256
+    ) -> None:
+        """Pretrain the autoencoder.
+
+        Args:
+            x: Input data.
+            optimizer: Optimizer for training the autoencoder. Default to 'adam'.
+            epochs: Number of epochs. Default to 200.
+            batch_size: Batch size. Default to 256.
+        """
         idx = np.arange(x.shape[0])
         np.random.shuffle(idx)
         x = x[idx]
@@ -184,32 +226,87 @@ class DEC(object):
         print('Pretraining time: %ds' % round(time() - t0))
         self.pretrained = True
 
-    def load_weights(self, weights):  # load weights of DEC model
+    def load_weights(self, weights:str) -> None:
+        """Load weights of DEC model.
+
+        Args:
+            weights: Path to the weights file.
+        """
         self.model.load_weights(weights)
 
-    def project(self, x):
+    def project(self, x:np.ndarray) -> np.ndarray:
+        """Project data into the latent space.
+
+        Args:
+            x: Input data.
+
+        Returns:
+            _type_: _description_
+        """
         return self.encoder.predict(x)
 
-    def reconstruct(self, x):
+    def reconstruct(self, x:np.ndarray) -> np.ndarray:
+        """Reconstruct data from the latent space.
+
+        Args:
+            x: Input data.
+
+        Returns:
+            np.ndarray: Reconstructed data.
+        """
         return self.decoder.predict(x)
 
-    def predict_proba(self, x):  # predict cluster labels using the output of clustering layer
+    def predict_proba(self, x:np.ndarray) -> np.ndarray:
+        """Predict cluster labels probabilities using the output of clustering layer.
+
+        Args:
+            x: Input data.
+
+        Returns:
+            np.ndarray: Predicted cluster label probabilities.
+        """
         return self.model.predict(x, verbose=0)
 
     def predict(self, x):  # predict cluster labels using the output of clustering layer
+        """Predict cluster labels using the output of clustering layer.
+
+        Args:
+            x: Input data.
+
+        Returns:
+            np.ndarray: Predicted cluster labels.
+        """
         q = self.model.predict(x, verbose=0)
         return q.argmax(1)
 
     @staticmethod
     def target_distribution(q):
+        """Target distribution for the K-means objective."""
         weight = q ** 2 / q.sum(0)
         return (weight.T / weight.sum(1)).T
 
-    def compile(self, optimizer='adam', loss='kld'):
+    def compile(self, optimizer:str='adam', loss:str='kld') -> None:
+        """Compile the DEC model.
+
+        Args:
+            optimizer: Optimizer for training the model. Default to 'adam'.
+            loss: Loss function. Default to 'kld'.
+        """
         self.model.compile(optimizer=optimizer, loss=loss)
 
     def fit(self, x, y=None, maxiter=2e4, batch_size=256, tol=1e-3,
             update_interval=140):
+        """Train the model.
+
+        Args:
+            x: Input data.
+            y: Target data. Default to None.
+            maxiter: Maximum number of iterationsf for training. Default to 2e4.
+            batch_size: Batch size. Default to 256.
+            tol: Tolerance for the stopping criterion. Default to 1e-3.
+            update_interval: The interval to check the stopping criterion and update the
+                cluster centers. Default to 140.
+        """
         idx = np.arange(x.shape[0])
         np.random.shuffle(idx)
         x = x[idx]
