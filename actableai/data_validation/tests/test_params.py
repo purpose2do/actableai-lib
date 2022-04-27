@@ -47,9 +47,7 @@ class TestBayesianRegressionDataValidator:
             val.name: val.level for val in validation_results if val is not None
         }
 
-        assert "CheckNUnique" in validations_dict
-        assert validations_dict["CheckNUnique"] == CheckLevels.CRITICAL
-
+        assert "CheckNUnique" not in validations_dict
 
 class TestCausalDataValidator:
     def test_validate(self):
@@ -125,8 +123,8 @@ class TestRegressionDataValidator:
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
         }
-        assert "ColumnExistsChecker" in validations_dict
-        assert validations_dict["ColumnExistsChecker"] == CheckLevels.CRITICAL
+        assert "ColumnsExistChecker" in validations_dict
+        assert validations_dict["ColumnsExistChecker"] == CheckLevels.CRITICAL
 
     def test_validate_columnexistchecker_target(self):
         df = pd.DataFrame(
@@ -143,8 +141,8 @@ class TestRegressionDataValidator:
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
         }
-        assert "ColumnExistsChecker" in validations_dict
-        assert validations_dict["ColumnExistsChecker"] == CheckLevels.CRITICAL
+        assert "ColumnsExistChecker" in validations_dict
+        assert validations_dict["ColumnsExistChecker"] == CheckLevels.CRITICAL
 
 
 class TestClassificationDataValidator:
@@ -165,5 +163,5 @@ class TestClassificationDataValidator:
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
         }
-        assert "ColumnExistsChecker" in validations_dict
-        assert validations_dict["ColumnExistsChecker"] == CheckLevels.CRITICAL
+        assert "ColumnsExistChecker" in validations_dict
+        assert validations_dict["ColumnsExistChecker"] == CheckLevels.CRITICAL
