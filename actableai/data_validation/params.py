@@ -23,7 +23,7 @@ class RegressionDataValidator:
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(df, features + [target]),
         ]
 
-        if len([x for x in validation_results if x is not None]) > 0:
+        if len([x for x in validation_results if x is not None and x.level == CheckLevels.CRITICAL]) > 0:
             return validation_results
 
         if drop_duplicates:
@@ -132,7 +132,7 @@ class ClassificationDataValidator:
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(df, [target, *features, *debiasing_features, *debiased_features])
         ]
 
-        if len([x for x in validation_results if x is not None]) > 0:
+        if len([x for x in validation_results if x is not None and x.level == CheckLevels.CRITICAL]) > 0:
             return validation_results
 
         if drop_duplicates:

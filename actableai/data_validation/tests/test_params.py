@@ -1,6 +1,7 @@
 import pandas as pd
 from pandas._testing import rands_array
 import numpy as np
+from actableai.data_validation.base import CheckLevels
 
 from actableai.data_validation.params import (
     BayesianRegressionDataValidator,
@@ -24,8 +25,11 @@ class TestBayesianRegressionDataValidator:
             "x", ["y", "z"], df, 1
         )
         validation_results = [x for x in validation_results if x is not None]
+        validations_dict = {val["name"]: val["level"] for val in validation_results}
 
-        assert "CheckNUnique" in [x.name for x in validation_results]
+        assert "CheckNUnique" in validations_dict
+        assert validations_dict["CheckNUnique"] == CheckLevels.CRITICAL
+
 
     def test_validate_not_CheckNUnique(self):
         df = pd.DataFrame(
