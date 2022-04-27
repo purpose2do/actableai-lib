@@ -14,7 +14,7 @@ def impute_df(df, numeric_imputer=None, categorical_imputer=None):
         df[categorical_cols] = categorical_imputer.fit_transform(df[categorical_cols])
 
 from sklearn.base import BaseEstimator, TransformerMixin, _OneToOneFeatureMixin
-
+from pandas.api.types import is_string_dtype, is_bool_dtype
 class PercentageTransformer(_OneToOneFeatureMixin, BaseEstimator, TransformerMixin):
     """Percentage Transformer that transforms strings with percentages into floats
 
@@ -33,8 +33,9 @@ class PercentageTransformer(_OneToOneFeatureMixin, BaseEstimator, TransformerMix
 
     @staticmethod
     def selector(df):
-        obj_cols = list(df.select_dtypes(include='object').columns)
-        parsed_rate_check = lambda x, min : x.isna().sum() >= min * len(x)
-        extracted = df[obj_cols].apply(lambda x: x.str.extract(r'^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$')[0])
+        obj_mask = df.apply(is_string_dtype)
+        df = df.loc[:, obj_mask]
+        parsed_rate_check = lambda x, min : x.isna().sum() >= min * len(x) if x is not None else False
+        extracted = df.apply(lambda x: x.str.extract(r'^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$')[0] if hasattr(x, 'str') else None)
         val = ~extracted.apply(lambda x: parsed_rate_check(x, 0.5))
         return val[val].index
