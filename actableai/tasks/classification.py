@@ -1,6 +1,5 @@
 from typing import Dict, List, Optional, Tuple
 import pandas as pd
-from autogluon.tabular.predictor import TabularPredictor
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
@@ -32,7 +31,7 @@ class _AAIClassificationTrainTask(AAITask):
         residuals_hyperparameters: Dict,
         num_gpus: int,
         eval_metric: str,
-    ) -> Tuple[TabularPredictor, List, Dict, object, pd.DataFrame]:
+    ) -> Tuple[object, List, Dict, object, pd.DataFrame]:
         """Runs a sub Classification Task for cross-validation.
 
         Args:
