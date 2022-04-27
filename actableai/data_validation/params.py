@@ -18,12 +18,15 @@ class RegressionDataValidator:
                  presets="medium_quality_faster_train",
                  explain_samples=False,
                  drop_duplicates=True):
+        validation_results = [
+            RegressionEvalMetricChecker(level=CheckLevels.CRITICAL).check(eval_metric),
+            ColumnsExistChecker(level=CheckLevels.CRITICAL).check(df, features + [target]),
+        ]
+
         if drop_duplicates:
             df = df.drop_duplicates(subset=features + [target])
 
         validation_results = [
-            RegressionEvalMetricChecker(level=CheckLevels.CRITICAL).check(eval_metric),
-            ColumnsExistChecker(level=CheckLevels.CRITICAL).check(df, [target]),
             DoNotContainEmptyColumnsChecker(level=CheckLevels.WARNING).check(df, features),
             DoNotContainEmptyColumnsChecker(level=CheckLevels.CRITICAL).check(df, [target]),
             IsSufficientDataChecker(level=CheckLevels.CRITICAL).check(df, n_sample=MINIMUM_NUMBER_OF_SAMPLE),
