@@ -25,7 +25,7 @@ class TestBayesianRegressionDataValidator:
             "x", ["y", "z"], df, 1
         )
         validation_results = [x for x in validation_results if x is not None]
-        validations_dict = {val["name"]: val["level"] for val in validation_results}
+        validations_dict = {val.name: val.level for val in validation_results}
 
         assert "CheckNUnique" in validations_dict
         assert validations_dict["CheckNUnique"] == CheckLevels.CRITICAL
