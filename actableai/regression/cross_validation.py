@@ -28,6 +28,7 @@ def run_cross_validation(
     residuals_hyperparameters: Dict[str, Dict],
     num_gpus: int,
     eval_metric: str,
+    time_limit: Optional[int],
     ) -> Tuple[Dict, Dict, List, float, float, List, List, List]:
     """Run cross validation on Regression Task. Data is divided in kfold groups and each
     run a regression. The returned values are means or lists of values from
@@ -54,6 +55,7 @@ def run_cross_validation(
         debiased_features (List[str]): Features debiased of the biased groups
         residuals_hyperparameters (Dict[str, Dict]): HyperParameters for debiasing models
         num_gpus (int): Number of GPUs for the model
+        time_limit: Time limit of training (in seconds)
 
     Returns:
         Tuple[Dict, Dict, List, float, float, List, List, List]:
