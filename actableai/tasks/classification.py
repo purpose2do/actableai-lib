@@ -31,6 +31,7 @@ class _AAIClassificationTrainTask(AAITask):
         residuals_hyperparameters: Dict,
         num_gpus: int,
         eval_metric: str,
+        time_limit: Optional[int],
     ) -> Tuple[object, List, Dict, object, pd.DataFrame]:
         """Runs a sub Classification Task for cross-validation.
 
@@ -62,6 +63,7 @@ class _AAIClassificationTrainTask(AAITask):
                 See https://auto.gluon.ai/stable/api/autogluon.task.html#autogluon.tabular.TabularPredictor
             num_gpus: Number of gpus used by AutoGluon
             eval_metric: Metric to be optimized for.
+            time_limit: Time limit for training (in seconds)
 
         Returns:
             Tuple[object, object, object, object, object]: Return results for
@@ -123,6 +125,7 @@ class _AAIClassificationTrainTask(AAITask):
             presets=presets,
             ag_args_fit=ag_args_fit,
             feature_generator=AutoMLPipelineFeatureGenerator(**feature_generator_args),
+            time_limit=time_limit,
         )
         predictor.persist_models()
         leaderboard = predictor.leaderboard(extra_info=True)
@@ -223,6 +226,7 @@ class AAIClassificationTask(AAITask):
         drop_duplicates: bool = True,
         num_gpus: int = 0,
         eval_metric: str = "accuracy",
+        time_limit: Optional[int] = None,
     ) -> Dict:
         """Run this classification task and return results.
 
@@ -262,7 +266,8 @@ class AAIClassificationTask(AAITask):
                 ‘f1_macro’, ‘f1_micro’, ‘f1_weighted’, ‘roc_auc’, ‘roc_auc_ovo_macro’, ‘average_precision’, 
                 ‘precision’, ‘precision_macro’, ‘precision_micro’, ‘precision_weighted’, ‘recall’, ‘recall_macro’, 
                 ‘recall_micro’, ‘recall_weighted’, ‘log_loss’, ‘pac_score’.
-                Defaults to "accuracy".            
+                Defaults to "accuracy".
+            time_limit: Time limit of training (in seconds)
 
         Raises:
             Exception: If the target has less than 2 unique values.
@@ -411,6 +416,7 @@ class AAIClassificationTask(AAITask):
                 residuals_hyperparameters=residuals_hyperparameters,
                 num_gpus=num_gpus,
                 eval_metric=eval_metric,
+                time_limit=time_limit,
             )
         else:
             (
@@ -436,6 +442,7 @@ class AAIClassificationTask(AAITask):
                 residuals_hyperparameters=residuals_hyperparameters,
                 num_gpus=num_gpus,
                 eval_metric=eval_metric,
+                time_limit=time_limit,
             )
 
         if not use_cross_validation:

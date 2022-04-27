@@ -105,6 +105,7 @@ def run_cross_validation(
                 "residuals_hyperparameters": residuals_hyperparameters,
                 "num_gpus": num_gpus,
                 "eval_metric": eval_metric,
+                "time_limit": time_limit,
             }
         )
         for kfold_index, (train_index, val_index) in enumerate(kfolds_index_list)
