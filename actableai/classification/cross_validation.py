@@ -90,6 +90,7 @@ def run_cross_validation(
     debiased_features: list,
     residuals_hyperparameters: Optional[dict],
     num_gpus: int,
+    eval_metric: str,
 ) -> Tuple[AverageEnsembleClassifier, list, dict, list, pd.DataFrame, pd.DataFrame]:
     """Runs a cross validation for a classification task.
 
@@ -118,6 +119,7 @@ def run_cross_validation(
         debiased_features: The features to debias.
         residuals_hyperparameters: The hyperparameters to use for the debiasing model.
         num_gpus (int): The number of GPUs to use.
+        eval_metric: Metric to be optimized for.
 
     Returns:
         Tuple: Result of the cross validation.
@@ -162,6 +164,7 @@ def run_cross_validation(
                 "debiased_features": debiased_features,
                 "residuals_hyperparameters": residuals_hyperparameters,
                 "num_gpus": num_gpus,
+                "eval_metric": eval_metric,
             },
         )
         for kfold_index, (train_index, val_index) in enumerate(kfolds_index_list)
