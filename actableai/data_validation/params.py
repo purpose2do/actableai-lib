@@ -23,10 +23,13 @@ class RegressionDataValidator:
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(df, features + [target]),
         ]
 
+        if len([x for x in validation_results if x is not None]) > 0:
+            return validation_results
+
         if drop_duplicates:
             df = df.drop_duplicates(subset=features + [target])
 
-        validation_results = [
+        validation_results += [
             DoNotContainEmptyColumnsChecker(level=CheckLevels.WARNING).check(df, features),
             DoNotContainEmptyColumnsChecker(level=CheckLevels.CRITICAL).check(df, [target]),
             IsSufficientDataChecker(level=CheckLevels.CRITICAL).check(df, n_sample=MINIMUM_NUMBER_OF_SAMPLE),
@@ -125,11 +128,17 @@ class ClassificationDataValidator:
                  kfolds=None,
                  drop_duplicates=True,
                  explain_samples=False):
+        validation_results = [
+            ColumnsExistChecker(level=CheckLevels.CRITICAL).check(df, [target, *features, *debiasing_features, *debiased_features])
+        ]
+
+        if len([x for x in validation_results if x is not None]) > 0:
+            return validation_results
+
         if drop_duplicates:
             df = df.drop_duplicates(subset=features + [target])
 
-        validation_results = [
-            ColumnsExistChecker(level=CheckLevels.CRITICAL).check(df, [target, *features, *debiasing_features, *debiased_features]),
+        validation_results += [
             DoNotContainEmptyColumnsChecker(level=CheckLevels.WARNING).check(df, df.columns),
             IsSufficientDataChecker(level=CheckLevels.CRITICAL).check(df, n_sample=MINIMUM_NUMBER_OF_SAMPLE),
             DoNotContainMixedChecker(level=CheckLevels.CRITICAL).check(df, features),
