@@ -94,7 +94,22 @@ class TestCausalDataValidator:
 
 
 class TestRegressionDataValidator:
-    def test_validate(self):
+    def test_validate_columnexistchecker_feature(self):
+        df = pd.DataFrame(
+            {
+                "x": rands_array(10, 5),
+                "y": rands_array(10, 5),
+                "z": rands_array(10, 5),
+                "t": rands_array(10, 5),
+            }
+        )
+
+        validation_results = RegressionDataValidator().validate("x", ["a"], df, [], [])
+        validation_results = [x for x in validation_results if x is not None]
+
+        assert "ColumnsExistChecker" in [x.name for x in validation_results]
+
+    def test_validate_columnexistchecker_target(self):
         df = pd.DataFrame(
             {
                 "x": rands_array(10, 5),
