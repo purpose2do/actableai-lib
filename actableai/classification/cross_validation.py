@@ -2,16 +2,11 @@ from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from functools import reduce
 from actableai.classification.utils import leaderboard_cross_val
-from actableai.tasks.classification import (
-    _AAIClassificationTrainTask,
-    AAIClassificationTask,
-)
+from actableai.tasks.classification import _AAIClassificationTrainTask
 
 
 class AverageEnsembleClassifier:
-
     def __init__(self, predictors):
         """Constructor for AverageEnsembleClassifier.
 
@@ -21,7 +16,7 @@ class AverageEnsembleClassifier:
         self.predictors = predictors
         self.class_labels = predictors[0].class_labels
 
-    def _predict_proba(self, X:pd.DataFrame, *args, **kwargs) -> List[np.ndarray]:
+    def _predict_proba(self, X: pd.DataFrame, *args, **kwargs) -> List[np.ndarray]:
         """Predict probabilities for each predictor for each class for each sample.
 
         Args:

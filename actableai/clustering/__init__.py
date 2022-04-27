@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.metrics import silhouette_score
-from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
 class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
     """ Transform numeric columns using StandardScaler and categorical columns

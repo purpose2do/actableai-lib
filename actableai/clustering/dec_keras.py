@@ -10,17 +10,13 @@ Author:
     Xifeng Guo. 2017.1.30
 """
 from time import time
-from turtle import st
 import numpy as np
 import tensorflow.keras.backend as K
 from tensorflow.keras.layers import Layer, InputSpec
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
-from tensorflow.keras.optimizers import SGD
 from tensorflow.keras import callbacks
-from tensorflow.keras.initializers import VarianceScaling
 from sklearn.cluster import KMeans
-import ray
 
 from typing import List, Tuple
 
