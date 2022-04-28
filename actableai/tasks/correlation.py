@@ -151,7 +151,9 @@ class AAICorrelationTask(AAITask):
                 "messenger": "Not enough data to calculate correlation",
                 "validations": [],
             }
-
+        if target_value is not None:
+            df[target_column] = df[target_column].astype(str)
+            target_value = str(target_value)
         corrs = Stats().corr(df, target_column, target_value, p_value=p_value)
         corrs = corrs[:top_k]
 
