@@ -35,7 +35,10 @@ class Stats(object):
         Returns:
             list: List containing the correlation between the target and all
         """
-        categorical_columns = df.columns[df.dtypes == object]
+        categorical_columns = list(df.columns[df.dtypes == object])
+        if target_value is not None and target_col not in categorical_columns:
+            df[target_col] = df[target_col].astype(str)
+            categorical_columns += [target_col]
         train_df = df[categorical_columns].fillna('NaN')
         enc = OneHotEncoder()
         enc.fit(train_df)
