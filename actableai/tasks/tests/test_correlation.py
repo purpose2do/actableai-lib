@@ -322,3 +322,15 @@ class TestRemoteCorrelation:
         assert "corr" in r["data"]
         assert len(r["data"]["corr"])==1
         assert len(r["data"]["charts"])==1
+
+    def test_target_value_non_object(self, correlation_task):
+        df = pd.DataFrame({
+            "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2,
+            "y": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2,
+            "z": ["a", "a", "a", "a", "a", "b", "b", "b", "b", "b"] * 2
+        })
+
+        r = correlation_task.run(df, "x", target_value="7")
+
+        assert r["status"] == "SUCCESS"
+        assert "corr" in r["data"]
