@@ -31,6 +31,7 @@ class _AAIRegressionTrainTask(AAITask):
             residuals_hyperparameters:Dict,
             num_gpus:int,
             eval_metric:Dict,
+            time_limit:Optional[int],
             ):
         """Sub class for running a regression without cross validation
 
@@ -57,6 +58,7 @@ class _AAIRegressionTrainTask(AAITask):
                 See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
             num_gpus: Number of GPUs used by AutoGluon
             eval_metric: Evaluation metric for validation
+            time_limit: Time limit of training
 
         Returns:
             Tuple:
@@ -114,7 +116,8 @@ class _AAIRegressionTrainTask(AAITask):
             presets=presets,
             hyperparameters=hyperparameters,
             ag_args_fit=ag_args_fit,
-            feature_generator=AutoMLPipelineFeatureGenerator(**feature_generator_args)
+            feature_generator=AutoMLPipelineFeatureGenerator(**feature_generator_args),
+            time_limit=time_limit,
         )
         predictor.persist_models()
         leaderboard = predictor.leaderboard(extra_info=True)
@@ -221,6 +224,7 @@ class _AAIInterventionTask(AAITask):
             presets (str): _description_
             model_directory (str): _description_
             num_gpus (int): _description_
+            time_limit (Optional[int]): time limit of training.
 
         Returns:
             _type_: _description_
@@ -383,7 +387,8 @@ class AAIRegressionTask(AAITask):
             drop_duplicates: bool = True,
             return_residuals: bool = False,
             kde_steps: int = 10,
-            num_gpus: int = 0):
+            num_gpus: int = 0,
+            time_limit: Optional[int] = None):
         """Run this regression task and return results.
 
         Args:
@@ -447,6 +452,8 @@ class AAIRegressionTask(AAITask):
             kde_steps: Steps used to generate KDE plots with debiasing. Defaults to 10.
             num_gpus: Number of GPUs used in nuisnace models in counterfactual
                 prediction. Defaults to 0.
+            time_limit: time limit (in seconds) of training. Defaults to None, which means
+                there is no time limit.
 
         Examples:
             >>> import pandas as pd
@@ -590,6 +597,7 @@ class AAIRegressionTask(AAITask):
                     residuals_hyperparameters=residuals_hyperparameters,
                     num_gpus=num_gpus,
                     eval_metric=eval_metric,
+                    time_limit=time_limit,
                 )
         else:
             predictor, \
@@ -621,6 +629,7 @@ class AAIRegressionTask(AAITask):
                 residuals_hyperparameters=residuals_hyperparameters,
                 num_gpus=num_gpus,
                 eval_metric=eval_metric,
+                time_limit=time_limit,
             )
 
         # Validation

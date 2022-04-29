@@ -91,6 +91,7 @@ def run_cross_validation(
     residuals_hyperparameters: Optional[dict],
     num_gpus: int,
     eval_metric: str,
+    time_limit: Optional[int],
 ) -> Tuple[AverageEnsembleClassifier, list, dict, list, pd.DataFrame, pd.DataFrame]:
     """Runs a cross validation for a classification task.
 
@@ -165,6 +166,7 @@ def run_cross_validation(
                 "residuals_hyperparameters": residuals_hyperparameters,
                 "num_gpus": num_gpus,
                 "eval_metric": eval_metric,
+                "time_limit": time_limit,
             },
         )
         for kfold_index, (train_index, val_index) in enumerate(kfolds_index_list)
