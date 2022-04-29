@@ -224,7 +224,7 @@ class _AAIInterventionTask(AAITask):
             presets (str): _description_
             model_directory (str): _description_
             num_gpus (int): _description_
-            time_limit: time limit of training.
+            time_limit (Optional[int]): time limit of training.
 
         Returns:
             _type_: _description_
