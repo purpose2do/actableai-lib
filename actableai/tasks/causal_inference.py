@@ -198,9 +198,8 @@ def infer_causal(
         if len(pd_table[treatments[0]].unique()) == 2:
             is_single_binary_treatment = True
     is_single_binary_outcome = False
-    if is_single_outcome and has_categorical_outcome:
-        if len(pd_table[outcomes[0]].unique()) == 2 or positive_outcome_value is not None:
-            is_single_binary_outcome = True
+    if is_single_outcome and (len(pd_table[outcomes[0]].unique()) == 2 or positive_outcome_value is not None):
+        is_single_binary_outcome = True
 
     # construct the dictionary of control values for categorical treatments
     for c in treatments:
