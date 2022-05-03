@@ -1,3 +1,4 @@
+from catboost import train
 from actableai.bayesian_regression.utils import expand_polynomial_categorical
 from actableai.data_imputation.error_detector.rule_parser import RulesBuilder
 from actableai.data_validation.base import *
@@ -207,6 +208,14 @@ class IsSufficientClassSampleChecker(IChecker):
         df_for_train = df.groupby(target).filter(lambda x : len(x)>=CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE)
         df_for_train = df_for_train[pd.notnull(df_for_train[target])]
         df_for_train = df_for_train.dropna(axis=1, how='all')
+        if len(df_for_train) * validation_ratio < df_for_train[target].nunique():
+            return CheckResult(name=self.name,
+                level = self.level,
+                message=f"The number of data sample in validation set\
+                {len(df_for_train) * validation_ratio} is insufficient\
+                compared to the number of unique values in the target prediction\
+                column {df_for_train[target].nunique()}.\
+                Please lower the validation ratio or increase the number of examples.")
         train_df, _ = train_test_split(df_for_train, test_size=validation_ratio, stratify=df_for_train[target])
         predictor = TabularPredictor(label=target, problem_type=problem_type)
         min_class_sample_threshold, _, _ = predictor._learner.adjust_threshold_if_necessary(train_df[target], threshold=10, holdout_frac=0.1, num_bag_folds=0)
