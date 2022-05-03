@@ -194,11 +194,3 @@ class TestIsSufficientClassSampleChecker:
         assert result is not None
         assert result.name == "IsSufficientClassSampleChecker"
         assert result.level == CheckLevels.CRITICAL
-        assert (
-            result.message
-            == f"The number of data sample in validation set\
-                {1.8} is insufficient\
-                compared to the number of unique values in the target prediction\
-                column {3}.\
-                Please lower the validation ratio or increase the number of examples."
-        )
