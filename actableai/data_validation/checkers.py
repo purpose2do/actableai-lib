@@ -237,7 +237,7 @@ class IsSufficientClassSampleChecker(IChecker):
                 {len(df_for_train) * validation_ratio} is insufficient\
                 compared to the number of unique values in the target prediction\
                 column {df_for_train[target].nunique()}.\
-                Please lower the validation ratio or increase the number of examples.",
+                Please increase the validation ratio or increase the number of examples.",
             )
         train_df, _ = train_test_split(
             df_for_train, test_size=validation_ratio, stratify=df_for_train[target]
