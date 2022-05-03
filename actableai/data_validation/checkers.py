@@ -1,4 +1,3 @@
-from catboost import train
 from actableai.bayesian_regression.utils import expand_polynomial_categorical
 from actableai.data_imputation.error_detector.rule_parser import RulesBuilder
 from actableai.data_validation.base import *
