@@ -210,7 +210,7 @@ class IsSufficientClassSampleChecker(IChecker):
         df_for_train = df_for_train.dropna(axis=1, how='all')
         if len(df_for_train) * validation_ratio < df_for_train[target].nunique():
             return CheckResult(name=self.name,
-                level = self.level,
+                level = CheckLevels.CRITICAL,
                 message=f"The number of data sample in validation set\
                 {len(df_for_train) * validation_ratio} is insufficient\
                 compared to the number of unique values in the target prediction\
