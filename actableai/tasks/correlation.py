@@ -99,6 +99,10 @@ class AAICorrelationTask(AAITask):
                 "runtime": time.time() - start,
             }
 
+        if target_value is not None:
+            df[target_column] = df[target_column].astype(str)
+            target_value = str(target_value)
+
         # Type reader
         type_specials = df.apply(get_type_special_no_ag)
         cat_cols = list((type_specials == "category") | (type_specials == "boolean"))
@@ -173,9 +177,6 @@ class AAICorrelationTask(AAITask):
                 "messenger": "Not enough data to calculate correlation",
                 "validations": [],
             }
-        if target_value is not None:
-            df[target_column] = df[target_column].astype(str)
-            target_value = str(target_value)
 
         cat_cols = []
         gen_cat_cols = []
