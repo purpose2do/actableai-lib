@@ -3,8 +3,6 @@ import pandas as pd
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 
-import pandas as pd
-
 
 class AAICorrelationTask(AAITask):
     """Correlation Task
@@ -77,6 +75,7 @@ class AAICorrelationTask(AAITask):
         from actableai.data_validation.base import CheckLevels
         from actableai.utils.preprocessing import SKLearnAGFeatureWrapperBase
         from actableai.utils import get_type_special_no_ag
+        from actableai.utils.preprocessing import CustomeDateTimeFeatureGenerator
 
         if use_bonferroni:
             p_value /= len(df.columns) - 1
@@ -105,13 +104,31 @@ class AAICorrelationTask(AAITask):
 
         # Type reader
         type_specials = df.apply(get_type_special_no_ag)
+        date_cols = list(type_specials == "datetime")
+
+        ct = ColumnTransformer(
+            [
+                (
+                    DatetimeFeatureGenerator.__name__,
+                    SKLearnAGFeatureWrapperBase(CustomeDateTimeFeatureGenerator()),
+                    date_cols,
+                ),
+            ],
+            remainder="passthrough",
+            sparse_threshold=0,
+            verbose_feature_names_out=False,
+            verbose=True,
+        )
+        df = pd.DataFrame(
+            ct.fit_transform(df).tolist(), columns=ct.get_feature_names_out()
+        )
+        type_specials = df.apply(get_type_special_no_ag)
         cat_cols = list((type_specials == "category") | (type_specials == "boolean"))
         text_cols = list(type_specials == "text")
-        date_cols = list(type_specials == "datetime")
+
         og_df_col = df.columns
         og_target_col = df.loc[:, cat_cols]
 
-        # Data Transformation
         ct = ColumnTransformer(
             [
                 (OneHotEncoder.__name__, OneHotEncoder(), cat_cols),
@@ -124,12 +141,7 @@ class AAICorrelationTask(AAITask):
                         )
                     ),
                     text_cols,
-                ),
-                (
-                    DatetimeFeatureGenerator.__name__,
-                    SKLearnAGFeatureWrapperBase(DatetimeFeatureGenerator()),
-                    date_cols,
-                ),
+                )
             ],
             remainder="passthrough",
             sparse_threshold=0,
