@@ -1,6 +1,6 @@
 import pandas as pd
 
-from actableai.timeseries.util import handle_datetime_column
+from actableai.timeseries.utils import handle_datetime_column
 
 simple_dt = pd.to_datetime('18-08-2021')
 hard_dt = pd.to_datetime('01-08-2021')
@@ -48,7 +48,6 @@ class TestParseDatetime:
         assert r.isnull().sum() == 0
 
     def test_year_day_month_format(self):
-        from actableai.timeseries.util import handle_datetime_column
         rng = pd.Series(pd.date_range('2015-01-01', periods=24, freq='MS'))
         ydm_series = pd.to_datetime(rng, format='%Y-%d-%m').astype(str)
         r, col_type = handle_datetime_column(ydm_series)
@@ -57,7 +56,6 @@ class TestParseDatetime:
         assert col_type == "datetime"
 
     def test_datetime_contain_milliseconds(self):
-        from actableai.timeseries.util import handle_datetime_column
         rng = pd.Series(pd.date_range('2015-01-01', periods=24, freq='U'))
         r, col_type = handle_datetime_column(rng)
         assert (r == rng).all()
