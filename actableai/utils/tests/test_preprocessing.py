@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
 from unittest.mock import Mock, MagicMock
-from actableai.utils.preprocessing import  impute_df, PercentageTransformer
+from actableai.utils.preprocessors.preprocessing import  impute_df, PercentageTransformer
 
 @pytest.fixture(scope="function")
 def df():

@@ -73,9 +73,9 @@ class AAICorrelationTask(AAITask):
         from actableai.data_validation.params import CorrelationDataValidator
         from actableai.utils import is_fitted
         from actableai.data_validation.base import CheckLevels
-        from actableai.utils.preprocessing import SKLearnAGFeatureWrapperBase
+        from actableai.utils.preprocessors.preprocessing import SKLearnAGFeatureWrapperBase
         from actableai.utils import get_type_special_no_ag
-        from actableai.utils.preprocessing import CustomeDateTimeFeatureGenerator
+        from actableai.utils.preprocessors.autogluon_preproc import CustomeDateTimeFeatureGenerator
 
         if use_bonferroni:
             p_value /= len(df.columns) - 1
