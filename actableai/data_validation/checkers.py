@@ -1,3 +1,4 @@
+from sklearn.preprocessing import PolynomialFeatures
 from actableai.bayesian_regression.utils import expand_polynomial_categorical
 from actableai.data_imputation.error_detector.rule_parser import RulesBuilder
 from actableai.data_validation.base import *
@@ -797,10 +798,9 @@ class CheckColumnInflateLimit(IChecker):
         Returns:
             Optional[CheckResult]: _description_
         """
-        df_polynomial, _ = expand_polynomial_categorical(
-            df[features], polynomial_degree, False
-        )
-        if df_polynomial.shape[1] > n_columns:
+        num_of_cols_dums = df[features].select_dtypes(include=["object"]).nunique().sum()
+        inflation_size = PolynomialFeatures._num_combinations(num_of_cols_dums, 1, polynomial_degree, False, True)
+        if inflation_size > n_columns:
             return CheckResult(
                 name=self.name,
                 level=self.level,
