@@ -211,6 +211,7 @@ class AAITimeSeriesForecaster:
             else:
                 univariate_model_params.append(model_param)
 
+        # Train multi-target model
         multi_target_model = AAITimeSeriesMultiTargetModel(
             target_columns=self.target_columns,
             prediction_length=self.prediction_length,
@@ -237,6 +238,7 @@ class AAITimeSeriesForecaster:
             fit_full=False,
         )
 
+        # Train multivariate models
         multivariate_model = None
         multivariate_fit_time = 0
         if len(self.target_columns) > 1 and len(multivariate_model_params) > 0:
@@ -269,6 +271,7 @@ class AAITimeSeriesForecaster:
 
         start_time = time()
 
+        # Choose best model
         if multivariate_model is not None:
             _, _, df_multi_target_agg_metrics = multi_target_model.score(df_dict)
             _, _, df_multivariate_agg_metrics = multivariate_model.score(df_dict)
@@ -372,6 +375,7 @@ class AAITimeSeriesForecaster:
             num_workers=num_workers,
         )
 
+        # Post process scores and predictions
         df_predictions = pd.DataFrame()
         for group, df_group in df_predictions_dict.items():
             df_group["_group"] = [group] * len(df_group)
@@ -433,6 +437,7 @@ class AAITimeSeriesForecaster:
 
         df_predictions_dict = self.model.predict(df_dict, quantiles=quantiles)
 
+        # Post process predictions
         df_predictions = pd.DataFrame()
         for group, df_group in df_predictions_dict.items():
             df_group["_group"] = [group] * len(df_group)

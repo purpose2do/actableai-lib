@@ -407,18 +407,21 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
             if model_param_class is not None
         }
 
+        # Split data
         train_data, train_data_partial, tune_data = self._generate_train_valid_data(
             df_dict,
             tune_samples,
             sampling_method,
         )
 
+        # Choose distribution output
         first_group_targets = train_data.list_data[0]["target"]
         if (first_group_targets >= 0).all() and first_group_targets in visions.Integer:
             self.distr_output = PoissonOutput()
         else:
             self.distr_output = StudentTOutput()
 
+        # Set up search space
         models_search_space = []
         for model_name, model_param_class in self.model_params_dict.items():
             if model_param_class is not None:
@@ -432,6 +435,7 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
 
         trials_time_total = 0
 
+        # Tune hyperparameters
         if use_ray:
             algo = HyperOptSearch(
                 search_space, metric=loss, mode="min", random_state_seed=random_state
@@ -501,6 +505,7 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
         else:
             final_train_data = train_data_partial
 
+        # Create final model using best parameters
         self.predictor = self._create_predictor(
             model_params_dict=self.model_params_dict,
             params=self.best_params,
@@ -603,6 +608,7 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
         ts_list = list(ts_it)
         forecast_list = list(forecast_it)
 
+        # Create custom metric function
         rmse = lambda target, forecast: np.sqrt(np.mean(np.square(target - forecast)))
 
         # Evaluate

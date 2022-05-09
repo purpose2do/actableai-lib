@@ -152,6 +152,8 @@ class AAITimeSeriesMultiTargetModel(AAITimeSeriesBaseModel):
 
         total_time = 0
 
+        # Train one model per target
+        # TODO make this parallel
         for target_column in self.target_columns:
             shift_target_column = self.shift_target_columns_dict[target_column]
 
