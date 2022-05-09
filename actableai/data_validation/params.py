@@ -99,7 +99,6 @@ class BayesianRegressionDataValidator:
             DoNotContainEmptyColumnsChecker(level=CheckLevels.CRITICAL).check(df, [target]),
             IsSufficientDataChecker(level=CheckLevels.CRITICAL).check(df, n_sample=MINIMUM_NUMBER_OF_SAMPLE),
             DoNotContainMixedChecker(level=CheckLevels.WARNING).check(df, features),
-            # We do not run for more than n_unique_level unique categorical values
             CheckNUnique(level=CheckLevels.CRITICAL).check(df=df, n_unique_level=EXPLAIN_SAMPLES_UNIQUE_CATEGORICAL_LIMIT, analytics='Bayesian Regression'),
             CheckColumnInflateLimit(level=CheckLevels.CRITICAL).check(df, features, polynomial_degree, POLYNOMIAL_INFLATE_COLUMN_LIMIT)
         ]
