@@ -55,8 +55,8 @@ class TestTimeSeries:
 
         results = forecast_task.run(
             df,
-            date_column,
             prediction_length=prediction_length,
+            date_column=date_column,
             predicted_columns=target_columns,
             group_by=group_by,
             feature_columns=feature_columns,
@@ -356,8 +356,8 @@ class TestTimeSeries:
 
         results = forecast_task.run(
             df,
-            date_column,
             prediction_length=prediction_length,
+            date_column=date_column,
             predicted_columns=target_columns,
             trials=10,
             use_ray=False,
@@ -385,14 +385,19 @@ class TestTimeSeries:
         forecast_task = AAIForecastTask(use_ray=True)
         results = forecast_task.run(
             df,
-            date_column,
             prediction_length=prediction_length,
+            date_column=date_column,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,
             use_ray=True,
-            RAY_CPU_PER_TRIAL=1,
-            RAY_MAX_CONCURRENT=1,
+            ray_tune_kwargs={
+                "resources_per_trial": {
+                    "cpu": 1,
+                    "gpu": 0,
+                },
+            },
+            max_concurrent=1,
         )
 
         assert results is not None
@@ -421,8 +426,8 @@ class TestTimeSeries:
 
         results = forecast_task.run(
             df,
-            date_column,
             prediction_length=prediction_length,
+            date_column=date_column,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,
@@ -456,8 +461,8 @@ class TestTimeSeries:
 
         results = forecast_task.run(
             df,
-            date_column,
             prediction_length=prediction_length,
+            date_column=date_column,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,
@@ -489,8 +494,8 @@ class TestTimeSeries:
 
         results = forecast_task.run(
             df,
-            date_column,
             prediction_length=prediction_length,
+            date_column=date_column,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,
@@ -522,8 +527,8 @@ class TestTimeSeries:
 
         results = forecast_task.run(
             df,
-            date_column,
             prediction_length=prediction_length,
+            date_column=date_column,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,
@@ -559,8 +564,8 @@ class TestTimeSeries:
 
         results = forecast_task.run(
             df,
-            date_column,
             prediction_length=prediction_length,
+            date_column=date_column,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,
@@ -592,8 +597,8 @@ class TestTimeSeries:
 
         results = forecast_task.run(
             df,
-            date_column,
             prediction_length=prediction_length,
+            date_column=date_column,
             predicted_columns=["test"],
             model_params=[params.ConstantValueParams()],
             trials=1,
@@ -627,8 +632,8 @@ class TestTimeSeries:
 
         results = forecast_task.run(
             df,
-            date_column,
             prediction_length=prediction_length,
+            date_column=date_column,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,
@@ -664,8 +669,8 @@ class TestTimeSeries:
 
         results = forecast_task.run(
             df,
-            date_column,
             prediction_length=prediction_length,
+            date_column=date_column,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,

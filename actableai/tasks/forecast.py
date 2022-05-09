@@ -13,13 +13,12 @@ class AAIForecastTask(AAITask):
         self,
         df: pd.DataFrame,
         prediction_length: int,
-        date_column: str = None,
+        date_column: Optional[str] = None,
         predicted_columns: Optional[List[str]] = None,
         group_by: Optional[List[str]] = None,
         feature_columns: Optional[List[str]] = None,
-        RAY_CPU_PER_TRIAL: int = 3,
-        RAY_GPU_PER_TRIAL: int = 0,
-        RAY_MAX_CONCURRENT: int = 3,
+        ray_tune_kwargs: Optional[Dict] = None,
+        max_concurrent: int = 3,
         trials: int = 1,
         model_params: Optional[List[object]] = None,
         use_ray: bool = True,
@@ -44,9 +43,8 @@ class AAIForecastTask(AAITask):
                 forecast. If one or more feature columns contain dynamic features
                 (features that change over time) the dataset must contain
                 `prediction_length` features data points in the future.
-            RAY_GPU_PER_TRIAL: Number of CPU to use per trial.
-            RAY_GPU_PER_TRIAL: Number of GPU to use per trial.
-            RAY_MAX_CONCURRENT: Maximum number of concurrent ray task.
+            ray_tune_kwargs: Named parameters to pass to ray's `tune` function.
+            max_concurrent: Maximum number of concurrent ray task.
             trials: Number of trials for hyperparameter search.
             model_params: List of model parameters to run the tuning search on. If None
                 some default models will be used.
@@ -95,6 +93,16 @@ class AAIForecastTask(AAITask):
             feature_columns = []
         if group_by is None:
             group_by = []
+        if ray_tune_kwargs is None:
+            ray_tune_kwargs = {
+                "resources_per_trial": {
+                    "cpu": 3,
+                    "gpu": 0,
+                },
+            }
+
+        if "raise_on_failed_trial" not in ray_tune_kwargs:
+            ray_tune_kwargs["raise_on_failed_trial"] = False
 
         # To resolve any issues of access rights make a copy
         df = df.copy()
@@ -241,7 +249,10 @@ class AAIForecastTask(AAITask):
         first_group = list(df_train_dict.keys())[0]
         freq = freq_dict[first_group]
 
-        mx_ctx = mx.gpu() if RAY_GPU_PER_TRIAL > 0 else mx.cpu()
+        ray_gpu_per_trial = 0
+        if "resources_per_trial" in ray_tune_kwargs:
+            ray_gpu_per_trial = ray_tune_kwargs["resources_per_trial"].get("gpu", 0)
+        mx_ctx = mx.gpu() if ray_gpu_per_trial > 0 else mx.cpu()
 
         if model_params is None:
             model_params = [
@@ -295,18 +306,12 @@ class AAIForecastTask(AAITask):
             group_dict=group_dict,
             loss="mean_wQuantileLoss",
             trials=trials,
-            max_concurrent=RAY_MAX_CONCURRENT,
+            max_concurrent=max_concurrent,
             use_ray=use_ray,
             tune_samples=tune_samples,
             sampling_method=sampling_method,
             random_state=seed,
-            ray_tune_kwargs={
-                "resources_per_trial": {
-                    "cpu": RAY_CPU_PER_TRIAL,
-                    "gpu": RAY_GPU_PER_TRIAL,
-                },
-                "raise_on_failed_trial": False,
-            },
+            ray_tune_kwargs=ray_tune_kwargs,
             verbose=verbose,
         )
 
