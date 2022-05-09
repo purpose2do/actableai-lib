@@ -346,3 +346,4 @@ class TestRemoteCorrelation:
 
         assert r["status"] == "SUCCESS"
         assert "corr" in r["data"]
+        assert "charts" in r["data"]

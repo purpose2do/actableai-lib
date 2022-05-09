@@ -17,20 +17,6 @@ def impute_df(df, numeric_imputer=None, categorical_imputer=None):
     if len(categorical_cols) > 0:
         df[categorical_cols] = categorical_imputer.fit_transform(df[categorical_cols])
 
-class TimeZoneTransformer(TransformerMixin, BaseEstimator):
-    def fit(self, X):
-        return self
-
-    def transform(self, X):
-        self.result = X.apply(lambda x: x.dt.tz_convert(None))
-        return self.result
-
-    def fit_transform(self, X, y=None, **fit_params):
-        return self.transform(X)
-
-    def get_feature_names(self):
-        return self.result.columns
-
 
 class CopyTransformer(TransformerMixin, BaseEstimator):
     def fit(self, X):
