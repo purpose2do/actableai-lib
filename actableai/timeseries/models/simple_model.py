@@ -442,7 +442,7 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
             if ray_tune_kwargs is None:
                 ray_tune_kwargs = {}
 
-            trainable = partial(
+            trainable = tune.with_parameters(
                 self._trainable,
                 model_params_dict=self.model_params_dict,
                 train_data_partial=train_data_partial,
