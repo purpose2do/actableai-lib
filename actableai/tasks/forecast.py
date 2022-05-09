@@ -12,8 +12,8 @@ class AAIForecastTask(AAITask):
     def run(
         self,
         df: pd.DataFrame,
-        date_column: str,
         prediction_length: int,
+        date_column: str = None,
         predicted_columns: Optional[List[str]] = None,
         group_by: Optional[List[str]] = None,
         feature_columns: Optional[List[str]] = None,
@@ -33,9 +33,9 @@ class AAIForecastTask(AAITask):
 
         Args:
             df: Input DataFrame.
+            prediction_length: Length of the prediction to forecast.
             date_column: Column containing the date/datetime/time component of the time
                 series.
-            prediction_length: Length of the prediction to forecast.
             predicted_columns: List of columns to forecast, if None all the columns will
                 be selected.
             group_by: List of columns to use to separate different time series/groups.
@@ -99,6 +99,10 @@ class AAIForecastTask(AAITask):
         # To resolve any issues of access rights make a copy
         df = df.copy()
         df = sanitize_timezone(df)
+
+        if date_column is None:
+            df["_date"] = df.index
+            df = df.reset_index(drop=True)
 
         # First parameters validation
         data_validation_results = TimeSeriesDataValidator().validate(
