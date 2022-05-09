@@ -392,7 +392,7 @@ class TestTimeSeries:
             trials=1,
             use_ray=True,
             RAY_CPU_PER_TRIAL=1,
-            RAY_MAX_CONCURRENT=None,
+            RAY_MAX_CONCURRENT=1,
         )
 
         assert results is not None

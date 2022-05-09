@@ -57,7 +57,7 @@ class TestAAITimeSeriesMultiTargetModel:
                 mx_ctx=mx_ctx,
                 loss="mean_wQuantileLoss",
                 trials=trials,
-                max_concurrent=4 if not use_ray else None,
+                max_concurrent=4 if not use_ray else 1,
                 use_ray=use_ray,
                 tune_samples=3,
                 sampling_method="random",
@@ -68,7 +68,6 @@ class TestAAITimeSeriesMultiTargetModel:
                         "gpu": 0,
                     },
                     "raise_on_failed_trial": False,
-                    "max_concurrent_trials": 1 if use_ray else None,
                 },
                 verbose=3,
             )

@@ -77,7 +77,7 @@ class AAITimeSeriesBaseModel(ABC):
         *,
         loss: str = "mean_wQuantileLoss",
         trials: int = 3,
-        max_concurrent: Optional[int] = None,
+        max_concurrent: Optional[int] = 1,
         use_ray: bool = True,
         tune_samples: int = 3,
         sampling_method: str = "random",

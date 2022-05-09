@@ -353,7 +353,9 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
                 list_data += tune_data_sample.list_data
 
             tune_data = ListDataset(
-                list_data, self.freq_gluon, one_dim_target=(len(self.target_columns) == 1)
+                list_data,
+                self.freq_gluon,
+                one_dim_target=(len(self.target_columns) == 1),
             )
 
         return train_data, train_data_partial, tune_data
@@ -366,7 +368,7 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
         *,
         loss: str = "mean_wQuantileLoss",
         trials: int = 3,
-        max_concurrent: Optional[int] = None,
+        max_concurrent: Optional[int] = 1,
         use_ray: bool = True,
         tune_samples: int = 3,
         sampling_method: str = "random",

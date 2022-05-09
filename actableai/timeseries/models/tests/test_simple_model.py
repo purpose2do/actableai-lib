@@ -14,6 +14,7 @@ from actableai.utils.testing import init_ray, generate_forecast_df_dict
 def mx_ctx():
     yield mx.cpu()
 
+
 class TestAAITimeSeriesSimpleModel:
     def _fit_predict_model(
         self,
@@ -56,7 +57,7 @@ class TestAAITimeSeriesSimpleModel:
                 mx_ctx=mx_ctx,
                 loss="mean_wQuantileLoss",
                 trials=trials,
-                max_concurrent=4 if not use_ray else None,
+                max_concurrent=4 if not use_ray else 1,
                 use_ray=use_ray,
                 tune_samples=3,
                 sampling_method="random",
@@ -67,7 +68,6 @@ class TestAAITimeSeriesSimpleModel:
                         "gpu": 0,
                     },
                     "raise_on_failed_trial": False,
-                    "max_concurrent_trials": 1 if use_ray else None,
                 },
                 verbose=3,
             )
