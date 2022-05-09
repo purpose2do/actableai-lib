@@ -83,7 +83,7 @@ class AAIClusteringTask(AAITask):
         from actableai.data_validation.params import ClusteringDataValidator
         from actableai.data_validation.base import CheckLevels
         from actableai.utils import gen_anchor_explanation
-        from actableai.utils.preprocessing import impute_df
+        from actableai.utils.preprocessors.preprocessing import impute_df
         from actableai.clustering import ClusteringDataTransformer
         from actableai.clustering.explain import generate_cluster_descriptions
         from alibi.explainers import AnchorTabular

@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+import pandas as pd
 from actableai.tasks.correlation import AAICorrelationTask
 from actableai.data_validation.base import *
 
@@ -334,3 +335,15 @@ class TestRemoteCorrelation:
 
         assert r["status"] == "SUCCESS"
         assert "corr" in r["data"]
+
+    def test_textngram(self, correlation_task):
+        df = pd.DataFrame({
+            "x": ["Hello my name is Mehdi", "Hello my name is Axen", "Hello my name is Benjamin", "is Benjamin the best ?"] * 100,
+            "y": [0, 0, 100, 100] * 100
+        })
+
+        r = correlation_task.run(df, "y")
+
+        assert r["status"] == "SUCCESS"
+        assert "corr" in r["data"]
+        assert "charts" in r["data"]
