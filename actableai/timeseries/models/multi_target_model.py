@@ -5,7 +5,7 @@ import pandas as pd
 from mxnet.context import Context
 
 from actableai.timeseries.models.base import AAITimeSeriesBaseModel
-from actableai.timeseries.models.simple_model import AAITimeSeriesSimpleModel
+from actableai.timeseries.models.single_model import AAITimeSeriesSimpleModel
 from actableai.timeseries.exceptions import UntrainedModelException
 from actableai.timeseries.models.params import BaseParams
 
