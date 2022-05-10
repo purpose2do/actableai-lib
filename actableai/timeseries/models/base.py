@@ -31,12 +31,13 @@ class AAITimeSeriesBaseModel(ABC):
             prediction_length: Length of the prediction to forecast.
             freq: Frequency of the time series.
             group_dict: Dictionary containing the unique label for each group.
-            real_static_feature_dict: Dictionary containing a list of real features for
-                each group.
-            cat_static_feature_dict: Dictionary containing a list of categorical
+            real_static_feature_dict: Dictionary containing a list of real static
                 features for each group.
-            real_dynamic_feature_columns: List of columns containing real features.
-            cat_dynamic_feature_columns: List of columns containing categorical
+            cat_static_feature_dict: Dictionary containing a list of categorical static
+                features for each group.
+            real_dynamic_feature_columns: List of columns containing real dynamic
+                features.
+            cat_dynamic_feature_columns: List of columns containing categorical dynamic
                 features.
         """
         self.target_columns = target_columns

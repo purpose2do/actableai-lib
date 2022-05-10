@@ -10,10 +10,30 @@ class AAIForecastTask(AAITask):
 
     @staticmethod
     def _split_static_dynamic_features(
-        df_dict, df_unique, real_feature_columns, cat_feature_columns
-    ):
-        """
-        TODO write documentation
+        df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        df_unique: pd.DataFrame,
+        real_feature_columns: List[str],
+        cat_feature_columns: List[str],
+    ) -> Tuple[
+        Dict[Tuple[Any, ...], List[float]],
+        Dict[Tuple[Any, ...], List[Any]],
+        List[str],
+        List[str],
+    ]:
+        """Split features columns into two groups, static and dynamic.
+
+        Args:
+            df_dict: Dictionary containing the time series for each group.
+            df_unique: DataFrame containing the number of unique values for each column.
+            real_feature_columns: List of real feature columns.
+            cat_feature_columns: List of categorical feature columns.
+
+        Returns:
+            - Dictionary containing a list of real static features for each group.
+            - Dictionary containing a list of categorical static features for each
+                group.
+            - List of columns containing real dynamic features.
+            - List of columns containing categorical dynamic features.
         """
         real_static_feature_dict = {group: [] for group in df_dict.keys()}
         cat_static_feature_dict = {group: [] for group in df_dict.keys()}
@@ -51,16 +71,35 @@ class AAIForecastTask(AAITask):
 
     @staticmethod
     def _split_train_valid_predict(
-        df_dict,
-        freq_dict,
-        prediction_length,
-        predicted_columns,
-        group_by,
-        real_dynamic_feature_columns,
-        cat_dynamic_feature_columns,
-    ):
-        """
-        TODO write documentation
+        df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        freq_dict: Dict[Tuple[Any, ...], str],
+        prediction_length: int,
+        predicted_columns: List[str],
+        group_by: List[str],
+        real_dynamic_feature_columns: List[str],
+        cat_dynamic_feature_columns: List[str],
+    ) -> Tuple[
+        Dict[Tuple[Any, ...], pd.DataFrame],
+        Dict[Tuple[Any, ...], pd.DataFrame],
+        Dict[Tuple[Any, ...], pd.DataFrame],
+    ]:
+        """Split dataset into three sub datasets, train, validation, and prediction.
+
+        Args:
+            df_dict: Dictionary containing the time series for each group.
+            freq_dict: Dictionary containing the frequency of each group.
+            prediction_length: Length of the prediction to forecast.
+            predicted_columns: List of columns to forecast.
+            group_by: List of columns to use to separate different time series/groups.
+            real_dynamic_feature_columns: List of columns containing real dynamic
+                features.
+            cat_dynamic_feature_columns: List of columns containing categorical dynamic
+                features.
+
+        Returns:
+            - Dictionary containing the training time series for each group.
+            - Dictionary containing the validation time series for each group.
+            - Dictionary containing the prediction time series for each group.
         """
         from actableai.timeseries.utils import interpolate
 
@@ -104,14 +143,25 @@ class AAIForecastTask(AAITask):
 
     @staticmethod
     def _get_default_model_params(
-        train_size,
-        prediction_length,
-        predicted_columns,
-        real_dynamic_feature_columns,
-        cat_dynamic_feature_columns,
-    ):
-        """
-        TODO write documentation
+        train_size: int,
+        prediction_length: int,
+        predicted_columns: List[str],
+        real_dynamic_feature_columns: List[str],
+        cat_dynamic_feature_columns: List[str],
+    ) -> List[object]:
+        """Get/generate default model parameters.
+
+        Args:
+            train_size: size of the training dataset.
+            prediction_length: Length of the prediction to forecast.
+            predicted_columns: List of columns to forecast.
+            real_dynamic_feature_columns: List of columns containing real dynamic
+                features.
+            cat_dynamic_feature_columns: List of columns containing categorical dynamic
+                features.
+
+        Returns:
+            List containing the default parameters.
         """
         from actableai.timeseries.models import params
 
@@ -152,16 +202,29 @@ class AAIForecastTask(AAITask):
 
     @staticmethod
     def _convert_to_legacy_output(
-        df_item_metrics,
-        df_val_predictions,
-        df_predictions,
-        date_column,
-        prediction_length,
-        group_by,
-        df_valid_dict,
-    ):
-        """
-        TODO write documentation
+        df_item_metrics: pd.DataFrame,
+        df_val_predictions: pd.DataFrame,
+        df_predictions: pd.DataFrame,
+        date_column: str,
+        prediction_length: int,
+        group_by: List[str],
+        df_valid_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+    ) -> Dict[str, Any]:
+        """Convert time series forecasting scoring to 'legacy' output.
+
+        Args:
+            df_item_metrics: Metrics for each target and groups.
+            df_val_predictions: Predicted time series for validation.
+            df_predictions: Predicted time series.
+            date_column: Column containing the date/datetime/time component of the time
+                series.
+            prediction_length: Length of the prediction to forecast.
+            group_by: List of columns to use to separate different time series/groups.
+            df_valid_dict: Dictionary containing the validation time series for each
+                group.
+
+        Returns:
+            Legacy output.
         """
         # TODO REMOVE LEGACY CODE/FUNCTION
         val_dates = [

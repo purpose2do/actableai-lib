@@ -47,8 +47,9 @@ class AAITimeSeriesForecaster:
             cat_static_feature: Dictionary or List containing the categorical static
                 features, if dictionary it represents the features for each group, if
                 list it means that there is no groups.
-            real_dynamic_feature_columns: List of columns containing real features.
-            cat_dynamic_feature_columns: List of columns containing categorical
+            real_dynamic_feature_columns: List of columns containing real dynamic
+                features.
+            cat_dynamic_feature_columns: List of columns containing categorical dynamic
                 features.
         """
         self.date_column = date_column
