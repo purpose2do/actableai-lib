@@ -464,7 +464,7 @@ class AAIForecastTask(AAITask):
         else:
             df_unique = df.nunique()
 
-        df_dict, group_dict, freq_dict = AAITimeSeriesForecaster.pre_process_data(
+        df_dict, group_label_dict, freq_dict = AAITimeSeriesForecaster.pre_process_data(
             df=df,
             date_column=date_column,
             group_by=group_by,
@@ -549,7 +549,7 @@ class AAIForecastTask(AAITask):
             mx_ctx=mx_ctx,
             df_dict=df_train_dict,
             freq=freq,
-            group_dict=group_dict,
+            group_label_dict=group_label_dict,
             loss="mean_wQuantileLoss",
             trials=trials,
             max_concurrent=max_concurrent,

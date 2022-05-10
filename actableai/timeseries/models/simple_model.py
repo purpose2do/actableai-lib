@@ -39,7 +39,7 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
         target_columns: List[str],
         prediction_length: int,
         freq: str,
-        group_dict: Optional[Dict[Tuple[Any], int]] = None,
+        group_label_dict: Optional[Dict[Tuple[Any], int]] = None,
         real_static_feature_dict: Optional[Dict[Tuple[Any], List[float]]] = None,
         cat_static_feature_dict: Optional[Dict[Tuple[Any], List[Any]]] = None,
         real_dynamic_feature_columns: Optional[List[str]] = None,
@@ -51,7 +51,7 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
             target_columns: List of columns to forecast.
             prediction_length: Length of the prediction to forecast.
             freq: Frequency of the time series.
-            group_dict: Dictionary containing the unique label for each group.
+            group_label_dict: Dictionary containing the unique label for each group.
             real_static_feature_dict: Dictionary containing a list of real features for
                 each group.
             cat_static_feature_dict: Dictionary containing a list of categorical
@@ -64,7 +64,7 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
             target_columns,
             prediction_length,
             freq,
-            group_dict,
+            group_label_dict,
             real_static_feature_dict,
             cat_static_feature_dict,
             real_dynamic_feature_columns,
@@ -297,7 +297,7 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
             cat_static_feature_dict=self.cat_static_feature_dict,
             real_dynamic_feature_columns=self.real_dynamic_feature_columns,
             cat_dynamic_feature_columns=self.cat_dynamic_feature_columns,
-            group_dict=self.group_dict,
+            group_label_dict=self.group_label_dict,
             prediction_length=self.prediction_length,
             training=True,
         )
@@ -310,7 +310,7 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
             cat_static_feature_dict=self.cat_static_feature_dict,
             real_dynamic_feature_columns=self.real_dynamic_feature_columns,
             cat_dynamic_feature_columns=self.cat_dynamic_feature_columns,
-            group_dict=self.group_dict,
+            group_label_dict=self.group_label_dict,
             prediction_length=self.prediction_length,
             slice_df=slice(-self.prediction_length - tune_samples),
             training=True,
@@ -337,7 +337,7 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
                     cat_static_feature_dict=self.cat_static_feature_dict,
                     real_dynamic_feature_columns=self.real_dynamic_feature_columns,
                     cat_dynamic_feature_columns=self.cat_dynamic_feature_columns,
-                    group_dict=self.group_dict,
+                    group_label_dict=self.group_label_dict,
                     prediction_length=self.prediction_length,
                     slice_df=slice_function,
                     training=True,
@@ -539,7 +539,7 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
             cat_static_feature_dict=self.cat_static_feature_dict,
             real_dynamic_feature_columns=self.real_dynamic_feature_columns,
             cat_dynamic_feature_columns=self.cat_dynamic_feature_columns,
-            group_dict=self.group_dict,
+            group_label_dict=self.group_label_dict,
             prediction_length=self.prediction_length,
             training=True,
         )
@@ -596,7 +596,7 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
             cat_static_feature_dict=self.cat_static_feature_dict,
             real_dynamic_feature_columns=self.real_dynamic_feature_columns,
             cat_dynamic_feature_columns=self.cat_dynamic_feature_columns,
-            group_dict=self.group_dict,
+            group_label_dict=self.group_label_dict,
             prediction_length=self.prediction_length,
             training=True,
         )
@@ -724,7 +724,7 @@ class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
             cat_static_feature_dict=self.cat_static_feature_dict,
             real_dynamic_feature_columns=self.real_dynamic_feature_columns,
             cat_dynamic_feature_columns=self.cat_dynamic_feature_columns,
-            group_dict=self.group_dict,
+            group_label_dict=self.group_label_dict,
             prediction_length=self.prediction_length,
             training=False,
         )

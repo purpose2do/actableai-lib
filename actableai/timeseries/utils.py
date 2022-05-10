@@ -1,11 +1,8 @@
-import json
 import re
 
 from typing import Optional, Tuple, Union, Dict, Callable, Iterable, List, Any, Iterator
 from copy import deepcopy
 
-import numpy as np
-import visions as v
 import pandas as pd
 
 
@@ -217,7 +214,7 @@ def dataframe_to_list_dataset(
     cat_static_feature_dict: Optional[Dict[Tuple[Any], List[Any]]] = None,
     real_dynamic_feature_columns: Optional[List[str]] = None,
     cat_dynamic_feature_columns: Optional[List[str]] = None,
-    group_dict: Optional[Dict[Tuple[Any], int]] = None,
+    group_label_dict: Optional[Dict[Tuple[Any], int]] = None,
     prediction_length: Optional[int] = None,
     slice_df: Optional[Union[slice, Callable]] = None,
     training: bool = True,
@@ -235,7 +232,7 @@ def dataframe_to_list_dataset(
         real_dynamic_feature_columns: List of columns containing real features.
         cat_dynamic_feature_columns: List of columns containing categorical
             features.
-        group_dict: Dictionary containing the unique label for each group.
+        group_label_dict: Dictionary containing the unique label for each group.
         prediction_length: Length of the prediction to forecast. Cannot be None if
             `training` is False.
         slice_df: Slice or function to call that will return a slice. The slice will be
@@ -255,8 +252,8 @@ def dataframe_to_list_dataset(
         real_dynamic_feature_columns = []
     if cat_dynamic_feature_columns is None:
         cat_dynamic_feature_columns = []
-    if group_dict is None:
-        group_dict = {}
+    if group_label_dict is None:
+        group_label_dict = {}
 
     if prediction_length is None and not training:
         raise Exception("prediction length cannot be None if training is False")
@@ -282,8 +279,8 @@ def dataframe_to_list_dataset(
         real_static_features = real_static_feature_dict.get(group, [])
         cat_static_features = cat_static_feature_dict.get(group, [])
 
-        if len(group_dict) > 0:
-            cat_static_features = [group_dict[group], *cat_static_features]
+        if len(group_label_dict) > 0:
+            cat_static_features = [group_label_dict[group], *cat_static_features]
 
         if len(real_static_features) > 0:
             entry["feat_static_real"] = real_static_features

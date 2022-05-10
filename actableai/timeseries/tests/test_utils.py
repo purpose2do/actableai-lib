@@ -380,20 +380,20 @@ def test_dataframe_to_list_dataset_cat_dynamic_features(
 @pytest.mark.parametrize("n_groups", [1, 5])
 @pytest.mark.parametrize("n_targets", [1, 5])
 @pytest.mark.parametrize("freq", ["T"])
-def test_dataframe_to_list_dataset_group_dict(np_rng, n_groups, n_targets, freq):
+def test_dataframe_to_list_dataset_group_label_dict(np_rng, n_groups, n_targets, freq):
     df_dict, target_columns, _, _ = generate_forecast_df_dict(
         np_rng, n_groups, n_targets=n_targets, freq=freq
     )
     gluonts_freq = find_gluonts_freq(freq)
 
-    group_dict = None
+    group_label_dict = None
     if n_groups > 1:
-        group_dict = {
+        group_label_dict = {
             group: group_index for group_index, group in enumerate(df_dict.keys())
         }
 
     list_dataset = dataframe_to_list_dataset(
-        df_dict, target_columns, gluonts_freq, group_dict=group_dict
+        df_dict, target_columns, gluonts_freq, group_label_dict=group_label_dict
     )
 
     assert list_dataset is not None
@@ -412,7 +412,7 @@ def test_dataframe_to_list_dataset_group_dict(np_rng, n_groups, n_targets, freq)
             assert (data["target"] == df_group[target_columns[0]]).all()
 
         if n_groups > 1:
-            assert group_dict[group_name] in data["feat_static_cat"]
+            assert group_label_dict[group_name] in data["feat_static_cat"]
         else:
             assert "feat_static_cat" not in data
         assert "feat_static_real" not in data

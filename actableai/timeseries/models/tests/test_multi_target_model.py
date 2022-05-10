@@ -30,7 +30,7 @@ class TestAAITimeSeriesMultiTargetModel:
         cat_static_feature_dict=None,
         real_dynamic_feature_columns=None,
         cat_dynamic_feature_columns=None,
-        group_dict=None,
+        group_label_dict=None,
         trials=1,
         use_ray=False,
     ):
@@ -38,7 +38,7 @@ class TestAAITimeSeriesMultiTargetModel:
             target_columns=target_columns,
             prediction_length=prediction_length,
             freq=freq,
-            group_dict=group_dict,
+            group_label_dict=group_label_dict,
             real_static_feature_dict=real_static_feature_dict,
             cat_static_feature_dict=cat_static_feature_dict,
             real_dynamic_feature_columns=real_dynamic_feature_columns,
@@ -136,9 +136,9 @@ class TestAAITimeSeriesMultiTargetModel:
                 n_features = np_rng.integers(2, 10)
                 cat_static_feature_dict[group] = np_rng.integers(1, 10, n_features)
 
-        group_dict = None
+        group_label_dict = None
         if n_groups > 1:
-            group_dict = {
+            group_label_dict = {
                 group: group_index for group_index, group in enumerate(df_dict.keys())
             }
 
@@ -171,7 +171,7 @@ class TestAAITimeSeriesMultiTargetModel:
             cat_static_feature_dict,
             real_dynamic_feature_columns,
             cat_dynamic_feature_columns,
-            group_dict,
+            group_label_dict,
         )
 
         assert validations is not None

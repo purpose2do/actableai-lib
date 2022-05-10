@@ -108,7 +108,7 @@ class AAITimeSeriesForecaster:
             group_by = []
 
         df_dict = {}
-        group_dict = {}
+        group_label_dict = {}
         freq_dict = {}
 
         # Create groups
@@ -117,7 +117,7 @@ class AAITimeSeriesForecaster:
                 if len(group_by) == 1:
                     group = (group,)
 
-                group_dict[group] = group_index
+                group_label_dict[group] = group_index
                 df_dict[group] = grouped_df.reset_index(drop=True)
         else:
             df_dict[("data",)] = df
@@ -139,7 +139,7 @@ class AAITimeSeriesForecaster:
             df_dict[group].name = date_column
             df_dict[group].sort_index(inplace=True)
 
-        return df_dict, group_dict, freq_dict
+        return df_dict, group_label_dict, freq_dict
 
     def fit(
         self,
@@ -149,7 +149,7 @@ class AAITimeSeriesForecaster:
         df: Optional[pd.DataFrame] = None,
         df_dict: Optional[Dict[Tuple[Any, ...], pd.DataFrame]] = None,
         freq: Optional[str] = None,
-        group_dict: Optional[Dict[Tuple[Any, ...], int]] = None,
+        group_label_dict: Optional[Dict[Tuple[Any, ...], int]] = None,
         loss: str = "mean_wQuantileLoss",
         trials: int = 3,
         max_concurrent: Optional[int] = 1,
@@ -165,12 +165,12 @@ class AAITimeSeriesForecaster:
         Args:
             model_params: List of models parameters to run the tuning search on.
             mx_ctx: mxnet context.
-            df: Input DataFrame. If None `df_dict`, `freq`, and `group_dict` must be
-                provided.
+            df: Input DataFrame. If None `df_dict`, `freq`, and `group_label_dict` must
+                be provided.
             df_dict: Dictionary containing the time series for each group. If None `df`
                 must be provided.
             freq: Frequency of the time series.
-            group_dict: Dictionary containing the unique label for each group.
+            group_label_dict: Dictionary containing the unique label for each group.
             loss: Loss to minimize when tuning.
             trials: Number of trials for hyperparameter search.
             max_concurrent: Maximum number of concurrent ray task.
@@ -191,11 +191,11 @@ class AAITimeSeriesForecaster:
             raise Exception("df or df_dict must be provided")
         if df is None and freq is None:
             raise Exception("freq cannot be None if df is None")
-        if df is None and group_dict is None:
-            raise Exception("group_dict cannot be None if df is None")
+        if df is None and group_label_dict is None:
+            raise Exception("group_label_dict cannot be None if df is None")
 
         if df_dict is None:
-            df_dict, group_dict, freq_dict = self.pre_process_data(
+            df_dict, group_label_dict, freq_dict = self.pre_process_data(
                 df=df,
                 date_column=self.date_column,
                 group_by=self.group_by,
@@ -217,7 +217,7 @@ class AAITimeSeriesForecaster:
             target_columns=self.target_columns,
             prediction_length=self.prediction_length,
             freq=freq,
-            group_dict=group_dict,
+            group_label_dict=group_label_dict,
             real_static_feature_dict=self.real_static_feature_dict,
             cat_static_feature_dict=self.cat_static_feature_dict,
             real_dynamic_feature_columns=self.real_dynamic_feature_columns,
@@ -247,7 +247,7 @@ class AAITimeSeriesForecaster:
                 target_columns=self.target_columns,
                 prediction_length=self.prediction_length,
                 freq=freq,
-                group_dict=group_dict,
+                group_label_dict=group_label_dict,
                 real_static_feature_dict=self.real_static_feature_dict,
                 cat_static_feature_dict=self.cat_static_feature_dict,
                 real_dynamic_feature_columns=self.real_dynamic_feature_columns,

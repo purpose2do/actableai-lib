@@ -18,7 +18,7 @@ class AAITimeSeriesBaseModel(ABC):
         target_columns: List[str],
         prediction_length: int,
         freq: str,
-        group_dict: Optional[Dict[Tuple[Any], int]] = None,
+        group_label_dict: Optional[Dict[Tuple[Any], int]] = None,
         real_static_feature_dict: Optional[Dict[Tuple[Any], List[float]]] = None,
         cat_static_feature_dict: Optional[Dict[Tuple[Any], List[Any]]] = None,
         real_dynamic_feature_columns: Optional[List[str]] = None,
@@ -30,7 +30,7 @@ class AAITimeSeriesBaseModel(ABC):
             target_columns: List of columns to forecast.
             prediction_length: Length of the prediction to forecast.
             freq: Frequency of the time series.
-            group_dict: Dictionary containing the unique label for each group.
+            group_label_dict: Dictionary containing the unique label for each group.
             real_static_feature_dict: Dictionary containing a list of real static
                 features for each group.
             cat_static_feature_dict: Dictionary containing a list of categorical static
@@ -44,14 +44,14 @@ class AAITimeSeriesBaseModel(ABC):
         self.prediction_length = prediction_length
         self.freq = freq
 
-        self.group_dict = group_dict
+        self.group_label_dict = group_label_dict
         self.real_static_feature_dict = real_static_feature_dict
         self.cat_static_feature_dict = cat_static_feature_dict
         self.real_dynamic_feature_columns = real_dynamic_feature_columns
         self.cat_dynamic_feature_columns = cat_dynamic_feature_columns
 
-        if self.group_dict is None:
-            self.group_dict = {}
+        if self.group_label_dict is None:
+            self.group_label_dict = {}
         if self.real_static_feature_dict is None:
             self.real_static_feature_dict = {}
         if self.cat_static_feature_dict is None:
