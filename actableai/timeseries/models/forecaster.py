@@ -159,6 +159,7 @@ class AAITimeSeriesForecaster:
         random_state: Optional[int] = None,
         ray_tune_kwargs: Optional[Dict[str, Any]] = None,
         verbose: int = 1,
+        fit_full: bool = True,
     ) -> float:
         """Tune and fit the model.
 
@@ -181,6 +182,8 @@ class AAITimeSeriesForecaster:
             random_state: Random state to use for reproducibility.
             ray_tune_kwargs: Named parameters to pass to ray's `tune` function.
             verbose: Verbose level.
+            fit_full: If True the model will be fit after tuning using all the data
+                (tuning data).
 
         Returns:
             Total time spent for tuning.
@@ -287,7 +290,8 @@ class AAITimeSeriesForecaster:
         else:
             self.model = multi_target_model
 
-        self.model.refit(df_dict)
+        if fit_full:
+            self.model.refit(df_dict)
 
         return multi_target_fit_time + multivariate_fit_time + time() - start_time
 
