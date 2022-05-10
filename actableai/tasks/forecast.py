@@ -10,7 +10,7 @@ class AAIForecastTask(AAITask):
 
     @staticmethod
     def _split_static_dynamic_features(
-        df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
         df_unique: pd.DataFrame,
         real_feature_columns: List[str],
         cat_feature_columns: List[str],
@@ -23,7 +23,7 @@ class AAIForecastTask(AAITask):
         """Split features columns into two groups, static and dynamic.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
             df_unique: DataFrame containing the number of unique values for each column.
             real_feature_columns: List of real feature columns.
             cat_feature_columns: List of categorical feature columns.
@@ -35,15 +35,15 @@ class AAIForecastTask(AAITask):
             - List of columns containing real dynamic features.
             - List of columns containing categorical dynamic features.
         """
-        real_static_feature_dict = {group: [] for group in df_dict.keys()}
-        cat_static_feature_dict = {group: [] for group in df_dict.keys()}
+        real_static_feature_dict = {group: [] for group in group_df_dict.keys()}
+        cat_static_feature_dict = {group: [] for group in group_df_dict.keys()}
         real_dynamic_feature_columns = []
         cat_dynamic_feature_columns = []
 
         # Real columns
         for column in real_feature_columns:
             if df_unique[column] == 1:
-                for group, df_group in df_dict.items():
+                for group, df_group in group_df_dict.items():
                     group_feature_value = df_group[column].loc[
                         df_group[column].first_valid_index()
                     ]
@@ -54,7 +54,7 @@ class AAIForecastTask(AAITask):
         # Categorical columns
         for column in cat_feature_columns:
             if df_unique[column] == 1:
-                for group, df_group in df_dict.items():
+                for group, df_group in group_df_dict.items():
                     group_feature_value = df_group[column].loc[
                         df_group[column].first_valid_index()
                     ]
@@ -71,7 +71,7 @@ class AAIForecastTask(AAITask):
 
     @staticmethod
     def _split_train_valid_predict(
-        df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
         freq_dict: Dict[Tuple[Any, ...], str],
         prediction_length: int,
         predicted_columns: List[str],
@@ -86,7 +86,7 @@ class AAIForecastTask(AAITask):
         """Split dataset into three sub datasets, train, validation, and prediction.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
             freq_dict: Dictionary containing the frequency of each group.
             prediction_length: Length of the prediction to forecast.
             predicted_columns: List of columns to forecast.
@@ -106,12 +106,12 @@ class AAIForecastTask(AAITask):
         has_dynamic_features = (
             len(real_dynamic_feature_columns) + len(cat_dynamic_feature_columns) > 0
         )
-        df_train_dict = {}
-        df_valid_dict = {}
-        df_predict_dict = {}
-        for group in df_dict.keys():
+        group_df_train_dict = {}
+        group_df_valid_dict = {}
+        group_df_predict_dict = {}
+        for group in group_df_dict.keys():
             # Filter Dataframe
-            df_dict[group] = df_dict[group][
+            group_df_dict[group] = group_df_dict[group][
                 predicted_columns
                 + real_dynamic_feature_columns
                 + cat_dynamic_feature_columns
@@ -119,27 +119,29 @@ class AAIForecastTask(AAITask):
             ]
 
             last_valid_index = (
-                -prediction_length if has_dynamic_features else df_dict[group].shape[0]
+                -prediction_length
+                if has_dynamic_features
+                else group_df_dict[group].shape[0]
             )
 
             # Interpolate missing values
-            df_dict[group] = pd.concat(
+            group_df_dict[group] = pd.concat(
                 [
                     interpolate(
-                        df_dict[group].iloc[:last_valid_index], freq_dict[group]
+                        group_df_dict[group].iloc[:last_valid_index], freq_dict[group]
                     ),
-                    df_dict[group].iloc[last_valid_index:],
+                    group_df_dict[group].iloc[last_valid_index:],
                 ]
             )
 
             # Split train/validation/test
-            df_train_dict[group] = df_dict[group].iloc[
+            group_df_train_dict[group] = group_df_dict[group].iloc[
                 : last_valid_index - prediction_length
             ]
-            df_valid_dict[group] = df_dict[group].iloc[:last_valid_index]
-            df_predict_dict[group] = df_dict[group]
+            group_df_valid_dict[group] = group_df_dict[group].iloc[:last_valid_index]
+            group_df_predict_dict[group] = group_df_dict[group]
 
-        return df_train_dict, df_valid_dict, df_predict_dict
+        return group_df_train_dict, group_df_valid_dict, group_df_predict_dict
 
     @staticmethod
     def _get_default_model_params(
@@ -208,7 +210,7 @@ class AAIForecastTask(AAITask):
         date_column: str,
         prediction_length: int,
         group_by: List[str],
-        df_valid_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        group_df_valid_dict: Dict[Tuple[Any, ...], pd.DataFrame],
     ) -> Dict[str, Any]:
         """Convert time series forecasting scoring to 'legacy' output.
 
@@ -220,8 +222,8 @@ class AAIForecastTask(AAITask):
                 series.
             prediction_length: Length of the prediction to forecast.
             group_by: List of columns to use to separate different time series/groups.
-            df_valid_dict: Dictionary containing the validation time series for each
-                group.
+            group_df_valid_dict: Dictionary containing the validation time series for
+                each group.
 
         Returns:
             Legacy output.
@@ -231,7 +233,7 @@ class AAIForecastTask(AAITask):
             df_group_valid_dict.index[-prediction_length:]
             .strftime("%Y-%m-%d %H:%M:%S")
             .tolist()
-            for df_group_valid_dict in df_valid_dict.values()
+            for df_group_valid_dict in group_df_valid_dict.values()
         ]
         if len(group_by) <= 0:
             val_dates = val_dates[0]
@@ -262,12 +264,12 @@ class AAIForecastTask(AAITask):
                         "group": group,
                         "value": {
                             "data": {
-                                "date": df_valid_dict[group]
+                                "date": group_df_valid_dict[group]
                                 .index.strftime("%Y-%m-%d %H:%M:%S")[
                                     -4 * prediction_length :
                                 ]
                                 .tolist(),
-                                "value": df_valid_dict[group][target][
+                                "value": group_df_valid_dict[group][target][
                                     -4 * prediction_length :
                                 ].tolist(),
                             },
@@ -464,7 +466,11 @@ class AAIForecastTask(AAITask):
         else:
             df_unique = df.nunique()
 
-        df_dict, group_label_dict, freq_dict = AAITimeSeriesForecaster.pre_process_data(
+        (
+            group_df_dict,
+            group_label_dict,
+            freq_dict,
+        ) = AAITimeSeriesForecaster.pre_process_data(
             df=df,
             date_column=date_column,
             group_by=group_by,
@@ -478,12 +484,16 @@ class AAIForecastTask(AAITask):
             real_dynamic_feature_columns,
             cat_dynamic_feature_columns,
         ) = self._split_static_dynamic_features(
-            df_dict, df_unique, real_feature_columns, cat_feature_columns
+            group_df_dict, df_unique, real_feature_columns, cat_feature_columns
         )
 
         # Split dataset
-        df_train_dict, df_valid_dict, df_predict_dict = self._split_train_valid_predict(
-            df_dict,
+        (
+            group_df_train_dict,
+            group_df_valid_dict,
+            group_df_predict_dict,
+        ) = self._split_train_valid_predict(
+            group_df_dict,
             freq_dict,
             prediction_length,
             predicted_columns,
@@ -495,9 +505,9 @@ class AAIForecastTask(AAITask):
         # Second Data Validation (for the prediction part of the data which needed pre-processing)
         data_prediction_validation_results = (
             TimeSeriesPredictionDataValidator().validate(
-                df_train_dict,
-                df_valid_dict,
-                df_predict_dict,
+                group_df_train_dict,
+                group_df_valid_dict,
+                group_df_predict_dict,
                 freq_dict,
                 real_dynamic_feature_columns + cat_dynamic_feature_columns,
                 predicted_columns,
@@ -517,7 +527,7 @@ class AAIForecastTask(AAITask):
                 "data": {},
             }
 
-        first_group = list(df_train_dict.keys())[0]
+        first_group = list(group_df_train_dict.keys())[0]
         freq = freq_dict[first_group]
 
         ray_gpu_per_trial = 0
@@ -527,7 +537,7 @@ class AAIForecastTask(AAITask):
 
         if model_params is None:
             model_params = self._get_default_model_params(
-                len(df_train_dict[first_group]),
+                len(group_df_train_dict[first_group]),
                 prediction_length,
                 predicted_columns,
                 real_dynamic_feature_columns,
@@ -547,7 +557,7 @@ class AAIForecastTask(AAITask):
         total_trials_times = model.fit(
             model_params=model_params,
             mx_ctx=mx_ctx,
-            df_dict=df_train_dict,
+            group_df_dict=group_df_train_dict,
             freq=freq,
             group_label_dict=group_label_dict,
             loss="mean_wQuantileLoss",
@@ -568,14 +578,14 @@ class AAIForecastTask(AAITask):
             df_val_predictions,
             df_item_metrics,
             df_agg_metrics,
-        ) = model.score(df_dict=df_valid_dict)
+        ) = model.score(group_df_dict=group_df_valid_dict)
 
         # Refit with validation data
         if refit_full:
-            model.refit(df_dict=df_valid_dict)
+            model.refit(group_df_dict=group_df_valid_dict)
 
         # Generate predictions
-        df_predictions = model.predict(df_dict=df_predict_dict)
+        df_predictions = model.predict(group_df_dict=group_df_predict_dict)
 
         # TODO REMOVE LEGACY CODE
         data = self._convert_to_legacy_output(
@@ -585,7 +595,7 @@ class AAIForecastTask(AAITask):
             date_column,
             prediction_length,
             group_by,
-            df_valid_dict,
+            group_df_valid_dict,
         )
 
         runtime = time.time() - start + total_trials_times

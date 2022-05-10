@@ -71,12 +71,12 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
         }
 
     def _pre_process_data(
-        self, df_dict: Dict[Tuple[Any], pd.DataFrame], keep_future: bool = True
+        self, group_df_dict: Dict[Tuple[Any], pd.DataFrame], keep_future: bool = True
     ) -> Dict[Tuple[Any], pd.DataFrame]:
         """Pre-process data to add the shifted target as features.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
             keep_future: If False the future (shifted) values are trimmed out.
 
         Returns:
@@ -84,12 +84,12 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
                 features).
         """
         if len(self.target_columns) <= 1:
-            return df_dict
+            return group_df_dict
 
-        df_dict_new = {}
-        for group in df_dict.keys():
+        group_df_dict_new = {}
+        for group in group_df_dict.keys():
             # Create the shifted dataframe
-            df_shift = df_dict[group]
+            df_shift = group_df_dict[group]
             if keep_future and self.has_dynamic_features:
                 df_shift = df_shift.iloc[: -self.prediction_length]
 
@@ -100,18 +100,22 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
             df_shift = df_shift.rename(columns=self.shift_target_columns_dict)
 
             if not keep_future:
-                df_shift = df_shift.loc[df_shift.index.isin(df_dict[group].index)]
+                df_shift = df_shift.loc[df_shift.index.isin(group_df_dict[group].index)]
 
             # Add new features
-            df_dict_new[group] = pd.concat([df_dict[group], df_shift], axis=1)
+            group_df_dict_new[group] = pd.concat(
+                [group_df_dict[group], df_shift], axis=1
+            )
 
-            df_dict_new[group] = df_dict_new[group].iloc[self.prediction_length :]
+            group_df_dict_new[group] = group_df_dict_new[group].iloc[
+                self.prediction_length :
+            ]
 
-        return df_dict_new
+        return group_df_dict_new
 
     def fit(
         self,
-        df_dict: Dict[Tuple[Any], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any], pd.DataFrame],
         model_params: List[BaseParams],
         mx_ctx: Context,
         *,
@@ -129,7 +133,7 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
         """Tune and fit the model.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
             model_params: List of models parameters to run the tuning search on.
             mx_ctx: mxnet context.
             loss: Loss to minimize when tuning.
@@ -148,7 +152,7 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
         Returns:
             Total time spent for tuning.
         """
-        df_dict_clean = self._pre_process_data(df_dict, keep_future=False)
+        group_df_dict_clean = self._pre_process_data(group_df_dict, keep_future=False)
 
         total_time = 0
 
@@ -174,7 +178,7 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
                 cat_dynamic_feature_columns=self.cat_dynamic_feature_columns,
             )
             target_total_time = self.predictor_dict[target_column].fit(
-                df_dict=df_dict_clean,
+                group_df_dict=group_df_dict_clean,
                 model_params=model_params,
                 mx_ctx=mx_ctx,
                 loss=loss,
@@ -193,25 +197,25 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
 
         return total_time
 
-    def refit(self, df_dict: Dict[Tuple[Any], pd.DataFrame]):
+    def refit(self, group_df_dict: Dict[Tuple[Any], pd.DataFrame]):
         """Fit previously tuned model.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
 
         Raises:
             UntrainedModelException: If the model has not been trained/tuned before.
         """
-        df_dict_clean = self._pre_process_data(df_dict, keep_future=False)
+        group_df_dict_clean = self._pre_process_data(group_df_dict, keep_future=False)
 
         for target_column in self.target_columns:
             if target_column not in self.predictor_dict:
                 raise UntrainedModelException()
-            self.predictor_dict[target_column].refit(df_dict_clean)
+            self.predictor_dict[target_column].refit(group_df_dict_clean)
 
     def score(
         self,
-        df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
         num_samples: int = 100,
         quantiles: List[float] = [0.05, 0.5, 0.95],
         num_workers: Optional[int] = None,
@@ -223,7 +227,7 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
         """Evaluate model.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
             num_samples: Number of dataset samples to use for evaluation
             quantiles: List of quantiles to use for evaluation.
             num_workers: Maximum number of workers to use, if None no parallelization
@@ -237,10 +241,14 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
             - Dictionary containing the metrics for each target for each group.
             - Dataframe containing the aggregated metrics for each target.
         """
-        df_dict_clean = self._pre_process_data(df_dict, keep_future=False)
+        group_df_dict_clean = self._pre_process_data(group_df_dict, keep_future=False)
 
-        df_predictions_dict = {group: pd.DataFrame() for group in df_dict_clean.keys()}
-        df_item_metrics_dict = {group: pd.DataFrame() for group in df_dict_clean.keys()}
+        df_predictions_dict = {
+            group: pd.DataFrame() for group in group_df_dict_clean.keys()
+        }
+        df_item_metrics_dict = {
+            group: pd.DataFrame() for group in group_df_dict_clean.keys()
+        }
         df_agg_metrics = pd.DataFrame()
 
         for target_column in self.target_columns:
@@ -252,13 +260,13 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
                 df_target_item_metrics_dict,
                 df_target_agg_metrics,
             ) = self.predictor_dict[target_column].score(
-                df_dict_clean,
+                group_df_dict_clean,
                 num_samples=num_samples,
                 quantiles=quantiles,
                 num_workers=num_workers,
             )
 
-            for group in df_dict_clean.keys():
+            for group in group_df_dict_clean.keys():
                 df_predictions_dict[group] = pd.concat(
                     [df_predictions_dict[group], df_target_predictions_dict[group]],
                     ignore_index=True,
@@ -275,13 +283,13 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
 
     def predict(
         self,
-        df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
         quantiles: List[float] = [0.05, 0.5, 0.95],
     ) -> Dict[Tuple[Any, ...], pd.DataFrame]:
         """Make a prediction using the model.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
             quantiles: Quantiles to predict.
 
         Raises:
@@ -290,19 +298,21 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
         Returns:
             Dictionary containing the predicted time series for each group.
         """
-        df_dict_clean = self._pre_process_data(df_dict, keep_future=True)
+        group_df_dict_clean = self._pre_process_data(group_df_dict, keep_future=True)
 
-        df_predictions_dict = {group: pd.DataFrame() for group in df_dict_clean.keys()}
+        df_predictions_dict = {
+            group: pd.DataFrame() for group in group_df_dict_clean.keys()
+        }
 
         for target_column in self.target_columns:
             if target_column not in self.predictor_dict:
                 raise UntrainedModelException()
 
             df_target_predictions_dict = self.predictor_dict[target_column].predict(
-                df_dict_clean, quantiles=quantiles
+                group_df_dict_clean, quantiles=quantiles
             )
 
-            for group in df_dict_clean.keys():
+            for group in group_df_dict_clean.keys():
                 df_predictions_dict[group] = pd.concat(
                     [df_predictions_dict[group], df_target_predictions_dict[group]],
                     ignore_index=True,

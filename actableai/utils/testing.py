@@ -70,7 +70,7 @@ def generate_date_range(
     return pd.date_range(start_date, periods=periods, freq=freq)
 
 
-def generate_forecast_df_dict(
+def generate_forecast_group_df_dict(
     np_rng,
     n_groups=1,
     n_targets=1,
@@ -85,7 +85,7 @@ def generate_forecast_df_dict(
     if date_range_kwargs is None:
         date_range_kwargs = {}
 
-    df_dict = {}
+    group_df_dict = {}
     target_list = [f"target_{i}" for i in range(n_targets)]
     real_feature_list = [f"real_feat_{i}" for i in range(n_real_features)]
     cat_feature_list = [f"cat_feat_{i}" for i in range(n_cat_features)]
@@ -105,9 +105,9 @@ def generate_forecast_df_dict(
         df.index = date_range
         df = df.sort_index()
 
-        df_dict[f"group_{i}"] = df
+        group_df_dict[f"group_{i}"] = df
 
-    return df_dict, target_list, real_feature_list, cat_feature_list
+    return group_df_dict, target_list, real_feature_list, cat_feature_list
 
 
 def generate_forecast_df(
@@ -145,11 +145,11 @@ def generate_forecast_df(
     ]
 
     (
-        df_dict,
+        group_df_dict,
         target_list,
         real_dynamic_feature_list,
         cat_dynamic_feature_list,
-    ) = generate_forecast_df_dict(
+    ) = generate_forecast_group_df_dict(
         np_rng,
         n_groups=n_groups,
         n_targets=n_targets,
@@ -169,7 +169,7 @@ def generate_forecast_df(
     df = pd.DataFrame()
 
     for (group, df_group), group_values in zip(
-        df_dict.items(), itertools.product(*group_values_list)
+        group_df_dict.items(), itertools.product(*group_values_list)
     ):
         df_group["_date"] = df_group.index
 

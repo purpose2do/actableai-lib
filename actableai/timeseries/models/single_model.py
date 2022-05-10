@@ -268,7 +268,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
 
     def _generate_train_valid_data(
         self,
-        df_dict: Dict[Tuple[Any], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any], pd.DataFrame],
         tune_samples: int,
         sampling_method: str = "random",
     ) -> Tuple[
@@ -277,7 +277,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         """Generate and split train and validation data for tuning.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
             tune_samples: Number of dataset samples to use when tuning.
             sampling_method: Method used when extracting the samples for the tuning
                 ["random", "last"].
@@ -290,7 +290,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         from gluonts.dataset.common import ListDataset
 
         train_data = dataframe_to_list_dataset(
-            df_dict,
+            group_df_dict,
             self.target_columns,
             self.freq_gluon,
             real_static_feature_dict=self.real_static_feature_dict,
@@ -303,7 +303,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         )
 
         train_data_partial = dataframe_to_list_dataset(
-            df_dict,
+            group_df_dict,
             self.target_columns,
             self.freq_gluon,
             real_static_feature_dict=self.real_static_feature_dict,
@@ -330,7 +330,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
 
             tune_data_list.append(
                 dataframe_to_list_dataset(
-                    df_dict,
+                    group_df_dict,
                     self.target_columns,
                     self.freq_gluon,
                     real_static_feature_dict=self.real_static_feature_dict,
@@ -362,7 +362,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
 
     def fit(
         self,
-        df_dict: Dict[Tuple[Any], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any], pd.DataFrame],
         model_params: List[BaseParams],
         mx_ctx: Context,
         *,
@@ -380,7 +380,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         """Tune and fit the model.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
             model_params: List of models parameters to run the tuning search on.
             mx_ctx: mxnet context.
             loss: Loss to minimize when tuning.
@@ -409,7 +409,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
 
         # Split data
         train_data, train_data_partial, tune_data = self._generate_train_valid_data(
-            df_dict,
+            group_df_dict,
             tune_samples,
             sampling_method,
         )
@@ -519,11 +519,11 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
 
         return time.time() - start + trials_time_total
 
-    def refit(self, df_dict: Dict[Tuple[Any], pd.DataFrame]):
+    def refit(self, group_df_dict: Dict[Tuple[Any], pd.DataFrame]):
         """Fit previously tuned model.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
 
         Raises:
             UntrainedModelException: If the model has not been trained/tuned before.
@@ -532,7 +532,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
             raise UntrainedModelException()
 
         train_data = dataframe_to_list_dataset(
-            df_dict,
+            group_df_dict,
             self.target_columns,
             self.freq_gluon,
             real_static_feature_dict=self.real_static_feature_dict,
@@ -557,7 +557,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
 
     def score(
         self,
-        df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
         num_samples: int = 100,
         quantiles: List[float] = [0.05, 0.5, 0.95],
         num_workers: Optional[int] = None,
@@ -569,7 +569,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         """Evaluate model.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
             num_samples: Number of dataset samples to use for evaluation
             quantiles: List of quantiles to use for evaluation.
             num_workers: Maximum number of workers to use, if None no parallelization
@@ -589,7 +589,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         df_predictions_dict = {}
 
         valid_data = dataframe_to_list_dataset(
-            df_dict,
+            group_df_dict,
             self.target_columns,
             self.freq_gluon,
             real_static_feature_dict=self.real_static_feature_dict,
@@ -628,7 +628,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         )
 
         # Add predictions
-        for (group, df_group), forecast in zip(df_dict.items(), forecast_list):
+        for (group, df_group), forecast in zip(group_df_dict.items(), forecast_list):
             df_predictions_dict[group] = forecast_to_dataframe(
                 forecast,
                 self.target_columns,
@@ -640,9 +640,9 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         # item_metrics
         target_list = []
         for target in self.target_columns:
-            target_list += [target] * len(df_dict)
+            target_list += [target] * len(group_df_dict)
         df_item_metrics["target"] = target_list
-        df_item_metrics["group"] = list(df_dict.keys()) * len(self.target_columns)
+        df_item_metrics["group"] = list(group_df_dict.keys()) * len(self.target_columns)
         df_item_metrics = df_item_metrics.reset_index(drop=True)
         df_item_metrics = df_item_metrics.rename(columns={"custom_RMSE": "RMSE"})
 
@@ -683,13 +683,13 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
 
     def predict(
         self,
-        df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
         quantiles: List[float] = [0.05, 0.5, 0.95],
     ) -> Dict[Tuple[Any, ...], pd.DataFrame]:
         """Make a prediction using the model.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
             quantiles: Quantiles to predict.
 
         Raises:
@@ -706,18 +706,18 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
                 group: pd.date_range(
                     df.index[-1], periods=self.prediction_length + 1, freq=self.freq
                 )[1:]
-                for group, df in df_dict.items()
+                for group, df in group_df_dict.items()
             }
         else:
             future_dates_dict = {
                 group: df.index[-self.prediction_length :]
-                for group, df in df_dict.items()
+                for group, df in group_df_dict.items()
             }
 
         df_predictions_dict = {}
 
         data = dataframe_to_list_dataset(
-            df_dict,
+            group_df_dict,
             self.target_columns,
             self.freq_gluon,
             real_static_feature_dict=self.real_static_feature_dict,
@@ -730,7 +730,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         )
 
         forecast_list = self.predictor.predict(data)
-        for group, forecast in zip(df_dict.keys(), forecast_list):
+        for group, forecast in zip(group_df_dict.keys(), forecast_list):
             df_predictions_dict[group] = forecast_to_dataframe(
                 forecast,
                 self.target_columns,

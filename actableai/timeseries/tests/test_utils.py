@@ -15,7 +15,7 @@ from actableai.timeseries.utils import (
     handle_features_dataset,
     handle_datetime_column,
 )
-from actableai.utils.testing import generate_forecast_df_dict, generate_date_range
+from actableai.utils.testing import generate_forecast_group_df_dict, generate_date_range
 
 
 # Test find_freq
@@ -158,22 +158,22 @@ def test_handle_datetime_column_nan_values_no_threshold():
 @pytest.mark.parametrize("n_targets", [1, 5])
 @pytest.mark.parametrize("freq", ["T"])
 def test_dataframe_to_list_dataset_simple(np_rng, n_groups, n_targets, freq):
-    df_dict, target_columns, _, _ = generate_forecast_df_dict(
+    group_df_dict, target_columns, _, _ = generate_forecast_group_df_dict(
         np_rng, n_groups, n_targets=n_targets, freq=freq
     )
     gluonts_freq = find_gluonts_freq(freq)
 
     list_dataset = dataframe_to_list_dataset(
-        df_dict,
+        group_df_dict,
         target_columns,
         gluonts_freq,
     )
 
     assert list_dataset is not None
     assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(df_dict)
+    assert len(list_dataset.list_data) == len(group_df_dict)
 
-    for group_index, (group_name, df_group) in enumerate(df_dict.items()):
+    for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
         data = list_dataset.list_data[group_index]
 
         assert data["start"] == df_group.index[0]
@@ -196,18 +196,18 @@ def test_dataframe_to_list_dataset_simple(np_rng, n_groups, n_targets, freq):
 def test_dataframe_to_list_dataset_real_static_features(
     np_rng, n_groups, n_targets, freq
 ):
-    df_dict, target_columns, _, _ = generate_forecast_df_dict(
+    group_df_dict, target_columns, _, _ = generate_forecast_group_df_dict(
         np_rng, n_groups, n_targets=n_targets, freq=freq
     )
     gluonts_freq = find_gluonts_freq(freq)
 
     real_static_feature_dict = {}
-    for group in df_dict.keys():
+    for group in group_df_dict.keys():
         n_features = np_rng.integers(2, 10)
         real_static_feature_dict[group] = np_rng.standard_normal(n_features)
 
     list_dataset = dataframe_to_list_dataset(
-        df_dict,
+        group_df_dict,
         target_columns,
         gluonts_freq,
         real_static_feature_dict=real_static_feature_dict,
@@ -215,9 +215,9 @@ def test_dataframe_to_list_dataset_real_static_features(
 
     assert list_dataset is not None
     assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(df_dict)
+    assert len(list_dataset.list_data) == len(group_df_dict)
 
-    for group_index, (group_name, df_group) in enumerate(df_dict.items()):
+    for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
         data = list_dataset.list_data[group_index]
 
         assert data["start"] == df_group.index[0]
@@ -241,18 +241,18 @@ def test_dataframe_to_list_dataset_real_static_features(
 def test_dataframe_to_list_dataset_cat_static_features(
     np_rng, n_groups, n_targets, freq
 ):
-    df_dict, target_columns, _, _ = generate_forecast_df_dict(
+    group_df_dict, target_columns, _, _ = generate_forecast_group_df_dict(
         np_rng, n_groups, n_targets=n_targets, freq=freq
     )
     gluonts_freq = find_gluonts_freq(freq)
 
     cat_static_feature_dict = {}
-    for group in df_dict.keys():
+    for group in group_df_dict.keys():
         n_features = np_rng.integers(2, 10)
         cat_static_feature_dict[group] = np_rng.integers(1, 10, n_features)
 
     list_dataset = dataframe_to_list_dataset(
-        df_dict,
+        group_df_dict,
         target_columns,
         gluonts_freq,
         cat_static_feature_dict=cat_static_feature_dict,
@@ -260,9 +260,9 @@ def test_dataframe_to_list_dataset_cat_static_features(
 
     assert list_dataset is not None
     assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(df_dict)
+    assert len(list_dataset.list_data) == len(group_df_dict)
 
-    for group_index, (group_name, df_group) in enumerate(df_dict.items()):
+    for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
         data = list_dataset.list_data[group_index]
 
         assert data["start"] == df_group.index[0]
@@ -287,11 +287,11 @@ def test_dataframe_to_list_dataset_real_dynamic_features(
     np_rng, n_groups, n_targets, freq
 ):
     (
-        df_dict,
+        group_df_dict,
         target_columns,
         real_dynamic_feature_columns,
         _,
-    ) = generate_forecast_df_dict(
+    ) = generate_forecast_group_df_dict(
         np_rng,
         n_groups,
         n_targets=n_targets,
@@ -301,7 +301,7 @@ def test_dataframe_to_list_dataset_real_dynamic_features(
     gluonts_freq = find_gluonts_freq(freq)
 
     list_dataset = dataframe_to_list_dataset(
-        df_dict,
+        group_df_dict,
         target_columns,
         gluonts_freq,
         real_dynamic_feature_columns=real_dynamic_feature_columns,
@@ -309,9 +309,9 @@ def test_dataframe_to_list_dataset_real_dynamic_features(
 
     assert list_dataset is not None
     assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(df_dict)
+    assert len(list_dataset.list_data) == len(group_df_dict)
 
-    for group_index, (group_name, df_group) in enumerate(df_dict.items()):
+    for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
         data = list_dataset.list_data[group_index]
 
         assert data["start"] == df_group.index[0]
@@ -337,7 +337,12 @@ def test_dataframe_to_list_dataset_real_dynamic_features(
 def test_dataframe_to_list_dataset_cat_dynamic_features(
     np_rng, n_groups, n_targets, freq
 ):
-    df_dict, target_columns, _, cat_dynamic_feature_columns = generate_forecast_df_dict(
+    (
+        group_df_dict,
+        target_columns,
+        _,
+        cat_dynamic_feature_columns,
+    ) = generate_forecast_group_df_dict(
         np_rng,
         n_groups,
         n_targets=n_targets,
@@ -347,7 +352,7 @@ def test_dataframe_to_list_dataset_cat_dynamic_features(
     gluonts_freq = find_gluonts_freq(freq)
 
     list_dataset = dataframe_to_list_dataset(
-        df_dict,
+        group_df_dict,
         target_columns,
         gluonts_freq,
         cat_dynamic_feature_columns=cat_dynamic_feature_columns,
@@ -355,9 +360,9 @@ def test_dataframe_to_list_dataset_cat_dynamic_features(
 
     assert list_dataset is not None
     assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(df_dict)
+    assert len(list_dataset.list_data) == len(group_df_dict)
 
-    for group_index, (group_name, df_group) in enumerate(df_dict.items()):
+    for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
         data = list_dataset.list_data[group_index]
 
         assert data["start"] == df_group.index[0]
@@ -381,7 +386,7 @@ def test_dataframe_to_list_dataset_cat_dynamic_features(
 @pytest.mark.parametrize("n_targets", [1, 5])
 @pytest.mark.parametrize("freq", ["T"])
 def test_dataframe_to_list_dataset_group_label_dict(np_rng, n_groups, n_targets, freq):
-    df_dict, target_columns, _, _ = generate_forecast_df_dict(
+    group_df_dict, target_columns, _, _ = generate_forecast_group_df_dict(
         np_rng, n_groups, n_targets=n_targets, freq=freq
     )
     gluonts_freq = find_gluonts_freq(freq)
@@ -389,18 +394,18 @@ def test_dataframe_to_list_dataset_group_label_dict(np_rng, n_groups, n_targets,
     group_label_dict = None
     if n_groups > 1:
         group_label_dict = {
-            group: group_index for group_index, group in enumerate(df_dict.keys())
+            group: group_index for group_index, group in enumerate(group_df_dict.keys())
         }
 
     list_dataset = dataframe_to_list_dataset(
-        df_dict, target_columns, gluonts_freq, group_label_dict=group_label_dict
+        group_df_dict, target_columns, gluonts_freq, group_label_dict=group_label_dict
     )
 
     assert list_dataset is not None
     assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(df_dict)
+    assert len(list_dataset.list_data) == len(group_df_dict)
 
-    for group_index, (group_name, df_group) in enumerate(df_dict.items()):
+    for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
         data = list_dataset.list_data[group_index]
 
         assert data["start"] == df_group.index[0]
@@ -425,11 +430,11 @@ def test_dataframe_to_list_dataset_group_label_dict(np_rng, n_groups, n_targets,
 @pytest.mark.parametrize("freq", ["T"])
 def test_dataframe_to_list_dataset_no_training(np_rng, n_groups, n_targets, freq):
     (
-        df_dict,
+        group_df_dict,
         target_columns,
         real_dynamic_feature_columns,
         cat_dynamic_feature_columns,
-    ) = generate_forecast_df_dict(
+    ) = generate_forecast_group_df_dict(
         np_rng,
         n_groups,
         n_targets=n_targets,
@@ -442,7 +447,7 @@ def test_dataframe_to_list_dataset_no_training(np_rng, n_groups, n_targets, freq
     prediction_length = np_rng.integers(1, 5)
 
     list_dataset = dataframe_to_list_dataset(
-        df_dict,
+        group_df_dict,
         target_columns,
         gluonts_freq,
         real_dynamic_feature_columns=real_dynamic_feature_columns,
@@ -453,9 +458,9 @@ def test_dataframe_to_list_dataset_no_training(np_rng, n_groups, n_targets, freq
 
     assert list_dataset is not None
     assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(df_dict)
+    assert len(list_dataset.list_data) == len(group_df_dict)
 
-    for group_index, (group_name, df_group) in enumerate(df_dict.items()):
+    for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
         data = list_dataset.list_data[group_index]
 
         assert data["start"] == df_group.index[0]
@@ -488,11 +493,11 @@ def test_dataframe_to_list_dataset_no_training(np_rng, n_groups, n_targets, freq
 @pytest.mark.parametrize("freq", ["T"])
 def test_dataframe_to_list_dataset_static_slice(np_rng, n_groups, n_targets, freq):
     (
-        df_dict,
+        group_df_dict,
         target_columns,
         real_dynamic_feature_columns,
         cat_dynamic_feature_columns,
-    ) = generate_forecast_df_dict(
+    ) = generate_forecast_group_df_dict(
         np_rng,
         n_groups,
         n_targets=n_targets,
@@ -505,7 +510,7 @@ def test_dataframe_to_list_dataset_static_slice(np_rng, n_groups, n_targets, fre
     slice_df = slice(0, np_rng.integers(2, 5))
 
     list_dataset = dataframe_to_list_dataset(
-        df_dict,
+        group_df_dict,
         target_columns,
         gluonts_freq,
         real_dynamic_feature_columns=real_dynamic_feature_columns,
@@ -515,9 +520,9 @@ def test_dataframe_to_list_dataset_static_slice(np_rng, n_groups, n_targets, fre
 
     assert list_dataset is not None
     assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(df_dict)
+    assert len(list_dataset.list_data) == len(group_df_dict)
 
-    for group_index, (group_name, df_group) in enumerate(df_dict.items()):
+    for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
         data = list_dataset.list_data[group_index]
 
         assert data["start"] == df_group.index[0]
@@ -549,11 +554,11 @@ def test_dataframe_to_list_dataset_static_slice(np_rng, n_groups, n_targets, fre
 @pytest.mark.parametrize("freq", ["T"])
 def test_dataframe_to_list_dataset_dynamic_slice(np_rng, n_groups, n_targets, freq):
     (
-        df_dict,
+        group_df_dict,
         target_columns,
         real_dynamic_feature_columns,
         cat_dynamic_feature_columns,
-    ) = generate_forecast_df_dict(
+    ) = generate_forecast_group_df_dict(
         np_rng,
         n_groups,
         n_targets=n_targets,
@@ -566,7 +571,7 @@ def test_dataframe_to_list_dataset_dynamic_slice(np_rng, n_groups, n_targets, fr
     slice_df = lambda df: slice(0, int(len(df) * 0.8))
 
     list_dataset = dataframe_to_list_dataset(
-        df_dict,
+        group_df_dict,
         target_columns,
         gluonts_freq,
         real_dynamic_feature_columns=real_dynamic_feature_columns,
@@ -576,9 +581,9 @@ def test_dataframe_to_list_dataset_dynamic_slice(np_rng, n_groups, n_targets, fr
 
     assert list_dataset is not None
     assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(df_dict)
+    assert len(list_dataset.list_data) == len(group_df_dict)
 
-    for group_index, (group_name, df_group) in enumerate(df_dict.items()):
+    for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
         slice_ = slice_df(df_group)
         data = list_dataset.list_data[group_index]
 
@@ -613,11 +618,11 @@ def test_handle_features_dataset_remove_static_real(
     dataset_type, np_rng, n_groups, n_targets, freq
 ):
     (
-        df_dict,
+        group_df_dict,
         target_columns,
         real_dynamic_feature_columns,
         cat_dynamic_feature_columns,
-    ) = generate_forecast_df_dict(
+    ) = generate_forecast_group_df_dict(
         np_rng,
         n_groups,
         n_targets=n_targets,
@@ -628,17 +633,17 @@ def test_handle_features_dataset_remove_static_real(
     gluonts_freq = find_gluonts_freq(freq)
 
     real_static_feature_dict = {}
-    for group in df_dict.keys():
+    for group in group_df_dict.keys():
         n_features = np_rng.integers(2, 10)
         real_static_feature_dict[group] = np_rng.standard_normal(n_features)
 
     cat_static_feature_dict = {}
-    for group in df_dict.keys():
+    for group in group_df_dict.keys():
         n_features = np_rng.integers(2, 10)
         cat_static_feature_dict[group] = np_rng.standard_normal(n_features)
 
     original_dataset = dataframe_to_list_dataset(
-        df_dict,
+        group_df_dict,
         target_columns,
         gluonts_freq,
         real_static_feature_dict=real_static_feature_dict,
@@ -670,9 +675,9 @@ def test_handle_features_dataset_remove_static_real(
         original_list_data = original_dataset.list_data
         clean_list_data = clean_dataset.list_data
 
-    assert len(clean_list_data) == len(df_dict)
+    assert len(clean_list_data) == len(group_df_dict)
 
-    for group_index, (group_name, df_group) in enumerate(df_dict.items()):
+    for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
         original_data = original_list_data[group_index]
         data = clean_list_data[group_index]
 
@@ -708,11 +713,11 @@ def test_handle_features_dataset_remove_static_cat(
     dataset_type, np_rng, n_groups, n_targets, freq
 ):
     (
-        df_dict,
+        group_df_dict,
         target_columns,
         real_dynamic_feature_columns,
         cat_dynamic_feature_columns,
-    ) = generate_forecast_df_dict(
+    ) = generate_forecast_group_df_dict(
         np_rng,
         n_groups,
         n_targets=n_targets,
@@ -723,17 +728,17 @@ def test_handle_features_dataset_remove_static_cat(
     gluonts_freq = find_gluonts_freq(freq)
 
     real_static_feature_dict = {}
-    for group in df_dict.keys():
+    for group in group_df_dict.keys():
         n_features = np_rng.integers(2, 10)
         real_static_feature_dict[group] = np_rng.standard_normal(n_features)
 
     cat_static_feature_dict = {}
-    for group in df_dict.keys():
+    for group in group_df_dict.keys():
         n_features = np_rng.integers(2, 10)
         cat_static_feature_dict[group] = np_rng.standard_normal(n_features)
 
     original_dataset = dataframe_to_list_dataset(
-        df_dict,
+        group_df_dict,
         target_columns,
         gluonts_freq,
         real_static_feature_dict=real_static_feature_dict,
@@ -765,9 +770,9 @@ def test_handle_features_dataset_remove_static_cat(
         original_list_data = original_dataset.list_data
         clean_list_data = clean_dataset.list_data
 
-    assert len(clean_list_data) == len(df_dict)
+    assert len(clean_list_data) == len(group_df_dict)
 
-    for group_index, (group_name, df_group) in enumerate(df_dict.items()):
+    for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
         original_data = original_list_data[group_index]
         data = clean_list_data[group_index]
 
@@ -803,11 +808,11 @@ def test_handle_features_dataset_remove_dynamic_real(
     dataset_type, np_rng, n_groups, n_targets, freq
 ):
     (
-        df_dict,
+        group_df_dict,
         target_columns,
         real_dynamic_feature_columns,
         cat_dynamic_feature_columns,
-    ) = generate_forecast_df_dict(
+    ) = generate_forecast_group_df_dict(
         np_rng,
         n_groups,
         n_targets=n_targets,
@@ -818,17 +823,17 @@ def test_handle_features_dataset_remove_dynamic_real(
     gluonts_freq = find_gluonts_freq(freq)
 
     real_static_feature_dict = {}
-    for group in df_dict.keys():
+    for group in group_df_dict.keys():
         n_features = np_rng.integers(2, 10)
         real_static_feature_dict[group] = np_rng.standard_normal(n_features)
 
     cat_static_feature_dict = {}
-    for group in df_dict.keys():
+    for group in group_df_dict.keys():
         n_features = np_rng.integers(2, 10)
         cat_static_feature_dict[group] = np_rng.standard_normal(n_features)
 
     original_dataset = dataframe_to_list_dataset(
-        df_dict,
+        group_df_dict,
         target_columns,
         gluonts_freq,
         real_static_feature_dict=real_static_feature_dict,
@@ -860,9 +865,9 @@ def test_handle_features_dataset_remove_dynamic_real(
         original_list_data = original_dataset.list_data
         clean_list_data = clean_dataset.list_data
 
-    assert len(clean_list_data) == len(df_dict)
+    assert len(clean_list_data) == len(group_df_dict)
 
-    for group_index, (group_name, df_group) in enumerate(df_dict.items()):
+    for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
         original_data = original_list_data[group_index]
         data = clean_list_data[group_index]
 
@@ -899,11 +904,11 @@ def test_handle_features_dataset_remove_dynamic_cat(
     dataset_type, np_rng, n_groups, n_targets, freq
 ):
     (
-        df_dict,
+        group_df_dict,
         target_columns,
         real_dynamic_feature_columns,
         cat_dynamic_feature_columns,
-    ) = generate_forecast_df_dict(
+    ) = generate_forecast_group_df_dict(
         np_rng,
         n_groups,
         n_targets=n_targets,
@@ -914,17 +919,17 @@ def test_handle_features_dataset_remove_dynamic_cat(
     gluonts_freq = find_gluonts_freq(freq)
 
     real_static_feature_dict = {}
-    for group in df_dict.keys():
+    for group in group_df_dict.keys():
         n_features = np_rng.integers(2, 10)
         real_static_feature_dict[group] = np_rng.standard_normal(n_features)
 
     cat_static_feature_dict = {}
-    for group in df_dict.keys():
+    for group in group_df_dict.keys():
         n_features = np_rng.integers(2, 10)
         cat_static_feature_dict[group] = np_rng.standard_normal(n_features)
 
     original_dataset = dataframe_to_list_dataset(
-        df_dict,
+        group_df_dict,
         target_columns,
         gluonts_freq,
         real_static_feature_dict=real_static_feature_dict,
@@ -956,9 +961,9 @@ def test_handle_features_dataset_remove_dynamic_cat(
         original_list_data = original_dataset.list_data
         clean_list_data = clean_dataset.list_data
 
-    assert len(clean_list_data) == len(df_dict)
+    assert len(clean_list_data) == len(group_df_dict)
 
-    for group_index, (group_name, df_group) in enumerate(df_dict.items()):
+    for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
         original_data = original_list_data[group_index]
         data = clean_list_data[group_index]
 

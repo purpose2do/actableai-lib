@@ -7,7 +7,7 @@ import mxnet as mx
 from actableai.timeseries.models import params
 from actableai.timeseries.exceptions import UntrainedModelException
 from actableai.timeseries.models import AAITimeSeriesSingleModel
-from actableai.utils.testing import init_ray, generate_forecast_df_dict
+from actableai.utils.testing import init_ray, generate_forecast_group_df_dict
 
 
 @pytest.fixture(scope="module")
@@ -52,7 +52,7 @@ class TestAAITimeSeriesSingleModel:
 
         if df_train_dict is not None:
             model.fit(
-                df_dict=df_train_dict,
+                group_df_dict=df_train_dict,
                 model_params=model_params,
                 mx_ctx=mx_ctx,
                 loss="mean_wQuantileLoss",
@@ -123,11 +123,11 @@ class TestAAITimeSeriesSingleModel:
     ):
         n_targets = 1 if univariate else 2
         (
-            df_dict,
+            group_df_dict,
             target_columns,
             real_dynamic_feature_columns,
             cat_dynamic_feature_columns,
-        ) = generate_forecast_df_dict(
+        ) = generate_forecast_group_df_dict(
             np_rng,
             n_groups,
             n_targets=n_targets,
@@ -135,39 +135,40 @@ class TestAAITimeSeriesSingleModel:
             n_real_features=np_rng.integers(1, 10) if use_features else 0,
             n_cat_features=np_rng.integers(1, 10) if use_features else 0,
         )
-        group_list = list(df_dict.keys())
+        group_list = list(group_df_dict.keys())
         prediction_length = np_rng.integers(1, 3)
 
         real_static_feature_dict = {}
         cat_static_feature_dict = {}
         if use_features:
-            for group in df_dict.keys():
+            for group in group_df_dict.keys():
                 n_features = np_rng.integers(2, 10)
                 real_static_feature_dict[group] = np_rng.standard_normal(n_features)
 
-            for group in df_dict.keys():
+            for group in group_df_dict.keys():
                 n_features = np_rng.integers(2, 10)
                 cat_static_feature_dict[group] = np_rng.integers(1, 10, n_features)
 
         group_label_dict = None
         if n_groups > 1:
             group_label_dict = {
-                group: group_index for group_index, group in enumerate(df_dict.keys())
+                group: group_index
+                for group_index, group in enumerate(group_df_dict.keys())
             }
 
         df_train_dict = {}
         df_valid_dict = {}
         df_test_dict = {}
-        for group in df_dict.keys():
+        for group in group_df_dict.keys():
             last_valid_index = (
-                -prediction_length if use_features else len(df_dict[group])
+                -prediction_length if use_features else len(group_df_dict[group])
             )
 
-            df_train_dict[group] = df_dict[group].iloc[
+            df_train_dict[group] = group_df_dict[group].iloc[
                 : last_valid_index - prediction_length
             ]
-            df_valid_dict[group] = df_dict[group].iloc[:last_valid_index]
-            df_test_dict[group] = df_dict[group]
+            df_valid_dict[group] = group_df_dict[group].iloc[:last_valid_index]
+            df_test_dict[group] = group_df_dict[group]
 
         model_param = None
         if model_type == "prophet":
@@ -302,7 +303,7 @@ class TestAAITimeSeriesSingleModel:
     @pytest.mark.parametrize("freq", ["T"])
     @pytest.mark.parametrize("use_ray", [True, False])
     def test_hyperopt(self, np_rng, mx_ctx, use_ray, freq):
-        df_dict, target_columns, _, _ = generate_forecast_df_dict(
+        group_df_dict, target_columns, _, _ = generate_forecast_group_df_dict(
             np_rng, n_groups=1, n_targets=1, freq=freq
         )
         prediction_length = np_rng.integers(1, 3)
@@ -310,14 +311,14 @@ class TestAAITimeSeriesSingleModel:
         df_train_dict = {}
         df_valid_dict = {}
         df_test_dict = {}
-        for group in df_dict.keys():
-            last_valid_index = len(df_dict[group])
+        for group in group_df_dict.keys():
+            last_valid_index = len(group_df_dict[group])
 
-            df_train_dict[group] = df_dict[group].iloc[
+            df_train_dict[group] = group_df_dict[group].iloc[
                 : last_valid_index - prediction_length
             ]
-            df_valid_dict[group] = df_dict[group].iloc[:last_valid_index]
-            df_test_dict[group] = df_dict[group]
+            df_valid_dict[group] = group_df_dict[group].iloc[:last_valid_index]
+            df_test_dict[group] = group_df_dict[group]
 
         model_params = [params.ConstantValueParams()]
 
@@ -343,7 +344,7 @@ class TestAAITimeSeriesSingleModel:
 
     @pytest.mark.parametrize("freq", ["T"])
     def test_not_trained_score(self, np_rng, mx_ctx, freq):
-        df_dict, target_columns, _, _ = generate_forecast_df_dict(
+        group_df_dict, target_columns, _, _ = generate_forecast_group_df_dict(
             np_rng, n_groups=1, n_targets=1, freq=freq
         )
         prediction_length = np_rng.integers(1, 3)
@@ -358,14 +359,14 @@ class TestAAITimeSeriesSingleModel:
                 freq,
                 target_columns,
                 df_train_dict=None,
-                df_valid_dict=df_dict,
+                df_valid_dict=group_df_dict,
                 trials=1,
                 use_ray=False,
             )
 
     @pytest.mark.parametrize("freq", ["T"])
     def test_not_trained_predict(self, np_rng, mx_ctx, freq):
-        df_dict, target_columns, _, _ = generate_forecast_df_dict(
+        group_df_dict, target_columns, _, _ = generate_forecast_group_df_dict(
             np_rng, n_groups=1, n_targets=1, freq=freq
         )
         prediction_length = np_rng.integers(1, 3)
@@ -380,7 +381,7 @@ class TestAAITimeSeriesSingleModel:
                 freq,
                 target_columns,
                 df_train_dict=None,
-                df_test_dict=df_dict,
+                df_test_dict=group_df_dict,
                 trials=1,
                 use_ray=False,
             )

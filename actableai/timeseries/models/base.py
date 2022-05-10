@@ -72,7 +72,7 @@ class AAITimeSeriesBaseModel(ABC):
     @abstractmethod
     def fit(
         self,
-        df_dict: Dict[Tuple[Any], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any], pd.DataFrame],
         model_params: List[BaseParams],
         mx_ctx: Context,
         *,
@@ -90,7 +90,7 @@ class AAITimeSeriesBaseModel(ABC):
         """Tune and fit the model.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
             model_params: List of models parameters to run the tuning search on.
             mx_ctx: mxnet context.
             loss: Loss to minimize when tuning.
@@ -112,11 +112,11 @@ class AAITimeSeriesBaseModel(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def refit(self, df_dict: Dict[Tuple[Any], pd.DataFrame]):
+    def refit(self, group_df_dict: Dict[Tuple[Any], pd.DataFrame]):
         """Fit previously tuned model.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
 
         Raises:
             UntrainedModelException: If the model has not been trained/tuned before.
@@ -126,7 +126,7 @@ class AAITimeSeriesBaseModel(ABC):
     @abstractmethod
     def score(
         self,
-        df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
         num_samples: int = 100,
         quantiles: List[float] = [0.05, 0.5, 0.95],
         num_workers: Optional[int] = None,
@@ -138,7 +138,7 @@ class AAITimeSeriesBaseModel(ABC):
         """Evaluate model.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
             num_samples: Number of dataset samples to use for evaluation
             quantiles: List of quantiles to use for evaluation.
             num_workers: Maximum number of workers to use, if None no parallelization
@@ -157,13 +157,13 @@ class AAITimeSeriesBaseModel(ABC):
     @abstractmethod
     def predict(
         self,
-        df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
         quantiles: List[float] = [0.05, 0.5, 0.95],
     ) -> Dict[Tuple[Any, ...], pd.DataFrame]:
         """Make a prediction using the model.
 
         Args:
-            df_dict: Dictionary containing the time series for each group.
+            group_df_dict: Dictionary containing the time series for each group.
             quantiles: Quantiles to predict.
 
         Raises:

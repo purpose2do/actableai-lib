@@ -206,7 +206,7 @@ def handle_datetime_column(
 
 
 def dataframe_to_list_dataset(
-    df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+    group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
     target_columns: List[str],
     freq: str,
     *,
@@ -222,7 +222,7 @@ def dataframe_to_list_dataset(
     """Transform pandas DataFrame to GluonTS ListDataset.
 
     Args:
-        df_dict: Dictionary containing the time series for each group.
+        group_df_dict: Dictionary containing the time series for each group.
         target_columns: List of columns to forecast.
         freq: Frequency of the time series.
         real_static_feature_dict: Dictionary containing a list of real features for
@@ -265,8 +265,8 @@ def dataframe_to_list_dataset(
     slice_df = slice_df or slice(None)
 
     list_data = []
-    for group in df_dict.keys():
-        df = df_dict[group]
+    for group in group_df_dict.keys():
+        df = group_df_dict[group]
 
         slice_ = slice_df
         if callable(slice_df):

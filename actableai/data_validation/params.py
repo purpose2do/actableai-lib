@@ -313,15 +313,15 @@ class TimeSeriesDataValidator:
             ),
         ]
 
-        df_dict = {}
+        group_df_dict = {}
         if len(group_by) > 0:
             for group, grouped_df in df.groupby(group_by):
-                df_dict[group] = grouped_df
+                group_df_dict[group] = grouped_df
         else:
-            df_dict["data"] = df
+            group_df_dict["data"] = df
 
-        for group in df_dict.keys():
-            df_group = df_dict[group].reset_index(drop=True)
+        for group in group_df_dict.keys():
+            df_group = group_df_dict[group].reset_index(drop=True)
 
             validation_results += [
                 IsSufficientDataChecker(level=CheckLevels.CRITICAL).check(
@@ -359,9 +359,9 @@ class TimeSeriesDataValidator:
 class TimeSeriesPredictionDataValidator:
     def validate(
         self,
-        df_train_dict,
-        df_valid_dict,
-        df_predict_dict,
+        group_df_train_dict,
+        group_df_valid_dict,
+        group_df_predict_dict,
         freq_dict,
         feature_columns,
         predicted_columns,
@@ -373,15 +373,15 @@ class TimeSeriesPredictionDataValidator:
 
         freq = None
         invalid_groups_freq = []
-        for group, df_train in df_train_dict.items():
-            df_valid = df_valid_dict.get(group)
+        for group, df_train in group_df_train_dict.items():
+            df_valid = group_df_valid_dict.get(group)
 
             if freq is None:
                 freq = freq_dict[group]
             elif freq_dict[group] != freq:
                 invalid_groups_freq.append(group)
 
-            df_predict = df_predict_dict.get(group)
+            df_predict = group_df_predict_dict.get(group)
 
             if df_predict is not None:
                 df_predict_cut = df_predict.loc[~df_predict.index.isin(df_valid.index)]
