@@ -6,7 +6,7 @@ import mxnet as mx
 
 from actableai.timeseries.models import params
 from actableai.timeseries.exceptions import UntrainedModelException
-from actableai.timeseries.models import AAITimeSeriesMultiTargetModel
+from actableai.timeseries.models import AAITimeSeriesIndependentMultivariateModel
 from actableai.utils.testing import init_ray, generate_forecast_df_dict
 
 
@@ -34,7 +34,7 @@ class TestAAITimeSeriesMultiTargetModel:
         trials=1,
         use_ray=False,
     ):
-        model = AAITimeSeriesMultiTargetModel(
+        model = AAITimeSeriesIndependentMultivariateModel(
             target_columns=target_columns,
             prediction_length=prediction_length,
             freq=freq,

@@ -6,7 +6,7 @@ from time import time
 from mxnet.context import Context
 
 from actableai.timeseries.models import (
-    AAITimeSeriesMultiTargetModel,
+    AAITimeSeriesIndependentMultivariateModel,
     AAITimeSeriesSingleModel,
 )
 from actableai.timeseries.models.params import BaseParams
@@ -216,7 +216,7 @@ class AAITimeSeriesForecaster:
                 univariate_model_params.append(model_param)
 
         # Train multi-target model
-        multi_target_model = AAITimeSeriesMultiTargetModel(
+        multi_target_model = AAITimeSeriesIndependentMultivariateModel(
             target_columns=self.target_columns,
             prediction_length=self.prediction_length,
             freq=freq,

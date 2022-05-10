@@ -1,5 +1,5 @@
 from .estimator import AAITimeSeriesEstimator
 from .predictor import AAITimeSeriesPredictor
-from .multi_target_model import AAITimeSeriesMultiTargetModel
+from .independent_multivariate_model import AAITimeSeriesIndependentMultivariateModel
 from .single_model import AAITimeSeriesSingleModel
 from .forecaster import AAITimeSeriesForecaster
