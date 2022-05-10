@@ -7,7 +7,7 @@ from mxnet.context import Context
 
 from actableai.timeseries.models import (
     AAITimeSeriesMultiTargetModel,
-    AAITimeSeriesSimpleModel,
+    AAITimeSeriesSingleModel,
 )
 from actableai.timeseries.models.params import BaseParams
 from actableai.timeseries.exceptions import UntrainedModelException
@@ -246,7 +246,7 @@ class AAITimeSeriesForecaster:
         multivariate_model = None
         multivariate_fit_time = 0
         if len(self.target_columns) > 1 and len(multivariate_model_params) > 0:
-            multivariate_model = AAITimeSeriesSimpleModel(
+            multivariate_model = AAITimeSeriesSingleModel(
                 target_columns=self.target_columns,
                 prediction_length=self.prediction_length,
                 freq=freq,

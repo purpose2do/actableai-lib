@@ -5,14 +5,14 @@ import pandas as pd
 from mxnet.context import Context
 
 from actableai.timeseries.models.base import AAITimeSeriesBaseModel
-from actableai.timeseries.models.single_model import AAITimeSeriesSimpleModel
+from actableai.timeseries.models.single_model import AAITimeSeriesSingleModel
 from actableai.timeseries.exceptions import UntrainedModelException
 from actableai.timeseries.models.params import BaseParams
 
 
 class AAITimeSeriesMultiTargetModel(AAITimeSeriesBaseModel):
     """Multi-Target Time Series Model, can be used for univariate and multivariate
-    forecasting. It will internally use one AAITimeSeriesSimpleModel for each
+    forecasting. It will internally use one AAITimeSeriesSingleModel for each
     target, using the other target as features for every model.
     """
 
@@ -163,7 +163,7 @@ class AAITimeSeriesMultiTargetModel(AAITimeSeriesBaseModel):
                 ).difference({shift_target_column})
             )
 
-            self.predictor_dict[target_column] = AAITimeSeriesSimpleModel(
+            self.predictor_dict[target_column] = AAITimeSeriesSingleModel(
                 target_columns=[target_column],
                 prediction_length=self.prediction_length,
                 freq=self.freq,

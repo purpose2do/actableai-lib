@@ -31,7 +31,7 @@ from actableai.timeseries.utils import (
 )
 
 
-class AAITimeSeriesSimpleModel(AAITimeSeriesBaseModel):
+class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
     """Simple Time Series Model,"""
 
     def __init__(
