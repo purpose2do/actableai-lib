@@ -116,7 +116,7 @@ class AAITimeSeriesMultiTargetModel(AAITimeSeriesBaseModel):
         mx_ctx: Context,
         *,
         loss: str = "mean_wQuantileLoss",
-        trials: int = 3,
+        trials: int = 1,
         max_concurrent: Optional[int] = 1,
         use_ray: bool = True,
         tune_samples: int = 3,
