@@ -1,3 +1,4 @@
+from typing import Dict, List, Optional, Union
 import numpy as np
 import pandas as pd
 from autogluon.tabular import TabularDataset, TabularPredictor
@@ -71,9 +72,9 @@ class SKLearnWrapper:
         self,
         ag_predictor: TabularPredictor,
         x_w_columns: Optional[List] = None,
-        hyperparameters: Optional[List] = None,
+        hyperparameters: Optional[Union[List, Dict]] = None,
         presets: Optional[str] = "best_quality",
-        ag_args_fit: Optional[List] = None,
+        ag_args_fit: Optional[Dict] = None
     ):
         """Construct a sklearn wrapper object
 
