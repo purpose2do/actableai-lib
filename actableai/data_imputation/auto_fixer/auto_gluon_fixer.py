@@ -71,8 +71,7 @@ class AutoGluonFixer(AutoFixer):
         return _ProblemType.unknown
 
     def _remove_saved_model(self):
-        """Removes the saved model
-        """
+        """Removes the saved model"""
         if os.path.exists(self._model_location):
             shutil.rmtree(self._model_location, ignore_errors=True)
 
@@ -96,7 +95,7 @@ class AutoGluonFixer(AutoFixer):
             EmptyTrainDataException: If the dataframe only contains errors
 
         Returns:
-            Tuple[_ProblemType, pd.Series]: 
+            Tuple[_ProblemType, pd.Series]:
                 - The problem type of the column
                 - _description_
         """

@@ -35,6 +35,7 @@ class CustomInstallCommand(install):
         install.run(self)
         post_install()
 
+
 class CustomDevelopCommand(develop):
     def run(self):
         develop.run(self)
@@ -45,6 +46,7 @@ class CustomEggInfoCommand(egg_info):
     def run(self):
         egg_info.run(self)
         post_install()
+
 
 setup(
     version="0.1",

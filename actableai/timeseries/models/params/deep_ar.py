@@ -101,7 +101,7 @@ class DeepARParams(BaseParams):
         prediction_length: int,
         distr_output: DistributionOutput,
         params: Dict[str, Any],
-        **kwargs
+        **kwargs,
     ) -> DeepAREstimator:
         """Build an estimator from the underlying model using selected parameters.
 

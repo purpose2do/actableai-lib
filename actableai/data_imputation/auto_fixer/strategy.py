@@ -108,9 +108,7 @@ def determine_fix_strategy(
         return FixStrategy.AUTOGLUON
 
 
-def determine_refine_strategy(
-    series: pd.Series, errors: ColumnErrors
-) -> FixStrategy:
+def determine_refine_strategy(series: pd.Series, errors: ColumnErrors) -> FixStrategy:
     """Determine the refine strategy.
 
     Args:

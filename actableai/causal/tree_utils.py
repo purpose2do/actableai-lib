@@ -1,10 +1,16 @@
 from __future__ import annotations
 from typing import Optional, Tuple
 
+
 class Node:
     def __init__(
-        self, left:Optional[Node]=None, right:Optional[Node]=None, label:Optional[str]=None, conditions:list=[], is_right_child:bool=False,
-        num_right_ancestors:int = 0
+        self,
+        left: Optional[Node] = None,
+        right: Optional[Node] = None,
+        label: Optional[str] = None,
+        conditions: list = [],
+        is_right_child: bool = False,
+        num_right_ancestors: int = 0,
     ):
         """Basic Node class for a tree.
 
@@ -25,7 +31,7 @@ class Node:
         self.num_right_ancestors = num_right_ancestors
 
 
-def parse_tree_dot(tree_dot:str) -> Tuple[str, dict]:
+def parse_tree_dot(tree_dot: str) -> Tuple[str, dict]:
     """Parser for tree_dot.
 
     Args:
@@ -78,7 +84,9 @@ def parse_tree_dot(tree_dot:str) -> Tuple[str, dict]:
                     node_dict[parent_k].right = node_dict[child_k]
                     node_dict[child_k].is_right_child = True
                 if node_dict[parent_k].is_right_child:
-                    node_dict[child_k].num_right_ancestors = node_dict[parent_k].num_right_ancestors+1
+                    node_dict[child_k].num_right_ancestors = (
+                        node_dict[parent_k].num_right_ancestors + 1
+                    )
         new_lines.append(l)
     return "\n".join(new_lines), node_dict
 
@@ -101,7 +109,7 @@ def get_cat_constraint(cat_name, cat_vals, constraints):
         return f"{cat_name} in [" + ", ".join(["{}".format(c) for c in res]) + "]"
 
 
-def negate_condition(condition:str) -> Optional[str]:
+def negate_condition(condition: str) -> Optional[str]:
     """Converts a condition to its negation.
 
     Args:
@@ -161,11 +169,13 @@ def convert_label_to_categorical(root_node, cat_name, cat_vals):
             and (cur_node.is_right_child)
             and len(constraints) > 0
         ):
-            for i in range(cur_node.num_right_ancestors+1):
+            for i in range(cur_node.num_right_ancestors + 1):
                 constraints.pop()
 
 
-def make_pretty_tree(tree_dot:str, cat_names:list[str], cat_vals_list:list[dict]) -> str:
+def make_pretty_tree(
+    tree_dot: str, cat_names: list[str], cat_vals_list: list[dict]
+) -> str:
     """Make a pretty tree from a tree_dot.
 
     Args:
