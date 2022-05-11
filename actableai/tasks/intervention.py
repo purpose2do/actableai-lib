@@ -1,5 +1,8 @@
+import time
 from typing import List, Dict, Optional
 import pandas as pd
+from sklearn.compose import ColumnTransformer
+from actableai.data_validation.base import CheckLevels
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
@@ -46,11 +49,17 @@ class AAIInterventionTask(AAITask):
         from sklearn.impute import SimpleImputer
         from autogluon.tabular import TabularPredictor
 
+        from actableai.utils.preprocessors.preprocessing import (
+            CustomSimpleImputerTransformer,
+        )
+        from actableai.data_validation.params import InterventionDataValidator
         from actableai.causal.predictors import SKLearnWrapper
         from actableai.causal import OneHotEncodingTransformer
         from actableai.utils import debiasing_hyperparameters
-        from actableai.utils import memory_efficient_hyperparameters
 
+        # from actableai.utils import memory_efficient_hyperparameters
+
+        start = time.time()
         # Handle default parameters
         if model_directory is None:
             model_directory = mkdtemp(prefix="autogluon_model")
@@ -61,22 +70,57 @@ class AAIInterventionTask(AAITask):
         if presets is None:
             presets = "medium_quality_faster_train"
 
-        df_ = df.copy()
-        df_ = df_[pd.notnull(df_[[current_intervention_column, target]]).all(axis=1)]
+        df = df.copy()
 
-        df_imputed = df_.copy()
-        num_cols = df_imputed.select_dtypes(include="number").columns
-        cat_cols = df_imputed.select_dtypes(exclude="number").columns
-        if len(num_cols) > 0:
-            df_imputed[num_cols] = SimpleImputer(strategy="median").fit_transform(
-                df_imputed[num_cols]
-            )
-        if len(cat_cols) > 0:
-            df_imputed[cat_cols] = SimpleImputer(
-                strategy="most_frequent"
-            ).fit_transform(df_imputed[cat_cols])
+        # Validate parameters
+        data_validation_results = InterventionDataValidator().validate(
+            df,
+            target,
+            current_intervention_column,
+            new_intervention_column,
+            common_causes,
+            causal_cv,
+        )
+        failed_checks = [
+            check for check in data_validation_results if check is not None
+        ]
 
-        X = df_imputed[common_causes] if len(common_causes) > 0 else None
+        if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
+            return {
+                "status": "FAILURE",
+                "data": {},
+                "validations": [
+                    {"name": check.name, "level": check.level, "message": check.message}
+                    for check in failed_checks
+                ],
+                "runtime": time.time() - start,
+            }
+
+        num_cols = df.select_dtypes(include="number").columns
+        cat_cols = df.select_dtypes(exclude="number").columns
+        ct = ColumnTransformer(
+            [
+                (
+                    "SimpleImputerNum",
+                    CustomSimpleImputerTransformer(strategy="median"),
+                    num_cols,
+                ),
+                (
+                    "SimpleImputerCat",
+                    CustomSimpleImputerTransformer(strategy="most_frequent"),
+                    cat_cols,
+                ),
+            ],
+            remainder="passthrough",
+            sparse_threshold=0,
+            verbose_feature_names_out=False,
+            verbose=True,
+        )
+        df = pd.DataFrame(
+            ct.fit_transform(df).tolist(), columns=ct.get_feature_names_out()
+        )
+
+        X = df[common_causes] if len(common_causes) > 0 else None
         model_t = TabularPredictor(
             path=mkdtemp(prefix=str(model_directory)),
             label="t",
@@ -108,8 +152,8 @@ class AAIInterventionTask(AAITask):
         )
 
         if (
-            (X is None)
-            or (cate_alpha is not None)
+            X is None
+            or cate_alpha is not None
             or (
                 current_intervention_column in cat_cols
                 and len(df[current_intervention_column].unique()) > 2
@@ -144,43 +188,33 @@ class AAIInterventionTask(AAITask):
                 model_final=model_final,
                 featurizer=None if X is None else OneHotEncodingTransformer(X),
                 cv=causal_cv,
-                discrete_treatment=current_intervention_column not in num_cols,
+                discrete_treatment=current_intervention_column in cat_cols,
             )
 
         causal_model.fit(
-            df_[[target]].values,
-            df_[[current_intervention_column]].values,
+            df[[target]].values,
+            df[[current_intervention_column]].values,
             X=X,
         )
 
-        df_intervene = df_[
-            pd.notnull(df_[[current_intervention_column, new_intervention_column]]).all(
-                axis=1
-            )
-        ]
-        df_imputed = df_imputed.loc[df_intervene.index]
-        X = df_imputed[common_causes] if len(common_causes) > 0 else None
         effects = causal_model.effect(
             X,
-            T0=df_imputed[[current_intervention_column]],
-            T1=df_imputed[[new_intervention_column]],
+            T0=df[[current_intervention_column]],  # type: ignore
+            T1=df[[new_intervention_column]],  # type: ignore
         )
 
-        targets = df_intervene[target].copy()
-        df_intervene[target + "_intervened"] = targets + effects.flatten()
+        df[target + "_intervened"] = df[target] + effects.flatten()  # type: ignore
+        df["intervention_effect"] = effects.flatten()  # type: ignore
         if cate_alpha is not None:
             lb, ub = causal_model.effect_interval(
                 X,
-                T0=df_intervene[[current_intervention_column]],
-                T1=df_intervene[[new_intervention_column]],
+                T0=df[[current_intervention_column]],  # type: ignore
+                T1=df[[new_intervention_column]],  # type: ignore
                 alpha=cate_alpha,
-            )
-            df_intervene[target + "_intervened_low"] = targets + lb.flatten()
-            df_intervene[target + "_intervened_high"] = targets + ub.flatten()
+            )  # type: ignore
+            df[target + "_intervened_low"] = df[target] + lb.flatten()
+            df[target + "_intervened_high"] = df[target] + ub.flatten()
+            df["intervention_effect_low"] = lb.flatten()
+            df["intervention_effect_high"] = ub.flatten()
 
-        df_intervene["intervention_effect"] = effects.flatten()
-        if cate_alpha is not None:
-            df_intervene["intervention_effect_low"] = lb.flatten()
-            df_intervene["intervention_effect_high"] = ub.flatten()
-
-        return df_intervene
+        return {"status": "SUCCESS", "df": df}

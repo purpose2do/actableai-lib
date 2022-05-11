@@ -648,3 +648,22 @@ class DataImputationDataValidator:
                 df, n_sample=MINIMUM_NUMBER_OF_SAMPLE
             ),
         ]
+
+class InterventionDataValidator:
+    def __init__(self):
+        pass
+
+    def validate(
+        self,
+        df,
+        target: str,
+        current_intervention_column: str,
+        new_intervention_column: str,
+        common_causes: List[str],
+        causal_cv
+    ):
+        return [
+            ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
+                df, [current_intervention_column, new_intervention_column, target] + common_causes
+            )
+        ]
