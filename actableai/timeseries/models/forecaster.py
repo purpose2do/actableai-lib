@@ -1,9 +1,8 @@
 from typing import List, Union, Tuple, Any, Dict, Optional
 
 import pandas as pd
+import mxnet as mx
 from time import time
-
-from mxnet.context import Context
 
 from actableai.timeseries.models import (
     AAITimeSeriesIndependentMultivariateModel,
@@ -144,10 +143,10 @@ class AAITimeSeriesForecaster:
     def fit(
         self,
         model_params: List[BaseParams],
-        mx_ctx: Context,
         *,
         df: Optional[pd.DataFrame] = None,
         group_df_dict: Optional[Dict[Tuple[Any, ...], pd.DataFrame]] = None,
+        mx_ctx: Optional[mx.Context] = mx.cpu(),
         freq: Optional[str] = None,
         group_label_dict: Optional[Dict[Tuple[Any, ...], int]] = None,
         loss: str = "mean_wQuantileLoss",
@@ -165,11 +164,11 @@ class AAITimeSeriesForecaster:
 
         Args:
             model_params: List of models parameters to run the tuning search on.
-            mx_ctx: mxnet context.
             df: Input DataFrame. If None `group_df_dict`, `freq`, and `group_label_dict`
                 must be provided.
             group_df_dict: Dictionary containing the time series for each group. If None
                 `df` must be provided.
+            mx_ctx: mxnet context, CPU by default.
             freq: Frequency of the time series.
             group_label_dict: Dictionary containing the unique label for each group.
             loss: Loss to minimize when tuning.
@@ -277,8 +276,12 @@ class AAITimeSeriesForecaster:
 
         # Choose best model
         if multivariate_model is not None:
-            _, _, df_multi_target_agg_metrics = multi_target_model.score(group_df_dict)
-            _, _, df_multivariate_agg_metrics = multivariate_model.score(group_df_dict)
+            _, _, df_multi_target_agg_metrics = multi_target_model.score(
+                group_df_dict=group_df_dict
+            )
+            _, _, df_multivariate_agg_metrics = multivariate_model.score(
+                group_df_dict=group_df_dict
+            )
 
             multi_target_loss = df_multi_target_agg_metrics[loss].mean(axis=0)
             multivariate_loss = df_multivariate_agg_metrics[loss].mean(axis=0)
@@ -291,7 +294,7 @@ class AAITimeSeriesForecaster:
             self.model = multi_target_model
 
         if fit_full:
-            self.model.refit(group_df_dict)
+            self.model.refit(group_df_dict=group_df_dict)
 
         return multi_target_fit_time + multivariate_fit_time + time() - start_time
 
@@ -300,6 +303,7 @@ class AAITimeSeriesForecaster:
         *,
         df: Optional[pd.DataFrame] = None,
         group_df_dict: Optional[Dict[Tuple[Any, ...], pd.DataFrame]] = None,
+        mx_ctx: Optional[mx.Context] = mx.cpu(),
     ):
         """Fit previously tuned model.
 
@@ -307,6 +311,7 @@ class AAITimeSeriesForecaster:
             df: Input DataFrame. If None `group_df_dict` must be provided.
             group_df_dict: Dictionary containing the time series for each group. If None
                 `df` must be provided.
+            mx_ctx: mxnet context, CPU by default.
 
         Raises:
             UntrainedModelException: If the model has not been trained/tuned before.
@@ -327,7 +332,7 @@ class AAITimeSeriesForecaster:
                 inplace=False,
             )
 
-        self.model.refit(group_df_dict)
+        self.model.refit(group_df_dict=group_df_dict, mx_ctx=mx_ctx)
 
     def score(
         self,
@@ -374,7 +379,7 @@ class AAITimeSeriesForecaster:
             )
 
         df_predictions_dict, df_item_metrics_dict, df_agg_metrics = self.model.score(
-            group_df_dict,
+            group_df_dict=group_df_dict,
             num_samples=num_samples,
             quantiles=quantiles,
             num_workers=num_workers,
@@ -440,7 +445,9 @@ class AAITimeSeriesForecaster:
                 inplace=False,
             )
 
-        df_predictions_dict = self.model.predict(group_df_dict, quantiles=quantiles)
+        df_predictions_dict = self.model.predict(
+            group_df_dict=group_df_dict, quantiles=quantiles
+        )
 
         # Post process predictions
         df_predictions = pd.DataFrame()

@@ -1,15 +1,14 @@
 import visions
 import time
 
-from typing import Dict, List, Optional, Tuple, Any, Iterable
+from typing import Dict, List, Optional, Tuple, Any, Iterable, Union
 
 import numpy as np
 import pandas as pd
+import mxnet as mx
+
 from functools import partial
-
 from hyperopt import hp, fmin, tpe, space_eval
-
-from mxnet.context import Context
 
 from ray import tune
 from ray.tune.suggest.hyperopt import HyperOptSearch
@@ -39,9 +38,9 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         target_columns: List[str],
         prediction_length: int,
         freq: str,
-        group_label_dict: Optional[Dict[Tuple[Any], int]] = None,
-        real_static_feature_dict: Optional[Dict[Tuple[Any], List[float]]] = None,
-        cat_static_feature_dict: Optional[Dict[Tuple[Any], List[Any]]] = None,
+        group_label_dict: Optional[Dict[Tuple[Any, ...], int]] = None,
+        real_static_feature_dict: Optional[Dict[Tuple[Any, ...], List[float]]] = None,
+        cat_static_feature_dict: Optional[Dict[Tuple[Any, ...], List[Any]]] = None,
         real_dynamic_feature_columns: Optional[List[str]] = None,
         cat_dynamic_feature_columns: Optional[List[str]] = None,
     ):
@@ -52,12 +51,13 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
             prediction_length: Length of the prediction to forecast.
             freq: Frequency of the time series.
             group_label_dict: Dictionary containing the unique label for each group.
-            real_static_feature_dict: Dictionary containing a list of real features for
-                each group.
-            cat_static_feature_dict: Dictionary containing a list of categorical
+            real_static_feature_dict: Dictionary containing a list of real static
                 features for each group.
-            real_dynamic_feature_columns: List of columns containing real features.
-            cat_dynamic_feature_columns: List of columns containing categorical
+            cat_static_feature_dict: Dictionary containing a list of categorical static
+                features for each group.
+            real_dynamic_feature_columns: List of columns containing real dynamic
+                features.
+            cat_dynamic_feature_columns: List of columns containing categorical dynamic
                 features.
         """
         super().__init__(
@@ -76,7 +76,6 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
 
         self.model_params_dict = None
         self.distr_output = None
-        self.mx_ctx = None
 
     @staticmethod
     def _create_predictor(
@@ -87,7 +86,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         distr_output: DistributionOutput,
         prediction_length: int,
         target_dim: int,
-        mx_ctx: Context,
+        mx_ctx: mx.Context,
     ) -> AAITimeSeriesPredictor:
         """Create and train a predictor.
 
@@ -160,7 +159,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         prediction_length: int,
         target_dim: int,
         use_ray: bool,
-        mx_ctx: Context,
+        mx_ctx: mx.Context,
     ) -> Optional[float]:
         """Create, train, and evaluate a model with specific hyperparameter.
 
@@ -227,7 +226,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         prediction_length: int,
         target_dim: int,
         use_ray: bool,
-        mx_ctx: Context,
+        mx_ctx: mx.Context,
     ) -> Dict[str, Any]:
         """Create, train, and evaluate a model with specific hyperparameter. Used by
             hyperopt.
@@ -268,7 +267,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
 
     def _generate_train_valid_data(
         self,
-        group_df_dict: Dict[Tuple[Any], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
         tune_samples: int,
         sampling_method: str = "random",
     ) -> Tuple[
@@ -362,10 +361,10 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
 
     def fit(
         self,
-        group_df_dict: Dict[Tuple[Any], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
         model_params: List[BaseParams],
-        mx_ctx: Context,
         *,
+        mx_ctx: Optional[mx.Context] = mx.cpu(),
         loss: str = "mean_wQuantileLoss",
         trials: int = 1,
         max_concurrent: Optional[int] = 1,
@@ -382,7 +381,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         Args:
             group_df_dict: Dictionary containing the time series for each group.
             model_params: List of models parameters to run the tuning search on.
-            mx_ctx: mxnet context.
+            mx_ctx: mxnet context, CPU by default.
             loss: Loss to minimize when tuning.
             trials: Number of trials for hyperparameter search.
             max_concurrent: Maximum number of concurrent ray task.
@@ -399,8 +398,6 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         Returns:
             Total time spent for tuning.
         """
-        self.mx_ctx = mx_ctx
-
         self.model_params_dict = {
             model_param_class.model_name: model_param_class
             for model_param_class in model_params
@@ -457,7 +454,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
                 prediction_length=self.prediction_length,
                 target_dim=len(self.target_columns),
                 use_ray=use_ray,
-                mx_ctx=self.mx_ctx,
+                mx_ctx=mx_ctx,
             )
 
             analysis = tune.run(
@@ -489,7 +486,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
                 prediction_length=self.prediction_length,
                 target_dim=len(self.target_columns),
                 use_ray=use_ray,
-                mx_ctx=self.mx_ctx,
+                mx_ctx=mx_ctx,
             )
 
             best = fmin(
@@ -514,16 +511,21 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
             distr_output=self.distr_output,
             prediction_length=self.prediction_length,
             target_dim=len(self.target_columns),
-            mx_ctx=self.mx_ctx,
+            mx_ctx=mx_ctx,
         )
 
         return time.time() - start + trials_time_total
 
-    def refit(self, group_df_dict: Dict[Tuple[Any], pd.DataFrame]):
+    def refit(
+        self,
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        mx_ctx: Optional[mx.Context] = mx.cpu(),
+    ):
         """Fit previously tuned model.
 
         Args:
             group_df_dict: Dictionary containing the time series for each group.
+            mx_ctx: mxnet context, CPU by default.
 
         Raises:
             UntrainedModelException: If the model has not been trained/tuned before.
@@ -552,7 +554,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
             distr_output=self.distr_output,
             prediction_length=self.prediction_length,
             target_dim=len(self.target_columns),
-            mx_ctx=self.mx_ctx,
+            mx_ctx=mx_ctx,
         )
 
     def score(

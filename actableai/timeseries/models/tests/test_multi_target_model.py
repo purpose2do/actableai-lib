@@ -78,7 +78,7 @@ class TestAAITimeSeriesMultiTargetModel:
         validations = None
         if df_valid_dict is not None:
             df_val_predictions_dict, df_item_metrics_dict, df_agg_metrics = model.score(
-                df_valid_dict
+                group_df_dict=df_valid_dict
             )
             validations = {
                 "predictions": df_val_predictions_dict,
@@ -87,11 +87,11 @@ class TestAAITimeSeriesMultiTargetModel:
             }
 
             if df_test_dict is not None:
-                model.refit(df_valid_dict)
+                model.refit(group_df_dict=df_valid_dict)
 
         predictions = None
         if df_test_dict is not None:
-            df_predictions_dict = model.predict(df_test_dict)
+            df_predictions_dict = model.predict(group_df_dict=df_test_dict)
             predictions = {"predictions": df_predictions_dict}
 
         return validations, predictions

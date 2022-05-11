@@ -582,7 +582,10 @@ class AAIForecastTask(AAITask):
 
         # Refit with validation data
         if refit_full:
-            model.refit(group_df_dict=group_df_valid_dict)
+            model.refit(
+                group_df_dict=group_df_valid_dict,
+                mx_ctx=mx_ctx,
+            )
 
         # Generate predictions
         df_predictions = model.predict(group_df_dict=group_df_predict_dict)

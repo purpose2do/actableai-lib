@@ -1,8 +1,7 @@
-from typing import List, Optional, Dict, Tuple, Any
+from typing import List, Optional, Dict, Tuple, Any, Union
 
 import pandas as pd
-
-from mxnet.context import Context
+import mxnet as mx
 
 from actableai.timeseries.models.base import AAITimeSeriesBaseModel
 from actableai.timeseries.models.single_model import AAITimeSeriesSingleModel
@@ -21,9 +20,9 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
         target_columns: List[str],
         prediction_length: int,
         freq: str,
-        group_label_dict: Optional[Dict[Tuple[Any], int]] = None,
-        real_static_feature_dict: Optional[Dict[Tuple[Any], List[float]]] = None,
-        cat_static_feature_dict: Optional[Dict[Tuple[Any], List[Any]]] = None,
+        group_label_dict: Optional[Dict[Tuple[Any, ...], int]] = None,
+        real_static_feature_dict: Optional[Dict[Tuple[Any, ...], List[float]]] = None,
+        cat_static_feature_dict: Optional[Dict[Tuple[Any, ...], List[Any]]] = None,
         real_dynamic_feature_columns: Optional[List[str]] = None,
         cat_dynamic_feature_columns: Optional[List[str]] = None,
     ):
@@ -34,12 +33,13 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
             prediction_length: Length of the prediction to forecast.
             freq: Frequency of the time series.
             group_label_dict: Dictionary containing the unique label for each group.
-            real_static_feature_dict: Dictionary containing a list of real features for
-                each group.
-            cat_static_feature_dict: Dictionary containing a list of categorical
+            real_static_feature_dict: Dictionary containing a list of real static
                 features for each group.
-            real_dynamic_feature_columns: List of columns containing real features.
-            cat_dynamic_feature_columns: List of columns containing categorical
+            cat_static_feature_dict: Dictionary containing a list of categorical static
+                features for each group.
+            real_dynamic_feature_columns: List of columns containing real dynamic
+                features.
+            cat_dynamic_feature_columns: List of columns containing categorical dynamic
                 features.
         """
         super().__init__(
@@ -71,8 +71,10 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
         }
 
     def _pre_process_data(
-        self, group_df_dict: Dict[Tuple[Any], pd.DataFrame], keep_future: bool = True
-    ) -> Dict[Tuple[Any], pd.DataFrame]:
+        self,
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        keep_future: bool = True,
+    ) -> Dict[Tuple[Any, ...], pd.DataFrame]:
         """Pre-process data to add the shifted target as features.
 
         Args:
@@ -115,10 +117,10 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
 
     def fit(
         self,
-        group_df_dict: Dict[Tuple[Any], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
         model_params: List[BaseParams],
-        mx_ctx: Context,
         *,
+        mx_ctx: Optional[mx.Context] = mx.cpu(),
         loss: str = "mean_wQuantileLoss",
         trials: int = 1,
         max_concurrent: Optional[int] = 1,
@@ -135,7 +137,7 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
         Args:
             group_df_dict: Dictionary containing the time series for each group.
             model_params: List of models parameters to run the tuning search on.
-            mx_ctx: mxnet context.
+            mx_ctx: mxnet context, CPU by default.
             loss: Loss to minimize when tuning.
             trials: Number of trials for hyperparameter search.
             max_concurrent: Maximum number of concurrent ray task.
@@ -197,11 +199,16 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
 
         return total_time
 
-    def refit(self, group_df_dict: Dict[Tuple[Any], pd.DataFrame]):
+    def refit(
+        self,
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        mx_ctx: Optional[mx.Context] = mx.cpu(),
+    ):
         """Fit previously tuned model.
 
         Args:
             group_df_dict: Dictionary containing the time series for each group.
+            mx_ctx: mxnet context, CPU by default.
 
         Raises:
             UntrainedModelException: If the model has not been trained/tuned before.
@@ -211,7 +218,9 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
         for target_column in self.target_columns:
             if target_column not in self.predictor_dict:
                 raise UntrainedModelException()
-            self.predictor_dict[target_column].refit(group_df_dict_clean)
+            self.predictor_dict[target_column].refit(
+                group_df_dict=group_df_dict_clean, mx_ctx=mx_ctx
+            )
 
     def score(
         self,
@@ -260,7 +269,7 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
                 df_target_item_metrics_dict,
                 df_target_agg_metrics,
             ) = self.predictor_dict[target_column].score(
-                group_df_dict_clean,
+                group_df_dict=group_df_dict_clean,
                 num_samples=num_samples,
                 quantiles=quantiles,
                 num_workers=num_workers,
@@ -309,7 +318,7 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
                 raise UntrainedModelException()
 
             df_target_predictions_dict = self.predictor_dict[target_column].predict(
-                group_df_dict_clean, quantiles=quantiles
+                group_df_dict=group_df_dict_clean, quantiles=quantiles
             )
 
             for group in group_df_dict_clean.keys():

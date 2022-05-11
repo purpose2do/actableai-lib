@@ -1,10 +1,9 @@
-from typing import List, Dict, Tuple, Any, Optional
+from typing import List, Dict, Tuple, Any, Optional, Union
 
 from abc import ABC, abstractmethod
 
 import pandas as pd
-
-from mxnet.context import Context
+import mxnet as mx
 
 from actableai.timeseries.utils import find_gluonts_freq
 from actableai.timeseries.models.params import BaseParams
@@ -18,9 +17,9 @@ class AAITimeSeriesBaseModel(ABC):
         target_columns: List[str],
         prediction_length: int,
         freq: str,
-        group_label_dict: Optional[Dict[Tuple[Any], int]] = None,
-        real_static_feature_dict: Optional[Dict[Tuple[Any], List[float]]] = None,
-        cat_static_feature_dict: Optional[Dict[Tuple[Any], List[Any]]] = None,
+        group_label_dict: Optional[Dict[Tuple[Any, ...], int]] = None,
+        real_static_feature_dict: Optional[Dict[Tuple[Any, ...], List[float]]] = None,
+        cat_static_feature_dict: Optional[Dict[Tuple[Any, ...], List[Any]]] = None,
         real_dynamic_feature_columns: Optional[List[str]] = None,
         cat_dynamic_feature_columns: Optional[List[str]] = None,
     ):
@@ -72,10 +71,10 @@ class AAITimeSeriesBaseModel(ABC):
     @abstractmethod
     def fit(
         self,
-        group_df_dict: Dict[Tuple[Any], pd.DataFrame],
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
         model_params: List[BaseParams],
-        mx_ctx: Context,
         *,
+        mx_ctx: Optional[mx.Context] = mx.cpu(),
         loss: str = "mean_wQuantileLoss",
         trials: int = 1,
         max_concurrent: Optional[int] = 1,
@@ -92,7 +91,7 @@ class AAITimeSeriesBaseModel(ABC):
         Args:
             group_df_dict: Dictionary containing the time series for each group.
             model_params: List of models parameters to run the tuning search on.
-            mx_ctx: mxnet context.
+            mx_ctx: mxnet context, CPU by default.
             loss: Loss to minimize when tuning.
             trials: Number of trials for hyperparameter search.
             max_concurrent: Maximum number of concurrent ray task.
@@ -112,11 +111,16 @@ class AAITimeSeriesBaseModel(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def refit(self, group_df_dict: Dict[Tuple[Any], pd.DataFrame]):
+    def refit(
+        self,
+        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        mx_ctx: Optional[mx.Context] = mx.cpu(),
+    ):
         """Fit previously tuned model.
 
         Args:
             group_df_dict: Dictionary containing the time series for each group.
+            mx_ctx: mxnet context, CPU by default.
 
         Raises:
             UntrainedModelException: If the model has not been trained/tuned before.
