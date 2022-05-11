@@ -216,6 +216,7 @@ class AAIRegressionTask(AAITask):
     """Regression task."""
 
     @AAITask.run_with_ray_remote(TaskType.REGRESSION)
+<<<<<<< HEAD
     def run(
         self,
         df: pd.DataFrame,
@@ -248,6 +249,31 @@ class AAIRegressionTask(AAITask):
         num_gpus: int = 0,
         time_limit: Optional[int] = None,
     ):
+=======
+    def run(self,
+            df: pd.DataFrame,
+            target: str,
+            features: Optional[List[str]] = None,
+            biased_groups: Optional[List[str]] = None,
+            debiased_features: Optional[List[str]] = None,
+            eval_metric : str = "r2",
+            validation_ratio: float = .2,
+            prediction_quantile_low: int = 5,
+            prediction_quantile_high: int = 95,
+            explain_samples: bool = False,
+            model_directory: Optional[str] = None,
+            presets: str = "medium_quality_faster_train",
+            hyperparameters: Optional[dict] = None,
+            train_task_params: Optional[dict] = None,
+            kfolds: int = 1,
+            cross_validation_max_concurrency: int = 1,
+            residuals_hyperparameters: Optional[dict] = None,
+            drop_duplicates: bool = True,
+            return_residuals: bool = False,
+            kde_steps: int = 10,
+            num_gpus: int = 0,
+            time_limit: Optional[int] = None):
+>>>>>>> fix: Removed intervention from the regerssion
         """Run this regression task and return results.
 
         Args:
@@ -284,24 +310,10 @@ class AAIRegressionTask(AAITask):
                 Defaults to "medium_quality_faster_train".
             train_task_params: Parameters for _AAITrainTask constructor.
                 Defaults to None.
-            intervention_task_params: Task parameters to be passed to build intervention
-                model and predictions. Defaults to None.
             kfolds: Number of folds for cross validation. If 1, train test split is used
                 instead.. Defaults to 1.
             cross_validation_max_concurrency: Maximum number of Ray actors used for
                 cross validation (each actor execute for one split). Defaults to 1.
-            current_intervention_column: Current values of intervention for
-                counterfactual prediction. Defaults to None.
-            new_intervention_column: New values of intervention for counterfactual
-                prediction. Defaults to None.
-            cate_alpha: Alpha value for CATE (conditional average treatment effect)
-                quantiles. Defaults to None.
-            common_causes: List of columns to be used as common causes in causal graph
-                of intervention model. Defaults to [].
-            causal_cv: Number of folds used in nuisance models in intervention model.
-                Defaults to 5.
-            causal_hyperparameters: Autogluon's hyperparameters used in nuisance models
-                of counterfactual prediction. Defaults to None.
             residuals_hyperparameters: Autogluon's hyperparameteres used in final model
                 of counterfactual predictions. Defaults to None.
             drop_duplicates: Whether duplicate values should be dropped before training.
@@ -363,8 +375,6 @@ class AAIRegressionTask(AAITask):
             model_directory = mkdtemp(prefix="autogluon_model")
         if train_task_params is None:
             train_task_params = {}
-        if intervention_task_params is None:
-            intervention_task_params = {}
 
         run_debiasing = len(biased_groups) > 0 and len(debiased_features) > 0
 
@@ -637,29 +647,6 @@ class AAIRegressionTask(AAITask):
             "debiasing_charts": debiasing_charts,
             "leaderboard": leaderboard.astype(str),  # type: ignore
         }
-
-        if (
-            current_intervention_column is not None
-            and new_intervention_column is not None
-        ):
-            # Counterfactual predictions
-            intervention_task = AAIInterventionTask(**intervention_task_params)
-            df_intervene = intervention_task.run(
-                df,
-                df_predict,
-                target,
-                run_model,
-                current_intervention_column,
-                new_intervention_column,
-                common_causes,
-                causal_cv,
-                causal_hyperparameters,
-                cate_alpha,
-                presets,
-                model_directory,
-                num_gpus,
-            )
-            data["intervention_table"] = df_intervene
 
         runtime = time.time() - start
         return {
