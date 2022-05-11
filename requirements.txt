@@ -204,3 +204,4 @@ nltk==3.7
 ./third_parties/autogluon/text
 autogluon-contrib-nlp==0.0.1b20210201
 
+gluonts==0.9.1
