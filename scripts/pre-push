@@ -7,8 +7,10 @@ CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 remote="$1"
 url="$2"
 
-if [[ `git rev-parse HEAD` == `git rev-parse $remote/$CURRENT_BRANCH` ]]; then
-  exit 0
+if [[ "$remote" != "" ]]; then
+  if [[ `git rev-parse HEAD` == `git rev-parse $remote/$CURRENT_BRANCH` ]]; then
+    exit 0
+  fi
 fi
 
 for FILE in `git diff --name-only `git merge-base $remote``; do
@@ -23,11 +25,19 @@ done
 if [[ $ISSUES == "no" ]]; then
     GREEN=$'\e[0;32m';
     NC=$'\e[0m';
-    echo "${GREEN}No linting errors detected. Push successfull${NC}";
+    if [[ "$remote" == "" ]]; then
+      echo "${GREEN}No linting errors detected.${NC}";
+    else
+      echo "${GREEN}No linting errors detected. Push to $remote successfull${NC}";
+    fi
     exit 0
 else
     RED=$'\e[0;31m';
     NC=$'\e[0m'
-    echo "${RED}Push cancelled. Please resolve linting issues or use the --no-verify option${NC}";
+    if [[ $remote == "" ]]; then
+      echo "${RED}Please resolve linting issues.${NC}";
+    else
+      echo "${RED}Push cancelled. Please resolve linting issues${NC}";
+    fi
     exit 1
 fi
