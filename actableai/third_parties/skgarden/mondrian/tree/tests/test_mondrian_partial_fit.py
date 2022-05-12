@@ -3,13 +3,13 @@ Tests specific to incremental building of trees.
 """
 
 import numpy as np
+from sklearn.datasets import load_digits
 from sklearn.datasets import make_classification
 from sklearn.datasets import make_regression
-from sklearn.datasets import load_digits
 from sklearn.utils.testing import assert_almost_equal
-from sklearn.utils.testing import assert_equal
 from sklearn.utils.testing import assert_array_almost_equal
 from sklearn.utils.testing import assert_array_equal
+from sklearn.utils.testing import assert_equal
 from sklearn.utils.testing import assert_greater
 
 from actableai.third_parties.skgarden import MondrianTreeClassifier

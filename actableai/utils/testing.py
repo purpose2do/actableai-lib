@@ -1,13 +1,11 @@
-import itertools
-import random
 import datetime
-from copy import deepcopy
-
-import psutil
-import ray
-
+import itertools
 import numpy as np
 import pandas as pd
+import psutil
+import random
+import ray
+from copy import deepcopy
 
 
 def unittest_hyperparameters():

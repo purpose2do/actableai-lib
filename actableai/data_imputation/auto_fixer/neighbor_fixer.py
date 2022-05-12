@@ -12,7 +12,6 @@ from actableai.data_imputation.auto_fixer.fix_info import (
     FixValue,
 )
 from actableai.data_imputation.auto_fixer.helper import get_df_without_error
-
 from actableai.data_imputation.error_detector import CellErrors
 from actableai.data_imputation.meta.column import RichColumnMeta
 

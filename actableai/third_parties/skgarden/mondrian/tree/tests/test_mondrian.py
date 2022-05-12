@@ -3,11 +3,11 @@ At fit time, the mondrian splitter works independent of labels.
 So a lot of things can be factored between the MondrianTreeRegressor and
 MondrianTreeClassifier
 """
-import pickle
 import numpy as np
-from sklearn.base import clone
+import pickle
 from sklearn.base import ClassifierMixin
 from sklearn.base import RegressorMixin
+from sklearn.base import clone
 from sklearn.datasets import load_boston
 from sklearn.datasets import load_iris
 from sklearn.datasets import make_regression
@@ -15,9 +15,9 @@ from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.utils.testing import assert_array_equal
-from sklearn.utils.testing import assert_array_almost_equal
 from sklearn.utils.testing import assert_almost_equal
+from sklearn.utils.testing import assert_array_almost_equal
+from sklearn.utils.testing import assert_array_equal
 from sklearn.utils.testing import assert_equal
 from sklearn.utils.testing import assert_false
 from sklearn.utils.testing import assert_less

@@ -1,11 +1,12 @@
 """ Official evaluation script for v1.1 of the SQuAD dataset. [Changed name for external importing]"""
 from __future__ import print_function
-from collections import Counter
-import string
-import re
+
 import argparse
 import json
+import re
+import string
 import sys
+from collections import Counter
 
 
 def span_len(span):

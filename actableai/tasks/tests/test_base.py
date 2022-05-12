@@ -1,8 +1,7 @@
-from itertools import product
-from unittest.mock import patch
-
 import pytest
 import ray
+from itertools import product
+from unittest.mock import patch
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask

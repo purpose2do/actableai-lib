@@ -1,7 +1,6 @@
-from unittest.mock import patch, MagicMock
-
 import pandas as pd
 import pytest
+from unittest.mock import patch, MagicMock
 
 from actableai.data_imputation.error_detector.cell_erros import (
     ErrorCandidate,

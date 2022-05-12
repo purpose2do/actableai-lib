@@ -1,8 +1,8 @@
-from unittest.mock import patch, MagicMock
-
 import pandas as pd
 import pytest
 from pandas import Index
+from unittest.mock import patch, MagicMock
+
 from actableai.data_imputation.auto_fixer.errors import EmptyTrainDataException
 from actableai.data_imputation.auto_fixer.neighbor_fixer import NeighborFixer
 from actableai.data_imputation.error_detector import CellErrors

@@ -1,12 +1,10 @@
+import mxnet as mx
+import pandas as pd
+from abc import ABC, abstractmethod
 from typing import List, Dict, Tuple, Any, Optional, Union
 
-from abc import ABC, abstractmethod
-
-import pandas as pd
-import mxnet as mx
-
-from actableai.timeseries.utils import find_gluonts_freq
 from actableai.timeseries.models.params.base import BaseParams
+from actableai.timeseries.utils import find_gluonts_freq
 
 
 class AAITimeSeriesBaseModel(ABC):

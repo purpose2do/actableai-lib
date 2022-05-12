@@ -1,12 +1,11 @@
 import numpy as np
 from functools import partial
-
 from sklearn.utils import check_random_state
-from sklearn.utils.testing import assert_array_equal
 from sklearn.utils.testing import assert_array_almost_equal
+from sklearn.utils.testing import assert_array_equal
 
-from actableai.third_parties.skgarden import RandomForestRegressor
 from actableai.third_parties.skgarden import ExtraTreesRegressor
+from actableai.third_parties.skgarden import RandomForestRegressor
 
 
 def check_variance_toy_data(Regressor):

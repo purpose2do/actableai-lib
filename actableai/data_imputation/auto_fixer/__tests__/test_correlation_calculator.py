@@ -1,9 +1,8 @@
-from datetime import datetime
-from unittest.mock import MagicMock
-
 import numpy as np
 import pandas as pd
 import pytest
+from datetime import datetime
+from unittest.mock import MagicMock
 
 from actableai.data_imputation.correlation_calculator import (
     CorrelationCalculator,

@@ -1,8 +1,7 @@
-from unittest.mock import MagicMock, patch, call
-
 import numpy as np
 import pandas as pd
 import pytest
+from unittest.mock import MagicMock, patch, call
 
 from actableai.data_imputation.error_detector.column_format import (
     MatchRules,
@@ -11,8 +10,8 @@ from actableai.data_imputation.error_detector.column_format import (
     MatchRule,
 )
 from actableai.data_imputation.error_detector.match_condition import ConditionOp
-from actableai.data_imputation.type_recon.type_detector import DfTypes
 from actableai.data_imputation.meta.types import ColumnType
+from actableai.data_imputation.type_recon.type_detector import DfTypes
 
 
 class TestMatchStrRule:

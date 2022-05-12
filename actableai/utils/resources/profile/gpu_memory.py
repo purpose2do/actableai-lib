@@ -1,6 +1,4 @@
 import logging
-from typing import List, Tuple
-
 import psutil
 from pynvml import (
     nvmlInit,
@@ -10,6 +8,7 @@ from pynvml import (
     NVMLError,
     nvmlShutdown,
 )
+from typing import List, Tuple
 
 from actableai.utils.resources.profile import ResourceProfilerType
 from actableai.utils.resources.profile.base import ResourceProfiler

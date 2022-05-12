@@ -1,6 +1,5 @@
-from typing import Tuple
-
 import pandas as pd
+from typing import Tuple
 
 from actableai.data_imputation.auto_fixer.fix_info import (
     FixInfoList,

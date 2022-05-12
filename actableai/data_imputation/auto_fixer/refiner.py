@@ -1,9 +1,8 @@
+import numpy as np
+import pandas as pd
 from abc import ABC, abstractmethod
 from math import inf
 from typing import Tuple, List
-
-import numpy as np
-import pandas as pd
 
 from actableai.data_imputation.auto_fixer.auto_gluon_fixer import AutoGluonFixer
 from actableai.data_imputation.auto_fixer.fix_info import (
@@ -28,11 +27,11 @@ from actableai.data_imputation.error_detector.cell_erros import (
     CellErrors,
 )
 from actableai.data_imputation.error_detector.constraint import Constraints
-from actableai.data_imputation.error_detector.validation_constraints_checker import (
-    ValidationConstrainsChecker,
-)
 from actableai.data_imputation.error_detector.misplaced_detector import (
     MisplacedDetector,
+)
+from actableai.data_imputation.error_detector.validation_constraints_checker import (
+    ValidationConstrainsChecker,
 )
 from actableai.data_imputation.meta.column import RichColumnMeta
 from actableai.data_imputation.type_recon.type_detector import (

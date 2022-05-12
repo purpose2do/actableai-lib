@@ -1,7 +1,6 @@
+import pandas as pd
 from datetime import datetime
 from typing import List, Text
-
-import pandas as pd
 
 from actableai.data_imputation.type_recon.regex_consts import POSSIBLE_DATETIME_FORMAT
 

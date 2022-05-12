@@ -1,11 +1,11 @@
-import string
-
-from tempfile import mkdtemp
 import dowhy.datasets
-from networkx.algorithms.structuralholes import effective_size
 import numpy as np
 import pandas as pd
 import pytest
+import string
+from networkx.algorithms.structuralholes import effective_size
+from tempfile import mkdtemp
+
 from actableai.causal.params import (
     LinearDMLCategoricalTreatmentParams,
     LinearDMLCategoricalTreatmentAGParams,
@@ -16,19 +16,18 @@ from actableai.causal.params import (
     SparseLinearDMLSingleBinaryTreatmentParams,
     SparseLinearDMLSingleContTreatmentParams,
 )
-
+from actableai.causal.tree_utils import make_pretty_tree
 from actableai.data_validation.base import *
+from actableai.data_validation.base import (
+    CAUSAL_INFERENCE_CATEGORICAL_MINIMUM_TREATMENT,
+)
 from actableai.data_validation.checkers import *
 from actableai.tasks.causal_inference import (
     LogCategoricalOutcomeNotAllowed,
     LogCategoricalTreatmentNotAllowed,
     infer_causal,
 )
-from actableai.causal.tree_utils import make_pretty_tree
 from actableai.utils.testing import unittest_hyperparameters
-from actableai.data_validation.base import (
-    CAUSAL_INFERENCE_CATEGORICAL_MINIMUM_TREATMENT,
-)
 
 
 @pytest.fixture

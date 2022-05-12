@@ -1,9 +1,7 @@
+import pandas as pd
 from typing import List, Set
 
-import pandas as pd
-
 from actableai.data_imputation.config import logger
-from actableai.data_imputation.error_detector.match_condition import ConditionOp
 from actableai.data_imputation.error_detector.base_error_detector import (
     BaseErrorDetector,
 )
@@ -14,6 +12,7 @@ from actableai.data_imputation.error_detector.column_format import (
     PresetRuleName,
 )
 from actableai.data_imputation.error_detector.error_detector import CellErrors
+from actableai.data_imputation.error_detector.match_condition import ConditionOp
 from actableai.data_imputation.meta import ColumnType
 from actableai.data_imputation.meta.column import ColumnName
 from actableai.data_imputation.type_recon.regex_consts import REGEX_CONSTS

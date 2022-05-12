@@ -1,14 +1,13 @@
 import logging
+import ray
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import wraps
 from typing import Callable, Optional, Tuple
 
-import ray
-
 from actableai.tasks import TaskType
-from actableai.utils.resources.profile import ResourceProfilerType
 from actableai.utils.resources.predict import ResourcePredictorType
+from actableai.utils.resources.profile import ResourceProfilerType
 
 
 class AAITask(ABC):

@@ -4,16 +4,12 @@
 # !pip install torch==1.7.1
 # !pip install allennlp==2.1.0
 
+import collections
 import os
-
-
+import torch
 
 from actableai.third_parties.spanABSA.absa.run_base import bert_load_state_dict
 from actableai.third_parties.spanABSA.squad.squad_utils import _get_best_indexes
-
-import collections
-import torch
-
 
 BERT_DIR = "sentiment/bert/bert-base-uncased"
 BERT_INIT_MODEL_DIR = os.path.join(BERT_DIR, "pytorch_model.bin")

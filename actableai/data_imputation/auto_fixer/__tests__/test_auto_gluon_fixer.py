@@ -1,7 +1,6 @@
-from unittest.mock import patch, MagicMock
-
 import pandas as pd
 import pytest
+from unittest.mock import patch, MagicMock
 
 from actableai.data_imputation.auto_fixer.auto_gluon_fixer import AutoGluonFixer
 from actableai.data_imputation.error_detector import CellErrors
@@ -9,10 +8,10 @@ from actableai.data_imputation.error_detector.cell_erros import (
     CellError,
     ErrorType,
 )
-from actableai.utils import memory_efficient_hyperparameters
+from actableai.data_imputation.meta.column import RichColumnMeta
 from actableai.data_imputation.meta.types import ColumnType
 from actableai.data_imputation.type_recon.type_detector import DfTypes
-from actableai.data_imputation.meta.column import RichColumnMeta
+from actableai.utils import memory_efficient_hyperparameters
 
 stub_path = "actableai.data_imputation.auto_fixer.auto_gluon_fixer"
 

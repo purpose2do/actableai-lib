@@ -1,10 +1,8 @@
-import pytest
 import datetime
-from copy import copy
-
-import pandas as pd
 import numpy as np
-
+import pandas as pd
+import pytest
+from copy import copy
 from gluonts.dataset.common import ListDataset
 from gluonts.transform import TransformedDataset
 

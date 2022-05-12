@@ -1,12 +1,10 @@
+from gluonts.model.simple_feedforward import SimpleFeedForwardEstimator
+from gluonts.mx.distribution import DistributionOutput
+from gluonts.mx.trainer import Trainer
+from mxnet.context import Context
 from typing import Union, Tuple, Optional, Dict, Any
 
 from actableai.timeseries.models.params.base import BaseParams
-
-from mxnet.context import Context
-
-from gluonts.mx.trainer import Trainer
-from gluonts.mx.distribution import DistributionOutput
-from gluonts.model.simple_feedforward import SimpleFeedForwardEstimator
 
 
 class FeedForwardParams(BaseParams):

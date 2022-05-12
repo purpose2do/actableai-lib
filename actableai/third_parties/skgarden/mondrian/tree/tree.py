@@ -16,36 +16,31 @@ randomized trees. Single and multi-output problems are both handled.
 
 from __future__ import division
 
-
 import numbers
+import numpy as np
+import six
 from abc import ABCMeta
 from abc import abstractmethod
 from math import ceil
-
-import six
-import numpy as np
 from scipy.sparse import issparse
-
 from sklearn.base import BaseEstimator
 from sklearn.base import ClassifierMixin
 from sklearn.base import RegressorMixin
+from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import check_random_state
 from sklearn.utils import compute_sample_weight
 from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.validation import check_X_y
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
-from sklearn.utils.validation import check_X_y
-from sklearn.exceptions import NotFittedError
 
+from . import _tree, _splitter, _criterion
 from ._criterion import Criterion
 from ._splitter import Splitter
 from ._tree import DepthFirstTreeBuilder
 from ._tree import PartialFitTreeBuilder
 from ._tree import Tree
-from . import _tree, _splitter, _criterion
-
-
 
 # =============================================================================
 # Types and constants

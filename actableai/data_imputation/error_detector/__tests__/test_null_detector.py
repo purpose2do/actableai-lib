@@ -4,8 +4,8 @@ import pytest
 
 from actableai.data_imputation.error_detector.cell_erros import CellError, ErrorType
 from actableai.data_imputation.error_detector.null_detector import NullDetector
-from actableai.data_imputation.type_recon.type_detector import DfTypes
 from actableai.data_imputation.meta.types import ColumnType
+from actableai.data_imputation.type_recon.type_detector import DfTypes
 
 
 @pytest.fixture(autouse=True)

@@ -1,10 +1,8 @@
-from typing import Union, Iterator, Tuple, Dict, Any, Iterable
-
 import pandas as pd
-
 from gluonts.evaluation.backtest import make_evaluation_predictions
 from gluonts.model.forecast import Forecast
 from gluonts.model.predictor import Predictor
+from typing import Union, Iterator, Tuple, Dict, Any, Iterable
 
 from actableai.timeseries.utils import handle_features_dataset
 

@@ -1,8 +1,8 @@
+import numpy as np
 import pandas as pd
 from pandas._testing import rands_array
-import numpy as np
-from actableai.data_validation.base import CheckLevels
 
+from actableai.data_validation.base import CheckLevels
 from actableai.data_validation.params import (
     BayesianRegressionDataValidator,
     CausalDataValidator,

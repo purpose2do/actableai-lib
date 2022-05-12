@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-from autogluon.tabular import TabularPredictor
 import pytest
+from autogluon.tabular import TabularPredictor
 
 from actableai.causal.predictors import DataFrameTransformer, SKLearnWrapper
 from actableai.utils.testing import unittest_hyperparameters

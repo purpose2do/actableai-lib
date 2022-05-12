@@ -1,12 +1,11 @@
 import numpy as np
-
-from autogluon.features.generators import LabelEncoderFeatureGenerator
-from autogluon.core.models.abstract.abstract_model import AbstractModel
 from autogluon.core import space
+from autogluon.core.models.abstract.abstract_model import AbstractModel
+from autogluon.features.generators import LabelEncoderFeatureGenerator
+from catboost import CatBoostRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 
 from actableai.third_parties.skgarden.quantile import ensemble
-from catboost import CatBoostRegressor
 
 
 def ag_quantile_hyperparameters(quantile_low=5, quantile_high=95):

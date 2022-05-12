@@ -1,28 +1,24 @@
-import re
-from functools import partial
-
-from actableai.data_imputation.config import logger
-from datetime import datetime
-from enum import Enum, auto
-from typing import List
-
 import numpy as np
 import pandas as pd
+import re
+from datetime import datetime
+from enum import Enum, auto
+from functools import partial
+from typing import List
 
 from actableai.data_imputation.config import NAN_INTEGER
+from actableai.data_imputation.config import logger
 from actableai.data_imputation.error_detector import CellErrors
 from actableai.data_imputation.meta.column import NumWithTagColumnMeta
-from actableai.data_imputation.processor.categories_data_processor import (
-    CategoriesDataProcessor,
-)
-
-
-from actableai.data_imputation.type_recon.helper import as_datetime
-from actableai.data_imputation.type_recon.type_detector import DfTypes
 from actableai.data_imputation.meta.types import (
     ColumnTypeUnsupported,
     ColumnType,
 )
+from actableai.data_imputation.processor.categories_data_processor import (
+    CategoriesDataProcessor,
+)
+from actableai.data_imputation.type_recon.helper import as_datetime
+from actableai.data_imputation.type_recon.type_detector import DfTypes
 
 
 class ProcessOps(Enum):

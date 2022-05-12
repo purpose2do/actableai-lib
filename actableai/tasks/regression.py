@@ -1,5 +1,5 @@
-from typing import Dict, List, Optional
 import pandas as pd
+from typing import Dict, List, Optional
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask

@@ -1,10 +1,6 @@
+import numpy as np
 import os
 from abc import ABC, abstractmethod
-
-from tensorflow import keras
-import numpy as np
-from actableai.causal.predictors import SKLearnWrapper
-from actableai.utils import random_directory
 from autogluon.tabular import TabularPredictor
 from econml.dml import CausalForestDML, LinearDML, NonParamDML, SparseLinearDML
 from econml.drlearner import DRLearner
@@ -31,6 +27,10 @@ from sklearn.linear_model import (
     MultiTaskElasticNetCV,
 )
 from sklearn.preprocessing import PolynomialFeatures
+from tensorflow import keras
+
+from actableai.causal.predictors import SKLearnWrapper
+from actableai.utils import random_directory
 
 
 class UnsupportedCausalScenario(ValueError):

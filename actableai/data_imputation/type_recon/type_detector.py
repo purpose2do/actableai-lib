@@ -1,6 +1,5 @@
-from typing import Tuple, List, Dict, Set
-
 import pandas as pd
+from typing import Tuple, List, Dict, Set
 
 from actableai.data_imputation.meta.column import (
     ColumnName,

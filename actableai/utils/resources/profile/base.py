@@ -1,7 +1,6 @@
+import psutil
 from abc import ABC, abstractmethod
 from typing import Union, List, Dict, Tuple
-
-import psutil
 
 from actableai.utils.resources.profile import ResourceProfilerType
 

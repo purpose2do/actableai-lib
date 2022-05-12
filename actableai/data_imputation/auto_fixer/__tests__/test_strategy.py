@@ -1,8 +1,7 @@
-from unittest.mock import patch
-
 import numpy as np
 import pandas as pd
 import pytest
+from unittest.mock import patch
 
 from actableai.data_imputation.auto_fixer import FixStrategy
 from actableai.data_imputation.auto_fixer.strategy import (

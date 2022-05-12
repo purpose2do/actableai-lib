@@ -7,13 +7,13 @@ from actableai.data_imputation.error_detector.base_error_detector import (
 from actableai.data_imputation.error_detector.cell_erros import (
     CellErrors,
 )
-from actableai.data_imputation.error_detector.validation_detector import (
-    ValidationDetector,
-)
 from actableai.data_imputation.error_detector.misplaced_detector import (
     MisplacedDetector,
 )
 from actableai.data_imputation.error_detector.null_detector import NullDetector
+from actableai.data_imputation.error_detector.validation_detector import (
+    ValidationDetector,
+)
 from actableai.data_imputation.type_recon.type_detector import DfTypes
 
 

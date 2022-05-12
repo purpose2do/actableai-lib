@@ -1,6 +1,6 @@
-from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd
+from typing import List, Optional, Tuple
 
 from actableai.classification.utils import leaderboard_cross_val
 from actableai.tasks.classification import _AAIClassificationTrainTask
