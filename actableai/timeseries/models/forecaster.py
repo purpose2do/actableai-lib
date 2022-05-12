@@ -4,11 +4,11 @@ import pandas as pd
 import mxnet as mx
 from time import time
 
-from actableai.timeseries.models import (
+from actableai.timeseries.models.independent_multivariate_model import (
     AAITimeSeriesIndependentMultivariateModel,
-    AAITimeSeriesSingleModel,
 )
-from actableai.timeseries.models.params import BaseParams
+from actableai.timeseries.models.single_model import AAITimeSeriesSingleModel
+from actableai.timeseries.models.params.base import BaseParams
 from actableai.timeseries.exceptions import UntrainedModelException
 from actableai.timeseries.utils import handle_datetime_column, find_freq
 

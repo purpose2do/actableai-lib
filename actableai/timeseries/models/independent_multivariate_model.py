@@ -6,7 +6,7 @@ import mxnet as mx
 from actableai.timeseries.models.base import AAITimeSeriesBaseModel
 from actableai.timeseries.models.single_model import AAITimeSeriesSingleModel
 from actableai.timeseries.exceptions import UntrainedModelException
-from actableai.timeseries.models.params import BaseParams
+from actableai.timeseries.models.params.base import BaseParams
 
 
 class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
