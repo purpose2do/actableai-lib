@@ -46,7 +46,6 @@ class AAIInterventionTask(AAITask):
         import pandas as pd
         from tempfile import mkdtemp
         from econml.dml import LinearDML, NonParamDML
-        from sklearn.impute import SimpleImputer
         from autogluon.tabular import TabularPredictor
 
         from actableai.utils.preprocessors.preprocessing import (
