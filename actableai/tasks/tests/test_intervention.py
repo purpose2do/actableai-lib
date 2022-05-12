@@ -139,7 +139,7 @@ class TestIntervention:
 
         assert r["status"] == "SUCCESS"
         assert "df" in r
-        assert r["df"].shape == (20, 11)
+        assert r["df"].shape == (20, 7)
 
     def test_intervention_with_common_causes_cate(
         self, intervention_task, tmp_path
