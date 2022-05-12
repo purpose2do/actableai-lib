@@ -2,11 +2,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from actableai.tasks.regression import AAIRegressionTask
 from actableai.data_validation.base import *
-from actableai.utils.testing import unittest_hyperparameters
-from actableai.utils.dataset_generator import DatasetGenerator
 from actableai.regression.quantile import ag_quantile_hyperparameters
+from actableai.tasks.regression import AAIRegressionTask
+from actableai.utils.dataset_generator import DatasetGenerator
+from actableai.utils.testing import unittest_hyperparameters
 
 
 @pytest.fixture(scope="function")

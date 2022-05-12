@@ -1,7 +1,7 @@
-from typing import Tuple, List
 import pandas as pd
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import PolynomialFeatures
+from typing import Tuple, List
 
 
 def expand_polynomial_categorical(

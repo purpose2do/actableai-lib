@@ -1,8 +1,9 @@
-import pytest
-import pandas as pd
 import numpy as np
-from actableai.data_validation.checkers import *
+import pandas as pd
+import pytest
+
 from actableai.data_validation.base import *
+from actableai.data_validation.checkers import *
 
 
 class TestIsCategoricalChecker:

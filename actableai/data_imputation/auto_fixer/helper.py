@@ -1,7 +1,6 @@
-from typing import Union
-
 import numpy as np
 import pandas as pd
+from typing import Union
 
 from actableai.data_imputation.auto_fixer.fix_info import FixInfoList, FixInfo
 from actableai.data_imputation.error_detector import (

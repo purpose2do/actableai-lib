@@ -1,14 +1,12 @@
-import os
 import numpy as np
+import os
 import pandas as pd
-
-from sklearn.preprocessing import LabelBinarizer
-from sklearn.utils import check_array, check_consistent_length
-from pandas.api.types import is_numeric_dtype
-
-from autogluon.core.utils.utils import setup_outputdir
 from autogluon.core.utils.loaders import load_pkl
 from autogluon.core.utils.savers import save_pkl
+from autogluon.core.utils.utils import setup_outputdir
+from pandas.api.types import is_numeric_dtype
+from sklearn.preprocessing import LabelBinarizer
+from sklearn.utils import check_array, check_consistent_length
 
 from actableai.utils.multilabel_predictor import MultilabelPredictor
 

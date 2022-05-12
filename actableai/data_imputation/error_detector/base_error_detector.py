@@ -1,6 +1,5 @@
-from abc import ABC, abstractmethod
-
 import pandas as pd
+from abc import ABC, abstractmethod
 
 from actableai.data_imputation.error_detector.cell_erros import CellErrors
 from actableai.data_imputation.type_recon.type_detector import DfTypes

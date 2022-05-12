@@ -1,9 +1,8 @@
 import os
-
-from autogluon.tabular import TabularDataset, TabularPredictor
-from autogluon.core.utils.utils import setup_outputdir
 from autogluon.core.utils.loaders import load_pkl
 from autogluon.core.utils.savers import save_pkl
+from autogluon.core.utils.utils import setup_outputdir
+from autogluon.tabular import TabularDataset, TabularPredictor
 
 
 class MultilabelPredictor:

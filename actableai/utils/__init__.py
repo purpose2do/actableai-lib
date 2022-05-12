@@ -1,9 +1,8 @@
+import numpy as np
 import os
+import pandas as pd
 import uuid
 from copy import deepcopy
-
-import numpy as np
-import pandas as pd
 from pandas.core.frame import DataFrame
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted

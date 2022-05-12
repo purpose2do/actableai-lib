@@ -1,9 +1,8 @@
-from math import inf
-from unittest.mock import MagicMock, patch
-
 import numpy as np
 import pandas as pd
 import pytest
+from math import inf
+from unittest.mock import MagicMock, patch
 
 from actableai.data_imputation import ColumnType
 from actableai.data_imputation.error_detector.cell_erros import (

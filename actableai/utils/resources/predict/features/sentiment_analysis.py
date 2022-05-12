@@ -1,6 +1,5 @@
-from copy import deepcopy
-
 import pandas as pd
+from copy import deepcopy
 
 from actableai.utils.resources.predict import ResourcePredictorType
 from actableai.utils.resources.predict.features.common import (

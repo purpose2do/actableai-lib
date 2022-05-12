@@ -1,9 +1,9 @@
-from typing import List
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.impute import SimpleImputer
 from pandas.api.types import is_numeric_dtype, is_object_dtype
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
+from typing import List
 
 from actableai.regression import PolynomialLinearPredictor
 

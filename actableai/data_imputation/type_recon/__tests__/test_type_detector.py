@@ -1,6 +1,5 @@
-from unittest.mock import patch, MagicMock
-
 import pytest
+from unittest.mock import patch, MagicMock
 
 from actableai.data_imputation.meta.column import (
     SingleValueColumnMeta,

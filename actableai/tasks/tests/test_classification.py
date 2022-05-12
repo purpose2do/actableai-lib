@@ -1,10 +1,10 @@
-import pytest
 import pandas as pd
+import pytest
 
-from actableai.tasks.classification import AAIClassificationTask
 from actableai.data_validation.checkers import CheckLevels
-from actableai.utils.testing import unittest_hyperparameters
+from actableai.tasks.classification import AAIClassificationTask
 from actableai.utils.dataset_generator import DatasetGenerator
+from actableai.utils.testing import unittest_hyperparameters
 
 
 @pytest.fixture(scope="function")

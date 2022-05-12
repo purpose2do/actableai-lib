@@ -1,12 +1,11 @@
 from copy import deepcopy
-from typing import Dict, List, Type
-
 from ray.util.metrics import Metric
 from river.base import Regressor, MultiOutputMixin
 from river.base.typing import RegTarget
 from river.compose import Pipeline
 from river.metrics import RMSE, Metrics
 from river.stats import Mean
+from typing import Dict, List, Type
 
 
 class NRMSE(RMSE):

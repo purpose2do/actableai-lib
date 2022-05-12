@@ -6,8 +6,8 @@ from sklearn.utils.testing import assert_array_equal
 from sklearn.utils.testing import assert_equal
 from sklearn.utils.testing import assert_greater
 
-from actableai.third_parties.skgarden import MondrianForestRegressor
 from actableai.third_parties.skgarden import MondrianForestClassifier
+from actableai.third_parties.skgarden import MondrianForestRegressor
 
 
 def check_partial_fit_equivalence(size_batch, f, random_state, X, y, is_clf=False):

@@ -1,7 +1,6 @@
+import pandas as pd
 from collections import Counter
 from enum import Enum, auto
-
-import pandas as pd
 
 from actableai.data_imputation import config
 from actableai.data_imputation.auto_fixer.auto_fixer import AutoFixer

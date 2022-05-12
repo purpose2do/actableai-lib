@@ -1,8 +1,6 @@
+import logging
 import pytest
 import torch
-import logging
-
-from actableai.utils.resources.profile import ResourceProfilerType, profile_function
 from pynvml import (
     nvmlInit,
     nvmlDeviceGetCount,
@@ -11,6 +9,8 @@ from pynvml import (
     NVMLError,
     nvmlShutdown,
 )
+
+from actableai.utils.resources.profile import ResourceProfilerType, profile_function
 
 
 def _function(sleep=False, n_child=0, child_sleep=False, cpu=True, gpu=False):

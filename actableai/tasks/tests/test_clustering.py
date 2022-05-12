@@ -1,7 +1,7 @@
+import pandas as pd
 import pytest
 
 from actableai.data_validation.base import *
-import pandas as pd
 from actableai.tasks.clustering import AAIClusteringTask
 from actableai.utils.dataset_generator import DatasetGenerator
 

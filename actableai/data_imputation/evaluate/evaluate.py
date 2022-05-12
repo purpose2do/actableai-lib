@@ -1,6 +1,6 @@
+import pandas as pd
 from sklearn.metrics import recall_score, accuracy_score
 from statistics import mean
-import pandas as pd
 
 
 def evaluate(data_name, new_version: int = 0):

@@ -9,15 +9,14 @@ Usage:
 Author:
     Xifeng Guo. 2017.1.30
 """
-from time import time
 import numpy as np
 import tensorflow.keras.backend as K
-from tensorflow.keras.layers import Layer, InputSpec
-from tensorflow.keras.layers import Dense, Input
-from tensorflow.keras.models import Model
-from tensorflow.keras import callbacks
 from sklearn.cluster import KMeans
-
+from tensorflow.keras import callbacks
+from tensorflow.keras.layers import Dense, Input
+from tensorflow.keras.layers import Layer, InputSpec
+from tensorflow.keras.models import Model
+from time import time
 from typing import List, Tuple
 
 from actableai.clustering import metrics, KMeans_pick_k

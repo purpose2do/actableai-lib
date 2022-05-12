@@ -1,8 +1,7 @@
+from gluonts.model.rotbaum import TreeEstimator
 from typing import Optional, Dict, Tuple, Any, Union, List
 
 from actableai.timeseries.models.params.base import BaseParams
-
-from gluonts.model.rotbaum import TreeEstimator
 
 
 class TreePredictorParams(BaseParams):

@@ -1,5 +1,5 @@
-import pandas as pd
 import abc
+import pandas as pd
 from typing import List
 
 MINIMUM_NUMBER_OF_SAMPLE = 20

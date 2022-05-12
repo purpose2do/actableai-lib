@@ -1,8 +1,9 @@
 from logging import CRITICAL
 from typing import Union
-from actableai.data_validation.checkers import *
+
 from actableai.causal import has_categorical_column, prepare_sanitize_data
 from actableai.data_validation.base import CheckLevels, CheckResult, IChecker
+from actableai.data_validation.checkers import *
 
 
 class RegressionDataValidator:

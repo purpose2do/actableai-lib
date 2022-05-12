@@ -1,8 +1,9 @@
-import pytest
 import numpy as np
 import pandas as pd
-from actableai.tasks.correlation import AAICorrelationTask
+import pytest
+
 from actableai.data_validation.base import *
+from actableai.tasks.correlation import AAICorrelationTask
 
 
 @pytest.fixture(scope="function")

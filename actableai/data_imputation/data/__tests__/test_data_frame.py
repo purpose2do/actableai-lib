@@ -1,6 +1,5 @@
-from unittest.mock import patch, MagicMock, call
-
 import pandas as pd
+from unittest.mock import patch, MagicMock, call
 
 from actableai.data_imputation.auto_fixer.fix_info import FixInfoList
 from actableai.data_imputation.auto_fixer.strategy import FixStrategy

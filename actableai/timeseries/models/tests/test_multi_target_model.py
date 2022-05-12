@@ -1,11 +1,11 @@
-import pytest
-import ray
+import mxnet as mx
 import numpy as np
 import pandas as pd
-import mxnet as mx
+import pytest
+import ray
 
-from actableai.timeseries.models import params
 from actableai.timeseries.exceptions import UntrainedModelException
+from actableai.timeseries.models import params
 from actableai.timeseries.models.independent_multivariate_model import (
     AAITimeSeriesIndependentMultivariateModel,
 )

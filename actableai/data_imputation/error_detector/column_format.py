@@ -1,11 +1,10 @@
+import pandas as pd
+import re
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
 from enum import Enum
-from typing import Text, List, Tuple, Iterator, Union
-import re
-
-import pandas as pd
 from pandas import Series
+from typing import Text, List, Tuple, Iterator, Union
 
 from actableai.data_imputation.config import logger
 from actableai.data_imputation.error_detector.match_condition import ConditionOp

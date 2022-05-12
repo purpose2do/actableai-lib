@@ -1,6 +1,6 @@
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor as _sk_RandomForestRegressor
 from sklearn.ensemble import ExtraTreesRegressor as _sk_ExtraTreesRegressor
+from sklearn.ensemble import RandomForestRegressor as _sk_RandomForestRegressor
 
 
 def _return_std(X, trees, predictions, min_variance):

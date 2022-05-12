@@ -1,6 +1,5 @@
-import time
-
 import pytest
+import time
 
 from actableai.data_imputation.error_detector.cell_erros import (
     CellErrors,

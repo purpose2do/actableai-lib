@@ -2,7 +2,6 @@ import pandas as pd
 
 from actableai.utils import get_type_special_no_ag
 
-
 all_dataset_features = [
     "dataset_type",
     "dataset_row_count",

@@ -1,7 +1,6 @@
+import pytest
 import time
 from math import inf
-
-import pytest
 
 from actableai.data_imputation.auto_fixer.__tests__.helper import (
     assert_fix_info_list,

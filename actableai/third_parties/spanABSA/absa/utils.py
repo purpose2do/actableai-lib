@@ -1,10 +1,12 @@
-import json
 import collections
+import json
 import numpy as np
 
 import actableai.third_parties.spanABSA.bert.tokenization as tokenization
-from actableai.third_parties.spanABSA.squad.squad_utils import  get_final_text, _get_best_indexes
-from actableai.third_parties.spanABSA.squad.squad_evaluate import exact_match_score, f1_score
+from actableai.third_parties.spanABSA.squad.squad_evaluate import exact_match_score, \
+    f1_score
+from actableai.third_parties.spanABSA.squad.squad_utils import get_final_text, \
+    _get_best_indexes
 
 label_to_id = {'other': 0, 'neutral': 1, 'positive': 2, 'negative': 3, 'conflict': 4}
 id_to_label = {0: 'other', 1: 'neutral', 2: 'positive', 3: 'negative', 4: 'conflict'}

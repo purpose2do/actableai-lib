@@ -1,8 +1,8 @@
-import pytest
 import numpy as np
+import pytest
 
-from actableai.tasks.forecast import AAIForecastTask
 from actableai.data_validation.base import *
+from actableai.tasks.forecast import AAIForecastTask
 from actableai.timeseries.models import params
 from actableai.utils.testing import generate_forecast_df
 

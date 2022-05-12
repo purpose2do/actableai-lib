@@ -1,5 +1,5 @@
-import pytest
 import pandas as pd
+import pytest
 
 from actableai.tasks.bayesian_regression import AAIBayesianRegressionTask
 
