@@ -1,4 +1,4 @@
-from enum import Enum, unique, auto
+from enum import Enum, unique
 
 
 @unique
@@ -6,6 +6,7 @@ class TaskType(str, Enum):
     """
     Enum representing the different tasks available
     """
+
     CAUSAL_INFERENCE = "causal_inference"
     CLASSIFICATION = "classification"
     CLASSIFICATION_TRAIN = "classification_train"

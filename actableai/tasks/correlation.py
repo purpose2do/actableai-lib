@@ -1,59 +1,85 @@
+from typing import List, Optional, Dict
+import pandas as pd
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 
 
 class AAICorrelationTask(AAITask):
-    """
-    Correlation Task
-    """
+    """Correlation Task
 
-    @staticmethod
-    def __preprocess_column_datetime(df, target_col):
-        """
-        TODO write documentation
-        """
-        import pandas as pd
-        import numpy as np
-        dt_df = df.select_dtypes(include=[np.datetime64])
-        for col in dt_df.columns:
-            if col == target_col:
-                df[target_col] = df[target_col].values.astype(np.int64) // 10 ** 9
-            else:
-                df[col + '_year'] = df[col].dt.year
-                df[col + '_month'] = df[col].dt.month_name()
-                df[col + '_day'] = df[col].dt.day
-                df[col + '_day_of_week'] = df[col].dt.day_name()
-                df[col] = df[col].values.astype(np.int64) // 10 ** 9
-
-        return df
+    Args:
+        AAITask: Base Class for tasks
+    """
 
     @AAITask.run_with_ray_remote(TaskType.CORRELATION)
-    def run(self,
-            df,
-            target_column,
-            target_value=None,
-            kde_steps=100,
-            lr_steps=100,
-            control_columns=None,
-            control_values=None,
-            correlation_threshold=0.05,
-            p_value=0.05,
-            use_bonferroni=False,
-            top_k=20):
-        """
-        TODO write documentation
+    def run(
+        self,
+        df: pd.DataFrame,
+        target_column: str,
+        target_value: Optional[str] = None,
+        kde_steps: int = 100,
+        lr_steps: int = 100,
+        control_columns: Optional[List[str]] = None,
+        control_values: Optional[List[str]] = None,
+        correlation_threshold: float = 0.05,
+        p_value: float = 0.05,
+        use_bonferroni: bool = False,
+        top_k: int = 20,
+    ) -> Dict:
+        """Runs a correlation analysis on Input DataFrame
+
+        Args:
+            df: Input DataFrame
+            target_column: Target for correlation analysis
+            target_value: If target_column type is categorical, target_value must be one
+                value of target_column. Else should be None. Defaults to None.
+            kde_steps: Number of steps for kernel density graph. Defaults to 100.
+            lr_steps: Number of steps for linear regression graph. Defaults to 100.
+            control_columns: Control columns for decorrelations. Defaults to None.
+            control_values: Control values for decorrelations. control_values[i] must be
+                a value from df[control_columns[i]]. Defaults to None.
+            correlation_threshold: Threshold for correlation validation. Values with
+                an absolute value above this threshold are considered correlated.
+                Defaults to 0.05.
+            p_value: PValue for correlation validation.
+                Defaults to 0.05.
+            use_bonferroni (bool, optional): Whether we should use bonferroni test.
+                Defaults to False.
+            top_k: Limit for number of results returned. Only the best k correlated
+                columns are returned. Defaults to 20.
+
+        Examples:
+            >>> df = pd.read_csv("path/to/dataframe")
+            >>> AAICorrelationTask().run(df, ["feature1", "feature2", "feature3"], "target")
+
+        Returns:
+            Dict: Dictionnary of results
         """
         import logging
         import time
-        import pandas as pd
         import numpy as np
         from sklearn.neighbors import KernelDensity
         from sklearn.linear_model import BayesianRidge
+        from sklearn.compose import ColumnTransformer
+        from sklearn.preprocessing import OneHotEncoder
+        from sklearn.feature_extraction.text import CountVectorizer
+        from autogluon.features import (
+            TextNgramFeatureGenerator,
+            DatetimeFeatureGenerator,
+        )
+        from nltk.corpus import stopwords
+
         from actableai.stats import Stats
         from actableai.data_validation.params import CorrelationDataValidator
-        from actableai.utils import handle_boolean_features
+        from actableai.utils import is_fitted
         from actableai.data_validation.base import CheckLevels
-        from actableai.utils.sanitize import sanitize_timezone
+        from actableai.utils.preprocessors.preprocessing import (
+            SKLearnAGFeatureWrapperBase,
+        )
+        from actableai.utils import get_type_special_no_ag
+        from actableai.utils.preprocessors.autogluon_preproc import (
+            CustomeDateTimeFeatureGenerator,
+        )
 
         if use_bonferroni:
             p_value /= len(df.columns) - 1
@@ -62,12 +88,11 @@ class AAICorrelationTask(AAITask):
 
         # To resolve any issues of acces rights make a copy
         df = df.copy()
-        df = sanitize_timezone(df)
 
         data_validation_results = CorrelationDataValidator().validate(df, target_column)
         failed_checks = [x for x in data_validation_results if x is not None]
         if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
-            return ({
+            return {
                 "status": "FAILURE",
                 "data": {},
                 "validations": [
@@ -75,34 +100,90 @@ class AAICorrelationTask(AAITask):
                     for check in failed_checks
                 ],
                 "runtime": time.time() - start,
-            })
+            }
 
-        df = self.__preprocess_column_datetime(df, target_column)
-        df = handle_boolean_features(df)
-        kde_bandwidth = lambda x: max(0.5 * x.std() * (x.size ** (-0.2)), 1e-2)
+        if target_value is not None:
+            df[target_column] = df[target_column].astype(str)
+            target_value = str(target_value)
+
+        # Type reader
+        type_specials = df.apply(get_type_special_no_ag)
+        date_cols = list(type_specials == "datetime")
+
+        ct = ColumnTransformer(
+            [
+                (
+                    DatetimeFeatureGenerator.__name__,
+                    SKLearnAGFeatureWrapperBase(CustomeDateTimeFeatureGenerator()),
+                    date_cols,
+                ),
+            ],
+            remainder="passthrough",
+            sparse_threshold=0,
+            verbose_feature_names_out=False,
+            verbose=True,
+        )
+        df = pd.DataFrame(
+            ct.fit_transform(df).tolist(), columns=ct.get_feature_names_out()
+        )
+        type_specials = df.apply(get_type_special_no_ag)
+        cat_cols = list((type_specials == "category") | (type_specials == "boolean"))
+        text_cols = list(type_specials == "text")
+
+        og_df_col = df.columns
+        og_target_col = df.loc[:, cat_cols]
+
+        ct = ColumnTransformer(
+            [
+                (OneHotEncoder.__name__, OneHotEncoder(), cat_cols),
+                (
+                    TextNgramFeatureGenerator.__name__,
+                    SKLearnAGFeatureWrapperBase(
+                        TextNgramFeatureGenerator(
+                            vectorizer=CountVectorizer(stop_words=stopwords.words()),
+                            vectorizer_strategy="separate",
+                        )
+                    ),
+                    text_cols,
+                ),
+            ],
+            remainder="passthrough",
+            sparse_threshold=0,
+            verbose_feature_names_out=False,
+            verbose=True,
+        )
+        df = pd.DataFrame(
+            ct.fit_transform(df).tolist(), columns=ct.get_feature_names_out()
+        )
 
         if control_columns is not None or control_values is not None:
             if len(control_columns) != len(control_values):
                 return {
                     "status": "FAILURE",
-                    "messenger": "control_columns and control_values must have the same length"
+                    "messenger": "control_columns and control_values must have the same length",
                 }
 
             for control_column, control_value in zip(control_columns, control_values):
                 try:
                     idx = Stats().decorrelate(
-                        df, target_column, control_column,
-                        target_value=target_value, control_value=control_value)
+                        df,
+                        target_column,
+                        control_column,
+                        target_value=target_value,
+                        control_value=control_value,
+                    )
                 except:
                     logging.exception("Fail to de-correlate.")
                     return {
                         "status": "FAILURE",
-                        "messenger": "Can't de-correlate {} from {}".format(control_column, target_column)
+                        "messenger": "Can't de-correlate {} from {}".format(
+                            control_column, target_column
+                        ),
                     }
                 if idx.shape[0] == 0:
                     return {
                         "status": "FAILURE",
-                        "messenger": "De-correlation returns empty data"
+                        "messenger": "De-correlation returns empty data",
                     }
                 df = df.loc[idx]
 
@@ -113,66 +194,102 @@ class AAICorrelationTask(AAITask):
                 "validations": [],
             }
 
-        corrs = Stats().corr(df, target_column, target_value, p_value=p_value)
+        cat_cols = []
+        gen_cat_cols = []
+        if is_fitted(ct.named_transformers_["OneHotEncoder"]):
+            cat_cols = og_df_col[ct.transformers[0][2]]
+            gen_cat_cols = ct.named_transformers_["OneHotEncoder"].categories_
+        corrs = Stats().corr(
+            df,
+            target_column,
+            target_value,
+            p_value=p_value,
+            categorical_columns=cat_cols,
+            gen_categorical_columns=gen_cat_cols,
+        )
         corrs = corrs[:top_k]
 
+        df = df.join(og_target_col)
         charts = []
-        other = lambda uniques, label: uniques[uniques != label][0] if uniques.size == 2 else "others"
+        other = (
+            lambda uniques, label: uniques[uniques != label][0]
+            if uniques.size == 2
+            else "others"
+        )
+        kde_bandwidth = lambda x: max(0.5 * x.std() * (x.size ** (-0.2)), 1e-2)
         for corr in corrs:
             if type(corr["col"]) is list:
                 group, val = corr["col"]
 
-                df[group].fillna('NaN', inplace=True)
+                df[group].fillna("None", inplace=True)
 
                 # Categorical variable
                 if target_value is None:
                     # Target column is continuous
-                    X = np.linspace(df[target_column].min(), df[target_column].max(), kde_steps)
+                    X = np.linspace(
+                        df[target_column].min(), df[target_column].max(), kde_steps
+                    )
 
                     x1 = df[target_column][df[group] == val]
                     x1 = x1[x1.notna()]
-                    k1 = KernelDensity(bandwidth=kde_bandwidth(x1)).fit(x1.values.reshape((-1, 1)))
+                    k1 = KernelDensity(bandwidth=kde_bandwidth(x1)).fit(
+                        x1.values.reshape((-1, 1))
+                    )
 
                     x2 = df[target_column][df[group] != val]
                     x2 = x2[x2.notna()]
-                    k2 = KernelDensity(bandwidth=kde_bandwidth(x2)).fit(x2.values.reshape((-1, 1)))
+                    k2 = KernelDensity(bandwidth=kde_bandwidth(x2)).fit(
+                        x2.values.reshape((-1, 1))
+                    )
 
-                    charts.append({
-                        "type": "kde",
-                        "corr": corr["corr"],
-                        "data": [
-                            {
-                                "value": val,
-                                "y": np.exp(k1.score_samples(X.reshape((-1, 1)))).tolist(),
-                                "x": X.tolist(),
-                                "group": group,
-                                "y_label": target_column,
-                            },
-                            {
-                                "value": other(df[group].unique(), val),
-                                "y": np.exp(k2.score_samples(X.reshape(-1, 1))).tolist(),
-                                "x": X.tolist(),
-                                "group": group,
-                                "y_label": target_column,
-                            }
-                        ]
-                    })
+                    charts.append(
+                        {
+                            "type": "kde",
+                            "corr": corr["corr"],
+                            "data": [
+                                {
+                                    "value": val,
+                                    "y": np.exp(
+                                        k1.score_samples(X.reshape((-1, 1)))
+                                    ).tolist(),
+                                    "x": X.tolist(),
+                                    "group": group,
+                                    "y_label": target_column,
+                                },
+                                {
+                                    "value": other(df[group].unique(), val),
+                                    "y": np.exp(
+                                        k2.score_samples(X.reshape(-1, 1))
+                                    ).tolist(),
+                                    "x": X.tolist(),
+                                    "group": group,
+                                    "y_label": target_column,
+                                },
+                            ],
+                        }
+                    )
                 else:
                     # Target value is also categorical
                     x = df[target_column].copy()
-                    x[x != target_value] = other(df[target_column].unique(), target_value)
+                    x[x != target_value] = other(
+                        df[target_column].unique(), target_value
+                    )
 
                     y = df[group].copy()
                     y[y != val] = other(df[group], val)
 
-                    charts.append({
-                        "type": "cm",
-                        "corr": corr["corr"],
-                        "data": {
-                            "cm": pd.crosstab(x, y, dropna=False, normalize="index").to_dict(),
-                            "corr": corr,
+                    charts.append(
+                        {
+                            "type": "cm",
+                            "corr": corr["corr"],
+                            "data": {
+                                "cm": pd.crosstab(
+                                    x, y, dropna=False, normalize="index"
+                                ).to_dict(),
+                                "corr": corr,
+                            },
                         }
-                    })
+                    )
 
             else:
                 if target_value is None:
@@ -183,55 +300,71 @@ class AAICorrelationTask(AAITask):
                     clf.fit(X.values.reshape((-1, 1)), y)
                     r2 = clf.score(X.values.reshape((-1, 1)), y)
                     x_pred = np.linspace(X.min(), X.max(), lr_steps)
-                    y_mean, y_std = clf.predict(x_pred.reshape((-1, 1)), return_std=True)
-                    charts.append({
-                        "type": "lr",
-                        "corr": corr["corr"],
-                        "data": {
-                            "x": X.tolist(),
-                            "y": y.tolist(),
-                            "x_pred": x_pred.tolist(),
-                            "intercept": clf.intercept_,
-                            "coef": clf.coef_[0],
-                            "r2": r2,
-                            "y_mean": y_mean.tolist(),
-                            "y_std": y_std.tolist(),
-                            "x_label": corr["col"],
-                            "y_label": target_column,
+                    y_mean, y_std = clf.predict(
+                        x_pred.reshape((-1, 1)), return_std=True
+                    )
+                    charts.append(
+                        {
+                            "type": "lr",
+                            "corr": corr["corr"],
+                            "data": {
+                                "x": X.tolist(),
+                                "y": y.tolist(),
+                                "x_pred": x_pred.tolist(),
+                                "intercept": clf.intercept_,
+                                "coef": clf.coef_[0],
+                                "r2": r2,
+                                "y_mean": y_mean.tolist(),
+                                "y_std": y_std.tolist(),
+                                "x_label": corr["col"],
+                                "y_label": target_column,
+                            },
                         }
-                    })
+                    )
                 else:
                     col = corr["col"]
                     X = np.linspace(df[col].min(), df[col].max(), kde_steps)
 
                     x1 = df[col][df[target_column] == target_value]
                     x1 = x1[x1.notna()]
-                    k1 = KernelDensity(bandwidth=kde_bandwidth(x1)).fit(x1.values.reshape((-1, 1)))
+                    k1 = KernelDensity(bandwidth=kde_bandwidth(x1)).fit(
+                        x1.values.reshape((-1, 1))
+                    )
 
                     x2 = df[col][df[target_column] != target_value]
                     x2 = x2[x2.notna()]
-                    k2 = KernelDensity(bandwidth=kde_bandwidth(x2)).fit(x2.values.reshape((-1, 1)))
+                    k2 = KernelDensity(bandwidth=kde_bandwidth(x2)).fit(
+                        x2.values.reshape((-1, 1))
+                    )
 
-                    charts.append({
-                        "type": "kde",
-                        "corr": corr["corr"],
-                        "data": [
-                            {
-                                "value": target_value,
-                                "y": np.exp(k1.score_samples(X.reshape((-1, 1)))).tolist(),
-                                "x": X.tolist(),
-                                "group": target_column,
-                                "y_label": col,
-                            },
-                            {
-                                "value": other(df[target_column].unique(), target_value),
-                                "y": np.exp(k2.score_samples(X.reshape(-1, 1))).tolist(),
-                                "x": X.tolist(),
-                                "group": target_column,
-                                "y_label": col,
-                            }
-                        ]
-                    })
+                    charts.append(
+                        {
+                            "type": "kde",
+                            "corr": corr["corr"],
+                            "data": [
+                                {
+                                    "value": target_value,
+                                    "y": np.exp(
+                                        k1.score_samples(X.reshape((-1, 1)))
+                                    ).tolist(),
+                                    "x": X.tolist(),
+                                    "group": target_column,
+                                    "y_label": col,
+                                },
+                                {
+                                    "value": other(
+                                        df[target_column].unique(), target_value
+                                    ),
+                                    "y": np.exp(
+                                        k2.score_samples(X.reshape(-1, 1))
+                                    ).tolist(),
+                                    "x": X.tolist(),
+                                    "group": target_column,
+                                    "y_label": col,
+                                },
+                            ],
+                        }
+                    )
 
         runtime = time.time() - start
 
@@ -243,5 +376,8 @@ class AAICorrelationTask(AAITask):
                 "corr": corrs,
                 "charts": charts,
             },
-            "validations": [{"name": x.name, "level": x.level, "message": x.message} for x in failed_checks],
+            "validations": [
+                {"name": x.name, "level": x.level, "message": x.message}
+                for x in failed_checks
+            ],
         }

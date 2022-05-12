@@ -1,6 +1,9 @@
 [flake8]
 exclude =
   third_parties/
+  actableai/third_parties/
+  gluonts/
+  *.egg
 max-line-length = 88
 inline-quotes = "
 ignore =

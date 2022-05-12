@@ -12,9 +12,7 @@ from actableai.data_imputation.type_recon.type_detector import DfTypes
 stub_path = "actableai.data_imputation.auto_fixer.neighbor_fixer"
 
 
-@pytest.mark.parametrize(
-    "df_without_error", [pd.DataFrame.from_dict({"A": [1, 2]})]
-)
+@pytest.mark.parametrize("df_without_error", [pd.DataFrame.from_dict({"A": [1, 2]})])
 @patch(f"{stub_path}.get_df_without_error")
 @patch(f"{stub_path}.IterativeImputer")
 def test_fix_should_raise_error_when_df_without_error_is_empty(
@@ -32,13 +30,13 @@ def test_fix_should_raise_error_when_df_without_error_is_empty(
         fixer.fix(df, errors, current_column)
 
 
-@pytest.mark.parametrize(
-    "df_without_error", [pd.DataFrame.from_dict({"A": [1, 2]})]
-)
+@pytest.mark.parametrize("df_without_error", [pd.DataFrame.from_dict({"A": [1, 2]})])
 @patch(f"{stub_path}.get_df_without_error")
 @patch(f"{stub_path}.IterativeImputer")
+@patch(f"{stub_path}.MinMaxScaler")
 def test_fix(
     mock_interactive_imputer,
+    mock_min_max_scaler,
     mock_get_df_without_error,
     df_without_error,
 ):
@@ -56,6 +54,10 @@ def test_fix(
     imp = MagicMock()
     mock_interactive_imputer.return_value = imp
     imp.fit_transform.return_value = df_fixed_on_error
+    mms = MagicMock()
+    mms.return_value = imp
+    mms.fit_transform.return_value = df_fixed_on_error
+    mms.inverse_transform.return_value = df_fixed_on_error
 
     mock_get_df_without_error.return_value = df_without_error
 

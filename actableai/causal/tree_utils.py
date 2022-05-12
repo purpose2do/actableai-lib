@@ -1,8 +1,28 @@
+from __future__ import annotations
+from typing import Optional, Tuple
+
+
 class Node:
     def __init__(
-        self, left=None, right=None, label=None, conditions=[], is_right_child=False,
-        num_right_ancestors = 0
+        self,
+        left: Optional[Node] = None,
+        right: Optional[Node] = None,
+        label: Optional[str] = None,
+        conditions: list = [],
+        is_right_child: bool = False,
+        num_right_ancestors: int = 0,
     ):
+        """Basic Node class for a tree.
+
+        Args:
+            left: Left Node. Defaults to None.
+            right: Right Node. Defaults to None.
+            label: Label of the Node . Defaults to None.
+            conditions: _description_. Defaults to [].
+            is_right_child: Whether this node is the right child of another one.
+                Defaults to False.
+            num_right_ancestors: Number of right ancester nodes. Defaults to 0.
+        """
         self.left = left
         self.right = right
         self.conditions = conditions
@@ -11,7 +31,17 @@ class Node:
         self.num_right_ancestors = num_right_ancestors
 
 
-def parse_tree_dot(tree_dot):
+def parse_tree_dot(tree_dot: str) -> Tuple[str, dict]:
+    """Parser for tree_dot.
+
+    Args:
+        tree_dot: String representation of the tree in dot format.
+
+    Returns:
+        Tuple:
+            - tree_dot: Parsed tree in dot format.
+            - node_dict: Dictionary mapping node ids to nodes.
+    """
     lines = tree_dot.split("\n")
     new_lines = []
     node_dict = {}
@@ -54,7 +84,9 @@ def parse_tree_dot(tree_dot):
                     node_dict[parent_k].right = node_dict[child_k]
                     node_dict[child_k].is_right_child = True
                 if node_dict[parent_k].is_right_child:
-                    node_dict[child_k].num_right_ancestors = node_dict[parent_k].num_right_ancestors+1
+                    node_dict[child_k].num_right_ancestors = (
+                        node_dict[parent_k].num_right_ancestors + 1
+                    )
         new_lines.append(l)
     return "\n".join(new_lines), node_dict
 
@@ -77,7 +109,15 @@ def get_cat_constraint(cat_name, cat_vals, constraints):
         return f"{cat_name} in [" + ", ".join(["{}".format(c) for c in res]) + "]"
 
 
-def negate_condition(condition):
+def negate_condition(condition: str) -> Optional[str]:
+    """Converts a condition to its negation.
+
+    Args:
+        condition: Condition to be negated.
+
+    Returns:
+        Optional[str]: Negated condition.
+    """
     try:
         items = condition.split(" ")
         s = items[1]
@@ -91,7 +131,7 @@ def negate_condition(condition):
             ns = ">="
         items[1] = ns
         return " ".join(items)
-    except:
+    except Exception:
         return None
 
 
@@ -129,11 +169,23 @@ def convert_label_to_categorical(root_node, cat_name, cat_vals):
             and (cur_node.is_right_child)
             and len(constraints) > 0
         ):
-            for i in range(cur_node.num_right_ancestors+1):
+            for i in range(cur_node.num_right_ancestors + 1):
                 constraints.pop()
 
 
-def make_pretty_tree(tree_dot, cat_names, cat_vals_list):
+def make_pretty_tree(
+    tree_dot: str, cat_names: list[str], cat_vals_list: list[dict]
+) -> str:
+    """Make a pretty tree from a tree_dot.
+
+    Args:
+        tree_dot: String representation of the tree in dot format.
+        cat_names: List of categorical variables.
+        cat_vals_list: List of dictionaries mapping numeric to categorical values.
+
+    Returns:
+        _type_: _description_
+    """
     new_tree_dot, node_dict = parse_tree_dot(tree_dot)
     root_node = node_dict[0]
     for cat_name, cat_vals in zip(cat_names, cat_vals_list):

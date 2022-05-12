@@ -3,11 +3,12 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.metrics import silhouette_score
-from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+
 
 class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
-    """ Transform numeric columns using StandardScaler and categorical columns
-    using OneHotEncoder. """
+    """Transform numeric columns using StandardScaler and categorical columns
+    using OneHotEncoder."""
 
     def fit_transform(self, X, categorical_cols):
         self.transformers = []
@@ -16,17 +17,17 @@ class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
         for i in range(X.shape[1]):
             if i not in categorical_cols:
                 t = StandardScaler()
-                result.append(t.fit_transform(X[:, i:i+1]))
+                result.append(t.fit_transform(X[:, i : i + 1]))
             else:
                 t = OneHotEncoder()
-                result.append(t.fit_transform(X[:, i:i+1]).todense())
+                result.append(t.fit_transform(X[:, i : i + 1]).todense())
             self.transformers.append(t)
         return np.hstack(result)
 
     def transform(self, X):
         result = []
         for i in range(X.shape[1]):
-            x = self.transformers[i].transform(X[:, i:i+1])
+            x = self.transformers[i].transform(X[:, i : i + 1])
             if i in self.categorical_cols:
                 x = x.todense()
             result.append(x)
@@ -37,30 +38,31 @@ class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
         result = []
         for i in range(len(self.transformers)):
             if type(self.transformers[i]) is StandardScaler:
-                result.append(self.transformers[i].inverse_transform(X[:, c0:c0+1]))
+                result.append(self.transformers[i].inverse_transform(X[:, c0 : c0 + 1]))
                 c0 += 1
             else:
                 t = self.transformers[i]
-                result.append(t.inverse_transform(X[:, c0:c0 + len(t.categories_[0])]))
+                result.append(
+                    t.inverse_transform(X[:, c0 : c0 + len(t.categories_[0])])
+                )
                 c0 += len(t.categories_[0])
         return np.hstack(result)
 
 
-def KMeans_scaled_inertia(scaled_data, k, alpha_k, *KMeans_args, **KMeans_kwargs):
-    '''
-    Parameters
-    ----------
-    scaled_data: matrix
-        scaled data. rows are samples and columns are features for clustering
-    k: int
-        current k for applying KMeans
-    alpha_k: float
-        manually tuned factor that gives penalty to the number of clusters
-    Returns
-    -------
-    scaled_inertia: float
-        scaled inertia value for current k
-    '''
+def KMeans_scaled_inertia(
+    scaled_data: np.ndarray, k: int, alpha_k: float, *KMeans_args, **KMeans_kwargs
+):
+    """KMeans with scaled inertia.
+
+    Args:
+        scaled_data: matrix scaled data. rows are samples and columns are features for
+            clustering.
+        k: current k for applying KMeans.
+        alpha_k: manually tuned factor that gives penalty to the number of clusters.
+
+    Returns:
+        float: scaled inertia value for current k
+    """
 
     # fit k-means
     inertia_o = np.square((scaled_data - scaled_data.mean(axis=0))).sum()
@@ -69,23 +71,49 @@ def KMeans_scaled_inertia(scaled_data, k, alpha_k, *KMeans_args, **KMeans_kwargs
     return scaled_inertia
 
 
-def KMeans_pick_k(scaled_data, alpha_k, k_range, *KMeans_args, **KMeans_kwargs):
-    # https://towardsdatascience.com/an-approach-for-choosing-number-of-clusters-for-k-means-c28e614ecb2c
+def KMeans_pick_k(
+    scaled_data, alpha_k, k_range, *KMeans_args, **KMeans_kwargs
+) -> KMeans:
+    """Find best k for KMeans based on scaled inertia method.
+        https://towardsdatascience.com/an-approach-for-choosing-number-of-clusters-for-k-means-c28e614ecb2c
+
+    Args:
+        scaled_data: matrix scaled data. rows are samples and columns are features for
+            clustering.
+        alpha_k: manually tuned factor that gives penalty to the number of clusters.
+        k_range: range of k values to test.
+
+    Returns:
+        KMeans: KMeans object with best k.
+    """
     ans = []
     for k in k_range:
-        scaled_inertia = KMeans_scaled_inertia(scaled_data, k, alpha_k, *KMeans_args, **KMeans_kwargs)
+        scaled_inertia = KMeans_scaled_inertia(
+            scaled_data, k, alpha_k, *KMeans_args, **KMeans_kwargs
+        )
         ans.append((k, scaled_inertia))
-    results = pd.DataFrame(ans, columns = ['k','Scaled Inertia']).set_index('k')
+    results = pd.DataFrame(ans, columns=["k", "Scaled Inertia"]).set_index("k")
     best_k = results.idxmin()[0]
     return best_k
 
+
 def KMeans_pick_k_sil(X, k_range, *KMeans_args, **KMeans_kwargs):
-    # https://newbedev.com/scikit-learn-k-means-elbow-criterion
+    """Find best k for KMeans based on silhouette score.
+        https://newbedev.com/scikit-learn-k-means-elbow-criterion
+
+    Args:
+        X: matrix of data. rows are samples and columns are features for
+            clustering.
+        k_range: range of k values to test.
+
+    Returns:
+        KMeans: KMeans object with best k.
+    """
     max_sil_coeff, best_k = 0, 2
     for k in k_range:
         kmeans = KMeans(n_clusters=k).fit(X)
         label = kmeans.labels_
-        sil_coeff = silhouette_score(X, label, metric='euclidean')
+        sil_coeff = silhouette_score(X, label, metric="euclidean")
         print("Cluster: ", k, ", Silhouette coeff: ", sil_coeff)
         if max_sil_coeff < sil_coeff:
             max_sil_coeff = sil_coeff

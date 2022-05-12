@@ -20,6 +20,16 @@ class DatetimeFixer(AutoFixer):
         all_errors: CellErrors,
         current_column: RichColumnMeta,
     ) -> FixInfoList:
+        """Fixes datetime errors.
+
+        Args:
+            df: DataFrame to fix.
+            all_errors: All errors in the dataframe.
+            current_column: Current column to fix.
+
+        Returns:
+            FixInfoList: List of fix information.
+        """
         df[current_column.name] = pd.to_datetime(df[current_column.name])
         df_to_fix = df.copy()
 
@@ -30,9 +40,7 @@ class DatetimeFixer(AutoFixer):
             dt_series = df_to_fix[current_column.name]
             valid_series_idx = (
                 dt_series.iloc[
-                    dt_series.index[
-                        pd.notna(dt_series).rolling(window=3).sum().ge(3)
-                    ]
+                    dt_series.index[pd.notna(dt_series).rolling(window=3).sum().ge(3)]
                     - 2
                 ]
                 .head(1)
@@ -44,14 +52,9 @@ class DatetimeFixer(AutoFixer):
             ]
             freq = pd.infer_freq(valid_datatime_series)
             if freq is not None:
-                if not (
-                    pd.isna(dt_series.values[0])
-                    or pd.isna(dt_series.values[-1])
-                ):
+                if not (pd.isna(dt_series.values[0]) or pd.isna(dt_series.values[-1])):
                     df_to_fix.set_index(current_column.name, inplace=True)
-                    series_with_fix = (
-                        df_to_fix.resample(freq).first().index.to_series()
-                    )
+                    series_with_fix = df_to_fix.resample(freq).first().index.to_series()
                 else:
                     ts_series = dt_series.apply(
                         lambda x: datetime.timestamp(x) if pd.notna(x) else x
@@ -84,7 +87,7 @@ class DatetimeFixer(AutoFixer):
                                 and idx - 2 not in nan_indices
                             ) and idx - 2 >= 0:
                                 ts_series[idx] = ts_series[idx - 1] - (
-                                        ts_series[idx - 2]- ts_series[idx - 1]
+                                    ts_series[idx - 2] - ts_series[idx - 1]
                                 )
                                 nan_indices.remove(idx)
 
@@ -98,9 +101,7 @@ class DatetimeFixer(AutoFixer):
                             col=current_column.name,
                             index=err.index,
                             options=FixValueOptions(
-                                options=[
-                                    FixValue(series_with_fix.iloc[err.index], 1)
-                                ]
+                                options=[FixValue(series_with_fix.iloc[err.index], 1)]
                             ),
                         )
                     )

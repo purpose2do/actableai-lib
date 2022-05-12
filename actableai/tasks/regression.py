@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 import pandas as pd
 
 from actableai.tasks import TaskType
@@ -11,29 +11,68 @@ class _AAIRegressionTrainTask(AAITask):
     """
 
     @AAITask.run_with_ray_remote(TaskType.REGRESSION_TRAIN)
-    def run(self,
-            explain_samples,
-            presets,
-            hyperparameters,
-            model_directory,
-            target,
-            features,
-            run_model,
-            df_train,
-            df_val,
-            df_test,
-            prediction_quantile_low,
-            prediction_quantile_high,
-            drop_duplicates,
-            run_debiasing,
-            biased_groups,
-            debiased_features,
-            residuals_hyperparameters,
-            num_gpus,
-            eval_metric,
-            ):
-        """
-        TODO write documentation
+    def run(
+        self,
+        explain_samples: bool,
+        presets: str,
+        hyperparameters: Dict,
+        model_directory: str,
+        target: str,
+        features: List[str],
+        run_model: bool,
+        df_train: pd.DataFrame,
+        df_val: pd.DataFrame,
+        df_test: pd.DataFrame,
+        prediction_quantile_low: int,
+        prediction_quantile_high: int,
+        drop_duplicates: bool,
+        run_debiasing: bool,
+        biased_groups: List[str],
+        debiased_features: List[str],
+        residuals_hyperparameters: Dict,
+        num_gpus: int,
+        eval_metric: Dict,
+        time_limit: Optional[int],
+    ):
+        """Sub class for running a regression without cross validation
+
+        Args:
+            explain_samples: Whether we explain the samples
+            presets: Presets for AutoGluon.
+                See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
+            hyperparameters: Hyperparameters for AutoGluon.
+                See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
+            model_directory: Directory for model
+            target: Target for regression
+            features: Features used in DataFrame for regression
+            run_model: Whether the model should be run on df_test
+            df_train: DataFrame for training
+            df_val: DataFrame for validation
+            df_test: DataFrame for testing
+            prediction_quantile_low: Low quantile for prediction and validation
+            prediction_quantile_high: High quantile for prediction and validation
+            drop_duplicates: Whether we should drop duplicated rows
+            run_debiasing: Whether we should debias the data
+            biased_groups: Features that creates a bias in prediction
+            debiased_features: Features debiased w.r.t to biased_groups
+            residuals_hyperparameters: Hyperparameters for debiasing with AutoGluon.
+                See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
+            num_gpus: Number of GPUs used by AutoGluon
+            eval_metric: Evaluation metric for validation
+            time_limit: Time limit of training
+
+        Returns:
+            Tuple:
+                - AutoGluon's predictor
+                - List of feature importance
+                - Dictionnary of evaluation metrics
+                - Predicted values for df_val
+                - Explainer for explaining the prediction and validation
+                - Predicted values for df_test if run_model is true
+                - Lowest prediction for df_test if prediction_quantile_low is not None
+                - Highest prediction for df_test if prediction_quantile_low is not None
+                - Predicted shap values if explain_samples is true
+                - Leaderboard of the best model ran by AutoGluon
         """
         import os
         import shap
@@ -41,7 +80,11 @@ class _AAIRegressionTrainTask(AAITask):
         from sklearn.model_selection import train_test_split
         from autogluon.tabular import TabularPredictor
         from autogluon.features.generators import AutoMLPipelineFeatureGenerator
-        from actableai.utils import preprocess_data_for_shap, AutogluonShapWrapper, debiasing_feature_generator_args
+        from actableai.utils import (
+            preprocess_data_for_shap,
+            AutogluonShapWrapper,
+            debiasing_feature_generator_args,
+        )
         from actableai.debiasing.debiasing_model import DebiasingModel
 
         ag_args_fit = {}
@@ -68,39 +111,64 @@ class _AAIRegressionTrainTask(AAITask):
         df_test = df_test[features + biased_groups]
 
         # Train
-        predictor = TabularPredictor(label=target,
-                                     path=model_directory,
-                                     problem_type="regression",
-                                     eval_metric=eval_metric)
+        predictor = TabularPredictor(
+            label=target,
+            path=model_directory,
+            problem_type="regression",
+            eval_metric=eval_metric,
+        )
 
         predictor = predictor.fit(
             train_data=df_train,
             presets=presets,
             hyperparameters=hyperparameters,
             ag_args_fit=ag_args_fit,
-            feature_generator=AutoMLPipelineFeatureGenerator(**feature_generator_args)
+            feature_generator=AutoMLPipelineFeatureGenerator(**feature_generator_args),
+            time_limit=time_limit,
         )
         predictor.persist_models()
-        leaderboard = predictor.leaderboard()
+        leaderboard = predictor.leaderboard(extra_info=True)
         pd.set_option("chained_assignment", "warn")
 
         important_features = []
-        for feature, importance in predictor.feature_importance(df_train)["importance"].iteritems():
+        for feature, importance in predictor.feature_importance(df_train)[
+            "importance"
+        ].iteritems():
             if feature in biased_groups:
                 continue
 
-            important_features.append({
-                "feature": feature,
-                "importance": importance
-            })
+            important_features.append({"feature": feature, "importance": importance})
 
         y_pred = predictor.predict(df_val)
-        metrics = predictor.evaluate_predictions(y_true=df_val[target], y_pred=y_pred, auxiliary_metrics=True)
+        metrics = predictor.evaluate_predictions(
+            y_true=df_val[target], y_pred=y_pred, auxiliary_metrics=True
+        )
+
+        # Legacy (TODO: to be removed)
         evaluate = {
             "RMSE": abs(metrics["root_mean_squared_error"]),
             "R2": metrics["r2"],
-            "MAE": abs(metrics["mean_absolute_error"])
+            "MAE": abs(metrics["mean_absolute_error"]),
+            "MSE": abs(metrics["mean_squared_error"]),
+            "MEDIAN_ABSOLUTE_ERROR": abs(metrics["median_absolute_error"]),
         }
+
+        evaluate["metrics"] = pd.DataFrame(
+            {
+                "metric": [
+                    "Root Mean Squared Error",
+                    "R2",
+                    "Mean Absolute Error",
+                    "Median Absolute Error",
+                ],
+                "value": [
+                    abs(metrics["root_mean_squared_error"]),
+                    metrics["r2"],
+                    abs(metrics["mean_absolute_error"]),
+                    abs(metrics["median_absolute_error"]),
+                ],
+            }
+        )
 
         explainer = None
         if explain_samples:
@@ -108,7 +176,9 @@ class _AAIRegressionTrainTask(AAITask):
 
             shap_data = preprocess_data_for_shap(df_full)
             ag_wrapper = AutogluonShapWrapper(predictor, shap_data.columns)
-            explainer = shap.KernelExplainer(ag_wrapper.predict, shap_data, feature_names=shap_data.columns)
+            explainer = shap.KernelExplainer(
+                ag_wrapper.predict, shap_data, feature_names=shap_data.columns
+            )
 
         predictions = []
         prediction_low = []
@@ -116,45 +186,73 @@ class _AAIRegressionTrainTask(AAITask):
         predict_shap_values = []
         if run_model:
             if explain_samples:
-                predict_shap_values = explainer.shap_values(preprocess_data_for_shap(df_test)).tolist()
+                predict_shap_values = explainer.shap_values(
+                    preprocess_data_for_shap(df_test)
+                ).tolist()
 
             predictions = predictor.predict(df_test).tolist()
             if prediction_quantile_low is not None:
-                prediction_low = predictor.predict(df_test, quantile=prediction_quantile_low)
+                prediction_low = predictor.predict(
+                    df_test, quantile=prediction_quantile_low
+                )
             if prediction_quantile_high is not None:
-                prediction_high = predictor.predict(df_test, quantile=prediction_quantile_high)
+                prediction_high = predictor.predict(
+                    df_test, quantile=prediction_quantile_high
+                )
 
-        return predictor, \
-               important_features, \
-               evaluate, \
-               y_pred, \
-               explainer, \
-               predictions, \
-               prediction_low, \
-               prediction_high, \
-               predict_shap_values, \
-               leaderboard
+        return (
+            predictor,
+            important_features,
+            evaluate,
+            y_pred,
+            explainer,
+            predictions,
+            prediction_low,
+            prediction_high,
+            predict_shap_values,
+            leaderboard,
+        )
 
 
 class _AAIInterventionTask(AAITask):
-
     @AAITask.run_with_ray_remote(TaskType.CAUSAL_INFERENCE)
     def run(
-            self,
-            df,
-            df_predict,
-            target,
-            run_model,
-            current_intervention_column,
-            new_intervention_column,
-            common_causes,
-            causal_cv,
-            causal_hyperparameters,
-            cate_alpha,
-            presets,
-            model_directory,
-            num_gpus,
+        self,
+        df: pd.DataFrame,
+        df_predict: pd.DataFrame,
+        target: str,
+        run_model: bool,
+        current_intervention_column: str,
+        new_intervention_column: str,
+        common_causes: List[str],
+        causal_cv: int,
+        causal_hyperparameters: Dict,
+        cate_alpha: float,
+        presets: str,
+        model_directory: str,
+        num_gpus: int,
     ):
+        """Runs an intervention on Input DataFrame
+
+        Args:
+            df: Input DataFrame
+            df_predict: DataFrame where we predicted the target
+            target: ?
+            run_model: Whether we run the model
+            current_intervention_column: Feature before intervention
+            new_intervention_column: Feature after intervention
+            common_causes: Common causes
+            causal_cv (int): _description_
+            causal_hyperparameters (Dict): _description_
+            cate_alpha (float): _description_
+            presets (str): _description_
+            model_directory (str): _description_
+            num_gpus (int): _description_
+            time_limit (Optional[int]): time limit of training.
+
+        Returns:
+            _type_: _description_
+        """
         import numpy as np
         import pandas as pd
         from tempfile import mkdtemp
@@ -174,21 +272,29 @@ class _AAIInterventionTask(AAITask):
         num_cols = df_imputed[columns]._get_numeric_data().columns
         cat_cols = list(set(df_imputed.columns) - set(num_cols))
         if len(num_cols) > 0:
-            df_imputed[num_cols] = SimpleImputer(strategy="median").fit_transform(df_imputed[num_cols])
+            df_imputed[num_cols] = SimpleImputer(strategy="median").fit_transform(
+                df_imputed[num_cols]
+            )
         if len(cat_cols) > 0:
-            df_imputed[cat_cols] = SimpleImputer(strategy="most_frequent").fit_transform(df_imputed[cat_cols])
+            df_imputed[cat_cols] = SimpleImputer(
+                strategy="most_frequent"
+            ).fit_transform(df_imputed[cat_cols])
 
         X = df_imputed[common_causes] if len(common_causes) > 0 else None
         model_t = TabularPredictor(
             path=mkdtemp(prefix=str(model_directory)),
             label="t",
-            problem_type="regression" if current_intervention_column in num_cols else "multiclass",
+            problem_type="regression"
+            if current_intervention_column in num_cols
+            else "multiclass",
         )
         model_t = SKLearnWrapper(
-            model_t, hyperparameters=causal_hyperparameters, presets=presets,
+            model_t,
+            hyperparameters=causal_hyperparameters,
+            presets=presets,
             ag_args_fit={
                 "num_gpus": num_gpus,
-            }
+            },
         )
 
         model_y = TabularPredictor(
@@ -197,15 +303,22 @@ class _AAIInterventionTask(AAITask):
             problem_type="regression",
         )
         model_y = SKLearnWrapper(
-            model_y, hyperparameters=causal_hyperparameters, presets=presets,
-            ag_args_fit = {
+            model_y,
+            hyperparameters=causal_hyperparameters,
+            presets=presets,
+            ag_args_fit={
                 "num_gpus": num_gpus,
-            }
+            },
         )
 
-        if (X is None) or \
-                (cate_alpha is not None) or \
-                (current_intervention_column not in num_cols and len(df[current_intervention_column].unique()) > 2):
+        if (
+            (X is None)
+            or (cate_alpha is not None)
+            or (
+                current_intervention_column not in num_cols
+                and len(df[current_intervention_column].unique()) > 2
+            )
+        ):
             # Multiclass treatment
             causal_model = LinearDML(
                 model_t=model_t,
@@ -222,12 +335,13 @@ class _AAIInterventionTask(AAITask):
                 problem_type="regression",
             )
             model_final = SKLearnWrapper(
-                df_[[target]], model_final,
+                df_[[target]],
+                model_final,
                 hyperparameters=causal_hyperparameters,
                 presets=presets,
                 ag_args_fit={
                     "num_gpus": num_gpus,
-                }
+                },
             )
             causal_model = NonParamDML(
                 model_t=model_t,
@@ -244,7 +358,11 @@ class _AAIInterventionTask(AAITask):
             X=X,
         )
 
-        df_intervene = df_[pd.notnull(df_[[current_intervention_column, new_intervention_column]]).all(axis=1)]
+        df_intervene = df_[
+            pd.notnull(df_[[current_intervention_column, new_intervention_column]]).all(
+                axis=1
+            )
+        ]
         df_imputed = df_imputed.loc[df_intervene.index]
         X = df_imputed[common_causes] if len(common_causes) > 0 else None
         effects = causal_model.effect(
@@ -257,15 +375,16 @@ class _AAIInterventionTask(AAITask):
         if run_model:
             df_predict_index = df_predict.index.intersection(df_intervene.index)
             df_intervene.loc[df_predict_index, target] = np.NaN
-            df_intervene.loc[df_predict_index, target + "_predicted"] = \
-                df_predict.loc[df_predict_index, target + "_predicted"]
+            df_intervene.loc[df_predict_index, target + "_predicted"] = df_predict.loc[
+                df_predict_index, target + "_predicted"
+            ]
         df_intervene[target + "_intervened"] = targets + effects.flatten()
         if cate_alpha is not None:
             lb, ub = causal_model.effect_interval(
                 X,
                 T0=df_intervene[[current_intervention_column]],
                 T1=df_intervene[[new_intervention_column]],
-                alpha=cate_alpha
+                alpha=cate_alpha,
             )
             df_intervene[target + "_intervened_low"] = targets + lb.flatten()
             df_intervene[target + "_intervened_high"] = targets + ub.flatten()
@@ -274,112 +393,126 @@ class _AAIInterventionTask(AAITask):
         if cate_alpha is not None:
             df_intervene["intervention_effect_low"] = lb.flatten()
             df_intervene["intervention_effect_high"] = ub.flatten()
-        df_intervene = df_intervene[df[current_intervention_column] != df[new_intervention_column]]
+        df_intervene = df_intervene[
+            df[current_intervention_column] != df[new_intervention_column]
+        ]
 
         return df_intervene
 
 
 class AAIRegressionTask(AAITask):
-    """ Regression task.
-
-    """
+    """Regression task."""
 
     @AAITask.run_with_ray_remote(TaskType.REGRESSION)
-    def run(self,
-            df: pd.DataFrame,
-            target: str,
-            features: Optional[List[str]] = None,
-            biased_groups: Optional[List[str]] = None,
-            debiased_features: Optional[List[str]] = None,
-            eval_metric : str = "r2",
-            validation_ratio: float = .2,
-            prediction_quantile_low: int = 5,
-            prediction_quantile_high: int = 95,
-            explain_samples: bool = False,
-            model_directory: Optional[str] = None,
-            presets: str = "medium_quality_faster_train",
-            hyperparameters: Optional[dict] = None,
-            train_task_params: Optional[dict] = None,
-            intervention_task_params: Optional[dict] = None,
-            kfolds: int = 1,
-            cross_validation_max_concurrency: int = 1,
-            current_intervention_column: Optional[str] = None,
-            new_intervention_column: Optional[str] = None,
-            cate_alpha: Optional[float] = None,
-            common_causes: List[str] = [],
-            causal_cv: int = 5,
-            causal_hyperparameters: Optional[dict] = None,
-            residuals_hyperparameters: Optional[dict] = None,
-            drop_duplicates: bool = True,
-            return_residuals: bool = False,
-            kde_steps: int = 10,
-            num_gpus: int = 0):
-        """
-        Run this regression task and return results.
+    def run(
+        self,
+        df: pd.DataFrame,
+        target: str,
+        features: Optional[List[str]] = None,
+        biased_groups: Optional[List[str]] = None,
+        debiased_features: Optional[List[str]] = None,
+        eval_metric: str = "r2",
+        validation_ratio: float = 0.2,
+        prediction_quantile_low: int = 5,
+        prediction_quantile_high: int = 95,
+        explain_samples: bool = False,
+        model_directory: Optional[str] = None,
+        presets: str = "medium_quality_faster_train",
+        hyperparameters: Optional[dict] = None,
+        train_task_params: Optional[dict] = None,
+        intervention_task_params: Optional[dict] = None,
+        kfolds: int = 1,
+        cross_validation_max_concurrency: int = 1,
+        current_intervention_column: Optional[str] = None,
+        new_intervention_column: Optional[str] = None,
+        cate_alpha: Optional[float] = None,
+        common_causes: List[str] = [],
+        causal_cv: int = 5,
+        causal_hyperparameters: Optional[dict] = None,
+        residuals_hyperparameters: Optional[dict] = None,
+        drop_duplicates: bool = True,
+        return_residuals: bool = False,
+        kde_steps: int = 10,
+        num_gpus: int = 0,
+        time_limit: Optional[int] = None,
+    ):
+        """Run this regression task and return results.
 
-        Parameters
-        ----------
-        df
-            Input data frame
-        target
-            Target columns in df. If there are emtpy values in this columns, predictions will be generated for
-            these rows.
-        features
-            A list of features to be used for prediction. If None, all columns except target are used as features
-        biased_groups
-            A list of columns of groups that should be protected from biases (e.g. gender, race, age)
-        debiased_features
-            A list of proxy features that need to be debiased for protection of sensitive groups
-        eval_metric
-            Metric to be optimized during training. Possible values include 'root_mean_squared_error',
-            'mean_squared_error', 'mean_absolute_error', 'median_absolute_error', 'r2'
-        validation_ratio
-            The ratio to randomly split data for training and validation
-        prediction_quantile_low
-            Lower quantile for quantile regression (in percentage)
-        prediction_quantile_high
-            Higher quantile for quantile regression (in percentage)
-        explain_samples
-            If true, explanations for predictions in test and validation will be generated. It takes significantly
-            longer time to run.
-        model_directory
-            Destination to store trained model. If not set, a temporary folder will be created
-        presets
-            Autogluon's presets for training model. More details at
-            https://auto.gluon.ai/stable/_modules/autogluon/tabular/predictor/predictor.html#TabularPredictor.fit
-        intervention_task_params
-            Task parameters to be passed to build intervention model and predictions
-        kfolds
-            Number of folds for cross validation. If 1, train test split is used instead.
-        cross_validation_max_concurrency
-            Maximum number of Ray actors used for cross validation (each actor execute for one split)
-        current_intervention_column
-            Current values of intervention for counterfactual prediction
-        new_intervention_column
-            New values of intervention for counterfactual prediction
-        cate_alpha
-            Alpha value for CATE (conditional average treatment effect) quantiles
-        common_causes
-            List of columns to be used as common causes in causal graph of intervention model
-        causal_cv
-            Number of folds used in nuisance models in intervention model
-        causal_hyperparameters
-            Autogluon's hyperparameters used in nuisance models of counterfactual prediction
-        residuals_hyperparameters
-            Autogluon's hyperparameteres used in final model of counterfactual predictions
-        drop_duplicates
-            Whether duplicate values should be dropped before training
-        return_residuals
-            Whether residual values should be returned in counterfactual prediction
-        kde_steps
-            Steps used to generate KDE plots with debiasing
-        num_gpus
-            Number of GPUs used in nuisnace models in counterfactual prediction
+        Args:
+            df: Input data frame
+            target: Target columns in df. If there are emtpy values in this columns,
+                predictions will be generated for these rows.
+            features: A list of features to be used for prediction. If None, all columns
+                except target are used as features. Defaults to None.
+            biased_groups: A list of columns of groups that should be protected from
+                biases (e.g. gender, race, age). Defaults to None.
+            debiased_features: A list of proxy features that need to be debiased for
+                protection of sensitive groups. Defaults to None.
+            eval_metric: Metric to be optimized during training. Possible values include
+                'root_mean_squared_error', 'mean_squared_error', 'mean_absolute_error',
+                'median_absolute_error', 'r2'. Defaults to "r2".
+            validation_ratio: The ratio to randomly split data for training and
+                validation. Defaults to .2.
+            prediction_quantile_low: Lower quantile for quantile regression (in
+                percentage). Defaults to 5.
+            prediction_quantile_high: Higher quantile for quantile regression
+                (in percentage). Defaults to 95.
+            explain_samples: If true, explanations for predictions in test and
+                validation will be generated. It takes significantly longer time to run.
+                Defaults to False.
+            model_directory: Destination to store trained model. If not set, a temporary
+                folder will be created. Defaults to None.
+            presets: Autogluon's presets for training model.
+                See
+                https://auto.gluon.ai/stable/_modules/autogluon/tabular/predictor/predictor.html#TabularPredictor.fit.
+                Defaults to "medium_quality_faster_train".
+            hyperparameters: Autogluon's hyperparameters for training model.
+                See
+                https://auto.gluon.ai/stable/_modules/autogluon/tabular/predictor/predictor.html#TabularPredictor.fit.
+                Defaults to "medium_quality_faster_train".
+            train_task_params: Parameters for _AAITrainTask constructor.
+                Defaults to None.
+            intervention_task_params: Task parameters to be passed to build intervention
+                model and predictions. Defaults to None.
+            kfolds: Number of folds for cross validation. If 1, train test split is used
+                instead.. Defaults to 1.
+            cross_validation_max_concurrency: Maximum number of Ray actors used for
+                cross validation (each actor execute for one split). Defaults to 1.
+            current_intervention_column: Current values of intervention for
+                counterfactual prediction. Defaults to None.
+            new_intervention_column: New values of intervention for counterfactual
+                prediction. Defaults to None.
+            cate_alpha: Alpha value for CATE (conditional average treatment effect)
+                quantiles. Defaults to None.
+            common_causes: List of columns to be used as common causes in causal graph
+                of intervention model. Defaults to [].
+            causal_cv: Number of folds used in nuisance models in intervention model.
+                Defaults to 5.
+            causal_hyperparameters: Autogluon's hyperparameters used in nuisance models
+                of counterfactual prediction. Defaults to None.
+            residuals_hyperparameters: Autogluon's hyperparameteres used in final model
+                of counterfactual predictions. Defaults to None.
+            drop_duplicates: Whether duplicate values should be dropped before training.
+                Defaults to True.
+            return_residuals: Whether residual values should be returned in
+                counterfactual prediction. Defaults to False.
+            kde_steps: Steps used to generate KDE plots with debiasing. Defaults to 10.
+            num_gpus: Number of GPUs used in nuisnace models in counterfactual
+                prediction. Defaults to 0.
+            time_limit: time limit (in seconds) of training. Defaults to None, which means
+                there is no time limit.
 
-        Returns
-        -------
+        Examples:
+            >>> import pandas as pd
+            >>> from actableai.tasks.regression import AAIRegressionTask
+            >>> df = pd.read_csv("path/to/csv")
+            >>> result = AAIRegressionTask().run(
+            ...     df,
+            ...     'target_column',
+            ... )
 
-
+        Returns:
+            Dict: Dictionnary containing results.
         """
         import os
         import ray
@@ -394,11 +527,20 @@ class AAIRegressionTask(AAITask):
         from sklearn.neighbors import KernelDensity
         from autogluon.tabular import TabularPredictor
         from actableai.regression.quantile import ag_quantile_hyperparameters
-        from actableai.utils import memory_efficient_hyperparameters, preprocess_data_for_shap
+        from actableai.utils import (
+            memory_efficient_hyperparameters,
+            preprocess_data_for_shap,
+        )
         from actableai.data_validation.params import RegressionDataValidator
-        from actableai.data_validation.base import CheckLevels, UNIQUE_CATEGORY_THRESHOLD
+        from actableai.data_validation.base import (
+            CheckLevels,
+            UNIQUE_CATEGORY_THRESHOLD,
+        )
         from actableai.regression.cross_validation import run_cross_validation
-        from actableai.tasks.regression import _AAIInterventionTask, _AAIRegressionTrainTask
+        from actableai.tasks.regression import (
+            _AAIInterventionTask,
+            _AAIRegressionTrainTask,
+        )
         from actableai.utils.sanitize import sanitize_timezone
 
         start = time.time()
@@ -423,7 +565,9 @@ class AAIRegressionTask(AAITask):
         run_debiasing = len(biased_groups) > 0 and len(debiased_features) > 0
 
         if prediction_quantile_low is not None or prediction_quantile_high is not None:
-            hyperparameters = ag_quantile_hyperparameters(prediction_quantile_low, prediction_quantile_high)
+            hyperparameters = ag_quantile_hyperparameters(
+                prediction_quantile_low, prediction_quantile_high
+            )
 
         # Pre process data
         df = df.fillna(np.nan)
@@ -443,13 +587,11 @@ class AAIRegressionTask(AAITask):
             drop_duplicates,
         )
         failed_checks = [
-            check
-            for check in data_validation_results
-            if check is not None
+            check for check in data_validation_results if check is not None
         ]
 
         if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
-            return ({
+            return {
                 "status": "FAILURE",
                 "data": {},
                 "validations": [
@@ -457,7 +599,7 @@ class AAIRegressionTask(AAITask):
                     for check in failed_checks
                 ],
                 "runtime": time.time() - start,
-            })
+            }
 
         if hyperparameters is None:
             hyperparameters = memory_efficient_hyperparameters()
@@ -468,10 +610,7 @@ class AAIRegressionTask(AAITask):
             df_train = df_train.drop_duplicates(subset=features + [target])
         df_val = None
         if kfolds <= 1:
-            df_train, df_val = train_test_split(
-                df_train,
-                test_size=validation_ratio
-            )
+            df_train, df_val = train_test_split(df_train, test_size=validation_ratio)
 
         df_test = df[pd.isnull(df[target])].drop(columns=[target])
 
@@ -488,41 +627,52 @@ class AAIRegressionTask(AAITask):
         explainer = None
         leaderboard = None
         if kfolds > 1:
-            important_features, evaluate, predictions, prediction_low, prediction_high, predict_shap_values, df_val, leaderboard = \
-                run_cross_validation(
-                    regression_train_task=regression_train_task,
-                    kfolds=kfolds,
-                    cross_validation_max_concurrency=cross_validation_max_concurrency,
-                    explain_samples=explain_samples,
-                    presets=presets,
-                    hyperparameters=hyperparameters,
-                    model_directory=model_directory,
-                    target=target,
-                    features=features,
-                    run_model=run_model,
-                    df_train=df_train,
-                    df_test=df_test,
-                    prediction_quantile_low=prediction_quantile_low,
-                    prediction_quantile_high=prediction_quantile_high,
-                    drop_duplicates=drop_duplicates,
-                    run_debiasing=run_debiasing,
-                    biased_groups=biased_groups,
-                    debiased_features=debiased_features,
-                    residuals_hyperparameters=residuals_hyperparameters,
-                    num_gpus=num_gpus,
-                    eval_metric=eval_metric,
-                )
+            (
+                important_features,
+                evaluate,
+                predictions,
+                prediction_low,
+                prediction_high,
+                predict_shap_values,
+                df_val,
+                leaderboard,
+            ) = run_cross_validation(
+                regression_train_task=regression_train_task,
+                kfolds=kfolds,
+                cross_validation_max_concurrency=cross_validation_max_concurrency,
+                explain_samples=explain_samples,
+                presets=presets,
+                hyperparameters=hyperparameters,
+                model_directory=model_directory,
+                target=target,
+                features=features,
+                run_model=run_model,
+                df_train=df_train,
+                df_test=df_test,
+                prediction_quantile_low=prediction_quantile_low,
+                prediction_quantile_high=prediction_quantile_high,
+                drop_duplicates=drop_duplicates,
+                run_debiasing=run_debiasing,
+                biased_groups=biased_groups,
+                debiased_features=debiased_features,
+                residuals_hyperparameters=residuals_hyperparameters,
+                num_gpus=num_gpus,
+                eval_metric=eval_metric,
+                time_limit=time_limit,
+            )
         else:
-            predictor, \
-            important_features, \
-            evaluate, \
-            y_pred, \
-            explainer, \
-            predictions, \
-            prediction_low, \
-            prediction_high, \
-            predict_shap_values, \
-            leaderboard = regression_train_task.run(
+            (
+                predictor,
+                important_features,
+                evaluate,
+                y_pred,
+                explainer,
+                predictions,
+                prediction_low,
+                prediction_high,
+                predict_shap_values,
+                leaderboard,
+            ) = regression_train_task.run(
                 explain_samples=explain_samples,
                 presets=presets,
                 hyperparameters=hyperparameters,
@@ -542,6 +692,7 @@ class AAIRegressionTask(AAITask):
                 residuals_hyperparameters=residuals_hyperparameters,
                 num_gpus=num_gpus,
                 eval_metric=eval_metric,
+                time_limit=time_limit,
             )
 
         # Validation
@@ -549,14 +700,20 @@ class AAIRegressionTask(AAITask):
         if kfolds <= 1:
             df_val[target + "_predicted"] = y_pred
             if prediction_quantile_low is not None:
-                df_val[target + "_low"] = predictor.predict(df_val, quantile=prediction_quantile_low)
+                df_val[target + "_low"] = predictor.predict(
+                    df_val, quantile=prediction_quantile_low
+                )
             if prediction_quantile_high is not None:
-                df_val[target + "_high"] = predictor.predict(df_val, quantile=prediction_quantile_high)
+                df_val[target + "_high"] = predictor.predict(
+                    df_val, quantile=prediction_quantile_high
+                )
 
             predictor.unpersist_models()
 
             if explain_samples:
-                eval_shap_values = explainer.shap_values(preprocess_data_for_shap(df_val[features + biased_groups]))
+                eval_shap_values = explainer.shap_values(
+                    preprocess_data_for_shap(df_val[features + biased_groups])
+                )
 
         # Prediction
         if run_model:
@@ -572,14 +729,12 @@ class AAIRegressionTask(AAITask):
             kde_bandwidth = lambda x: max(0.5 * x.std() * (x.size ** (-0.2)), 1e-2)
 
             kde_x_axis_gt = np.linspace(
-                df_val[target].min(),
-                df_val[target].max(),
-                kde_steps
+                df_val[target].min(), df_val[target].max(), kde_steps
             )
             kde_x_axis_predicted = np.linspace(
                 df_val[f"{target}_predicted"].min(),
                 df_val[f"{target}_predicted"].max(),
-                kde_steps
+                kde_steps,
             )
 
             plot_targets = [target, f"{target}_predicted"]
@@ -595,32 +750,42 @@ class AAIRegressionTask(AAITask):
                     # Categorical Biased Group => KDE plot
                     group_chart_type = "kde"
 
-                    for plot_target, x_axis in zip(plot_targets, [kde_x_axis_gt, kde_x_axis_predicted]):
+                    for plot_target, x_axis in zip(
+                        plot_targets, [kde_x_axis_gt, kde_x_axis_predicted]
+                    ):
                         y_prob = {}
 
                         for biased_class in biased_classes:
-                            values = df_val[df_val_biased_group == biased_class][plot_target]
+                            values = df_val[df_val_biased_group == biased_class][
+                                plot_target
+                            ]
                             values = values[values.notna()]
 
                             kde = KernelDensity(bandwidth=kde_bandwidth(values))
                             kde = kde.fit(values.values.reshape(-1, 1))
 
-                            y_prob[biased_class] = kde.score_samples(x_axis.reshape(-1, 1))
+                            y_prob[biased_class] = kde.score_samples(
+                                x_axis.reshape(-1, 1)
+                            )
 
-                        corr, pvalue = spearmanr(df_val[biased_group], df_val[plot_target])
-                        group_charts.append({
-                            "x_label": plot_target,
-                            "x": x_axis.tolist(),
-                            "lines": [
-                                {
-                                    "y": np.exp(y).tolist(),
-                                    "name": biased_class,
-                                }
-                                for biased_class, y in y_prob.items()
-                            ],
-                            "corr": corr,
-                            "pvalue": pvalue
-                        })
+                        corr, pvalue = spearmanr(
+                            df_val[biased_group], df_val[plot_target]
+                        )
+                        group_charts.append(
+                            {
+                                "x_label": plot_target,
+                                "x": x_axis.tolist(),
+                                "lines": [
+                                    {
+                                        "y": np.exp(y).tolist(),
+                                        "name": biased_class,
+                                    }
+                                    for biased_class, y in y_prob.items()
+                                ],
+                                "corr": corr,
+                                "pvalue": pvalue,
+                            }
+                        )
                 else:
                     # Non-Categorical Biased Group => Scatter plot
                     group_chart_type = "scatter"
@@ -633,22 +798,27 @@ class AAIRegressionTask(AAITask):
                         X = X[notna_mask]
                         y = y[notna_mask]
 
-                        corr, pvalue = spearmanr(df_val[biased_group], df_val[plot_target])
-                        group_charts.append({
-                            "x_label": plot_target,
-                            "x": X.tolist(),
-                            "y": y.tolist(),
-                            "corr": corr,
-                            "pvalue": pvalue
-                        })
+                        corr, pvalue = spearmanr(
+                            df_val[biased_group], df_val[plot_target]
+                        )
+                        group_charts.append(
+                            {
+                                "x_label": plot_target,
+                                "x": X.tolist(),
+                                "y": y.tolist(),
+                                "corr": corr,
+                                "pvalue": pvalue,
+                            }
+                        )
 
-                debiasing_charts.append({
-                    "type": group_chart_type,
-                    "group": biased_group,
-                    "target": target,
-                    "charts": group_charts
-                })
-
+                debiasing_charts.append(
+                    {
+                        "type": group_chart_type,
+                        "group": biased_group,
+                        "target": target,
+                        "charts": group_charts,
+                    }
+                )
 
         data = {
             "validation_table": df_val if kfolds <= 1 else None,
@@ -658,10 +828,13 @@ class AAIRegressionTask(AAITask):
             "validation_shaps": eval_shap_values,
             "importantFeatures": important_features,
             "debiasing_charts": debiasing_charts,
-            "leaderboard": leaderboard
+            "leaderboard": leaderboard,
         }
 
-        if current_intervention_column is not None and new_intervention_column is not None:
+        if (
+            current_intervention_column is not None
+            and new_intervention_column is not None
+        ):
             # Counterfactual predictions
             intervention_task = _AAIInterventionTask(**intervention_task_params)
             df_intervene = intervention_task.run(
@@ -682,7 +855,7 @@ class AAIRegressionTask(AAITask):
             data["intervention_table"] = df_intervene
 
         runtime = time.time() - start
-        return ({
+        return {
             "status": "SUCCESS",
             "messenger": "",
             "validations": [
@@ -691,4 +864,4 @@ class AAIRegressionTask(AAITask):
             ],
             "runtime": runtime,
             "data": data,
-        })
+        }

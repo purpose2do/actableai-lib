@@ -4,6 +4,7 @@ from enum import Enum, auto
 import pandas as pd
 
 from actableai.data_imputation import config
+from actableai.data_imputation.auto_fixer.auto_fixer import AutoFixer
 from actableai.data_imputation.auto_fixer.auto_gluon_fixer import AutoGluonFixer
 from actableai.data_imputation.auto_fixer.datetime_fixer import DatetimeFixer
 from actableai.data_imputation.auto_fixer.neighbor_fixer import NeighborFixer
@@ -24,7 +25,18 @@ class FixStrategy(Enum):
     DATETIME = auto()
 
 
-def get_fixer(strategy: FixStrategy):
+def get_fixer(strategy: FixStrategy) -> AutoFixer:
+    """Return a fixer according to the strategy.
+
+    Args:
+        strategy: FixStrategy
+
+    Raises:
+        NotImplementedError: If strategy is not implemented.
+
+    Returns:
+        AutoFixer: A fixer.
+    """
     if strategy == FixStrategy.SINGLE_CATEGORY:
         return SingleCategoryFixer()
     elif strategy == FixStrategy.NEIGHBOR:
@@ -37,7 +49,16 @@ def get_fixer(strategy: FixStrategy):
     raise NotImplementedError
 
 
-def get_quick_fixer_for_debug(column_type: ColumnType):
+def get_quick_fixer_for_debug(column_type: ColumnType) -> AutoFixer:
+    """Return a quick fixer for debug.
+
+    Args:
+        column_type: ColumnType
+
+    Returns:
+        AutoFixer: Single category fixer if column type is category.
+            else return a neighbor fixer.
+    """
     if column_type == ColumnType.Category:
         return SingleCategoryFixer()
     else:
@@ -47,6 +68,16 @@ def get_quick_fixer_for_debug(column_type: ColumnType):
 def determine_fix_strategy(
     series: pd.Series, column_type: ColumnType, errors: ColumnErrors
 ) -> FixStrategy:
+    """Determine the fix strategy.
+
+    Args:
+        series: Series to fix.
+        column_type: Column type.
+        errors: Errors to fix.
+
+    Returns:
+        FixStrategy: The fixing strategy.
+    """
     remain_series = series[~series.index.isin([err.index for err in errors])]
 
     counter = Counter(remain_series)
@@ -77,9 +108,16 @@ def determine_fix_strategy(
         return FixStrategy.AUTOGLUON
 
 
-def determine_refine_strategy(
-    series: pd.Series, errors: ColumnErrors
-) -> FixStrategy:
+def determine_refine_strategy(series: pd.Series, errors: ColumnErrors) -> FixStrategy:
+    """Determine the refine strategy.
+
+    Args:
+        series: Series to refine.
+        errors: Errors to refine.
+
+    Returns:
+        FixStrategy: The refining strategy.
+    """
     remain_series = series[~series.index.isin([err.index for err in errors])]
 
     if len(set(remain_series[~pd.isnull(remain_series)])) == 1:
