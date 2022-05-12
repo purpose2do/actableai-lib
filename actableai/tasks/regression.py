@@ -216,40 +216,6 @@ class AAIRegressionTask(AAITask):
     """Regression task."""
 
     @AAITask.run_with_ray_remote(TaskType.REGRESSION)
-<<<<<<< HEAD
-    def run(
-        self,
-        df: pd.DataFrame,
-        target: str,
-        features: Optional[List[str]] = None,
-        biased_groups: Optional[List[str]] = None,
-        debiased_features: Optional[List[str]] = None,
-        eval_metric: str = "r2",
-        validation_ratio: float = 0.2,
-        prediction_quantile_low: int = 5,
-        prediction_quantile_high: int = 95,
-        explain_samples: bool = False,
-        model_directory: Optional[str] = None,
-        presets: str = "medium_quality_faster_train",
-        hyperparameters: Optional[dict] = None,
-        train_task_params: Optional[dict] = None,
-        intervention_task_params: Optional[dict] = None,
-        kfolds: int = 1,
-        cross_validation_max_concurrency: int = 1,
-        current_intervention_column: Optional[str] = None,
-        new_intervention_column: Optional[str] = None,
-        cate_alpha: Optional[float] = None,
-        common_causes: List[str] = [],
-        causal_cv: int = 5,
-        causal_hyperparameters: Optional[dict] = None,
-        residuals_hyperparameters: Optional[dict] = None,
-        drop_duplicates: bool = True,
-        return_residuals: bool = False,
-        kde_steps: int = 10,
-        num_gpus: int = 0,
-        time_limit: Optional[int] = None,
-    ):
-=======
     def run(self,
             df: pd.DataFrame,
             target: str,
@@ -273,7 +239,6 @@ class AAIRegressionTask(AAITask):
             kde_steps: int = 10,
             num_gpus: int = 0,
             time_limit: Optional[int] = None):
->>>>>>> fix: Removed intervention from the regerssion
         """Run this regression task and return results.
 
         Args:
