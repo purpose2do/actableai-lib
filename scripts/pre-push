@@ -37,7 +37,7 @@ else
     if [[ $remote == "" ]]; then
       echo "${RED}Please resolve linting issues.${NC}";
     else
-      echo "${RED}Push cancelled. Please resolve linting issues${NC}";
+      echo "${RED}Push cancelled. Please resolve linting issues or use --no-verify option.${NC}";
     fi
     exit 1
 fi
