@@ -33,7 +33,7 @@ class TestIntervention:
 
         assert result["status"] == "SUCCESS"
         assert "df" in result
-        assert result["df"].shape == (10, 3)
+        assert result["df"].shape == (20, 6)
 
     def test_intervention_numeric_cate(
         self, intervention_task: AAIInterventionTask, tmp_path
@@ -58,7 +58,7 @@ class TestIntervention:
 
         assert result["status"] == "SUCCESS"
         assert "df" in result
-        assert result["df"].shape == (10, 3)
+        assert result["df"].shape == (20, 10)
 
     def test_intervention_categorical(
         self, intervention_task: AAIInterventionTask, tmp_path
@@ -83,8 +83,8 @@ class TestIntervention:
         )
 
         assert r["status"] == "SUCCESS"
-        assert "df" in r["data"]
-        assert r["df"].shape == (10, 2)
+        assert "df" in r
+        assert r["df"].shape == (20, 6)
 
     def test_intervention_categorical_cate(
         self, intervention_task: AAIInterventionTask, tmp_path
@@ -110,11 +110,11 @@ class TestIntervention:
         )
 
         assert r["status"] == "SUCCESS"
-        assert "df" in r["data"]
-        assert r["df"].shape == (10, 2)
+        assert "df" in r
+        assert r["df"].shape == (20, 10)
 
     def test_intervention_with_common_causes(
-        self, intervention_task, tmp_path, cate_alpha
+        self, intervention_task, tmp_path
     ):
         current_intervention = ["a", None, "a", "a", "a", "b", "b", "b", "b", "b"]
         new_intervention = ["b", "b", "b", "b", "b", None, None, "a", "a", "a"]
@@ -138,8 +138,8 @@ class TestIntervention:
         )
 
         assert r["status"] == "SUCCESS"
-        assert "df" in r["data"]
-        assert r["df"].shape == (10, 2)
+        assert "df" in r
+        assert r["df"].shape == (20, 11)
 
     def test_intervention_with_common_causes_cate(
         self, intervention_task, tmp_path
@@ -167,5 +167,5 @@ class TestIntervention:
         )
 
         assert r["status"] == "SUCCESS"
-        assert "df" in r["data"]
-        assert r["df"].shape == (10, 2)
+        assert "df" in r
+        assert r["df"].shape == (20, 11)
