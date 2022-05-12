@@ -9,7 +9,7 @@ from actableai.tasks.base import AAITask
 
 
 class AAIInterventionTask(AAITask):
-    @AAITask.run_with_ray_remote(TaskType.CAUSAL_INFERENCE)
+    @AAITask.run_with_ray_remote(TaskType.INTERVENTION)
     def run(
         self,
         df: pd.DataFrame,
@@ -216,4 +216,4 @@ class AAIInterventionTask(AAITask):
             df["intervention_effect_low"] = lb.flatten()
             df["intervention_effect_high"] = ub.flatten()
 
-        return {"status": "SUCCESS", "df": df}
+        return {"status": "SUCCESS", "df": df, "runtime": time.time() - start}
