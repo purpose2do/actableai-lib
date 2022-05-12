@@ -6,7 +6,7 @@ import mxnet as mx
 
 from actableai.timeseries.models import params
 from actableai.timeseries.exceptions import UntrainedModelException
-from actableai.timeseries.models import AAITimeSeriesSingleModel
+from actableai.timeseries.models.single_model import AAITimeSeriesSingleModel
 from actableai.utils.testing import init_ray, generate_forecast_group_df_dict
 
 

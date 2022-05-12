@@ -19,7 +19,7 @@ from gluonts.mx.distribution.student_t import StudentTOutput
 from gluonts.mx.distribution.poisson import PoissonOutput
 from gluonts.evaluation import Evaluator, MultivariateEvaluator
 
-from actableai.timeseries.models.params import BaseParams
+from actableai.timeseries.models.params.base import BaseParams
 from actableai.timeseries.models.base import AAITimeSeriesBaseModel
 from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.predictor import AAITimeSeriesPredictor

@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Tuple, Any, Union, List
 
-from actableai.timeseries.models.params import BaseParams
+from actableai.timeseries.models.params.base import BaseParams
 
 from gluonts.model.rotbaum import TreeEstimator
 

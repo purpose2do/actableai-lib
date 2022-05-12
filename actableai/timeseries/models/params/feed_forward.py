@@ -1,6 +1,6 @@
 from typing import Union, Tuple, Optional, Dict, Any
 
-from actableai.timeseries.models.params import BaseParams
+from actableai.timeseries.models.params.base import BaseParams
 
 from mxnet.context import Context
 
