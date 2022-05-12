@@ -117,7 +117,8 @@ class _AAIClassificationTrainTask(AAITask):
             label=target,
             problem_type=problem_type,
             path=model_directory,
-            eval_metric=eval_metric)
+            eval_metric=eval_metric,
+        )
 
         predictor = predictor.fit(
             train_data=df_train,
@@ -144,18 +145,23 @@ class _AAIClassificationTrainTask(AAITask):
         label_val = df_val[target]
         label_pred = predictor.predict(df_val)
         perf = predictor.evaluate_predictions(
-            y_true=label_val, y_pred=label_pred, auxiliary_metrics=True, detailed_report=False)
+            y_true=label_val,
+            y_pred=label_pred,
+            auxiliary_metrics=True,
+            detailed_report=False,
+        )
         pred_prob_val = predictor.predict_proba(df_val, as_multiclass=True)
 
         evaluate = {
             # TODO: to be removed (legacy)
             "problem_type": predictor.problem_type,
             "accuracy": perf["accuracy"],
-
-            "metrics": pd.DataFrame({
-                "metric": perf.keys(),
-                "value": perf.values(),
-            })
+            "metrics": pd.DataFrame(
+                {
+                    "metric": perf.keys(),
+                    "value": perf.values(),
+                }
+            ),
         }
         evaluate["labels"] = predictor.class_labels
         evaluate["confusion_matrix"] = confusion_matrix(
@@ -183,15 +189,21 @@ class _AAIClassificationTrainTask(AAITask):
                 "negative_label": str(neg_label),
                 "threshold": 0.5,
             }
-            evaluate["precision_score"] = precision_score(label_val, label_pred, pos_label=pos_label)
-            evaluate["recall_score"] = recall_score(label_val, label_pred, pos_label=pos_label)
-            precision, recall, thresholds = precision_recall_curve(label_val, pred_prob_val[pos_label], pos_label=pos_label)
+            evaluate["precision_score"] = precision_score(
+                label_val, label_pred, pos_label=pos_label
+            )
+            evaluate["recall_score"] = recall_score(
+                label_val, label_pred, pos_label=pos_label
+            )
+            precision, recall, thresholds = precision_recall_curve(
+                label_val, pred_prob_val[pos_label], pos_label=pos_label
+            )
             evaluate["precision_recall_curve"] = {
                 "Precision": precision.tolist(),
                 "Recall": recall.tolist(),
                 "thresholds": thresholds.tolist(),
                 "positive_label": str(pos_label),
-                "negative_label": str(neg_label)
+                "negative_label": str(neg_label),
             }
             evaluate["f1_score"] = f1_score(label_val, label_pred, pos_label=pos_label)
 
@@ -262,9 +274,9 @@ class AAIClassificationTask(AAITask):
             drop_duplicates: Whether duplicate values should be dropped before training.
                 Defaults to True.
             num_gpus: Number of gpus used for training. Defaults to 0.
-            eval_metric: Metric to be optimized for. Possible values include ‘accuracy’, ‘balanced_accuracy’, ‘f1’, 
-                ‘f1_macro’, ‘f1_micro’, ‘f1_weighted’, ‘roc_auc’, ‘roc_auc_ovo_macro’, ‘average_precision’, 
-                ‘precision’, ‘precision_macro’, ‘precision_micro’, ‘precision_weighted’, ‘recall’, ‘recall_macro’, 
+            eval_metric: Metric to be optimized for. Possible values include ‘accuracy’, ‘balanced_accuracy’, ‘f1’,
+                ‘f1_macro’, ‘f1_micro’, ‘f1_weighted’, ‘roc_auc’, ‘roc_auc_ovo_macro’, ‘average_precision’,
+                ‘precision’, ‘precision_macro’, ‘precision_micro’, ‘precision_weighted’, ‘recall’, ‘recall_macro’,
                 ‘recall_micro’, ‘recall_weighted’, ‘log_loss’, ‘pac_score’.
                 Defaults to "accuracy".
             time_limit: Time limit of training (in seconds)

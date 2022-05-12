@@ -23,6 +23,7 @@ class NeighborFixer(AutoFixer):
     Args:
         AutoFixer: AutoFixer Abstract class
     """
+
     def __init__(self):
         self._imp = IterativeImputer(max_iter=10, random_state=0, verbose=1)
         self.__cached_matrix_after_fit = None
@@ -54,16 +55,14 @@ class NeighborFixer(AutoFixer):
             df_to_matrix = df.select_dtypes(exclude=["datetime"]).to_numpy()
             scaler = MinMaxScaler()
             df_to_matrix = scaler.fit_transform(df_to_matrix)
-            self.__cached_matrix_after_fit = self._imp.fit_transform(
-                df_to_matrix
-            )
+            self.__cached_matrix_after_fit = self._imp.fit_transform(df_to_matrix)
             self.__cached_matrix_after_fit = scaler.inverse_transform(
                 self.__cached_matrix_after_fit
             )
 
-        column_index_to_fix = df.select_dtypes(
-            exclude=["datetime"]
-        ).columns.get_loc(current_column.name)
+        column_index_to_fix = df.select_dtypes(exclude=["datetime"]).columns.get_loc(
+            current_column.name
+        )
 
         fix_info_list = FixInfoList()
         for err in all_errors[current_column.name]:

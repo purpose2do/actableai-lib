@@ -10,16 +10,17 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 class UnsupportedPredictorType(ValueError):
     """Raised when the predictor type is not supported."""
+
     pass
 
 
 class UnsupportedProblemType(ValueError):
     """Raised when the problem type is not supported."""
+
     pass
 
 
 class DataFrameTransformer(TransformerMixin, BaseEstimator):
-
     def __init__(self, column_names: Optional[List[str]] = None) -> None:
         """DataFrame Transformer to transform lists and np.ndarray in DataFrames
 
@@ -61,7 +62,7 @@ class LinearRegressionWrapper(LinearRegression):
             "r2": r2_score(y, y_pred, sample_weight=sample_weight),
             "y": y,
             "y_pred": y_pred,
-            "sample_weight": sample_weight
+            "sample_weight": sample_weight,
         }
 
 
@@ -72,7 +73,7 @@ class SKLearnWrapper:
         x_w_columns: Optional[List] = None,
         hyperparameters: Optional[List] = None,
         presets: Optional[str] = "best_quality",
-        ag_args_fit: Optional[List] = None
+        ag_args_fit: Optional[List] = None,
     ):
         """Construct a sklearn wrapper object
 
@@ -143,14 +144,14 @@ class SKLearnWrapper:
                 "accuracy": accuracy_score(y, y_pred, sample_weight=sample_weight),
                 "y": y,
                 "y_pred": y_pred,
-                "sample_weight": sample_weight
+                "sample_weight": sample_weight,
             }
         elif self.ag_predictor.problem_type == "regression":
             return {
                 "r2": r2_score(y, y_pred, sample_weight=sample_weight),
                 "y": y,
                 "y_pred": y_pred,
-                "sample_weight": sample_weight
+                "sample_weight": sample_weight,
             }
         else:
             raise UnsupportedProblemType()

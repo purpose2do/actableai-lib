@@ -397,7 +397,7 @@ class AAICausalEstimator:
             num_samples=trials,
             scheduler=scheduler,
             stop=stopper,
-            **tune_params
+            **tune_params,
         )
         self.tune_results_df = analysis.results_df
 

@@ -99,7 +99,7 @@ class DeepVARParams(BaseParams):
         prediction_length: int,
         target_dim: int,
         params: Dict[str, Any],
-        **kwargs
+        **kwargs,
     ) -> DeepVAREstimator:
         """Build an estimator from the underlying model using selected parameters.
 

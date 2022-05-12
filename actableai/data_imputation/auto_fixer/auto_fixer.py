@@ -16,6 +16,7 @@ class AutoFixer(ABC):
     Raises:
         NotImplementedError: If the method is not implemented.
     """
+
     @abstractmethod
     def fix(
         self,

@@ -8,7 +8,7 @@ from actableai.utils.preprocessors.preprocessing import (
     impute_df,
     PercentageTransformer,
     CopyTransformer,
-    SKLearnAGFeatureWrapperBase
+    SKLearnAGFeatureWrapperBase,
 )
 from dateutil import tz
 

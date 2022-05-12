@@ -17,8 +17,15 @@ class Stats(object):
     def _is_categorical(self, df, column):
         return not self._is_numeric(df, column)
 
-    def corr(self, df:pd.DataFrame, target_col:str, target_value:Optional[str]=None, p_value:float=0.05,
-        categorical_columns:Optional[List]=None, gen_categorical_columns:Optional[List]=None) -> list:
+    def corr(
+        self,
+        df: pd.DataFrame,
+        target_col: str,
+        target_value: Optional[str] = None,
+        p_value: float = 0.05,
+        categorical_columns: Optional[List] = None,
+        gen_categorical_columns: Optional[List] = None,
+    ) -> list:
         """Calculate correlation between target and all other columns.
 
         Args:
@@ -38,18 +45,25 @@ class Stats(object):
         dummy_col_to_original = {}
         for i, cat_col in enumerate(categorical_columns):
             for gen_cat_col in gen_categorical_columns[i]:
-                    dummy_col_to_original[cat_col + '_' + (gen_cat_col if gen_cat_col is not None else 'None')] = cat_col
+                dummy_col_to_original[
+                    cat_col + "_" + (gen_cat_col if gen_cat_col is not None else "None")
+                ] = cat_col
 
         if target_value is not None:
             target_col = "_".join([target_col, target_value])
         if target_col not in df.columns:
-            raise ValueError("Target column or target value is not in the input dataframe")
+            raise ValueError(
+                "Target column or target value is not in the input dataframe"
+            )
         re = []
         spearman_col = df[target_col]
         is_target_col_cat = target_col in dummy_col_to_original.keys()
         for col in list(df.columns):
-            if col == target_col or (is_target_col_cat and col in dummy_col_to_original.keys()
-                                    and dummy_col_to_original[target_col] == dummy_col_to_original[col]):
+            if col == target_col or (
+                is_target_col_cat
+                and col in dummy_col_to_original.keys()
+                and dummy_col_to_original[target_col] == dummy_col_to_original[col]
+            ):
                 df = df.drop(col, axis=1)
         for col in list(df.columns):
             c = spearmanr(spearman_col, df[col], nan_policy="omit")

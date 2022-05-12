@@ -92,7 +92,7 @@ class FeedForwardParams(BaseParams):
         prediction_length: int,
         distr_output: DistributionOutput,
         params: Dict[str, Any],
-        **kwargs
+        **kwargs,
     ) -> SimpleFeedForwardEstimator:
         """Build an estimator from the underlying model using selected parameters.
 

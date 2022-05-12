@@ -49,6 +49,7 @@ class TestBayesianRegressionDataValidator:
 
         assert "CheckNUnique" not in validations_dict
 
+
 class TestCausalDataValidator:
     def test_validate(self):
         df = pd.DataFrame(

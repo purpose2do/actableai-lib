@@ -5,6 +5,7 @@ from pandas.api.types import is_string_dtype
 from sklearn.impute import SimpleImputer
 from sklearn.base import TransformerMixin, BaseEstimator, _OneToOneFeatureMixin
 
+
 def impute_df(df, numeric_imputer=None, categorical_imputer=None):
     numeric_cols = df.select_dtypes(include=np.number).columns
     categorical_cols = df.select_dtypes(exclude=np.number).columns
@@ -45,8 +46,16 @@ class PercentageTransformer(_OneToOneFeatureMixin, BaseEstimator, TransformerMix
     def selector(df):
         obj_mask = df.apply(is_string_dtype)
         df = df.loc[:, obj_mask]
-        parsed_rate_check = lambda x, min : x.isna().sum() >= min * len(x) if x is not None else False
-        extracted = df.apply(lambda x: x.str.extract(r'^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$')[0] if hasattr(x, 'str') else None)
+        parsed_rate_check = (
+            lambda x, min: x.isna().sum() >= min * len(x) if x is not None else False
+        )
+        extracted = df.apply(
+            lambda x: x.str.extract(
+                r"^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$"
+            )[0]
+            if hasattr(x, "str")
+            else None
+        )
         val = ~extracted.apply(lambda x: parsed_rate_check(x, 0.5))
         return val[val].index
 
