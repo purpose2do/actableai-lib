@@ -3,7 +3,11 @@ exclude =
   third_parties/
   actableai/third_parties/
   gluonts/
+  build/
+  pts/
+  examples/
   *.egg
+  .git
 max-line-length = 88
 inline-quotes = "
 ignore =
@@ -14,6 +18,7 @@ ignore =
   E203
   E226
   E24
+  E501
   E704
   W503
   W504
