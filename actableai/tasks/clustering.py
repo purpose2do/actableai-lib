@@ -30,6 +30,9 @@ class AAIClusteringTask(AAITask):
         explain_precision_threshold: float = 0.8,
         alpha_k: float = 0.01,
         max_train_samples: int = None,
+        cluster_explain_max_depth=10,
+        cluster_explain_min_impurity_decrease=0.005,
+        cluster_explain_min_samples_leaf=0.01,
     ) -> Dict:
         """Runs a clustering analysis on df
 
@@ -261,9 +264,10 @@ class AAIClusteringTask(AAITask):
         df_dummies = pd.get_dummies(df_)
         dummy_columns = set(df_dummies.columns) - set(df_.columns)
         clf = DecisionTreeClassifier(
-            max_depth=20,
-            min_impurity_decrease=0.01,
-            min_samples_leaf=0.1 / len(clusters),
+            cluster_explain_max_depth=10,
+            cluster_explain_min_impurity_decrease=0.01,
+            cluster_explain_min_samples_leaf=\
+                cluster_explain_min_samples_leaf / len(clusters),
         )
         clf.fit(df_dummies, cluster_id)
         cluster_explanations = generate_cluster_descriptions(
