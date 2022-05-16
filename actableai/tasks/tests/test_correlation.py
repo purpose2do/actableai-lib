@@ -395,3 +395,37 @@ class TestRemoteCorrelation:
         assert r["status"] == "SUCCESS"
         assert "corr" in r["data"]
         assert "charts" in r["data"]
+
+    def test_bool(self, correlation_task):
+        df = pd.DataFrame(
+            {
+                "x": [True, False, True, False, True, False, True, False, True, False]
+                * 10,
+                "y": [True, False, True, False, True, False, True, False, True, False]
+                * 10,
+                "z": ["a", "a", "a", "a", "a", "b", "b", "b", "b", "b"] * 10,
+            }
+        )
+
+        r = correlation_task.run(df, "z", target_value="a")
+
+        assert r["status"] == "SUCCESS"
+        assert "corr" in r["data"]
+        assert "charts" in r["data"]
+
+    def test_bool_target(self, correlation_task):
+        df = pd.DataFrame(
+            {
+                "x": [True, False, True, False, True, False, True, False, True, False]
+                * 10,
+                "y": [True, False, True, False, True, False, True, False, True, False]
+                * 10,
+                "z": ["a", "a", "a", "a", "a", "b", "b", "b", "b", "b"] * 10,
+            }
+        )
+
+        r = correlation_task.run(df, target_column="x", target_value="True")
+
+        assert r["status"] == "SUCCESS"
+        assert "corr" in r["data"]
+        assert "charts" in r["data"]
