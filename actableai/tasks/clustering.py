@@ -264,10 +264,9 @@ class AAIClusteringTask(AAITask):
         df_dummies = pd.get_dummies(df_)
         dummy_columns = set(df_dummies.columns) - set(df_.columns)
         clf = DecisionTreeClassifier(
-            cluster_explain_max_depth=10,
-            cluster_explain_min_impurity_decrease=0.01,
-            cluster_explain_min_samples_leaf=\
-                cluster_explain_min_samples_leaf / len(clusters),
+            max_depth=cluster_explain_max_depth,
+            min_impurity_decrease=cluster_explain_min_impurity_decrease,
+            min_samples_leaf=cluster_explain_min_samples_leaf / len(clusters),
         )
         clf.fit(df_dummies, cluster_id)
         cluster_explanations = generate_cluster_descriptions(
