@@ -6,6 +6,7 @@ from actableai.data_validation.base import CheckLevels
 from actableai.data_validation.params import (
     BayesianRegressionDataValidator,
     CausalDataValidator,
+    CorrelationDataValidator,
     RegressionDataValidator,
     ClassificationDataValidator,
 )
@@ -166,3 +167,21 @@ class TestClassificationDataValidator:
         }
         assert "ColumnsExistChecker" in validations_dict
         assert validations_dict["ColumnsExistChecker"] == CheckLevels.CRITICAL
+
+
+class TestCorrelationDataValidator:
+    def test_validate(self):
+        df = pd.DataFrame(
+            {
+                "a": [1, 2],
+                "b": [1, 2],
+            }
+        )
+
+        validation_results = CorrelationDataValidator().validate(df, target="a")
+
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "IsSufficientDataChecker" in validations_dict
+        assert validations_dict["IsSufficientDataChecker"] == CheckLevels.CRITICAL
