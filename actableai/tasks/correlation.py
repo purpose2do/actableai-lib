@@ -128,7 +128,14 @@ class AAICorrelationTask(AAITask):
             ct.fit_transform(df).tolist(), columns=ct.get_feature_names_out()
         )
         type_specials = df.apply(get_type_special_no_ag)
-        cat_cols = list((type_specials == "category") | (type_specials == "boolean"))
+
+        bool_cols = type_specials == "boolean"
+        df.loc[:, bool_cols] = df.loc[:, bool_cols].astype(str)
+
+        str_cols = type_specials == "category"
+        cat_cols = list(str_cols | bool_cols)
+        df.loc[:, cat_cols] = df.loc[:, list(cat_cols)].fillna("None")
+
         text_cols = list(type_specials == "text")
 
         og_df_col = df.columns
