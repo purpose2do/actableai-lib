@@ -545,6 +545,9 @@ class CorrelationDataValidator:
 
     def validate(self, df, target):
         return [
+            IsSufficientDataChecker(level=CheckLevels.CRITICAL).check(
+                df, CORRELATION_MINIMUM_NUMBER_OF_SAMPLE
+            ),
             DoNotContainEmptyColumnsChecker(level=CheckLevels.WARNING).check(
                 df, df.columns
             ),
