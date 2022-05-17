@@ -240,14 +240,14 @@ class AAIInterventionTask(AAITask):
 
         Y_res, T_res, X_, W_ = causal_model.residuals_
 
-        # SHIT copy pasted from causal dont forget to remove
+        # This has lots of redundant code with causal_inferences.py
+        # Can we refactor?
         estimation_results = {
             "causal_graph_dot": causal_graph_dot,
             "T_res": T_res,
             "Y_res": Y_res,
             "X": X_,
             "df": df,
-            "ate": causal_model.ate(),
         }
 
         model_t_scores, model_y_scores = [], []
