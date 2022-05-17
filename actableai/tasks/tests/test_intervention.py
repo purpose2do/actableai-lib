@@ -32,8 +32,8 @@ class TestIntervention:
         )
 
         assert result["status"] == "SUCCESS"
-        assert "df" in result
-        assert result["df"].shape == (20, 6)
+        assert "df" in result["data"]
+        assert result["data"]["df"].shape == (20, 6)
 
     def test_intervention_numeric_cate(
         self, intervention_task: AAIInterventionTask, tmp_path
@@ -57,8 +57,8 @@ class TestIntervention:
         )
 
         assert result["status"] == "SUCCESS"
-        assert "df" in result
-        assert result["df"].shape == (20, 10)
+        assert "df" in result["data"]
+        assert result["data"]["df"].shape == (20, 10)
 
     def test_intervention_categorical(
         self, intervention_task: AAIInterventionTask, tmp_path
@@ -83,8 +83,8 @@ class TestIntervention:
         )
 
         assert r["status"] == "SUCCESS"
-        assert "df" in r
-        assert r["df"].shape == (20, 6)
+        assert "df" in r["data"]
+        assert r["data"]["df"].shape == (20, 6)
 
     def test_intervention_categorical_cate(
         self, intervention_task: AAIInterventionTask, tmp_path
@@ -110,8 +110,8 @@ class TestIntervention:
         )
 
         assert r["status"] == "SUCCESS"
-        assert "df" in r
-        assert r["df"].shape == (20, 10)
+        assert "df" in r["data"]
+        assert r["data"]["df"].shape == (20, 10)
 
     def test_intervention_with_common_causes(
         self, intervention_task, tmp_path
@@ -138,8 +138,8 @@ class TestIntervention:
         )
 
         assert r["status"] == "SUCCESS"
-        assert "df" in r
-        assert r["df"].shape == (20, 7)
+        assert "df" in r["data"]
+        assert r["data"]["df"].shape == (20, 7)
 
     def test_intervention_with_common_causes_cate(
         self, intervention_task, tmp_path
@@ -167,5 +167,5 @@ class TestIntervention:
         )
 
         assert r["status"] == "SUCCESS"
-        assert "df" in r
-        assert r["df"].shape == (20, 11)
+        assert "df" in r["data"]
+        assert r["data"]["df"].shape == (20, 11)
