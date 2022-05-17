@@ -232,7 +232,7 @@ class AAIInterventionTask(AAITask):
         buffer = StringIO()
         causal_model_do_why = CausalModel(
             data=df,
-            treatment=[current_intervention_column, new_intervention_column],
+            treatment=[current_intervention_column],
             outcome=target,
             common_causes=common_causes,
         )
