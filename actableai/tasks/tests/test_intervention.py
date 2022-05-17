@@ -114,7 +114,7 @@ class TestIntervention:
         assert r["data"]["df"].shape == (20, 10)
 
     def test_intervention_with_common_causes(
-        self, intervention_task, tmp_path
+        self, intervention_task: AAIInterventionTask, tmp_path
     ):
         current_intervention = ["a", None, "a", "a", "a", "b", "b", "b", "b", "b"]
         new_intervention = ["b", "b", "b", "b", "b", None, None, "a", "a", "a"]
@@ -142,7 +142,7 @@ class TestIntervention:
         assert r["data"]["df"].shape == (20, 7)
 
     def test_intervention_with_common_causes_cate(
-        self, intervention_task, tmp_path
+        self, intervention_task: AAIInterventionTask, tmp_path
     ):
         current_intervention = ["a", None, "a", "a", "a", "b", "b", "b", "b", "b"]
         new_intervention = ["b", "b", "b", "b", "b", None, None, "a", "a", "a"]

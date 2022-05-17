@@ -71,6 +71,7 @@ class AAIInterventionTask(AAITask):
             common_causes = []
         if presets is None:
             presets = "medium_quality_faster_train"
+        causal_cv = 3 if causal_cv is None else causal_cv
 
         df = df.copy()
 
@@ -241,7 +242,7 @@ class AAIInterventionTask(AAITask):
         Y_res, T_res, X_, W_ = causal_model.residuals_
 
         # This has lots of redundant code with causal_inferences.py
-        # Can we refactor?
+        # Should be refactored
         estimation_results = {
             "causal_graph_dot": causal_graph_dot,
             "T_res": T_res,
@@ -282,6 +283,7 @@ class AAIInterventionTask(AAITask):
             "stderr": np.std(model_y_scores) / np.sqrt(len(model_y_scores)),
             "metric": "r2",
         }
+
         if feature_importance and X is not None:
             importances = []
             # Only run feature importance for first mc_iter to speed it up
