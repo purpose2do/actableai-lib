@@ -1,0 +1,28 @@
+-f https://download.pytorch.org/whl/torch_stable.html
+
+scikit-learn==1.0.2
+pandasql==0.7.3
+ray[tune,default]==1.11.0 # TODO update
+autogluon.tabular[all]==0.4.0 # TODO update, must wait for a version which accepts ray
+autogluon.text==0.4.0 # TODO update, must wait for a version which accepts ray
+gluonts[Prophet,R]==0.9.1
+dowhy==0.6 # TODO update
+econml==0.11.1 # TODO update
+tensorflow==2.8.0 # UPDATED
+ipython==7.32.0
+hyperopt==0.2.5 # TODO update
+mxnet==1.7.0.post1 # TODO update + GPU
+ujson==4.0.2 # TODO update
+torch==1.8.0+cpu # TODO update + GPU
+torchvision==0.9.0+cpu # TODO update + GPU
+torchaudio==0.8.0 # TODO update
+python-rapidjson==1.4 # TODO update
+visions==0.7.1 # TODO update
+alibi==0.6.5
+nltk==3.7
+pystan==2.19.1.1 # Cannot be updated (backward compatibility issues with fbprophet)
+
+pytest==7.1.1 # UPDATED
+pytest-parallel==0.1.1
+
+gluonts==0.9.1
