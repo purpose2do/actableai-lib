@@ -828,7 +828,7 @@ class AAIRegressionTask(AAITask):
             "validation_shaps": eval_shap_values,
             "importantFeatures": important_features,
             "debiasing_charts": debiasing_charts,
-            "leaderboard": leaderboard,
+            "leaderboard": leaderboard.astype(str),  # type: ignore
         }
 
         if (
