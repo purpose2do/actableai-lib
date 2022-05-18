@@ -6,7 +6,6 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import r2_score
-from typing import List, Optional
 
 
 class UnsupportedPredictorType(ValueError):
