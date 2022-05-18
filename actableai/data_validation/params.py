@@ -649,6 +649,7 @@ class DataImputationDataValidator:
             ),
         ]
 
+
 class InterventionDataValidator:
     def __init__(self):
         pass
@@ -660,10 +661,19 @@ class InterventionDataValidator:
         current_intervention_column: str,
         new_intervention_column: str,
         common_causes: List[str],
-        causal_cv
+        causal_cv,
     ):
-        return [
+        validations = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
-                df, [current_intervention_column, new_intervention_column, target] + common_causes
+                df,
+                [current_intervention_column, new_intervention_column, target]
+                + common_causes,
             )
         ]
+        if len([x for x in validations if x is not None]) > 0:
+            return validations
+        # Columns are sane now we treat
+        validations += [
+            IsNumericalChecker(level=CheckLevels.CRITICAL).check(df[target]),
+        ]
+        return validations
