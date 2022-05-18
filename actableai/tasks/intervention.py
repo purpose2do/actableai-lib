@@ -2,8 +2,8 @@ from io import StringIO
 import time
 from typing import List, Dict, Optional
 import pandas as pd
-from sklearn.compose import ColumnTransformer
-from sklearn.metrics import accuracy_score, r2_score
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import r2_score
 from actableai.data_validation.base import CheckLevels
 
 from actableai.tasks import TaskType
@@ -59,7 +59,8 @@ class AAIInterventionTask(AAITask):
         )
         from actableai.data_validation.params import InterventionDataValidator
         from actableai.causal.predictors import SKLearnWrapper
-        from actableai.causal import OneHotEncodingTransformer
+        from actableai.utils.preprocessors.autogluon_preproc import DMLFeaturizer
+        from actableai.utils import get_type_special_no_ag
 
         # from actableai.utils import memory_efficient_hyperparameters
 
@@ -99,28 +100,15 @@ class AAIInterventionTask(AAITask):
                 "runtime": time.time() - start,
             }
 
-        num_cols = df.select_dtypes(include="number").columns
-        cat_cols = df.select_dtypes(exclude="number").columns
-        ct = ColumnTransformer(
-            [
-                (
-                    "SimpleImputerNum",
-                    CustomSimpleImputerTransformer(strategy="median"),
-                    num_cols,
-                ),
-                (
-                    "SimpleImputerCat",
-                    CustomSimpleImputerTransformer(strategy="most_frequent"),
-                    cat_cols,
-                ),
-            ],
-            remainder="passthrough",
-            sparse_threshold=0,
-            verbose_feature_names_out=False,
-            verbose=True,
+        # Preprocess data
+        type_special = df.apply(get_type_special_no_ag)
+        num_cols = type_special == "numeric"
+        cat_cols = type_special == "category"
+        df.loc[:, num_cols] = SimpleImputer(strategy="median").fit_transform(
+            df.loc[:, num_cols]
         )
-        df = pd.DataFrame(
-            ct.fit_transform(df).tolist(), columns=ct.get_feature_names_out()
+        df.loc[:, cat_cols] = SimpleImputer(strategy="most_frequent").fit_transform(
+            df.loc[:, cat_cols]
         )
 
         X = df[common_causes] if len(common_causes) > 0 else None
@@ -173,7 +161,7 @@ class AAIInterventionTask(AAITask):
             causal_model = LinearDML(
                 model_t=model_t,
                 model_y=model_y,
-                featurizer=None if X is None else OneHotEncodingTransformer(X),
+                featurizer=None if X is None else DMLFeaturizer(),
                 cv=causal_cv,
                 linear_first_stages=False,
                 discrete_treatment=current_intervention_column not in num_cols,
@@ -196,7 +184,7 @@ class AAIInterventionTask(AAITask):
                 model_t=model_t,
                 model_y=model_y,
                 model_final=model_final,
-                featurizer=None if X is None else OneHotEncodingTransformer(X),
+                featurizer=None if X is None else DMLFeaturizer(),
                 cv=causal_cv,
                 discrete_treatment=current_intervention_column in cat_cols,
             )
@@ -236,7 +224,7 @@ class AAIInterventionTask(AAITask):
             outcome=target,
             common_causes=common_causes,
         )
-        nx.drawing.nx_pydot.write_dot(causal_model_do_why._graph._graph, buffer)  # type: ignore
+        nx.drawing.nx_pydot.write_dot(causal_model_do_why._graph._graph, buffer)  # type: ignore # noqa
         causal_graph_dot = buffer.getvalue()
 
         Y_res, T_res, X_, W_ = causal_model.residuals_
