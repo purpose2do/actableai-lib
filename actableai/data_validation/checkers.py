@@ -10,6 +10,7 @@ from actableai.data_validation.base import (
     CheckResult,
     CheckLevels,
 )
+from actableai.utils import get_type_special_no_ag
 
 
 class IsNumericalChecker(IChecker):
@@ -856,10 +857,10 @@ class MaxTrainSamplesChecker(IChecker):
         Args:
             df: Dataframe to check.
             max_samples: Maximum number of samples.
-
         Returns:
             Optional[CheckResult]: Check result.
         """
+
         if type(n_cluster) == int and max_samples is not None and n_cluster > max_samples:  # type: ignore
             return CheckResult(
                 name=self.name,
@@ -898,3 +899,26 @@ class PositiveOutcomeValueThreshold(IChecker):
                     message="There should be at least 2 samples with positive outcome"
                     + f"value ({positive_outcome_value}) in the outcome column ({outcomes[0]})",
                 )
+class IsCategoricalOrNumericalChecker(IChecker):
+    def __init__(self, level, name="IsCategoricalNumericalChecker"):
+        self.name = name
+        self.level = level
+
+    def check(self, df: pd.DataFrame, features: List[str]) -> Optional[CheckResult]:
+        """Check if the features are categorical or numerical.
+
+        Args:
+            df: Dataframe to check.
+            features: Features to check.
+        """
+
+        bad_features = []
+        for feature in features:
+            if not (get_type_special_no_ag(df[feature]) in ["numeric", "category"]):
+                bad_features.append(feature)
+        if len(bad_features) > 0:
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"{', '.join(bad_features)} are not numerical or categorical",
+            )
