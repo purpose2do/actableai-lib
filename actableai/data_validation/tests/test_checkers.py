@@ -8,6 +8,7 @@ from actableai.data_validation.checkers import (
     CheckNUnique,
     DoNotContainMixedChecker,
     IsCategoricalChecker,
+    IsCategoricalOrNumericalChecker,
     IsDatetimeChecker,
     IsNumericalChecker,
     IsSufficientClassSampleChecker,
@@ -226,9 +227,27 @@ class TestPositiveOutcomeValueThreshold:
                 "y": ["a", "a", "a", "b", "b", "b", "c", "c", "c", "d"],
             }
         )
+
         result = PositiveOutcomeValueThreshold(
             level=CheckLevels.CRITICAL, name="PositiveOutcomeValueThreshold"
         ).check(df=df, outcomes=["x"], positive_outcome_value="tomato")
         assert result is not None
         assert result.name == "PositiveOutcomeValueThreshold"
         assert result.level == CheckLevels.CRITICAL
+
+
+class TestIsCategoricalOrNumericalChecker:
+    def test_check(self):
+        checker = IsCategoricalOrNumericalChecker(
+            level=CheckLevels.CRITICAL, name="IsCategoricalOrNumericalChecker"
+        )
+
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                "y": ["a", "a", "a", "b", "b", "b", "c", "c", "c", "d"],
+            }
+        )
+
+        result = checker.check(df, ["x", "y"])
+        assert result is None
