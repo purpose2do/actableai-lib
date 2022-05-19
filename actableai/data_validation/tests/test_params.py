@@ -8,6 +8,7 @@ from actableai.data_validation.params import (
     CausalDataValidator,
     ClusteringDataValidator,
     CorrelationDataValidator,
+    InterventionDataValidator,
     RegressionDataValidator,
     ClassificationDataValidator,
 )
@@ -222,7 +223,6 @@ class TestClusteringDataValidator:
                 "t": rands_array(10, 5),
             }
         )
-
         validation_results = ClusteringDataValidator().validate(
             target=["x"], df=df, n_cluster=3, explain_samples=False, max_train_samples=2
         )
@@ -232,3 +232,74 @@ class TestClusteringDataValidator:
         }
         assert "MaxTrainSamplesChecker" in validations_dict
         assert validations_dict["MaxTrainSamplesChecker"] == CheckLevels.CRITICAL
+
+
+class TestInterventionDataValidator:
+    def test_validate_column_exists(self):
+        df = pd.DataFrame(
+            {
+                "x": rands_array(10, 5),
+                "y": rands_array(10, 5),
+                "z": rands_array(10, 5),
+                "t": rands_array(10, 5),
+            }
+        )
+
+        validation_results = InterventionDataValidator().validate(
+            df=df,
+            target="x",
+            current_intervention_column="y",
+            new_intervention_column="b",
+            common_causes=["t"],
+        )
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "ColumnsExistChecker" in validations_dict
+        assert validations_dict["ColumnsExistChecker"] == CheckLevels.CRITICAL
+
+    def test_validate_column_identical(self):
+        df = pd.DataFrame(
+            {
+                "x": ["a" for _ in range(5)],
+                "y": ["a" for _ in range(5)],
+                "z": [1 for _ in range(5)],
+                "t": ["a" for _ in range(5)],
+            }
+        )
+
+        validation_results = InterventionDataValidator().validate(
+            df=df,
+            target="x",
+            current_intervention_column="y",
+            new_intervention_column="z",
+            common_causes=["t"],
+        )
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "SameTypeChecker" in validations_dict
+        assert validations_dict["SameTypeChecker"] == CheckLevels.CRITICAL
+
+    def test_validate_target_numerical(self):
+        df = pd.DataFrame(
+            {
+                "x": ["a" for _ in range(5)],
+                "y": ["a" for _ in range(5)],
+                "z": ["a" for _ in range(5)],
+                "t": ["a" for _ in range(5)],
+            }
+        )
+
+        validation_results = InterventionDataValidator().validate(
+            df=df,
+            target="x",
+            current_intervention_column="y",
+            new_intervention_column="z",
+            common_causes=["t"],
+        )
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "IsNumericalChecker" in validations_dict
+        assert validations_dict["IsNumericalChecker"] == CheckLevels.CRITICAL
