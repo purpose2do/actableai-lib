@@ -173,8 +173,6 @@ class TestIntervention:
     def test_intervention_with_common_causes_date(
         self, intervention_task: AAIInterventionTask, tmp_path
     ):
-        import pandas as pd
-
         current_intervention = ["a", None, "a", "a", "a", "b", "b", "b", "b", "b"]
         new_intervention = ["b", "b", "b", "b", "b", None, None, "a", "a", "a"]
         df = pd.DataFrame(
