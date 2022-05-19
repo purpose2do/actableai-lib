@@ -914,7 +914,7 @@ class IsCategoricalOrNumericalChecker(IChecker):
 
         bad_features = []
         for feature in features:
-            if not (get_type_special_no_ag(df[feature]) in ["numeric", "category"]):
+            if not (get_type_special_no_ag(df[feature]) in ["integer", "numeric", "category"]):
                 bad_features.append(feature)
         if len(bad_features) > 0:
             return CheckResult(
