@@ -198,4 +198,4 @@ class TestIntervention:
 
         assert r["status"] == "SUCCESS"
         assert "df" in r["data"]
-        assert r["data"]["df"].shape == (20, 11)
+        assert r["data"]["df"].shape == (20, 12)
