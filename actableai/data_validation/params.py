@@ -661,7 +661,6 @@ class InterventionDataValidator:
         current_intervention_column: str,
         new_intervention_column: str,
         common_causes: List[str],
-        causal_cv,
     ):
         validations = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
