@@ -103,12 +103,14 @@ class AAIInterventionTask(AAITask):
         # Preprocess data
         type_special = df.apply(get_type_special_no_ag)
         num_cols = (type_special == "numeric") | (type_special == "integer")
+        num_cols = list(df.loc[:, num_cols].columns)
         cat_cols = type_special == "category"
-        if num_cols.any():
+        cat_cols = list(df.loc[:, cat_cols].columns)
+        if len(num_cols):
             df.loc[:, num_cols] = SimpleImputer(strategy="median").fit_transform(
                 df.loc[:, num_cols]
             )
-        if cat_cols.any():
+        if len(cat_cols):
             df.loc[:, cat_cols] = SimpleImputer(strategy="most_frequent").fit_transform(
                 df.loc[:, cat_cols]
             )
@@ -166,7 +168,7 @@ class AAIInterventionTask(AAITask):
                 featurizer=None if X is None else DMLFeaturizer(),
                 cv=causal_cv,
                 linear_first_stages=False,
-                discrete_treatment=current_intervention_column not in num_cols,
+                discrete_treatment=current_intervention_column in cat_cols,
             )
         else:
             model_final = TabularPredictor(
