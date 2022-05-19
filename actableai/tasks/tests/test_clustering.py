@@ -121,9 +121,7 @@ class TestRemoteSegmentation:
 
         assert r["status"] == "SUCCESS"
         assert "data" in r
-        for cluster in r["data"]:
-            for row in cluster["value"]:
-                assert "explanation" in row["column"]
+        assert "shap_values" in r
 
     def test_segment_empty_col(self, clustering_task):
         df = pd.DataFrame(
