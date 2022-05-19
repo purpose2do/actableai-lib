@@ -195,12 +195,12 @@ class AAIInterventionTask(AAITask):
         causal_model.fit(
             df[[target]].values,
             df[[current_intervention_column]].values,
-            X=X,
+            X=X.values if X is not None else None,
             cache_values=True,
         )
 
         effects = causal_model.effect(
-            X,
+            X.values if X is not None else None,
             T0=df[[current_intervention_column]],  # type: ignore
             T1=df[[new_intervention_column]],  # type: ignore
         )
@@ -209,7 +209,7 @@ class AAIInterventionTask(AAITask):
         df["intervention_effect"] = effects.flatten()  # type: ignore
         if cate_alpha is not None:
             lb, ub = causal_model.effect_interval(
-                X,
+                X.values if X is not None else None,
                 T0=df[[current_intervention_column]],  # type: ignore
                 T1=df[[new_intervention_column]],  # type: ignore
                 alpha=cate_alpha,
