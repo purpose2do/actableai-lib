@@ -306,6 +306,22 @@ class AAIInterventionTask(AAITask):
                 "model_y_feature_importances"
             ] = model_y_feature_importances
 
+        # Display plot in front end
+        if current_intervention_column in num_cols:
+            intervention_diff = (
+                df[new_intervention_column] - df[current_intervention_column]
+            )
+        else:
+            intervention_diff = None
+        estimation_results["intervention_plot"] = {
+            "type": "category"
+            if current_intervention_column in cat_cols
+            else "numeric",
+            "intervention_diff": intervention_diff,
+            "min_target": df[target].min(),
+            "max_target": df[target].max(),
+        }
+
         return {
             "status": "SUCCESS",
             "messenger": "",
