@@ -922,3 +922,27 @@ class IsCategoricalOrNumericalChecker(IChecker):
                 level=self.level,
                 message=f"{', '.join(bad_features)} are not numerical or categorical",
             )
+
+class SameTypeChecker(IChecker):
+    def __init__(self, level, name="SameTypeChecker"):
+        self.name = name
+        self.level = level
+
+    def check(self, df: pd.DataFrame, features: List[str]) -> Optional[CheckResult]:
+        """Check if the features are categorical or numerical.
+
+        Args:
+            df: Dataframe to check.
+            features: Features to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
+        og_type = get_type_special_no_ag(df[features[0]])
+        for feature in features:
+            if get_type_special_no_ag(df[feature]) != og_type:
+                return CheckResult(
+                    name=self.name,
+                    level=self.level,
+                    message=f"{', '.join(features)} are not of the same type",
+                )

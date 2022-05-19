@@ -678,5 +678,8 @@ class InterventionDataValidator:
             IsCategoricalOrNumericalChecker(level=CheckLevels.CRITICAL).check(
                 df, [current_intervention_column, new_intervention_column]
             ),
+            SameTypeChecker(level=CheckLevels.CRITICAL).check(
+                df, [current_intervention_column, new_intervention_column]
+            ),
         ]
         return validations
