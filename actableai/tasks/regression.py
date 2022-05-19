@@ -74,18 +74,15 @@ class _AAIRegressionTrainTask(AAITask):
                 - Predicted shap values if explain_samples is true
                 - Leaderboard of the best model ran by AutoGluon
         """
-        import os
         import shap
         import pandas as pd
-        from sklearn.model_selection import train_test_split
         from autogluon.tabular import TabularPredictor
         from autogluon.features.generators import AutoMLPipelineFeatureGenerator
         from actableai.utils import (
-            preprocess_data_for_shap,
-            AutogluonShapWrapper,
             debiasing_feature_generator_args,
         )
         from actableai.debiasing.debiasing_model import DebiasingModel
+        from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
 
         ag_args_fit = {}
         feature_generator_args = {}
@@ -126,6 +123,19 @@ class _AAIRegressionTrainTask(AAITask):
             feature_generator=AutoMLPipelineFeatureGenerator(**feature_generator_args),
             time_limit=time_limit,
         )
+
+        explainer = None
+        if explain_samples:
+            # Filter out models which are not compatible with explanations
+            while not AutoGluonShapTreeExplainer.is_predictor_compatible(predictor):
+                predictor.delete_models(
+                    models_to_delete=predictor.get_model_best(),
+                    dry_run=False,
+                    allow_delete_cascade=True,
+                )
+
+            explainer = AutoGluonShapTreeExplainer(predictor)
+
         predictor.persist_models()
         leaderboard = predictor.leaderboard(extra_info=True)
         pd.set_option("chained_assignment", "warn")
@@ -170,25 +180,13 @@ class _AAIRegressionTrainTask(AAITask):
             }
         )
 
-        explainer = None
-        if explain_samples:
-            df_full = df_train.append(df_val).append(df_test).drop(columns=[target])
-
-            shap_data = preprocess_data_for_shap(df_full)
-            ag_wrapper = AutogluonShapWrapper(predictor, shap_data.columns)
-            explainer = shap.KernelExplainer(
-                ag_wrapper.predict, shap_data, feature_names=shap_data.columns
-            )
-
         predictions = []
         prediction_low = []
         prediction_high = []
         predict_shap_values = []
         if run_model:
             if explain_samples:
-                predict_shap_values = explainer.shap_values(
-                    preprocess_data_for_shap(df_test)
-                ).tolist()
+                predict_shap_values = explainer.shap_values(df_test)
 
             predictions = predictor.predict(df_test).tolist()
             if prediction_quantile_low is not None:
@@ -514,22 +512,17 @@ class AAIRegressionTask(AAITask):
         Returns:
             Dict: Dictionnary containing results.
         """
-        import os
-        import ray
-        import psutil
         import time
-        import json
         from tempfile import mkdtemp
         import numpy as np
         import pandas as pd
         from scipy.stats import spearmanr
         from sklearn.model_selection import train_test_split
         from sklearn.neighbors import KernelDensity
-        from autogluon.tabular import TabularPredictor
         from actableai.regression.quantile import ag_quantile_hyperparameters
         from actableai.utils import (
             memory_efficient_hyperparameters,
-            preprocess_data_for_shap,
+            explanation_hyperparameters,
         )
         from actableai.data_validation.params import RegressionDataValidator
         from actableai.data_validation.base import (
@@ -602,7 +595,10 @@ class AAIRegressionTask(AAITask):
             }
 
         if hyperparameters is None:
-            hyperparameters = memory_efficient_hyperparameters()
+            if explain_samples:
+                hyperparameters = explanation_hyperparameters()
+            else:
+                hyperparameters = memory_efficient_hyperparameters()
 
         # Split data
         df_train = df[pd.notnull(df[target])]
@@ -712,7 +708,7 @@ class AAIRegressionTask(AAITask):
 
             if explain_samples:
                 eval_shap_values = explainer.shap_values(
-                    preprocess_data_for_shap(df_val[features + biased_groups])
+                    df_val[features + biased_groups]
                 )
 
         # Prediction

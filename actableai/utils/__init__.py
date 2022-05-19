@@ -340,6 +340,21 @@ def debiasing_hyperparameters():
     return {"LR": {}}
 
 
+def explanation_hyperparameters():
+    from autogluon.tabular.configs.hyperparameter_configs import (
+        hyperparameter_config_dict,
+    )
+
+    hyperparameters = deepcopy(hyperparameter_config_dict["default"])
+
+    compatible_models = {"GBM", "CAT", "XGB", "RF", "XT"}
+    for model_name in hyperparameter_config_dict["default"].keys():
+        if model_name not in compatible_models:
+            del hyperparameters[model_name]
+
+    return hyperparameters
+
+
 def debiasing_feature_generator_args():
     return {
         "enable_numeric_features": True,

@@ -20,11 +20,13 @@ def test_run_cross_validation():
         important_features,
         evaluate,
         df_val_cross_val_pred_prob,
+        predict_shap_values,
         df_val,
         leaderboard,
     ) = run_cross_validation(
         classification_train_task=task,
         problem_type="multiclass",
+        explain_samples=False,
         positive_label=None,
         kfolds=5,
         cross_validation_max_concurrency=1,
@@ -33,7 +35,9 @@ def test_run_cross_validation():
         model_directory=mkdtemp(prefix="autogluon_model"),
         target="y",
         features=["x"],
+        run_model=False,
         df_train=df_train,
+        df_test=None,
         drop_duplicates=True,
         run_debiasing=False,
         biased_groups=[],
@@ -48,5 +52,6 @@ def test_run_cross_validation():
     assert evaluate is not None
     assert ensemble_model is not None
     assert df_val_cross_val_pred_prob is not None
+    assert predict_shap_values is not None
     assert df_val is not None
     assert leaderboard is not None
