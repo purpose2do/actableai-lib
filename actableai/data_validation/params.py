@@ -113,6 +113,16 @@ class RegressionDataValidator:
                 )
             )
 
+        # Check explain samples (incompatible with debiasing)
+        if run_debiasing and explain_samples:
+            validation_results.append(
+                CheckResult(
+                    name="ExplanationChecker",
+                    level=CheckLevels.CRITICAL,
+                    message="Debiasing is incompatible explanation",
+                )
+            )
+
         if run_debiasing:
             validation_results.append(
                 DoNotContainTextChecker(level=CheckLevels.CRITICAL).check(
@@ -287,6 +297,16 @@ class ClassificationDataValidator:
                     name="PresetsChecker",
                     level=CheckLevels.CRITICAL,
                     message="Optimize for performance is incompatible with debiasing",
+                )
+            )
+
+        # Check explain samples (incompatible with debiasing)
+        if run_debiasing and explain_samples:
+            validation_results.append(
+                CheckResult(
+                    name="ExplanationChecker",
+                    level=CheckLevels.CRITICAL,
+                    message="Debiasing is incompatible explanation",
                 )
             )
 

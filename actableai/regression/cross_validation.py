@@ -244,7 +244,7 @@ def run_cross_validation(
         if explain_samples:
             predict_shap_values = np.mean(
                 cross_val_predict_shap_values, axis=0
-            ).tolist()
+            )
 
         predictions = np.mean(cross_val_predictions, axis=0).tolist()
         if prediction_quantile_low is not None:

@@ -3,53 +3,8 @@ import os
 import pandas as pd
 import uuid
 from copy import deepcopy
-from pandas.core.frame import DataFrame
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
-
-
-class AutogluonShapWrapper:
-    def __init__(self, predictor, feature_names):
-        self.ag_model = predictor
-        self.feature_names = feature_names
-
-    def predict(self, X):
-        if isinstance(X, pd.Series):
-            X = X.values.reshape(1, -1)
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X, columns=self.feature_names)
-        return self.ag_model.predict(X)
-
-    def predict_proba(self, X):
-        if isinstance(X, pd.Series):
-            X = X.values.reshape(1, -1)
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X, columns=self.feature_names)
-        return self.ag_model.predict_proba(X)
-
-
-class AnchorWrapper(object):
-    def __init__(self, predictor, columns, cat_columns, ordinal_encoder=None):
-        self.predictor = predictor
-        self.columns = columns
-        self.ordinal_encoder = ordinal_encoder
-        self.cat_columns = cat_columns
-
-    def predict_proba(self, X):
-        df = pd.DataFrame(X, columns=self.columns)
-        if len(self.cat_columns) > 0:
-            df[self.cat_columns] = self.ordinal_encoder.inverse_transform(
-                df[self.cat_columns]
-            )
-        return self.predictor.predict_proba(df)
-
-    def predict(self, X):
-        df = pd.DataFrame(X, columns=self.columns)
-        if len(self.cat_columns) > 0:
-            df[self.cat_columns] = self.ordinal_encoder.inverse_transform(
-                df[self.cat_columns]
-            )
-        return self.predictor.predict(df)
 
 
 def fill_na(df, fillna_dict=None, fill_median=True):
@@ -68,22 +23,6 @@ def fill_na(df, fillna_dict=None, fill_median=True):
         df[ordinal_cols] = df[ordinal_cols].fillna(fillna_dict[int])
 
     return df
-
-
-def explain_predictions(df, cat_cols, explainer, encoder=None, threshold=0.80):
-    df_processed = preprocess_data_for_anchor(df, cat_cols, encoder)
-    predict_explains = []
-    origin_indices = df.index.values
-    for idx, row in enumerate(df_processed):
-        explanation = explainer.explain(row, threshold=threshold)
-        explanation_dict = {}
-        explanation_dict["anchor"] = explanation.anchor
-        explanation_dict["precision"] = explanation.precision
-        explanation_dict["coverage"] = explanation.coverage
-        explanation_dict["index"] = int(origin_indices[idx])
-        predict_explains.append(explanation_dict)
-        print(explanation_dict)
-    return predict_explains
 
 
 def handle_datetime_features(df):
@@ -105,42 +44,11 @@ def handle_boolean_features(df):
     return df
 
 
-def preprocess_data_for_anchor(df, cat_cols, encoder=None):
-    if len(cat_cols) > 0:
-        df[cat_cols] = encoder.transform(df[cat_cols])
-    return df.values
-
-
 def preprocess_dataset(df):
     df = handle_datetime_features(df)
     df = handle_boolean_features(df)
     df = fill_na(df)
     return df
-
-
-def create_explainer(df, predictor, cat_map, encoder=None, ncpu=1):
-    from alibi.explainers import AnchorTabular, DistributedAnchorTabular
-    from actableai.utils import AnchorWrapper
-
-    cat_cols = df.columns[list(cat_map.keys())]
-    anchor_wrapper = AnchorWrapper(predictor, df.columns, cat_cols, encoder)
-    if ncpu > 1:
-        explainer = DistributedAnchorTabular(
-            anchor_wrapper.predict_proba, df.columns, categorical_names=cat_map
-        )
-        explainer.fit(
-            preprocess_data_for_anchor(df, cat_cols, encoder),
-            disc_perc=[25, 50, 75],
-            ncpu=ncpu,
-        )
-    else:
-        explainer = AnchorTabular(
-            anchor_wrapper.predict_proba, df.columns, categorical_names=cat_map
-        )
-        explainer.fit(
-            preprocess_data_for_anchor(df, cat_cols, encoder), disc_perc=[25, 50, 75]
-        )
-    return explainer
 
 
 def get_type_special(X: pd.Series) -> str:
@@ -283,12 +191,6 @@ def check_if_integer_feature(X: pd.Series):
     return np.array_equal(clean_X.values, clean_X.values.astype(int))
 
 
-def gen_anchor_explanation(anchor, total_samples):
-    return "{}% of similar generated samples that satisfy {} are predicted to belong to this class".format(
-        int(anchor["precision"] * 100), " and ".join(anchor["anchor"])
-    )
-
-
 def memory_efficient_hyperparameters():
     from autogluon.tabular.configs.hyperparameter_configs import (
         hyperparameter_config_dict,
@@ -305,17 +207,6 @@ def memory_efficient_hyperparameters():
     hyperparameters["AG_TEXT_NN"] = {}
 
     return hyperparameters
-
-
-def preprocess_data_for_shap(X: DataFrame):
-    from autogluon.features.generators import DatetimeFeatureGenerator
-
-    shap_data = X.copy()
-    datetime_columns = X.select_dtypes(include=["datetime"]).columns
-    shap_data[datetime_columns] = DatetimeFeatureGenerator().fit_transform(
-        shap_data[datetime_columns]
-    )
-    return shap_data
 
 
 def fast_categorical_hyperparameters():
@@ -338,6 +229,21 @@ def fast_categorical_hyperparameters():
 
 def debiasing_hyperparameters():
     return {"LR": {}}
+
+
+def explanation_hyperparameters():
+    from autogluon.tabular.configs.hyperparameter_configs import (
+        hyperparameter_config_dict,
+    )
+
+    hyperparameters = deepcopy(hyperparameter_config_dict["default"])
+
+    compatible_models = {"GBM", "CAT", "XGB", "RF", "XT"}
+    for model_name in hyperparameter_config_dict["default"].keys():
+        if model_name not in compatible_models:
+            del hyperparameters[model_name]
+
+    return hyperparameters
 
 
 def debiasing_feature_generator_args():
