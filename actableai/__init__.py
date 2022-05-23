@@ -1,1 +1,1 @@
-from .tasks.intervention import AAIInterventionTask # noqa
+from .tasks.intervention import AAIInterventionTask  # noqa

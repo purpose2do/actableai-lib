@@ -772,6 +772,7 @@ class TestRemoteRegressionCrossValidation:
                     assert "y" in chart
                     assert type(chart["y"]) is list
 
+
 class TestDebiasing:
     def test_simple_debiasing_feature(self, regression_task, tmp_path):
         df = pd.DataFrame(

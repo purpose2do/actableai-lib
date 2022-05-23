@@ -73,7 +73,7 @@ class SKLearnWrapper:
         x_w_columns: Optional[List] = None,
         hyperparameters: Optional[Union[List, Dict]] = None,
         presets: Optional[str] = "best_quality",
-        ag_args_fit: Optional[Dict] = None
+        ag_args_fit: Optional[Dict] = None,
     ):
         """Construct a sklearn wrapper object
 

@@ -267,11 +267,13 @@ def run_cross_validation(
     )
 
     metric_groups = pd.concat(cross_val_evaluates["metrics"]).groupby("metric")
-    metric_df = pd.DataFrame({
-        "metrics": metric_groups.mean()["value"].index,
-        "value": metric_groups.mean()["value"].values.flatten(),
-        "stderr": metric_groups.agg(np.std)["value"].values/sqrt_k,
-    })
+    metric_df = pd.DataFrame(
+        {
+            "metrics": metric_groups.mean()["value"].index,
+            "value": metric_groups.mean()["value"].values.flatten(),
+            "stderr": metric_groups.agg(np.std)["value"].values / sqrt_k,
+        }
+    )
     evaluate = {
         "problem_type": cross_val_evaluates["problem_type"][0],
         "labels": [str(x) for x in cross_val_evaluates["labels"][0]],

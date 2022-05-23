@@ -275,7 +275,7 @@ class TestInterventionDataValidator:
             current_intervention_column="y",
             new_intervention_column="z",
             common_causes=["t"],
-            causal_cv=1
+            causal_cv=1,
         )
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
@@ -299,7 +299,7 @@ class TestInterventionDataValidator:
             current_intervention_column="y",
             new_intervention_column="z",
             common_causes=["t"],
-            causal_cv=1
+            causal_cv=1,
         )
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
@@ -323,7 +323,7 @@ class TestInterventionDataValidator:
             current_intervention_column="y",
             new_intervention_column="z",
             common_causes=["t"],
-            causal_cv=2
+            causal_cv=2,
         )
 
         validations_dict = {
