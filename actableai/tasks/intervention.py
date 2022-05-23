@@ -53,6 +53,7 @@ class AAIInterventionTask(AAITask):
         from dowhy import CausalModel
         import numpy as np
         import networkx as nx
+        from sklearn.preprocessing import LabelEncoder
 
         from actableai.utils.preprocessors.preprocessing import (
             CustomSimpleImputerTransformer,
@@ -306,17 +307,20 @@ class AAIInterventionTask(AAITask):
             ] = model_y_feature_importances
 
         # Display plot in front end
+        intervention_names = None
         if current_intervention_column in num_cols:
             intervention_diff = (
                 df[new_intervention_column] - df[current_intervention_column]
             )
         else:
-            intervention_diff = None
+            intervention_names = df["location"] + " -> " + df["new_location"]
+            intervention_diff = LabelEncoder().fit_transform(intervention_names)
         estimation_results["intervention_plot"] = {
             "type": "category"
             if current_intervention_column in cat_cols
             else "numeric",
             "intervention_diff": intervention_diff,
+            "intervention_names": intervention_names,
             "min_target": df[target].min(),
             "max_target": df[target].max(),
         }
