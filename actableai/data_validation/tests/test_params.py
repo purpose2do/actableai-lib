@@ -251,6 +251,7 @@ class TestInterventionDataValidator:
             current_intervention_column="y",
             new_intervention_column="b",
             common_causes=["t"],
+            causal_cv=1,
         )
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
@@ -274,6 +275,7 @@ class TestInterventionDataValidator:
             current_intervention_column="y",
             new_intervention_column="z",
             common_causes=["t"],
+            causal_cv=1
         )
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
@@ -297,9 +299,35 @@ class TestInterventionDataValidator:
             current_intervention_column="y",
             new_intervention_column="z",
             common_causes=["t"],
+            causal_cv=1
         )
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
         }
         assert "IsNumericalChecker" in validations_dict
         assert validations_dict["IsNumericalChecker"] == CheckLevels.CRITICAL
+
+    def test_validate_causal_cv(self):
+        df = pd.DataFrame(
+            {
+                "x": ["a", "b", "c", "d", "e"],
+                "y": ["a", "b", "c", "d", "e"],
+                "z": ["a", "b", "c", "d", "e"],
+                "t": ["a", "b", "c", "d", "e"],
+            }
+        )
+
+        validation_results = InterventionDataValidator().validate(
+            df=df,
+            target="x",
+            current_intervention_column="y",
+            new_intervention_column="z",
+            common_causes=["t"],
+            causal_cv=2
+        )
+
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "StratifiedKFoldChecker" in validations_dict
+        assert validations_dict["StratifiedKFoldChecker"] == CheckLevels.CRITICAL
