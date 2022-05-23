@@ -46,18 +46,13 @@ class AAIInterventionTask(AAITask):
             Dict: Dictionnay containing the following keys:
                 - 'df': DataFrame with the intervention
         """
-        import pandas as pd
         from tempfile import mkdtemp
         from econml.dml import LinearDML, NonParamDML
         from autogluon.tabular import TabularPredictor
         from dowhy import CausalModel
         import numpy as np
         import networkx as nx
-        from sklearn.preprocessing import LabelEncoder
 
-        from actableai.utils.preprocessors.preprocessing import (
-            CustomSimpleImputerTransformer,
-        )
         from actableai.data_validation.params import InterventionDataValidator
         from actableai.causal.predictors import SKLearnWrapper
         from actableai.utils.preprocessors.autogluon_preproc import DMLFeaturizer
