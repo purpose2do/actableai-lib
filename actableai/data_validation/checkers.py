@@ -914,7 +914,10 @@ class IsCategoricalOrNumericalChecker(IChecker):
 
         bad_features = []
         for feature in features:
-            if not (get_type_special_no_ag(df[feature]) in ["integer", "numeric", "category"]):
+            if not (
+                get_type_special_no_ag(df[feature])
+                in ["integer", "numeric", "category"]
+            ):
                 bad_features.append(feature)
         if len(bad_features) > 0:
             return CheckResult(
@@ -922,6 +925,7 @@ class IsCategoricalOrNumericalChecker(IChecker):
                 level=self.level,
                 message=f"{', '.join(bad_features)} are not numerical or categorical",
             )
+
 
 class SameTypeChecker(IChecker):
     def __init__(self, level, name="SameTypeChecker"):
@@ -945,4 +949,35 @@ class SameTypeChecker(IChecker):
                     name=self.name,
                     level=self.level,
                     message=f"{', '.join(features)} are not of the same type",
+                )
+
+
+class CategoricalSameValuesChecker(IChecker):
+    def __init__(self, level, name="CategoricalSameValuesChecker"):
+        self.name = name
+        self.level = level
+
+    def check(
+        self,
+        df: pd.DataFrame,
+        current_intervention_column: str,
+        new_intervention_column: str,
+    ) -> Optional[CheckResult]:
+        """Check if the categorical features have the same values.
+
+        Args:
+            df: Dataframe to check.
+            features: Features to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
+        og_values = df[current_intervention_column].unique()
+        for value in df[new_intervention_column].unique():
+            if not (value in og_values):
+                return CheckResult(
+                    name=self.name,
+                    level=self.level,
+                    message=f"New Intervention : {new_intervention_column} has unseen values than current intervetion : {current_intervention_column}."
+                    + f"When intervention is categorical please make sure that the new intervention column has the same values as the current intervention column.",
                 )

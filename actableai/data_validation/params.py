@@ -681,4 +681,10 @@ class InterventionDataValidator:
                 df, [current_intervention_column, new_intervention_column]
             ),
         ]
+        if get_type_special_no_ag(df[current_intervention_column]) == "categorical":
+            validations.append(
+                CategoricalSameValuesChecker(level=CheckLevels.CRITICAL).check(
+                    df, current_intervention_column, new_intervention_column
+                )
+            )
         return validations
