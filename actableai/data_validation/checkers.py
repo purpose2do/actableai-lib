@@ -989,7 +989,7 @@ class StratifiedKFoldChecker(IChecker):
         self.level = level
 
     def check(
-        self, df: pd.DataFrame, intervention: str, causal_cv
+        self, df: pd.DataFrame, intervention: str, causal_cv: int
     ) -> Optional[CheckResult]:
         """Check if the features can be splitted into stratified folds.
 

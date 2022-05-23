@@ -283,3 +283,20 @@ class TestCategoricalSameValuesChecker:
         assert result is not None
         assert result.name == "CategoricalSameValuesChecker"
         assert result.level == CheckLevels.CRITICAL
+
+
+class TestStratifiedKFoldChecker:
+    def test_check(self):
+        checker = StratifiedKFoldChecker(
+            level=CheckLevels.CRITICAL, name="StratifiedKFoldChecker"
+        )
+        df = pd.DataFrame(
+            {
+                "x": ["a", "a", "a", "b", "b", "b", "c", "c", "c", "d"],
+                "y": ["a", "a", "a", "b", "b", "b", "c", "c", "c", "e"],
+            }
+        )
+        result = checker.check(df, "x", 20)
+        assert result is not None
+        assert result.name == "StratifiedKFoldChecker"
+        assert result.level == CheckLevels.CRITICAL
