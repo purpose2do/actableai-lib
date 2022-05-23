@@ -44,7 +44,6 @@ class DMLFeaturizer:
         return self.transform(X)
 
     def transform(self, X):
-        print("DMLFeaturizer")
         X = DataFrameTransformer().fit_transform(X)
         type_special = X.apply(get_type_special_no_ag)
         ct = ColumnTransformer(
@@ -72,5 +71,4 @@ class DMLFeaturizer:
             verbose=True,
         )
         result = ct.fit_transform(X)
-        print(result)
         return result

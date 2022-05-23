@@ -62,9 +62,6 @@ class PercentageTransformer(_OneToOneFeatureMixin, BaseEstimator, TransformerMix
     def fit_transform(self, X, y=None, **fit_params):
         return self.transform(X, y)
 
-class CustomSimpleImputerTransformer(_OneToOneFeatureMixin, SimpleImputer):
-    pass
-
 
 class SKLearnAGFeatureWrapperBase(TransformerMixin, BaseEstimator):
     """SKLearn Transformer Wrapper around AutoGluonFeature Generator

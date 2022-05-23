@@ -321,7 +321,6 @@ class AAIRegressionTask(AAITask):
             UNIQUE_CATEGORY_THRESHOLD,
         )
         from actableai.regression.cross_validation import run_cross_validation
-        from actableai.tasks.regression import _AAIRegressionTrainTask
         from actableai.utils.sanitize import sanitize_timezone
 
         start = time.time()
