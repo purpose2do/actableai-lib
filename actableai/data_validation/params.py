@@ -661,6 +661,7 @@ class InterventionDataValidator:
         current_intervention_column: str,
         new_intervention_column: str,
         common_causes: List[str],
+        causal_cv,
     ):
         validations = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
@@ -681,10 +682,16 @@ class InterventionDataValidator:
                 df, [current_intervention_column, new_intervention_column]
             ),
         ]
-        if get_type_special_no_ag(df[current_intervention_column]) == "categorical":
+        if get_type_special_no_ag(df[current_intervention_column]) == "category":
             validations.append(
                 CategoricalSameValuesChecker(level=CheckLevels.CRITICAL).check(
                     df, current_intervention_column, new_intervention_column
                 )
             )
+            validations.append(
+                StratifiedKFoldChecker(level=CheckLevels.CRITICAL).check(
+                    df, current_intervention_column, causal_cv
+                )
+            )
+
         return validations

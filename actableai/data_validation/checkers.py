@@ -981,3 +981,29 @@ class CategoricalSameValuesChecker(IChecker):
                     message=f"New Intervention : {new_intervention_column} has unseen values than current intervetion : {current_intervention_column}."
                     + f"When intervention is categorical please make sure that the new intervention column has the same values as the current intervention column.",
                 )
+
+
+class StratifiedKFoldChecker(IChecker):
+    def __init__(self, level, name="StratifiedKFoldChecker"):
+        self.name = name
+        self.level = level
+
+    def check(
+        self, df: pd.DataFrame, intervention: str, causal_cv
+    ) -> Optional[CheckResult]:
+        """Check if the features can be splitted into stratified folds.
+
+        Args:
+            df: Dataframe to check.
+            features: Features to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
+
+        if df[intervention].value_counts().min() < causal_cv:
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"The count of each unique values in the intervention column ({intervention}) must be greater than or equal to causal_cv : {causal_cv}.",
+            )
