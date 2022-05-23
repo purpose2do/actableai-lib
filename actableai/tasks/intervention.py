@@ -313,7 +313,7 @@ class AAIInterventionTask(AAITask):
                 df[new_intervention_column] - df[current_intervention_column]
             )
         else:
-            intervention_names = df["location"] + " -> " + df["new_location"]
+            intervention_names = df[current_intervention_column] + " -> " + df[new_intervention_column]
             intervention_diff = LabelEncoder().fit_transform(intervention_names)
         estimation_results["intervention_plot"] = {
             "type": "category"
