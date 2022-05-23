@@ -84,7 +84,7 @@ class AAIInterventionTask(AAITask):
             current_intervention_column,
             new_intervention_column,
             common_causes,
-            causal_cv
+            causal_cv,
         )
         failed_checks = [
             check for check in data_validation_results if check is not None
@@ -309,13 +309,32 @@ class AAIInterventionTask(AAITask):
 
         # Display plot in front end
         intervention_names = None
+        intervention_diff = None
+        pair_dict = None
         if current_intervention_column in num_cols:
             intervention_diff = (
                 df[new_intervention_column] - df[current_intervention_column]
             )
         else:
-            intervention_names = df[current_intervention_column] + " -> " + df[new_intervention_column]
-            intervention_diff = LabelEncoder().fit_transform(intervention_names)
+            intervention_names = (
+                df[current_intervention_column] + " -> " + df[new_intervention_column]
+            )
+            pair_dict = {}
+            for _, val in df.iterrows():
+                intervention_name = (
+                    val[current_intervention_column]
+                    + " -> "
+                    + val[new_intervention_column]
+                )
+                if intervention_name not in pair_dict:
+                    pair_dict[intervention_name] = {
+                        "original_target": [],
+                        "target_intervened": [],
+                    }
+                pair_dict[intervention_name]["original_target"].append(val[target])
+                pair_dict[intervention_name]["target_intervened"].append(
+                    val[target + "_intervened"]
+                )
         estimation_results["intervention_plot"] = {
             "type": "category"
             if current_intervention_column in cat_cols
@@ -324,6 +343,7 @@ class AAIInterventionTask(AAITask):
             "intervention_names": intervention_names,
             "min_target": df[target].min(),
             "max_target": df[target].max(),
+            "pair_dict": pair_dict,
         }
 
         return {
