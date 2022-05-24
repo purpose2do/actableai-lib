@@ -6,6 +6,7 @@ from actableai.data_validation.base import CheckLevels
 from actableai.data_validation.params import (
     BayesianRegressionDataValidator,
     CausalDataValidator,
+    ClusteringDataValidator,
     CorrelationDataValidator,
     RegressionDataValidator,
     ClassificationDataValidator,
@@ -185,3 +186,24 @@ class TestCorrelationDataValidator:
         }
         assert "IsSufficientDataChecker" in validations_dict
         assert validations_dict["IsSufficientDataChecker"] == CheckLevels.CRITICAL
+
+class TestClusteringDataValidator:
+    def test_validate(self):
+        df = pd.DataFrame(
+            {
+                "x": rands_array(10, 5),
+                "y": rands_array(10, 5),
+                "z": rands_array(10, 5),
+                "t": rands_array(10, 5),
+            }
+        )
+
+        validation_results = ClusteringDataValidator().validate(
+            target="x", df=df, n_cluster=3, explain_samples=False, max_train_samples=2
+        )
+
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "MaxTrainSamplesChecker" in validations_dict
+        assert validations_dict["MaxTrainSamplesChecker"] == CheckLevels.CRITICAL
