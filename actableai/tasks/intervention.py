@@ -58,8 +58,6 @@ class AAIInterventionTask(AAITask):
         from actableai.utils.preprocessors.autogluon_preproc import DMLFeaturizer
         from actableai.utils import get_type_special_no_ag
 
-        # from actableai.utils import memory_efficient_hyperparameters
-
         start = time.time()
         # Handle default parameters
         if model_directory is None:
@@ -68,7 +66,7 @@ class AAIInterventionTask(AAITask):
             common_causes = []
         if presets is None:
             presets = "medium_quality_faster_train"
-        causal_cv = 3 if causal_cv is None else causal_cv
+        causal_cv = 1 if causal_cv is None else causal_cv
 
         df = df.copy()
 
