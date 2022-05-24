@@ -92,7 +92,11 @@ class AAIClusteringTask(AAITask):
         df_train = df[features]
 
         data_validation_results = ClusteringDataValidator().validate(
-            features, df_train, n_cluster=num_clusters, explain_samples=explain_samples
+            features,
+            df_train,
+            n_cluster=num_clusters,
+            explain_samples=explain_samples,
+            max_train_samples=max_train_samples,
         )
         failed_checks = [x for x in data_validation_results if x is not None]
         if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
@@ -132,7 +136,10 @@ class AAIClusteringTask(AAITask):
         transformed_values = preprocessor.fit_transform(
             df_train.values, categorical_cols=categorical_features
         )
-
+        if num_clusters == "auto":
+            auto_num_clusters_max = min(
+                auto_num_clusters_max, max_train_samples
+            )
         dec = DEC(
             dims=[transformed_values.shape[-1], 500, 500, 2000, 10],
             init=init,

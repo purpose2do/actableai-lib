@@ -466,7 +466,9 @@ class ClusteringDataValidator:
     def __init__(self):
         pass
 
-    def validate(self, target, df, n_cluster, explain_samples=False):
+    def validate(
+        self, target, df, n_cluster, explain_samples=False, max_train_samples=None
+    ):
         return [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(df, target),
             DoNotContainEmptyColumnsChecker(level=CheckLevels.WARNING).check(
@@ -489,6 +491,9 @@ class ClusteringDataValidator:
             if explain_samples
             else None,
             DoNotContainTextChecker(level=CheckLevels.CRITICAL).check(df, target),
+            MaxTrainSamplesChecker(level=CheckLevels.CRITICAL).check(
+                n_cluster=n_cluster, max_samples=max_train_samples
+            ),
         ]
 
 

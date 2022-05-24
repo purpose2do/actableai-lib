@@ -1,7 +1,7 @@
 import numpy as np
 from collections import Counter
 from sklearn.preprocessing import PolynomialFeatures
-from typing import Optional
+from typing import Optional, Union
 
 from actableai.bayesian_regression.utils import expand_polynomial_categorical
 from actableai.data_imputation.error_detector.rule_parser import RulesBuilder
@@ -836,4 +836,29 @@ class RegressionEvalMetricChecker(IChecker):
         ]:
             return CheckResult(
                 name=self.name, level=self.level, message="Invalid eval_metric"
+            )
+
+
+class MaxTrainSamplesChecker(IChecker):
+    def __init__(self, level, name="MaxTrainSamplesChecker"):
+        self.name = name
+        self.level = level
+
+    def check(
+        self, n_cluster: Union[str, int], max_samples: int
+    ) -> Optional[CheckResult]:
+        """Check if the number of samples is not too large for the model.
+
+        Args:
+            df: Dataframe to check.
+            max_samples: Maximum number of samples.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
+        if type(n_cluster) == int and n_cluster > max_samples:  # type: ignore
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"If n_cluster ({n_cluster}) is specified, it should be less than max_samples ({max_samples})",
             )
