@@ -1,11 +1,9 @@
-import numpy as np
 from collections import Counter
 from sklearn.preprocessing import PolynomialFeatures
 from typing import Optional, Union
 
-from actableai.bayesian_regression.utils import expand_polynomial_categorical
 from actableai.data_imputation.error_detector.rule_parser import RulesBuilder
-from actableai.data_validation.base import *
+from actableai.data_validation.base import IChecker, CheckResult, CheckLevels
 
 
 class IsNumericalChecker(IChecker):
