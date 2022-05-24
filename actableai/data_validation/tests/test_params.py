@@ -187,6 +187,7 @@ class TestCorrelationDataValidator:
         assert "IsSufficientDataChecker" in validations_dict
         assert validations_dict["IsSufficientDataChecker"] == CheckLevels.CRITICAL
 
+
 class TestClusteringDataValidator:
     def test_validate(self):
         df = pd.DataFrame(
