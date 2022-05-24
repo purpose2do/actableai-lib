@@ -200,7 +200,7 @@ class TestClusteringDataValidator:
         )
 
         validation_results = ClusteringDataValidator().validate(
-            target="x", df=df, n_cluster=3, explain_samples=False, max_train_samples=2
+            target=["x"], df=df, n_cluster=3, explain_samples=False, max_train_samples=2
         )
 
         validations_dict = {
