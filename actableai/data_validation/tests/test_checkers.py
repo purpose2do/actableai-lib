@@ -209,7 +209,7 @@ class TestIsSufficientClassSampleChecker:
 class TestMaxTrainSamplesChecker:
     def test_check(self):
         mtsc = MaxTrainSamplesChecker(
-            level=CheckLevels.WARNING, name="MaxTrainSamplesChecker"
+            level=CheckLevels.CRITICAL, name="MaxTrainSamplesChecker"
         )
         result = mtsc.check(n_cluster=3, max_samples=2)
         assert result is not None
