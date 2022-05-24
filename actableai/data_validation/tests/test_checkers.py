@@ -27,7 +27,7 @@ class TestIsCategoricalChecker:
         c1 = IsCategoricalChecker(level=CheckLevels.CRITICAL).check(df["y"])
         c2 = IsCategoricalChecker(level=CheckLevels.CRITICAL).check(df["z"])
         assert isinstance(c1, CheckResult)
-        assert c2 == None
+        assert c2 is None
 
 
 class TestDoNotContainMixedChecker:
@@ -42,7 +42,7 @@ class TestDoNotContainMixedChecker:
         c1 = DoNotContainMixedChecker(level=CheckLevels.CRITICAL).check(df, ["y"])
         c2 = DoNotContainMixedChecker(level=CheckLevels.CRITICAL).check(df, ["x"])
         assert isinstance(c1, CheckResult)
-        assert c2 == None
+        assert c2 is None
 
 
 class TestIsDatetimeChecker:
@@ -158,7 +158,7 @@ class TestIsNumericalChecker:
         c1 = IsNumericalChecker(level=CheckLevels.CRITICAL).check(df["y"])
         c2 = IsNumericalChecker(level=CheckLevels.CRITICAL).check(df["x"])
         assert isinstance(c1, CheckResult)
-        assert c2 == None
+        assert c2 is None
 
 
 class TestCheckColumnInflateLimit:
@@ -174,7 +174,7 @@ class TestCheckColumnInflateLimit:
         assert checkresult.level == CheckLevels.CRITICAL
         assert (
             checkresult.message
-            == f"Dataset after inflation is too large. Please lower the polynomial degree or reduce the number of unique values in categorical columns."
+            == "Dataset after inflation is too large. Please lower the polynomial degree or reduce the number of unique values in categorical columns."
         )
 
     def test_not_check(self):
