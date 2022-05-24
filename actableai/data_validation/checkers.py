@@ -845,7 +845,7 @@ class MaxTrainSamplesChecker(IChecker):
         self.level = level
 
     def check(
-        self, n_cluster: Union[str, int], max_samples: int
+        self, n_cluster: Union[str, int], max_samples: Optional[int]
     ) -> Optional[CheckResult]:
         """Check if the number of samples is not too large for the model.
 
@@ -856,7 +856,7 @@ class MaxTrainSamplesChecker(IChecker):
         Returns:
             Optional[CheckResult]: Check result.
         """
-        if type(n_cluster) == int and n_cluster > max_samples:  # type: ignore
+        if type(n_cluster) == int and max_samples is not None and n_cluster > max_samples:  # type: ignore
             return CheckResult(
                 name=self.name,
                 level=self.level,

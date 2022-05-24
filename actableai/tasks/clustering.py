@@ -26,7 +26,7 @@ class AAIClusteringTask(AAITask):
         update_interval: int = 30,
         pretrain_epochs: int = 300,
         alpha_k: float = 0.01,
-        max_train_samples: int = None,
+        max_train_samples: Optional[int] = None,
     ) -> Dict:
         """Runs a clustering analysis on df
 

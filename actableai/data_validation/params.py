@@ -1,8 +1,7 @@
-from logging import CRITICAL
-from typing import Union
+from typing import Union, Optional
 
 from actableai.causal import has_categorical_column, prepare_sanitize_data
-from actableai.data_validation.base import CheckLevels, CheckResult, IChecker
+from actableai.data_validation.base import CheckLevels, CheckResult
 from actableai.data_validation.checkers import *
 
 
@@ -467,7 +466,12 @@ class ClusteringDataValidator:
         pass
 
     def validate(
-        self, target, df, n_cluster, explain_samples=False, max_train_samples=None
+        self,
+        target,
+        df,
+        n_cluster,
+        explain_samples=False,
+        max_train_samples: Optional[int] = None,
     ):
         return [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(df, target),
