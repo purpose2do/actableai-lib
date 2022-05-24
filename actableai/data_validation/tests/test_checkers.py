@@ -2,8 +2,17 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from actableai.data_validation.base import *
-from actableai.data_validation.checkers import *
+from actableai.data_validation.base import CheckLevels, CheckResult
+from actableai.data_validation.checkers import (
+    CheckColumnInflateLimit,
+    CheckNUnique,
+    DoNotContainMixedChecker,
+    IsCategoricalChecker,
+    IsDatetimeChecker,
+    IsNumericalChecker,
+    IsSufficientClassSampleChecker,
+    MaxTrainSamplesChecker,
+)
 
 
 class TestIsCategoricalChecker:
@@ -51,7 +60,7 @@ class TestIsDatetimeChecker:
         c1 = IsDatetimeChecker(level=CheckLevels.CRITICAL).check(df["y"])
         c2 = IsDatetimeChecker(level=CheckLevels.CRITICAL).check(df["date"])
         assert isinstance(c1, CheckResult)
-        assert c2 == None
+        assert c2 is None
 
 
 class TestCheckNUnique:
@@ -70,7 +79,7 @@ class TestCheckNUnique:
         assert (
             checkresult.message
             == f"{analytics} currently doesn't support categorical columns with more than {n_unique_level} unique values.\n"
-            + f"['x'] column(s) have too many unique values."
+            + "['x'] column(s) have too many unique values."
         )
 
     @pytest.mark.parametrize("analytics", ["Explanation", "Bayesian Regression"])
@@ -94,7 +103,7 @@ class TestCheckNUnique:
         assert (
             checkresult.message
             == f"{analytics} currently doesn't support categorical columns with more than {n_unique_level} unique values.\n"
-            + f"['x', 'y'] column(s) have too many unique values."
+            + "['x', 'y'] column(s) have too many unique values."
         )
 
 
