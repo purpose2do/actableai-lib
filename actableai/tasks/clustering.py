@@ -126,20 +126,13 @@ class AAIClusteringTask(AAITask):
         )
 
         # Process data
-        ordinal_features = [
-            i
-            for i in range(len(df_train.columns))
-            if i not in list(category_map.keys())
-        ]
         categorical_features = list(category_map.keys())
         preprocessor = ClusteringDataTransformer()
         transformed_values = preprocessor.fit_transform(
             df_train.values, categorical_cols=categorical_features
         )
         if num_clusters == "auto":
-            auto_num_clusters_max = min(
-                auto_num_clusters_max, max_train_samples
-            )
+            auto_num_clusters_max = min(auto_num_clusters_max, max_train_samples)
         dec = DEC(
             dims=[transformed_values.shape[-1], 500, 500, 2000, 10],
             init=init,
@@ -191,7 +184,7 @@ class AAIClusteringTask(AAITask):
             lda = LinearDiscriminantAnalysis(n_components=2)
             x_embedded = lda.fit_transform(z, cluster_ids)
             projected_cluster_centers = lda.transform(dec.encoded_cluster_centers)
-        except:
+        except Exception:
             tsne = TSNE(n_components=2)
             embedded = tsne.fit_transform(np.vstack([z, dec.encoded_cluster_centers]))
             x_embedded, projected_cluster_centers = (
