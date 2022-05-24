@@ -593,7 +593,7 @@ class CausalDataValidator:
                 else None
             )
 
-        if not CheckLevels.CRITICAL in [
+        if CheckLevels.CRITICAL not in [
             check.level for check in validation_results if check is not None
         ]:
             for treatment in treatments:
