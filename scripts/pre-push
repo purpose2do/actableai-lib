@@ -35,7 +35,7 @@ if [[ $ISSUES == "no" ]]; then
     if [[ "$remote" == "" ]]; then
       echo "${GREEN}No linting errors detected.${NC}";
     else
-      echo "${GREEN}Push successfull. No linting errors detected.${NC}";
+      echo "${GREEN}Push allowed. No linting errors detected.${NC}";
     fi
     exit 0
 else

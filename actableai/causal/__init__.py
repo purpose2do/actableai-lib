@@ -23,7 +23,6 @@ def autogluon_hyperparameters():
         # ],
     }
 
-
 class OneHotEncodingTransformer:
     def __init__(self, df):
         num_cols = df._get_numeric_data().columns
