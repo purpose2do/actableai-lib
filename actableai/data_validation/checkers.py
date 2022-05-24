@@ -1,9 +1,10 @@
 from collections import Counter
 from sklearn.preprocessing import PolynomialFeatures
-from typing import Optional, Union
+from typing import List, Optional, Union
+import pandas as pd
 
 from actableai.data_imputation.error_detector.rule_parser import RulesBuilder
-from actableai.data_validation.base import IChecker, CheckResult, CheckLevels
+from actableai.data_validation.base import CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE, IChecker, CheckResult, CheckLevels
 
 
 class IsNumericalChecker(IChecker):
@@ -141,7 +142,7 @@ class IsDatetimeChecker(IChecker):
         """
         from actableai.utils import get_type_special
 
-        data_type = get_type_special(df)
+        data_type = get_type_special(df)  # type: ignore
         if data_type != "datetime":
             return CheckResult(
                 name=self.name,
@@ -247,7 +248,7 @@ class IsSufficientClassSampleChecker(IChecker):
             min_class_sample_threshold,
             _,
             _,
-        ) = predictor._learner.adjust_threshold_if_necessary(
+        ) = predictor._learner.adjust_threshold_if_necessary(  # type: ignore
             train_df[target], threshold=10, holdout_frac=0.1, num_bag_folds=0
         )
         valid_df = df.groupby(target).filter(
@@ -640,7 +641,7 @@ class IsValidFrequencyChecker(IChecker):
             pd_date, _ = handle_datetime_column(df)
             pd_date.sort_index(inplace=True)
             freq = find_freq(pd_date)
-        except:
+        except Exception:
             freq = None
         if freq is None:
             return CheckResult(
@@ -807,7 +808,7 @@ class CheckColumnInflateLimit(IChecker):
             return CheckResult(
                 name=self.name,
                 level=self.level,
-                message=f"Dataset after inflation is too large. Please lower the polynomial degree or reduce the number of unique values in categorical columns.",
+                message="Dataset after inflation is too large. Please lower the polynomial degree or reduce the number of unique values in categorical columns.",
             )
 
 
