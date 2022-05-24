@@ -100,6 +100,7 @@ class AAIInterventionTask(AAITask):
         num_cols = list(df.loc[:, num_cols].columns)
         cat_cols = type_special == "category"
         cat_cols = list(df.loc[:, cat_cols].columns)
+        df = df.replace(to_replace=[None], value=np.nan)
         if len(num_cols):
             df.loc[:, num_cols] = SimpleImputer(strategy="median").fit_transform(
                 df.loc[:, num_cols]
