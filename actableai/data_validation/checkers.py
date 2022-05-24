@@ -905,7 +905,7 @@ class IsCategoricalOrNumericalChecker(IChecker):
         self.level = level
 
     def check(self, df: pd.DataFrame, features: List[str]) -> Optional[CheckResult]:
-        """Check if the features are categorical or numerical.
+        """Check if the types of the features are the same.
 
         Args:
             df: Dataframe to check.
@@ -923,7 +923,7 @@ class IsCategoricalOrNumericalChecker(IChecker):
             return CheckResult(
                 name=self.name,
                 level=self.level,
-                message=f"{', '.join(bad_features)} are not numerical or categorical",
+                message=f"{', '.join(bad_features)} are neither numerical nor categorical",
             )
 
 
@@ -963,7 +963,7 @@ class CategoricalSameValuesChecker(IChecker):
         current_intervention_column: str,
         new_intervention_column: str,
     ) -> Optional[CheckResult]:
-        """Check if the categorical features have the same values.
+        """Check if the categorical features have the same unique values.
 
         Args:
             df: Dataframe to check.
