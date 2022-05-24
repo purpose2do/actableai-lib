@@ -5,8 +5,6 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
 from typing import List
 
-from actableai.regression import PolynomialLinearPredictor
-
 
 def autogluon_hyperparameters():
     return {
