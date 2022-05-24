@@ -1,11 +1,10 @@
-import numpy as np
 from collections import Counter
 from sklearn.preprocessing import PolynomialFeatures
-from typing import Optional
+from typing import List, Optional, Union
+import pandas as pd
 
-from actableai.bayesian_regression.utils import expand_polynomial_categorical
 from actableai.data_imputation.error_detector.rule_parser import RulesBuilder
-from actableai.data_validation.base import *
+from actableai.data_validation.base import CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE, IChecker, CheckResult, CheckLevels
 
 
 class IsNumericalChecker(IChecker):
@@ -51,7 +50,7 @@ class IsCategoricalChecker(IChecker):
         """
         from actableai.utils import get_type_special
 
-        data_type = get_type_special(df)
+        data_type = get_type_special(df)  # type: ignore
         if data_type not in ["category", "integer", "boolean"]:
             if data_type == "integer":
                 self.level = CheckLevels.WARNING
@@ -143,7 +142,7 @@ class IsDatetimeChecker(IChecker):
         """
         from actableai.utils import get_type_special
 
-        data_type = get_type_special(df)
+        data_type = get_type_special(df)  # type: ignore
         if data_type != "datetime":
             return CheckResult(
                 name=self.name,
@@ -195,7 +194,7 @@ class IsValidTypeNumberOfClusterChecker(IChecker):
             return CheckResult(
                 name=self.name,
                 level=self.level,
-                message=f'Number of clusters must be an integer or "auto"',
+                message='Number of clusters must be an integer or "auto"',
             )
 
 
@@ -249,7 +248,7 @@ class IsSufficientClassSampleChecker(IChecker):
             min_class_sample_threshold,
             _,
             _,
-        ) = predictor._learner.adjust_threshold_if_necessary(
+        ) = predictor._learner.adjust_threshold_if_necessary(  # type: ignore
             train_df[target], threshold=10, holdout_frac=0.1, num_bag_folds=0
         )
         valid_df = df.groupby(target).filter(
@@ -639,10 +638,10 @@ class IsValidFrequencyChecker(IChecker):
         from actableai.timeseries.utils import find_freq, handle_datetime_column
 
         try:
-            pd_date, _ = handle_datetime_column(df)
+            pd_date, _ = handle_datetime_column(df)  # type: ignore
             pd_date.sort_index(inplace=True)
             freq = find_freq(pd_date)
-        except:
+        except Exception:
             freq = None
         if freq is None:
             return CheckResult(
@@ -722,7 +721,7 @@ class RuleDoNotContainDatetimeChecker(IChecker):
                 datetime_columns.append(column)
 
         column_dtypes = dict(df.dtypes.astype(str))
-        custom_rules = RulesBuilder.parse(column_dtypes, rules)
+        custom_rules = RulesBuilder.parse(column_dtypes, rules)  # type: ignore
         invalid_columns = []
         invalid_match_rules = [
             x[0] for x in custom_rules.match_rules if x[0] in datetime_columns
@@ -809,7 +808,7 @@ class CheckColumnInflateLimit(IChecker):
             return CheckResult(
                 name=self.name,
                 level=self.level,
-                message=f"Dataset after inflation is too large. Please lower the polynomial degree or reduce the number of unique values in categorical columns.",
+                message="Dataset after inflation is too large. Please lower the polynomial degree or reduce the number of unique values in categorical columns.",
             )
 
 
@@ -836,4 +835,29 @@ class RegressionEvalMetricChecker(IChecker):
         ]:
             return CheckResult(
                 name=self.name, level=self.level, message="Invalid eval_metric"
+            )
+
+
+class MaxTrainSamplesChecker(IChecker):
+    def __init__(self, level, name="MaxTrainSamplesChecker"):
+        self.name = name
+        self.level = level
+
+    def check(
+        self, n_cluster: Union[str, int], max_samples: Optional[int]
+    ) -> Optional[CheckResult]:
+        """Check if the number of samples is not too large for the model.
+
+        Args:
+            df: Dataframe to check.
+            max_samples: Maximum number of samples.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
+        if type(n_cluster) == int and max_samples is not None and n_cluster > max_samples:  # type: ignore
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"If n_cluster ({n_cluster}) is specified, it should be less than max_samples ({max_samples})",
             )

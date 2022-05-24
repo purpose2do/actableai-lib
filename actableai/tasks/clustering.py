@@ -26,7 +26,7 @@ class AAIClusteringTask(AAITask):
         update_interval: int = 30,
         pretrain_epochs: int = 300,
         alpha_k: float = 0.01,
-        max_train_samples: int = None,
+        max_train_samples: Optional[int] = None,
     ) -> Dict:
         """Runs a clustering analysis on df
 
@@ -88,11 +88,17 @@ class AAIClusteringTask(AAITask):
 
         if features is None:
             features = list(df.columns)
+        if max_train_samples is None:
+            max_train_samples = len(df)
 
         df_train = df[features]
 
         data_validation_results = ClusteringDataValidator().validate(
-            features, df_train, n_cluster=num_clusters, explain_samples=explain_samples
+            features,
+            df_train,
+            n_cluster=num_clusters,
+            explain_samples=explain_samples,
+            max_train_samples=max_train_samples,
         )
         failed_checks = [x for x in data_validation_results if x is not None]
         if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
@@ -122,17 +128,13 @@ class AAIClusteringTask(AAITask):
         )
 
         # Process data
-        ordinal_features = [
-            i
-            for i in range(len(df_train.columns))
-            if i not in list(category_map.keys())
-        ]
         categorical_features = list(category_map.keys())
         preprocessor = ClusteringDataTransformer()
         transformed_values = preprocessor.fit_transform(
             df_train.values, categorical_cols=categorical_features
         )
-
+        if num_clusters == "auto" and max_train_samples is not None:
+            auto_num_clusters_max = min(auto_num_clusters_max, max_train_samples)
         dec = DEC(
             dims=[transformed_values.shape[-1], 500, 500, 2000, 10],
             init=init,
@@ -184,7 +186,7 @@ class AAIClusteringTask(AAITask):
             lda = LinearDiscriminantAnalysis(n_components=2)
             x_embedded = lda.fit_transform(z, cluster_ids)
             projected_cluster_centers = lda.transform(dec.encoded_cluster_centers)
-        except:
+        except Exception:
             tsne = TSNE(n_components=2)
             embedded = tsne.fit_transform(np.vstack([z, dec.encoded_cluster_centers]))
             x_embedded, projected_cluster_centers = (
