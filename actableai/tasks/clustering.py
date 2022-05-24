@@ -88,6 +88,8 @@ class AAIClusteringTask(AAITask):
 
         if features is None:
             features = list(df.columns)
+        if max_train_samples is None:
+            max_train_samples = len(df)
 
         df_train = df[features]
 
@@ -131,7 +133,7 @@ class AAIClusteringTask(AAITask):
         transformed_values = preprocessor.fit_transform(
             df_train.values, categorical_cols=categorical_features
         )
-        if num_clusters == "auto":
+        if num_clusters == "auto" and max_train_samples is not None:
             auto_num_clusters_max = min(auto_num_clusters_max, max_train_samples)
         dec = DEC(
             dims=[transformed_values.shape[-1], 500, 500, 2000, 10],
