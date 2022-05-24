@@ -50,7 +50,7 @@ class IsCategoricalChecker(IChecker):
         """
         from actableai.utils import get_type_special
 
-        data_type = get_type_special(df)
+        data_type = get_type_special(df)  # type: ignore
         if data_type not in ["category", "integer", "boolean"]:
             if data_type == "integer":
                 self.level = CheckLevels.WARNING
@@ -194,7 +194,7 @@ class IsValidTypeNumberOfClusterChecker(IChecker):
             return CheckResult(
                 name=self.name,
                 level=self.level,
-                message=f'Number of clusters must be an integer or "auto"',
+                message='Number of clusters must be an integer or "auto"',
             )
 
 
@@ -638,7 +638,7 @@ class IsValidFrequencyChecker(IChecker):
         from actableai.timeseries.utils import find_freq, handle_datetime_column
 
         try:
-            pd_date, _ = handle_datetime_column(df)
+            pd_date, _ = handle_datetime_column(df)  # type: ignore
             pd_date.sort_index(inplace=True)
             freq = find_freq(pd_date)
         except Exception:
@@ -721,7 +721,7 @@ class RuleDoNotContainDatetimeChecker(IChecker):
                 datetime_columns.append(column)
 
         column_dtypes = dict(df.dtypes.astype(str))
-        custom_rules = RulesBuilder.parse(column_dtypes, rules)
+        custom_rules = RulesBuilder.parse(column_dtypes, rules)  # type: ignore
         invalid_columns = []
         invalid_match_rules = [
             x[0] for x in custom_rules.match_rules if x[0] in datetime_columns

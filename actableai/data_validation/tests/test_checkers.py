@@ -24,7 +24,7 @@ class TestIsCategoricalChecker:
                 "z": ["1", "1", "1", "2", "2", "2", "3", "3", "3", "3"],
             }
         )
-        c1 = IsCategoricalChecker(level=CheckLevels.CRITICAL).check(df["y"])
+        c1 = IsCategoricalChecker(level=CheckLevels.CRITICAL).check(df["y"])  # type: ignore
         c2 = IsCategoricalChecker(level=CheckLevels.CRITICAL).check(df["z"])
         assert isinstance(c1, CheckResult)
         assert c2 is None
@@ -58,7 +58,7 @@ class TestIsDatetimeChecker:
             }
         )
         c1 = IsDatetimeChecker(level=CheckLevels.CRITICAL).check(df["y"])
-        c2 = IsDatetimeChecker(level=CheckLevels.CRITICAL).check(df["date"])
+        c2 = IsDatetimeChecker(level=CheckLevels.CRITICAL).check(df["date"])  # type: ignore
         assert isinstance(c1, CheckResult)
         assert c2 is None
 
