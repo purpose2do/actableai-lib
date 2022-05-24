@@ -5,8 +5,6 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
 from typing import List
 
-from actableai.regression import PolynomialLinearPredictor
-
 
 def autogluon_hyperparameters():
     return {
@@ -67,11 +65,11 @@ def prepare_sanitize_data(
     """Drop NAN rows for treatments and outcomes then impute effect_modifiers and common_causes
 
     Args:
-        pd_table (pd.DataFrame): Table to prepare
-        treatments (List[str]): List of treatments
-        outcomes (List[str]): List of outcomes
-        effect_modifiers (List[str]): List of effect modifiers
-        common_causes (List[str]): List of common causes
+        pd_table: Table to prepare
+        treatments: List of treatments
+        outcomes: List of outcomes
+        effect_modifiers: List of effect modifiers
+        common_causes: List of common causes
 
     Returns:
         pd.DataFrame: New table sanitized and imputed
