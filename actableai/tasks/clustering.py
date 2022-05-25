@@ -119,18 +119,26 @@ class AAIClusteringTask(AAITask):
         df_train = df_train.dropna(how="all", axis=1)
         features = list(df_train.columns)
 
+        numeric_columns = list(df_train.select_dtypes(include=["number"]).columns)
+        df_train[numeric_columns] = pd.DataFrame(
+            SimpleImputer(strategy="median").fit_transform(df_train[numeric_columns]),
+            columns=numeric_columns,
+        )
+
         category_map = {}
         label_encoder = {}
         for i, c in enumerate(features):
-            if df_train[c].dtype == "object":
+            if df_train[c].dtype in ["object", "bool"]:
                 df_train[c] = df_train[c].fillna("NA")
                 le = LabelEncoder()
                 df_train[c] = le.fit_transform(df_train[c])
                 category_map[i] = le.classes_
                 label_encoder[c] = le
-        df_train = pd.DataFrame(
-            SimpleImputer(strategy="most_frequent").fit_transform(df_train),
-            columns=df_train.columns,
+        df_train[[x for x in label_encoder]] = pd.DataFrame(
+            SimpleImputer(strategy="most_frequent").fit_transform(
+                df_train[[x for x in label_encoder]]
+            ),
+            columns=df_train[[x for x in label_encoder]].columns,
         )
 
         # Process data
@@ -206,7 +214,7 @@ class AAIClusteringTask(AAITask):
         points_y = x_embedded[:, 1]
 
         for c in label_encoder:
-            df_train[c] = label_encoder[c].inverse_transform(df_train[c].astype(int))
+            df_train[c] = label_encoder[c].inverse_transform(df_train[c])
 
         origin_dict = df_train.to_dict("record")
         for idx, (i, j, k, l) in enumerate(
