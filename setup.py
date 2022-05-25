@@ -78,7 +78,6 @@ setup(
         "hyperopt>=0.2.4",
         "prophet>=1.0.1",
         "rpy2>=2.9.*,<3.*",
-        "alibi>=0.5.7,<=0.5.9",
         "tensorflow>=2.4.1,<2.5.*",
         "shap<=0.39.0",
         "sqlalchemy>=1.3.5, <2.0",
