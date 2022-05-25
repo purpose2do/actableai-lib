@@ -4,7 +4,7 @@ import numpy as np
 
 def _shorten_conditions(conds):
     re = {}
-    conds = sorted(conds, key=lambda c: 0 if c[1] == ">" else 1)
+    conds = sorted(conds, key=lambda c: (c[0], c[1]))
     for cond in conds:
         fid, op, threshold = cond
         if op == "<=":
@@ -14,48 +14,56 @@ def _shorten_conditions(conds):
     return [(k[0], k[1], v) for k, v in re.items()]
 
 
-def _paths_to_leaves(tree, shorten_conditions=True):
-    def _walk(tree, result, node_id=0, depth=0, cond=[]):
+def _paths_to_leaves(tree, shorten_conditions=True, min_precision=0.8):
+
+    def _walk(tree, result, cond, classes_with_explanation, node_id=0, depth=0):
         left_node = tree.children_left[node_id]
         right_node = tree.children_right[node_id]
         is_split_node = left_node != right_node
-        if is_split_node:
-            _walk(
-                tree,
-                result,
-                left_node,
-                depth + 1,
-                cond + [(tree.feature[node_id], "<=", tree.threshold[node_id])],
-            )
-            _walk(
-                tree,
-                result,
-                right_node,
-                depth + 1,
-                cond + [(tree.feature[node_id], ">", tree.threshold[node_id])],
-            )
-        else:
+        precision = np.max(tree.value[node_id])/np.sum(tree.value[node_id])
+        cls = np.argmax(tree.value[node_id])
+        if precision >= min_precision and cls not in classes_with_explanation:
             result.append(
                 {
                     "conditions": _shorten_conditions(cond)
                     if shorten_conditions
                     else cond,
                     "values": tree.value[node_id],
-                    "class": np.argmax(tree.value[node_id]),
-                    "precision": np.max(tree.value[node_id])
-                    * 1
-                    / np.sum(tree.value[node_id]),
+                    "class": cls,
+                    "precision": precision,
                 }
+            )
+            classes_with_explanation = classes_with_explanation + [cls]
+
+        if is_split_node:
+            _walk(
+                tree,
+                result,
+                cond + [(tree.feature[node_id], "<=", tree.threshold[node_id])],
+                classes_with_explanation,
+                left_node,
+                depth + 1,
+            )
+            _walk(
+                tree,
+                result,
+                cond + [(tree.feature[node_id], ">", tree.threshold[node_id])],
+                classes_with_explanation,
+                right_node,
+                depth + 1,
             )
 
     result = []
-    _walk(tree, result)
+    classes_with_explanation = []
+    cond = []
+    _walk(tree, result, cond, classes_with_explanation)
     return result
 
 
-def generate_cluster_descriptions(tree, features, dummy_columns=None):
+def generate_cluster_descriptions(tree, features, dummy_columns=None,
+                                  min_precision=0.8):
     def _path_iter():
-        paths = _paths_to_leaves(tree)
+        paths = _paths_to_leaves(tree, min_precision=min_precision)
         for path in paths:
             description = "{:.2f}% of samples that satisfy ".format(
                 path["precision"] * 100
@@ -76,8 +84,8 @@ def generate_cluster_descriptions(tree, features, dummy_columns=None):
                         + op
                         + " "
                         + (
-                            "{%.2f}".format(threshold)
-                            if type(threshold) is float
+                            "{:.2f}".format(threshold)
+                            if type(threshold) in [float, np.float64]
                             else str(threshold)
                         )
                     )
@@ -87,7 +95,7 @@ def generate_cluster_descriptions(tree, features, dummy_columns=None):
                     description += " and "
                 else:
                     description += ", "
-            description += " belong to this cluster"
+            description += " belong to this cluster."
             yield path["class"], description
 
     results = defaultdict(list)

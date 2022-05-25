@@ -30,9 +30,10 @@ class AAIClusteringTask(AAITask):
         explain_precision_threshold: float = 0.8,
         alpha_k: float = 0.01,
         max_train_samples: int = None,
-        cluster_explain_max_depth=10,
-        cluster_explain_min_impurity_decrease=0.005,
-        cluster_explain_min_samples_leaf=0.01,
+        cluster_explain_max_depth=20,
+        cluster_explain_min_impurity_decrease=0.001,
+        cluster_explain_min_samples_leaf=0.001,
+        cluster_explain_min_precision=0.8,
     ) -> Dict:
         """Runs a clustering analysis on df
 
@@ -124,14 +125,16 @@ class AAIClusteringTask(AAITask):
         features = list(df_train.columns)
 
         category_map = {}
+        label_encoder = {}
         for i, c in enumerate(features):
             if df_train[c].dtype == "object":
                 df_train[c] = df_train[c].fillna("NA")
                 le = LabelEncoder()
                 df_train[c] = le.fit_transform(df_train[c])
                 category_map[i] = le.classes_
+                label_encoder[c] = le
         df_train = pd.DataFrame(
-            SimpleImputer(strategy="median").fit_transform(df_train),
+            SimpleImputer(strategy="most_frequent").fit_transform(df_train),
             columns=df_train.columns,
         )
 
@@ -242,6 +245,9 @@ class AAIClusteringTask(AAITask):
         points_x = x_embedded[:, 0]
         points_y = x_embedded[:, 1]
 
+        for c in label_encoder:
+            df_train[c] = label_encoder[c].inverse_transform(df_train[c])
+
         origin_dict = df_train.to_dict("record")
         for idx, (i, j, k, l, e) in enumerate(
             zip(points_x.tolist(), points_y.tolist(), cluster_ids, origin_dict, anchors)
@@ -270,7 +276,8 @@ class AAIClusteringTask(AAITask):
         )
         clf.fit(df_dummies, cluster_id)
         cluster_explanations = generate_cluster_descriptions(
-            clf.tree_, df_dummies.columns, dummy_columns
+            clf.tree_, df_dummies.columns, dummy_columns,
+            min_precision=cluster_explain_min_precision,
         )
 
         for cluster in clusters:
@@ -293,4 +300,5 @@ class AAIClusteringTask(AAITask):
                 {"name": x.name, "level": x.level, "message": x.message}
                 for x in failed_checks
             ],
+            "clf": clf,
         }
