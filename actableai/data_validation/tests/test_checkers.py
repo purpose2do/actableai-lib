@@ -4,6 +4,7 @@ import pytest
 
 from actableai.data_validation.base import CheckLevels, CheckResult
 from actableai.data_validation.checkers import (
+    CategoricalSameValuesChecker,
     CheckColumnInflateLimit,
     CheckNUnique,
     DoNotContainMixedChecker,
@@ -14,6 +15,8 @@ from actableai.data_validation.checkers import (
     IsSufficientClassSampleChecker,
     MaxTrainSamplesChecker,
     PositiveOutcomeValueThreshold,
+    SameTypeChecker,
+    StratifiedKFoldChecker,
 )
 
 
