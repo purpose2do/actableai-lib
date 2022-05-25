@@ -206,7 +206,7 @@ class AAIClusteringTask(AAITask):
         points_y = x_embedded[:, 1]
 
         for c in label_encoder:
-            df_train[c] = label_encoder[c].inverse_transform(df_train[c])
+            df_train[c] = label_encoder[c].inverse_transform(df_train[c].astype(int))
 
         origin_dict = df_train.to_dict("record")
         for idx, (i, j, k, l) in enumerate(
