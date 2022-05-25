@@ -263,5 +263,4 @@ class AAIClusteringTask(AAITask):
                 {"name": x.name, "level": x.level, "message": x.message}
                 for x in failed_checks
             ],
-            "clf": clf,
         }
