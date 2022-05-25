@@ -979,7 +979,7 @@ class CategoricalSameValuesChecker(IChecker):
                     name=self.name,
                     level=self.level,
                     message=f"New Intervention : {new_intervention_column} has unseen values than current intervetion : {current_intervention_column}."
-                    + f"When intervention is categorical please make sure that the new intervention column has the same values as the current intervention column.",
+                    + "When intervention is categorical please make sure that the new intervention column has the same values as the current intervention column.",
                 )
 
 

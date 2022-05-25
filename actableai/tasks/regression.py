@@ -74,7 +74,6 @@ class _AAIRegressionTrainTask(AAITask):
                 - Predicted shap values if explain_samples is true
                 - Leaderboard of the best model ran by AutoGluon
         """
-        import shap
         import pandas as pd
         from autogluon.tabular import TabularPredictor
         from autogluon.features.generators import AutoMLPipelineFeatureGenerator

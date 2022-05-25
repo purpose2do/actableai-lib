@@ -15,6 +15,7 @@ from actableai.data_validation.base import (
     CheckResult,
 )
 from actableai.data_validation.checkers import (
+    CategoricalSameValuesChecker,
     CategoryChecker,
     CheckColumnInflateLimit,
     CheckNUnique,
@@ -28,6 +29,7 @@ from actableai.data_validation.checkers import (
     DoNotContainTextChecker,
     InsufficientCategoricalRows,
     IsCategoricalChecker,
+    IsCategoricalOrNumericalChecker,
     IsDatetimeChecker,
     IsNumericalChecker,
     IsSufficientClassSampleChecker,
@@ -42,8 +44,11 @@ from actableai.data_validation.checkers import (
     MaxTrainSamplesChecker,
     PositiveOutcomeValueThreshold,
     RegressionEvalMetricChecker,
+    SameTypeChecker,
+    StratifiedKFoldChecker,
     UniqueDateTimeChecker,
 )
+from actableai.utils import get_type_special_no_ag
 
 
 class RegressionDataValidator:
