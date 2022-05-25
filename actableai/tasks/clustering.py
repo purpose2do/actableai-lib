@@ -236,7 +236,9 @@ class AAIClusteringTask(AAITask):
         )
         clf.fit(df_dummies, cluster_id)
         cluster_explanations = generate_cluster_descriptions(
-            clf.tree_, df_dummies.columns, dummy_columns,
+            clf.tree_,
+            df_dummies.columns,
+            dummy_columns,
             min_precision=cluster_explain_min_precision,
         )
 
