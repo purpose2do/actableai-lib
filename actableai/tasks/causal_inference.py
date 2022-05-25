@@ -45,7 +45,7 @@ def infer_causal(
     log_treatment: Optional[bool] = False,
     log_outcome: Optional[bool] = False,
     model_directory: Optional[Union[str, Path]] = None,
-    ag_hyperparameters: Optional[dict] = "auto",
+    ag_hyperparameters: Optional[Union[str, dict]] = "auto",
     ag_presets: str = "medium_quality_faster_train",
     model_params: Optional[list] = None,
     rscorer: Optional[list] = None,
@@ -57,7 +57,7 @@ def infer_causal(
     validation_ratio: float = 0.2,
     trials: Optional[int] = 1,
     verbose: Optional[int] = 0,
-    cv: int = "auto",
+    cv: Union[int, str] = "auto",
     feature_importance: bool = False,
     mc_iters="auto",
     seed=123,
@@ -199,6 +199,8 @@ def infer_causal(
         len(pd_table[outcomes[0]].unique()) == 2 or positive_outcome_value is not None
     ):
         is_single_binary_outcome = True
+        pd_table[outcomes[0]] = pd_table[outcomes[0]].astype(str)
+        positive_outcome_value = str(positive_outcome_value)
 
     # construct the dictionary of control values for categorical treatments
     for c in treatments:
