@@ -120,10 +120,11 @@ class AAIClusteringTask(AAITask):
         features = list(df_train.columns)
 
         numeric_columns = list(df_train.select_dtypes(include=["number"]).columns)
-        df_train[numeric_columns] = pd.DataFrame(
-            SimpleImputer(strategy="median").fit_transform(df_train[numeric_columns]),
-            columns=numeric_columns,
-        )
+        if len(numeric_columns):
+            df_train[numeric_columns] = pd.DataFrame(
+                SimpleImputer(strategy="median").fit_transform(df_train[numeric_columns]),
+                columns=numeric_columns,
+            )
 
         category_map = {}
         label_encoder = {}
@@ -134,12 +135,14 @@ class AAIClusteringTask(AAITask):
                 df_train[c] = le.fit_transform(df_train[c])
                 category_map[i] = le.classes_
                 label_encoder[c] = le
-        df_train[[x for x in label_encoder]] = pd.DataFrame(
-            SimpleImputer(strategy="most_frequent").fit_transform(
-                df_train[[x for x in label_encoder]]
-            ),
-            columns=df_train[[x for x in label_encoder]].columns,
-        )
+        encoded_col = [x for x in label_encoder]
+        if len(encoded_col):
+            df_train[encoded_col] = pd.DataFrame(
+                SimpleImputer(strategy="most_frequent").fit_transform(
+                    df_train[encoded_col]
+                ),
+                columns=df_train[encoded_col].columns,
+            )
 
         # Process data
         categorical_features = list(category_map.keys())
