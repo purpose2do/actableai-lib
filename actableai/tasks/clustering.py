@@ -135,14 +135,6 @@ class AAIClusteringTask(AAITask):
                 df_train[c] = le.fit_transform(df_train[c])
                 category_map[i] = le.classes_
                 label_encoder[c] = le
-        encoded_col = [x for x in label_encoder]
-        if len(encoded_col):
-            df_train[encoded_col] = pd.DataFrame(
-                SimpleImputer(strategy="most_frequent").fit_transform(
-                    df_train[encoded_col]
-                ),
-                columns=df_train[encoded_col].columns,
-            )
 
         # Process data
         categorical_features = list(category_map.keys())
