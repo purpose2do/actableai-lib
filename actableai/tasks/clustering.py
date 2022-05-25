@@ -122,7 +122,9 @@ class AAIClusteringTask(AAITask):
         numeric_columns = list(df_train.select_dtypes(include=["number"]).columns)
         if len(numeric_columns):
             df_train[numeric_columns] = pd.DataFrame(
-                SimpleImputer(strategy="median").fit_transform(df_train[numeric_columns]),
+                SimpleImputer(strategy="median").fit_transform(
+                    df_train[numeric_columns]
+                ),
                 columns=numeric_columns,
             )
 
