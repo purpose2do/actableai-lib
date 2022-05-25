@@ -1,6 +1,8 @@
 import pandas as pd
 from pathlib import Path
 from typing import Optional, Union
+from sklearn.preprocessing import LabelEncoder
+from actableai.utils import get_type_special
 
 
 class LogCategoricalOutcomeNotAllowed(ValueError):
