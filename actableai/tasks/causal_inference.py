@@ -1,7 +1,8 @@
-import numpy as np
 import pandas as pd
 from pathlib import Path
 from typing import Optional, Union
+from sklearn.preprocessing import LabelEncoder
+from actableai.utils import get_type_special
 
 
 class LogCategoricalOutcomeNotAllowed(ValueError):
@@ -10,10 +11,6 @@ class LogCategoricalOutcomeNotAllowed(ValueError):
 
 class LogCategoricalTreatmentNotAllowed(ValueError):
     pass
-
-
-from sklearn.preprocessing import LabelEncoder
-from actableai.utils import get_type_special
 
 
 # fit the model with data
@@ -45,7 +42,7 @@ def infer_causal(
     log_treatment: Optional[bool] = False,
     log_outcome: Optional[bool] = False,
     model_directory: Optional[Union[str, Path]] = None,
-    ag_hyperparameters: Optional[dict] = "auto",
+    ag_hyperparameters: Optional[Union[str, dict]] = "auto",
     ag_presets: str = "medium_quality_faster_train",
     model_params: Optional[list] = None,
     rscorer: Optional[list] = None,
@@ -57,7 +54,7 @@ def infer_causal(
     validation_ratio: float = 0.2,
     trials: Optional[int] = 1,
     verbose: Optional[int] = 0,
-    cv: int = "auto",
+    cv: Union[int, str] = "auto",
     feature_importance: bool = False,
     mc_iters="auto",
     seed=123,
@@ -107,15 +104,7 @@ def infer_causal(
     from tempfile import mkdtemp
     from actableai.causal.models import AAICausalEstimator
     from actableai.causal.params import (
-        CausalForestDMLSingleContTreatmentParams,
         DeepIVParams,
-        LinearDMLCategoricalTreatmentParams,
-        LinearDMLSingleBinaryTreatmentParams,
-        LinearDMLSingleContTreatmentParams,
-        SparseLinearDMLSingleBinaryTreatmentParams,
-        SparseLinearDMLSingleContTreatmentParams,
-        get_model_params,
-        get_rscorer,
     )
     from actableai.causal.tree_utils import make_pretty_tree
     from actableai.causal import has_categorical_column
@@ -199,6 +188,8 @@ def infer_causal(
         len(pd_table[outcomes[0]].unique()) == 2 or positive_outcome_value is not None
     ):
         is_single_binary_outcome = True
+        pd_table[outcomes[0]] = pd_table[outcomes[0]].astype(str)
+        positive_outcome_value = str(positive_outcome_value)
 
     # construct the dictionary of control values for categorical treatments
     for c in treatments:
@@ -274,11 +265,6 @@ def infer_causal(
         )
         Z = pd_table[instrumental_variables]
 
-    if (len(effect_modifiers) == 0) or (len(common_causes) == 0):
-        has_effect_modifiers_and_common_causes = False
-    else:
-        has_effect_modifiers_and_common_causes = True
-
     ce = AAICausalEstimator(
         model_params=model_params,
         scorer=rscorer,
@@ -306,8 +292,6 @@ def infer_causal(
         mc_iters=mc_iters,
         num_gpus=num_gpus,
     )
-    tune_results_df = ce.tune_results_df
-    X_test_cat = None
     X_test = None
     target_idx = pd.Series(np.full(len(pd_table), True, dtype=bool))
     if (target_units == "att") and is_single_binary_treatment:
@@ -325,7 +309,6 @@ def infer_causal(
         X_test = X_test_df.values
         for c, le in em_transformers.items():
             X_test_df[c] = le.inverse_transform(X_test_df[c])
-        X_test_cat = X_test_df
 
         if controls:
             effect, lb, ub = {}, {}, {}
