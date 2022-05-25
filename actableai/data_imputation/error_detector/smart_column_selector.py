@@ -1,10 +1,9 @@
-from math import inf
-from typing import List, Iterable, Tuple, Set
-
 import numpy as np
 import pandas as pd
+from math import inf
 from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import cosine_distances
+from typing import List, Iterable, Tuple, Set
 
 from actableai.data_imputation.config import logger
 from actableai.data_imputation.correlation_calculator import (

@@ -1,8 +1,8 @@
+import pandas as pd
 from typing import Dict, List, Optional, Any, Tuple
+
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
-
-import pandas as pd
 
 
 class AAIForecastTask(AAITask):

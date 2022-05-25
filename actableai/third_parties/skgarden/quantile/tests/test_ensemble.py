@@ -1,14 +1,14 @@
 import numpy as np
 from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
-from sklearn.utils.testing import assert_array_equal
 from sklearn.utils.testing import assert_array_almost_equal
+from sklearn.utils.testing import assert_array_equal
 from sklearn.utils.testing import assert_true
 
-from actableai.third_parties.skgarden import RandomForestQuantileRegressor
-from actableai.third_parties.skgarden import ExtraTreesQuantileRegressor
 from actableai.third_parties.skgarden import DecisionTreeQuantileRegressor
 from actableai.third_parties.skgarden import ExtraTreeQuantileRegressor
+from actableai.third_parties.skgarden import ExtraTreesQuantileRegressor
+from actableai.third_parties.skgarden import RandomForestQuantileRegressor
 
 boston = load_boston()
 X, y = boston.data, boston.target

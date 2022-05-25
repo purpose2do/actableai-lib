@@ -1,8 +1,7 @@
-from collections import defaultdict
-from typing import Dict, List
-
 import numpy as np
 import pandas as pd
+from collections import defaultdict
+from typing import Dict, List
 
 from actableai.data_imputation.meta.column import ColumnName
 

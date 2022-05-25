@@ -1,7 +1,6 @@
+import psutil
 from queue import Queue
 from typing import List, Tuple
-
-import psutil
 
 from actableai.utils.resources.profile import ResourceProfilerType
 from actableai.utils.resources.profile.base import ResourceProfiler

@@ -1,7 +1,7 @@
+import collections
 import json
 import math
 import six
-import collections
 
 import actableai.third_parties.spanABSA.bert.tokenization as tokenization
 

@@ -1,8 +1,8 @@
+import pandas as pd
 from typing import Dict, List, Optional, Union
+
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
-
-import pandas as pd
 
 
 class AAIClusteringTask(AAITask):
@@ -19,21 +19,18 @@ class AAIClusteringTask(AAITask):
         features: Optional[List[str]] = None,
         num_clusters: Union[int, str] = "auto",
         explain_samples: bool = False,
-        explainer_task_params: Optional[Dict] = None,
         auto_num_clusters_min: int = 2,
         auto_num_clusters_max: int = 20,
         init: str = "glorot_uniform",
         pretrain_optimizer: str = "adam",
         update_interval: int = 30,
         pretrain_epochs: int = 300,
-        explain_max_concurrent: int = 1,
-        explain_precision_threshold: float = 0.8,
         alpha_k: float = 0.01,
-        max_train_samples: int = None,
         cluster_explain_max_depth=20,
         cluster_explain_min_impurity_decrease=0.001,
         cluster_explain_min_samples_leaf=0.001,
         cluster_explain_min_precision=0.8,
+        max_train_samples: Optional[int] = None,
     ) -> Dict:
         """Runs a clustering analysis on df
 
@@ -45,7 +42,6 @@ class AAIClusteringTask(AAITask):
                 Defaults to "auto".
             explain_samples: If the result contains a human readable explanation of
                 the clustering. Defaults to False.
-            explainer_task_params: ?. Defaults to None.
             auto_num_clusters_min: Minimum number of clusters when num_clusters is
                 _auto_. Defaults to 2.
             auto_num_clusters_max: Maximum number of clusters when num_clusters is
@@ -56,8 +52,6 @@ class AAIClusteringTask(AAITask):
             update_interval: The interval to check the stopping criterion and update the
                 cluster centers. Default to 140.
             pretrain_epochs: Number of epochs for pretraining DEC. Defaults to 300.
-            explain_max_concurrent: Maximum number of concurrent explanations running.
-            explain_precision_threshold: Precision threshold for each explainer.
             alpha_k: The factor to control the penalty term of the number of clusters.
                 Default to 0.01.
             max_train_samples: Number of randomly selected rows to train the DEC.
@@ -70,27 +64,22 @@ class AAIClusteringTask(AAITask):
             Dict: Dictionnary of results
         """
         import time
-        import ray
+        import shap
         import pandas as pd
         import numpy as np
-        import psutil
-        from multiprocessing.pool import ThreadPool
         from collections import defaultdict
         from tensorflow.keras.optimizers import SGD
         from sklearn.impute import SimpleImputer
         from sklearn.preprocessing import LabelEncoder
         from sklearn.manifold import TSNE
         from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-        from sklearn.pipeline import Pipeline
         from sklearn.tree import DecisionTreeClassifier
-        from actableai.clustering.dec_keras import DEC, DECAnchor
+        from actableai.clustering.dec_keras import DEC
         from actableai.data_validation.params import ClusteringDataValidator
         from actableai.data_validation.base import CheckLevels
-        from actableai.utils import gen_anchor_explanation
         from actableai.utils.preprocessors.preprocessing import impute_df
         from actableai.clustering import ClusteringDataTransformer
         from actableai.clustering.explain import generate_cluster_descriptions
-        from alibi.explainers import AnchorTabular
 
         from actableai.utils.sanitize import sanitize_timezone
 
@@ -103,11 +92,17 @@ class AAIClusteringTask(AAITask):
 
         if features is None:
             features = list(df.columns)
+        if max_train_samples is None:
+            max_train_samples = len(df)
 
         df_train = df[features]
 
         data_validation_results = ClusteringDataValidator().validate(
-            features, df_train, n_cluster=num_clusters, explain_samples=explain_samples
+            features,
+            df_train,
+            n_cluster=num_clusters,
+            explain_samples=explain_samples,
+            max_train_samples=max_train_samples,
         )
         failed_checks = [x for x in data_validation_results if x is not None]
         if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
@@ -139,17 +134,13 @@ class AAIClusteringTask(AAITask):
         )
 
         # Process data
-        ordinal_features = [
-            i
-            for i in range(len(df_train.columns))
-            if i not in list(category_map.keys())
-        ]
         categorical_features = list(category_map.keys())
         preprocessor = ClusteringDataTransformer()
         transformed_values = preprocessor.fit_transform(
             df_train.values, categorical_cols=categorical_features
         )
-
+        if num_clusters == "auto" and max_train_samples is not None:
+            auto_num_clusters_max = min(auto_num_clusters_max, max_train_samples)
         dec = DEC(
             dims=[transformed_values.shape[-1], 500, 500, 2000, 10],
             init=init,
@@ -180,59 +171,28 @@ class AAIClusteringTask(AAITask):
         )
         z = dec.project(transformed_values)
 
-        anchors = [None] * df_train.shape[0]
+        shap_values = []
         if explain_samples:
-            if explainer_task_params is None:
-                explainer_task_params = {}
+            background_samples = 100
+            if len(sampled_transformed_values) < 100:
+                background_samples = int(len(sampled_transformed_values) * 0.1)
 
-            predict_fn = lambda x: dec.predict(preprocessor.transform(x))
-            explainer = AnchorTabular(
-                predict_fn, df_train.columns, categorical_names=category_map, seed=1
-            )
-            explainer.fit(df_train.values)
-            # Remove Tensorflow model here as it's not serializable
-            explainer.predictor = None
-            for sampler in explainer.samplers:
-                sampler.predictor = None
-
-            dec_anchor_task = DECAnchor(**explainer_task_params)
-
-            dec_anchor_pool = ThreadPool(processes=explain_max_concurrent)
-
-            chunks = np.array_split(df_train.values, explain_max_concurrent)
-            dec_anchor_async_results = [
-                dec_anchor_pool.apply_async(
-                    dec_anchor_task.run,
-                    kwds={
-                        "n_clusters": dec.n_clusters,
-                        "input_dim": transformed_values.shape[1],
-                        "explainer": explainer,
-                        "dec_encoder_weights": dec.encoder.get_weights(),
-                        "dec_weights": dec.model.get_weights(),
-                        "init": init,
-                        "preprocessor": preprocessor,
-                        "df": chunk,
-                        "threshold": explain_precision_threshold,
-                    },
+            background = sampled_transformed_values[
+                np.random.choice(
+                    sampled_transformed_values.shape[0],
+                    background_samples,
+                    replace=False,
                 )
-                for chunk in chunks
             ]
 
-            anchors = [
-                anchor
-                for anchors in dec_anchor_async_results
-                for anchor in anchors.get()
-            ]
-
-            df_train["explanation"] = [
-                gen_anchor_explanation(a, df_train.shape[0]) for a in anchors
-            ]
+            explainer = shap.DeepExplainer(dec.encoder, background)
+            shap_values = explainer.shap_values(sampled_transformed_values)
 
         try:
             lda = LinearDiscriminantAnalysis(n_components=2)
             x_embedded = lda.fit_transform(z, cluster_ids)
             projected_cluster_centers = lda.transform(dec.encoded_cluster_centers)
-        except:
+        except Exception:
             tsne = TSNE(n_components=2)
             embedded = tsne.fit_transform(np.vstack([z, dec.encoded_cluster_centers]))
             x_embedded, projected_cluster_centers = (
@@ -249,13 +209,13 @@ class AAIClusteringTask(AAITask):
             df_train[c] = label_encoder[c].inverse_transform(df_train[c])
 
         origin_dict = df_train.to_dict("record")
-        for idx, (i, j, k, l, e) in enumerate(
-            zip(points_x.tolist(), points_y.tolist(), cluster_ids, origin_dict, anchors)
+        for idx, (i, j, k, l) in enumerate(
+            zip(points_x.tolist(), points_y.tolist(), cluster_ids, origin_dict)
         ):
-            data.append((k, {"x": i, "y": j}, l, e))
+            data.append((k, {"x": i, "y": j}, l))
 
         res = defaultdict(list)
-        for idx, (k, v, s, e) in enumerate(data):
+        for idx, (k, v, s) in enumerate(data):
             res[k].append({"train": v, "column": s, "index": df_train.index[idx]})
 
         # Explain clusters
@@ -293,6 +253,7 @@ class AAIClusteringTask(AAITask):
 
         return {
             "data": clusters,
+            "shap_values": shap_values,
             "status": "SUCCESS",
             "messenger": "",
             "runtime": runtime,

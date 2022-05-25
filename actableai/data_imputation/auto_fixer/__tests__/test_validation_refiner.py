@@ -1,8 +1,7 @@
-from math import inf
-from unittest.mock import MagicMock
-
 import pandas as pd
 import pytest
+from math import inf
+from unittest.mock import MagicMock
 
 from actableai.data_imputation.auto_fixer.__tests__.helper import (
     assert_fix_info_list,

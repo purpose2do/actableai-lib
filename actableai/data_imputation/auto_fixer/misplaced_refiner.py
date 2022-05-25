@@ -1,13 +1,12 @@
-from typing import Tuple
-
 import pandas as pd
+from typing import Tuple
 
 from actableai.data_imputation.auto_fixer.fix_info import (
     FixInfoList,
 )
+from actableai.data_imputation.auto_fixer.refiner import Refiner
 from actableai.data_imputation.config import logger
 from actableai.data_imputation.error_detector import CellErrors, ErrorDetector
-from actableai.data_imputation.auto_fixer.refiner import Refiner
 from actableai.data_imputation.error_detector.misplaced_detector import (
     MisplacedDetector,
 )

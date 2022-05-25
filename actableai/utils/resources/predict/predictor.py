@@ -1,5 +1,4 @@
 import ray
-
 from typing import Dict, Union, Optional, List
 
 from actableai.tasks import TaskType

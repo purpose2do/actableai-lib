@@ -1,8 +1,7 @@
+from gluonts.model.trivial.constant import ConstantValuePredictor
 from typing import Tuple, Union, Dict, Any
 
-from actableai.timeseries.models.params import BaseParams
-
-from gluonts.model.trivial.constant import ConstantValuePredictor
+from actableai.timeseries.models.params.base import BaseParams
 
 
 class ConstantValueParams(BaseParams):

@@ -2,14 +2,6 @@ from typing import Callable
 
 from actableai.tasks import TaskType
 from actableai.utils.resources.predict import ResourcePredictorType
-from actableai.utils.resources.predict.features.forecast import (
-    ForecastFeaturesExtractor,
-)
-from actableai.utils.resources.predict.features.method import MethodFeaturesExtractor
-from actableai.utils.resources.predict.features.regression import (
-    RegressionFeaturesExtractor,
-    RegressionTrainFeaturesExtractor,
-)
 from actableai.utils.resources.predict.features.bayesian_regression import (
     BayesianRegressionFeaturesExtractor,
 )
@@ -26,6 +18,14 @@ from actableai.utils.resources.predict.features.correlation import (
 )
 from actableai.utils.resources.predict.features.data_imputation import (
     DataImputationFeaturesExtractor,
+)
+from actableai.utils.resources.predict.features.forecast import (
+    ForecastFeaturesExtractor,
+)
+from actableai.utils.resources.predict.features.method import MethodFeaturesExtractor
+from actableai.utils.resources.predict.features.regression import (
+    RegressionFeaturesExtractor,
+    RegressionTrainFeaturesExtractor,
 )
 from actableai.utils.resources.predict.features.sentiment_analysis import (
     SentimentAnalysisFeaturesExtractor,

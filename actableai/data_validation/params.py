@@ -1,8 +1,48 @@
-from logging import CRITICAL
-from typing import Union
-from actableai.data_validation.checkers import *
+from typing import List, Optional, Union
+
+import pandas as pd
 from actableai.causal import has_categorical_column, prepare_sanitize_data
-from actableai.data_validation.base import CheckLevels, CheckResult, IChecker
+from actableai.data_validation.base import (
+    CAUSAL_INFERENCE_CATEGORICAL_MINIMUM_TREATMENT,
+    CLASSIFICATION_ANALYTIC,
+    CORRELATION_MINIMUM_NUMBER_OF_SAMPLE,
+    EXPLAIN_SAMPLES_UNIQUE_CATEGORICAL_LIMIT,
+    MINIMUM_NUMBER_OF_SAMPLE,
+    POLYNOMIAL_INFLATE_COLUMN_LIMIT,
+    REGRESSION_ANALYTIC,
+    UNIQUE_CATEGORY_THRESHOLD,
+    CheckLevels,
+    CheckResult,
+)
+from actableai.data_validation.checkers import (
+    CategoryChecker,
+    CheckColumnInflateLimit,
+    CheckNUnique,
+    ColumnsExistChecker,
+    ColumnsInList,
+    ColumnsNotInList,
+    CorrectAnalyticChecker,
+    DoNotContainDatetimeChecker,
+    DoNotContainEmptyColumnsChecker,
+    DoNotContainMixedChecker,
+    DoNotContainTextChecker,
+    InsufficientCategoricalRows,
+    IsCategoricalChecker,
+    IsDatetimeChecker,
+    IsNumericalChecker,
+    IsSufficientClassSampleChecker,
+    IsSufficientClassSampleForCrossValidationChecker,
+    IsSufficientDataChecker,
+    IsSufficientNumberOfClassChecker,
+    IsSufficientValidationSampleChecker,
+    IsValidFrequencyChecker,
+    IsValidNumberOfClusterChecker,
+    IsValidPredictionLengthChecker,
+    IsValidTypeNumberOfClusterChecker,
+    MaxTrainSamplesChecker,
+    RegressionEvalMetricChecker,
+    UniqueDateTimeChecker,
+)
 
 
 class RegressionDataValidator:
@@ -109,6 +149,16 @@ class RegressionDataValidator:
                     name="PresetsChecker",
                     level=CheckLevels.CRITICAL,
                     message="Optimize for performance is incompatible with debiasing",
+                )
+            )
+
+        # Check explain samples (incompatible with debiasing)
+        if run_debiasing and explain_samples:
+            validation_results.append(
+                CheckResult(
+                    name="ExplanationChecker",
+                    level=CheckLevels.CRITICAL,
+                    message="Debiasing is incompatible explanation",
                 )
             )
 
@@ -289,6 +339,16 @@ class ClassificationDataValidator:
                 )
             )
 
+        # Check explain samples (incompatible with debiasing)
+        if run_debiasing and explain_samples:
+            validation_results.append(
+                CheckResult(
+                    name="ExplanationChecker",
+                    level=CheckLevels.CRITICAL,
+                    message="Debiasing is incompatible explanation",
+                )
+            )
+
         if run_debiasing:
             validation_results.append(
                 DoNotContainTextChecker(level=CheckLevels.CRITICAL).check(
@@ -434,7 +494,7 @@ class TimeSeriesPredictionDataValidator:
                 CheckResult(
                     name="FrequenciesChecker",
                     level=CheckLevels.CRITICAL,
-                    messge="Frequencies must be the same for all the groups",
+                    messge="Frequencies must be the same for all the groups",  # type: ignore
                 )
             )
 
@@ -445,7 +505,14 @@ class ClusteringDataValidator:
     def __init__(self):
         pass
 
-    def validate(self, target, df, n_cluster, explain_samples=False):
+    def validate(
+        self,
+        target,
+        df,
+        n_cluster,
+        explain_samples=False,
+        max_train_samples: Optional[int] = None,
+    ):
         return [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(df, target),
             DoNotContainEmptyColumnsChecker(level=CheckLevels.WARNING).check(
@@ -468,6 +535,9 @@ class ClusteringDataValidator:
             if explain_samples
             else None,
             DoNotContainTextChecker(level=CheckLevels.CRITICAL).check(df, target),
+            MaxTrainSamplesChecker(level=CheckLevels.CRITICAL).check(
+                n_cluster=n_cluster, max_samples=max_train_samples
+            ),
         ]
 
 
@@ -523,7 +593,7 @@ class CausalDataValidator:
                 else None
             )
 
-        if not CheckLevels.CRITICAL in [
+        if CheckLevels.CRITICAL not in [
             check.level for check in validation_results if check is not None
         ]:
             for treatment in treatments:
@@ -544,6 +614,9 @@ class CorrelationDataValidator:
 
     def validate(self, df, target):
         return [
+            IsSufficientDataChecker(level=CheckLevels.CRITICAL).check(
+                df, CORRELATION_MINIMUM_NUMBER_OF_SAMPLE
+            ),
             DoNotContainEmptyColumnsChecker(level=CheckLevels.WARNING).check(
                 df, df.columns
             ),

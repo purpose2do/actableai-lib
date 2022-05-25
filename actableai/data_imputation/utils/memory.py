@@ -1,7 +1,6 @@
 import os
-from typing import Text
-
 import psutil
+from typing import Text
 
 from actableai.data_imputation.config import logger
 

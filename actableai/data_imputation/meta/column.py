@@ -3,7 +3,6 @@ from typing_extensions import Literal
 
 from actableai.data_imputation.meta.types import ColumnType
 
-
 _TAG_WITH_NUM_EXPEND_COLUMN_FORMAT = {
     "NUM_COLUMN": "__{original_name}_num__",
     "L_TAG_COLUMN": "__{original_name}_ltag__",

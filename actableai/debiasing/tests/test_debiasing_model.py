@@ -1,8 +1,6 @@
-import shutil
-import pytest
-
 import pandas as pd
-
+import pytest
+import shutil
 from autogluon.tabular import TabularPredictor
 
 from actableai.debiasing.debiasing_model import DebiasingModel

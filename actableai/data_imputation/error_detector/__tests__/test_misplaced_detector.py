@@ -1,7 +1,6 @@
-from unittest.mock import MagicMock, call
-
 import pandas as pd
 import pytest
+from unittest.mock import MagicMock, call
 
 from actableai.data_imputation.error_detector.column_format import (
     MatchStrRule,

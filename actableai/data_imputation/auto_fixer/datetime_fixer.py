@@ -8,7 +8,6 @@ from actableai.data_imputation.auto_fixer.fix_info import (
     FixValueOptions,
     FixValue,
 )
-
 from actableai.data_imputation.error_detector import CellErrors
 from actableai.data_imputation.meta.column import RichColumnMeta
 

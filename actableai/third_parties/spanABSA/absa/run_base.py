@@ -4,7 +4,8 @@ from __future__ import print_function
 
 import sys
 import torch
-from actableai.third_parties.spanABSA. bert.optimization import BERTAdam
+
+from actableai.third_parties.spanABSA.bert.optimization import BERTAdam
 
 try:
     import xml.etree.ElementTree as ET, getopt, logging, sys, random, re, copy

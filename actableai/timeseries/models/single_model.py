@@ -1,29 +1,24 @@
-import visions
-import time
-
-from typing import Dict, List, Optional, Tuple, Any, Iterable, Union
-
+import mxnet as mx
 import numpy as np
 import pandas as pd
-import mxnet as mx
-
+import time
+import visions
 from functools import partial
-from hyperopt import hp, fmin, tpe, space_eval
-
-from ray import tune
-from ray.tune.suggest.hyperopt import HyperOptSearch
-from ray.tune.suggest import ConcurrencyLimiter
-
-from gluonts.mx.distribution import DistributionOutput
-from gluonts.mx.distribution.student_t import StudentTOutput
-from gluonts.mx.distribution.poisson import PoissonOutput
 from gluonts.evaluation import Evaluator, MultivariateEvaluator
+from gluonts.mx.distribution import DistributionOutput
+from gluonts.mx.distribution.poisson import PoissonOutput
+from gluonts.mx.distribution.student_t import StudentTOutput
+from hyperopt import hp, fmin, tpe, space_eval
+from ray import tune
+from ray.tune.suggest import ConcurrencyLimiter
+from ray.tune.suggest.hyperopt import HyperOptSearch
+from typing import Dict, List, Optional, Tuple, Any, Iterable, Union
 
-from actableai.timeseries.models.params import BaseParams
+from actableai.timeseries.exceptions import UntrainedModelException
 from actableai.timeseries.models.base import AAITimeSeriesBaseModel
 from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
+from actableai.timeseries.models.params.base import BaseParams
 from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
-from actableai.timeseries.exceptions import UntrainedModelException
 from actableai.timeseries.utils import (
     dataframe_to_list_dataset,
     forecast_to_dataframe,

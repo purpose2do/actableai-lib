@@ -1,10 +1,10 @@
-from typing import Dict, List, Optional, Tuple
 import pandas as pd
+from typing import Dict, List, Optional, Tuple
 
+from actableai.classification.utils import leaderboard_cross_val
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 from actableai.tasks.regression import _AAIRegressionTrainTask
-from actableai.classification.utils import leaderboard_cross_val
 
 
 def run_cross_validation(
@@ -244,7 +244,7 @@ def run_cross_validation(
         if explain_samples:
             predict_shap_values = np.mean(
                 cross_val_predict_shap_values, axis=0
-            ).tolist()
+            )
 
         predictions = np.mean(cross_val_predictions, axis=0).tolist()
         if prediction_quantile_low is not None:

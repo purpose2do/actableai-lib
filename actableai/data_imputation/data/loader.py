@@ -1,5 +1,5 @@
-from typing import Union, Text
 import pandas as pd
+from typing import Union, Text
 
 LoaderType = Union[Text, pd.DataFrame]
 

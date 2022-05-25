@@ -1,20 +1,19 @@
 # Most tests copied verbatim from sklearn.ensemble.tests.test_forest.py
-import pickle
 import numpy as np
-
-from sklearn.base import clone
+import pickle
 from sklearn.base import ClassifierMixin
+from sklearn.base import clone
 from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.utils.testing import assert_array_equal
 from sklearn.utils.testing import assert_array_almost_equal
+from sklearn.utils.testing import assert_array_equal
 from sklearn.utils.testing import assert_equal
 from sklearn.utils.testing import assert_false
-from sklearn.utils.testing import assert_true
 from sklearn.utils.testing import assert_greater
+from sklearn.utils.testing import assert_true
 
 from actableai.third_parties.skgarden import MondrianForestClassifier
 from actableai.third_parties.skgarden import MondrianForestRegressor

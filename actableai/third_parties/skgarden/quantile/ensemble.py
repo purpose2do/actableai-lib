@@ -1,16 +1,18 @@
 from __future__ import division
+
 import numpy as np
 from numpy import ma
 from sklearn.ensemble import ExtraTreesRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble._forest import ForestRegressor
+from sklearn.utils import check_X_y
 from sklearn.utils import check_array
 from sklearn.utils import check_random_state
-from sklearn.utils import check_X_y
 
 from .tree import DecisionTreeQuantileRegressor
 from .tree import ExtraTreeQuantileRegressor
 from .utils import weighted_percentile
+
 
 def generate_sample_indices(random_state, n_samples):
     """

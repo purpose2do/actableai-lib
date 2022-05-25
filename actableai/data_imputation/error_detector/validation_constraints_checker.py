@@ -1,11 +1,10 @@
 import logging
-from collections import defaultdict
-from string import Template
-from typing import List, Iterable, Set
-
 import numpy as np
 import pandas as pd
 import pandasql as ps
+from collections import defaultdict
+from string import Template
+from typing import List, Iterable, Set
 
 from actableai.data_imputation.config import (
     logger,

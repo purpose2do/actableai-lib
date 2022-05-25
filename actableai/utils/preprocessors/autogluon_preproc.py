@@ -1,6 +1,6 @@
 import pandas as pd
-from pandas import DataFrame
 from autogluon.features import DatetimeFeatureGenerator
+from pandas import DataFrame
 
 
 class CustomeDateTimeFeatureGenerator(DatetimeFeatureGenerator):

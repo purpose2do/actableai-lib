@@ -1,7 +1,6 @@
+import numpy as np
 import pytest
 import ray
-
-import numpy as np
 
 from actableai.utils.testing import init_ray as _init_ray
 

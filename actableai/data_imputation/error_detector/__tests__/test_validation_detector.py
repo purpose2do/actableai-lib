@@ -1,22 +1,20 @@
-from unittest.mock import patch, MagicMock, call
-
 import pandas as pd
 import pytest
+from unittest.mock import patch, MagicMock, call
 
+from actableai.data_imputation.error_detector.cell_erros import (
+    ErrorColumns,
+    ErrorCandidate,
+    CellErrors,
+)
 from actableai.data_imputation.error_detector.constraint import (
     Constraints,
 )
 from actableai.data_imputation.error_detector.validation_detector import (
     ValidationDetector,
 )
-from actableai.data_imputation.error_detector.cell_erros import (
-    ErrorColumns,
-    ErrorCandidate,
-    CellErrors,
-)
-from actableai.data_imputation.type_recon.type_detector import DfTypes
 from actableai.data_imputation.meta.types import ColumnType
-
+from actableai.data_imputation.type_recon.type_detector import DfTypes
 
 stub_path = "actableai.data_imputation.error_detector.validation_detector"
 

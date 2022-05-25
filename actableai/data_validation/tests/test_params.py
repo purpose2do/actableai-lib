@@ -1,11 +1,13 @@
+import numpy as np
 import pandas as pd
 from pandas._testing import rands_array
-import numpy as np
-from actableai.data_validation.base import CheckLevels
 
+from actableai.data_validation.base import CheckLevels
 from actableai.data_validation.params import (
     BayesianRegressionDataValidator,
     CausalDataValidator,
+    ClusteringDataValidator,
+    CorrelationDataValidator,
     RegressionDataValidator,
     ClassificationDataValidator,
 )
@@ -166,3 +168,43 @@ class TestClassificationDataValidator:
         }
         assert "ColumnsExistChecker" in validations_dict
         assert validations_dict["ColumnsExistChecker"] == CheckLevels.CRITICAL
+
+
+class TestCorrelationDataValidator:
+    def test_validate(self):
+        df = pd.DataFrame(
+            {
+                "a": [1, 2],
+                "b": [1, 2],
+            }
+        )
+
+        validation_results = CorrelationDataValidator().validate(df, target="a")
+
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "IsSufficientDataChecker" in validations_dict
+        assert validations_dict["IsSufficientDataChecker"] == CheckLevels.CRITICAL
+
+
+class TestClusteringDataValidator:
+    def test_validate(self):
+        df = pd.DataFrame(
+            {
+                "x": rands_array(10, 5),
+                "y": rands_array(10, 5),
+                "z": rands_array(10, 5),
+                "t": rands_array(10, 5),
+            }
+        )
+
+        validation_results = ClusteringDataValidator().validate(
+            target=["x"], df=df, n_cluster=3, explain_samples=False, max_train_samples=2
+        )
+
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "MaxTrainSamplesChecker" in validations_dict
+        assert validations_dict["MaxTrainSamplesChecker"] == CheckLevels.CRITICAL

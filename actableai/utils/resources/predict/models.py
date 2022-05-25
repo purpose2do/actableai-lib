@@ -1,12 +1,11 @@
 from numbers import Number
-from typing import Optional
-
 from river.compose import SelectType
 from river.dummy import StatisticRegressor
 from river.ensemble import AdaptiveRandomForestRegressor
 from river.metrics import RMSE
 from river.preprocessing import AdaptiveStandardScaler, OneHotEncoder, Normalizer
 from river.stats import Mean
+from typing import Optional
 
 from actableai.tasks import TaskType
 from actableai.utils.resources.predict import ResourcePredictorType

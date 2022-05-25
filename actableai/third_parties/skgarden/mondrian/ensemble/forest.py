@@ -1,14 +1,14 @@
 import numpy as np
+from joblib import delayed, Parallel
 from scipy import sparse
 from sklearn.base import ClassifierMixin
 from sklearn.ensemble._forest import ForestClassifier
 from sklearn.ensemble._forest import ForestRegressor
 from sklearn.exceptions import NotFittedError, DataConversionWarning
-from joblib import delayed, Parallel
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_X_y
+from sklearn.utils.validation import check_array
 from warnings import catch_warnings, simplefilter, warn
 
 from ..tree import MondrianTreeClassifier

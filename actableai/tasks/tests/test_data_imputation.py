@@ -1,11 +1,11 @@
+import numpy as np
+import pandas as pd
 import pytest
 
 from actableai.tasks.data_imputation import (
     AAIDataImputationTask,
     construct_rules,
 )
-import pandas as pd
-import numpy as np
 
 np.random.seed(1)
 

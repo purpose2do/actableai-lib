@@ -1,10 +1,9 @@
 import math
+import numpy as np
+import pandas as pd
 from abc import ABC, abstractmethod
 from decimal import Decimal
 from typing import Text, Set
-
-import numpy as np
-import pandas as pd
 
 from actableai.data_imputation.config import (
     MATCH_ROW_NUM_THRESHOLD,

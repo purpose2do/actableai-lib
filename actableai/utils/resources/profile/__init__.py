@@ -1,8 +1,7 @@
+import pandas as pd
 from enum import IntFlag, unique, auto
 from queue import Queue
 from typing import Callable, Tuple, Any, Dict, Type, Optional
-
-import pandas as pd
 
 
 @unique

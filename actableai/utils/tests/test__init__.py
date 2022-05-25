@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 
 from actableai.utils import get_type_special_no_ag, is_fitted

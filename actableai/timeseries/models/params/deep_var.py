@@ -1,11 +1,9 @@
+from gluonts.model.deepvar import DeepVAREstimator
+from gluonts.mx.trainer import Trainer
+from mxnet.context import Context
 from typing import Union, Tuple, Dict, Any
 
-from actableai.timeseries.models.params import BaseParams
-
-from mxnet.context import Context
-
-from gluonts.mx.trainer import Trainer
-from gluonts.model.deepvar import DeepVAREstimator
+from actableai.timeseries.models.params.base import BaseParams
 
 
 class DeepVARParams(BaseParams):

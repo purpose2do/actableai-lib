@@ -1,8 +1,7 @@
-from datetime import datetime
-
 import numpy as np
 import pandas as pd
 import pytest
+from datetime import datetime
 
 from actableai.data_imputation.meta.types import ColumnType
 from actableai.data_imputation.type_recon.dtype_detector import (

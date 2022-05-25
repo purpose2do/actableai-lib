@@ -1,5 +1,5 @@
-from typing import Dict, List, Optional, Tuple
 import pandas as pd
+from typing import Dict, List, Optional, Tuple
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
@@ -16,14 +16,17 @@ class _AAIClassificationTrainTask(AAITask):
     def run(
         self,
         problem_type: str,
+        explain_samples: bool,
         positive_label: Optional[str],
         presets: str,
         hyperparameters: Dict,
         model_directory: str,
         target: str,
         features: List[str],
+        run_model: bool,
         df_train: pd.DataFrame,
         df_val: pd.DataFrame,
+        df_test: pd.DataFrame,
         drop_duplicates: bool,
         run_debiasing: bool,
         biased_groups: List[str],
@@ -39,6 +42,7 @@ class _AAIClassificationTrainTask(AAITask):
             problem_type: Problem type of the classification
                 - _binary_: Runs a binary classification
                 - _multiclass_: Runs a multiclass classification
+            explain_samples: Whether we explain the samples or not.
             positive_label: Positive label for binary classification.
                 Should be None if problem_type is _multiclass_
             presets: Presets for AutoGluon predictor.
@@ -49,9 +53,11 @@ class _AAIClassificationTrainTask(AAITask):
                 See https://auto.gluon.ai/stable/api/autogluon.task.html#autogluon.tabular.TabularPredictor
             target: GroundTruth column in DataFrame for training
             features: Features in DataFrame used for training
+            run_model: Whether the model should be run on df_test or not.
             df_train: DataFrame used for training.
             df_val: DataFrame used for Validation. Must contain the same
                 columns as df_trains
+            df_test: DataFrame for testing.
             drop_duplicates: If True drops the duplicated rows to avoid overfitting in
                 validation
             run_debiasing: If True debias the debiased_features with biased_groups
@@ -89,6 +95,7 @@ class _AAIClassificationTrainTask(AAITask):
 
         from actableai.debiasing.debiasing_model import DebiasingModel
         from actableai.utils import debiasing_feature_generator_args
+        from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
 
         ag_args_fit = {}
         feature_generator_args = {}
@@ -128,6 +135,19 @@ class _AAIClassificationTrainTask(AAITask):
             feature_generator=AutoMLPipelineFeatureGenerator(**feature_generator_args),
             time_limit=time_limit,
         )
+
+        explainer = None
+        if explain_samples:
+            # Filter out models which are not compatible with explanations
+            while not AutoGluonShapTreeExplainer.is_predictor_compatible(predictor):
+                predictor.delete_models(
+                    models_to_delete=predictor.get_model_best(),
+                    dry_run=False,
+                    allow_delete_cascade=True,
+                )
+
+            explainer = AutoGluonShapTreeExplainer(predictor)
+
         predictor.persist_models()
         leaderboard = predictor.leaderboard(extra_info=True)
         pd.set_option("chained_assignment", "warn")
@@ -207,7 +227,20 @@ class _AAIClassificationTrainTask(AAITask):
             }
             evaluate["f1_score"] = f1_score(label_val, label_pred, pos_label=pos_label)
 
-        return predictor, important_features, evaluate, pred_prob_val, leaderboard
+        predict_shap_values = []
+
+        if run_model and explain_samples:
+            predict_shap_values = explainer.shap_values(df_test)
+
+        return (
+            predictor,
+            explainer,
+            important_features,
+            evaluate,
+            pred_prob_val,
+            predict_shap_values,
+            leaderboard,
+        )
 
 
 class AAIClassificationTask(AAITask):
@@ -302,9 +335,6 @@ class AAIClassificationTask(AAITask):
             memory_efficient_hyperparameters,
             handle_boolean_features,
             preprocess_dataset,
-            explain_predictions,
-            create_explainer,
-            gen_anchor_explanation,
         )
         from actableai.data_validation.params import ClassificationDataValidator
         from actableai.data_validation.base import (
@@ -399,6 +429,7 @@ class AAIClassificationTask(AAITask):
             raise Exception()
 
         leaderboard = None
+        explainer = None
         # Train
         classification_train_task = _AAIClassificationTrainTask(**train_task_params)
         if kfolds > 1:
@@ -407,18 +438,22 @@ class AAIClassificationTask(AAITask):
                 important_features,
                 evaluate,
                 pred_prob_val,
+                predict_shap_values,
                 df_val,
                 leaderboard,
             ) = run_cross_validation(
                 classification_train_task=classification_train_task,
                 problem_type=problem_type,
+                explain_samples=explain_samples,
                 positive_label=positive_label,
                 presets=presets,
                 hyperparameters=hyperparameters,
                 model_directory=model_directory,
                 target=target,
                 features=features,
+                run_model=run_model,
                 df_train=df_train,
+                df_test=df_test,
                 kfolds=kfolds,
                 cross_validation_max_concurrency=cross_validation_max_concurrency,
                 drop_duplicates=drop_duplicates,
@@ -433,20 +468,25 @@ class AAIClassificationTask(AAITask):
         else:
             (
                 predictor,
+                explainer,
                 important_features,
                 evaluate,
                 pred_prob_val,
+                predict_shap_values,
                 leaderboard,
             ) = classification_train_task.run(
                 problem_type=problem_type,
+                explain_samples=explain_samples,
                 positive_label=positive_label,
                 presets=presets,
                 hyperparameters=hyperparameters,
                 model_directory=model_directory,
                 target=target,
                 features=features,
+                run_model=run_model,
                 df_train=df_train,
                 df_val=df_val,
+                df_test=df_test,
                 drop_duplicates=drop_duplicates,
                 run_debiasing=run_debiasing,
                 biased_groups=biased_groups,
@@ -471,60 +511,10 @@ class AAIClassificationTask(AAITask):
                 df_predict[str(c) + " probability"] = pred_prob[c]
             df_predict[target] = pred_prob.idxmax(axis=1)
 
-        # Construct explanations
-        val_anchors = []
-        predict_anchors = []
-        if explain_samples and (not use_cross_validation or run_model):
-            from alibi.utils.data import gen_category_map
-
-            ordinal_encoder = None
-
-            # Preprocess dataset
-            df_full = df_train[features + biased_groups]
-            if not use_cross_validation:
-                df_full = df_full.append(df_val[features + biased_groups])
-            df_full = df_full.append(df_test[features + biased_groups])
-            df_full = preprocess_dataset(df_full)
-            cat_map = gen_category_map(df_full)
-            cat_cols = df_full.columns[list(cat_map.keys())]
-
-            if len(cat_cols) > 0:
-                # fit ordinal encoder
-                ordinal_encoder = OrdinalEncoder(dtype=int)
-                ordinal_encoder.fit(df_full[cat_cols])
-
-            # Create explainer
-            explainer = create_explainer(
-                df_full,
-                predictor,
-                cat_map,
-                encoder=ordinal_encoder,
-                ncpu=int(self.ray_params.get("num_cpus", 1)),
-            )
-            pd.set_option("chained_assignment", "warn")
-
-            if not use_cross_validation:
-                df_val_processed = preprocess_dataset(df_val[features + biased_groups])
-                val_anchors = explain_predictions(
-                    df_val_processed, cat_cols, explainer, encoder=ordinal_encoder
-                )
-
-                df_val["explanation"] = [
-                    gen_anchor_explanation(anchor, df_full.shape[0])
-                    for anchor in val_anchors
-                ]
-
-            if run_model:
-                df_predict_processed = preprocess_dataset(
-                    df_test[features + biased_groups]
-                )
-                predict_anchors = explain_predictions(
-                    df_predict_processed, cat_cols, explainer, encoder=ordinal_encoder
-                )
-                df_predict["explanation"] = [
-                    gen_anchor_explanation(anchor, df_full.shape[0])
-                    for anchor in predict_anchors
-                ]
+        # Validation
+        eval_shap_values = []
+        if kfolds <= 1 and explain_samples:
+            eval_shap_values = explainer.shap_values(df_val[features + biased_groups])
 
         debiasing_charts = []
         # Generate debiasing charts
@@ -628,8 +618,8 @@ class AAIClassificationTask(AAITask):
                 "prediction_table": df_predict,
                 "fields": predict_data["schema"]["fields"],
                 "predictData": predict_data["data"],
-                "predict_explanations": predict_anchors,
-                "validation_explanations": val_anchors,
+                "predict_shaps": predict_shap_values,
+                "validation_shaps": eval_shap_values,
                 "exdata": exdata["data"] if not use_cross_validation else [],
                 "evaluate": evaluate,
                 "importantFeatures": important_features,

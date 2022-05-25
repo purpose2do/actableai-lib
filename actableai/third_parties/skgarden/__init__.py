@@ -1,5 +1,5 @@
-from .forest import RandomForestRegressor
 from .forest import ExtraTreesRegressor
+from .forest import RandomForestRegressor
 from .mondrian import MondrianForestClassifier
 from .mondrian import MondrianForestRegressor
 from .mondrian import MondrianTreeClassifier

@@ -1,8 +1,7 @@
-import shutil
-import pytest
-
 import numpy as np
 import pandas as pd
+import pytest
+import shutil
 
 from actableai.debiasing.residuals_model import ResidualsModel
 from actableai.utils.testing import unittest_hyperparameters

@@ -18,26 +18,29 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import sys
-import os
-import json
-import pickle
 import argparse
 import collections
-
+import json
 import numpy as np
+import os
+import pickle
+import sys
 import torch
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
 
 import actableai.third_parties.spanABSA.bert.tokenization as tokenization
-from actableai.third_parties.spanABSA. bert.modeling import BertConfig
-from actableai.third_parties.spanABSA. bert.sentiment_modeling import BertForSpanAspectExtraction
-
-from actableai.third_parties.spanABSA.squad.squad_evaluate import exact_match_score, metric_max_over_ground_truths
-from actableai.third_parties.spanABSA.absa.utils import read_absa_data, convert_absa_data, convert_examples_to_features, RawFinalResult, RawSpanResult, \
+from actableai.third_parties.spanABSA.absa.run_base import \
+    copy_optimizer_params_to_model, set_optimizer_params_grad, prepare_optimizer, \
+    post_process_loss, bert_load_state_dict
+from actableai.third_parties.spanABSA.absa.utils import read_absa_data, \
+    convert_absa_data, convert_examples_to_features, RawFinalResult, RawSpanResult, \
     span_annotate_candidates, wrapped_get_final_text
-from actableai.third_parties.spanABSA.absa.run_base import copy_optimizer_params_to_model, set_optimizer_params_grad, prepare_optimizer, post_process_loss, bert_load_state_dict
+from actableai.third_parties.spanABSA.bert.modeling import BertConfig
+from actableai.third_parties.spanABSA.bert.sentiment_modeling import \
+    BertForSpanAspectExtraction
+from actableai.third_parties.spanABSA.squad.squad_evaluate import exact_match_score, \
+    metric_max_over_ground_truths
 
 try:
     import xml.etree.ElementTree as ET, getopt, logging, sys, random, re, copy

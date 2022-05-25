@@ -1,8 +1,18 @@
-import pytest
-import pandas as pd
 import numpy as np
-from actableai.data_validation.checkers import *
-from actableai.data_validation.base import *
+import pandas as pd
+import pytest
+
+from actableai.data_validation.base import CheckLevels, CheckResult
+from actableai.data_validation.checkers import (
+    CheckColumnInflateLimit,
+    CheckNUnique,
+    DoNotContainMixedChecker,
+    IsCategoricalChecker,
+    IsDatetimeChecker,
+    IsNumericalChecker,
+    IsSufficientClassSampleChecker,
+    MaxTrainSamplesChecker,
+)
 
 
 class TestIsCategoricalChecker:
@@ -14,10 +24,10 @@ class TestIsCategoricalChecker:
                 "z": ["1", "1", "1", "2", "2", "2", "3", "3", "3", "3"],
             }
         )
-        c1 = IsCategoricalChecker(level=CheckLevels.CRITICAL).check(df["y"])
+        c1 = IsCategoricalChecker(level=CheckLevels.CRITICAL).check(df["y"])  # type: ignore
         c2 = IsCategoricalChecker(level=CheckLevels.CRITICAL).check(df["z"])
         assert isinstance(c1, CheckResult)
-        assert c2 == None
+        assert c2 is None
 
 
 class TestDoNotContainMixedChecker:
@@ -32,7 +42,7 @@ class TestDoNotContainMixedChecker:
         c1 = DoNotContainMixedChecker(level=CheckLevels.CRITICAL).check(df, ["y"])
         c2 = DoNotContainMixedChecker(level=CheckLevels.CRITICAL).check(df, ["x"])
         assert isinstance(c1, CheckResult)
-        assert c2 == None
+        assert c2 is None
 
 
 class TestIsDatetimeChecker:
@@ -48,9 +58,9 @@ class TestIsDatetimeChecker:
             }
         )
         c1 = IsDatetimeChecker(level=CheckLevels.CRITICAL).check(df["y"])
-        c2 = IsDatetimeChecker(level=CheckLevels.CRITICAL).check(df["date"])
+        c2 = IsDatetimeChecker(level=CheckLevels.CRITICAL).check(df["date"])  # type: ignore
         assert isinstance(c1, CheckResult)
-        assert c2 == None
+        assert c2 is None
 
 
 class TestCheckNUnique:
@@ -69,7 +79,7 @@ class TestCheckNUnique:
         assert (
             checkresult.message
             == f"{analytics} currently doesn't support categorical columns with more than {n_unique_level} unique values.\n"
-            + f"['x'] column(s) have too many unique values."
+            + "['x'] column(s) have too many unique values."
         )
 
     @pytest.mark.parametrize("analytics", ["Explanation", "Bayesian Regression"])
@@ -93,7 +103,7 @@ class TestCheckNUnique:
         assert (
             checkresult.message
             == f"{analytics} currently doesn't support categorical columns with more than {n_unique_level} unique values.\n"
-            + f"['x', 'y'] column(s) have too many unique values."
+            + "['x', 'y'] column(s) have too many unique values."
         )
 
 
@@ -148,7 +158,7 @@ class TestIsNumericalChecker:
         c1 = IsNumericalChecker(level=CheckLevels.CRITICAL).check(df["y"])
         c2 = IsNumericalChecker(level=CheckLevels.CRITICAL).check(df["x"])
         assert isinstance(c1, CheckResult)
-        assert c2 == None
+        assert c2 is None
 
 
 class TestCheckColumnInflateLimit:
@@ -164,7 +174,7 @@ class TestCheckColumnInflateLimit:
         assert checkresult.level == CheckLevels.CRITICAL
         assert (
             checkresult.message
-            == f"Dataset after inflation is too large. Please lower the polynomial degree or reduce the number of unique values in categorical columns."
+            == "Dataset after inflation is too large. Please lower the polynomial degree or reduce the number of unique values in categorical columns."
         )
 
     def test_not_check(self):
@@ -193,4 +203,15 @@ class TestIsSufficientClassSampleChecker:
         result = iscsc.check(df, target, validation_ratio)
         assert result is not None
         assert result.name == "IsSufficientClassSampleChecker"
+        assert result.level == CheckLevels.CRITICAL
+
+
+class TestMaxTrainSamplesChecker:
+    def test_check(self):
+        mtsc = MaxTrainSamplesChecker(
+            level=CheckLevels.CRITICAL, name="MaxTrainSamplesChecker"
+        )
+        result = mtsc.check(n_cluster=3, max_samples=2)
+        assert result is not None
+        assert result.name == "MaxTrainSamplesChecker"
         assert result.level == CheckLevels.CRITICAL
