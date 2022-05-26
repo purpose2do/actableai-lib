@@ -217,6 +217,7 @@ class TestMaxTrainSamplesChecker:
         assert result.name == "MaxTrainSamplesChecker"
         assert result.level == CheckLevels.CRITICAL
 
+
 class TestPositiveOutcomeValueThreshold:
     def test_check(self):
         df = pd.DataFrame(
