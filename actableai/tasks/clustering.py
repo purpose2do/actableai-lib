@@ -119,19 +119,24 @@ class AAIClusteringTask(AAITask):
         df_train = df_train.dropna(how="all", axis=1)
         features = list(df_train.columns)
 
+        numeric_columns = list(df_train.select_dtypes(include=["number"]).columns)
+        if len(numeric_columns):
+            df_train[numeric_columns] = pd.DataFrame(
+                SimpleImputer(strategy="median").fit_transform(
+                    df_train[numeric_columns]
+                ),
+                columns=numeric_columns,
+            )
+
         category_map = {}
         label_encoder = {}
         for i, c in enumerate(features):
-            if df_train[c].dtype == "object":
+            if df_train[c].dtype in ["object", "bool"]:
                 df_train[c] = df_train[c].fillna("NA")
                 le = LabelEncoder()
                 df_train[c] = le.fit_transform(df_train[c])
                 category_map[i] = le.classes_
                 label_encoder[c] = le
-        df_train = pd.DataFrame(
-            SimpleImputer(strategy="most_frequent").fit_transform(df_train),
-            columns=df_train.columns,
-        )
 
         # Process data
         categorical_features = list(category_map.keys())
@@ -236,7 +241,9 @@ class AAIClusteringTask(AAITask):
         )
         clf.fit(df_dummies, cluster_id)
         cluster_explanations = generate_cluster_descriptions(
-            clf.tree_, df_dummies.columns, dummy_columns,
+            clf.tree_,
+            df_dummies.columns,
+            dummy_columns,
             min_precision=cluster_explain_min_precision,
         )
 
@@ -261,5 +268,4 @@ class AAIClusteringTask(AAITask):
                 {"name": x.name, "level": x.level, "message": x.message}
                 for x in failed_checks
             ],
-            "clf": clf,
         }
