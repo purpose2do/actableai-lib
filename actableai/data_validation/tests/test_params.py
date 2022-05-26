@@ -63,7 +63,9 @@ class TestCausalDataValidator:
             }
         )
 
-        validation_results = CausalDataValidator().validate(["x"], ["y"], df, [], [], None)
+        validation_results = CausalDataValidator().validate(
+            ["x"], ["y"], df, [], [], None
+        )
 
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
@@ -82,7 +84,9 @@ class TestCausalDataValidator:
         )
         df["x"] = np.nan
 
-        validation_results = CausalDataValidator().validate(["x"], ["y"], df, [], [], None)
+        validation_results = CausalDataValidator().validate(
+            ["x"], ["y"], df, [], [], None
+        )
 
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
@@ -101,7 +105,9 @@ class TestCausalDataValidator:
         )
         df["y"] = np.nan
 
-        validation_results = CausalDataValidator().validate(["x"], ["y"], df, [], [], None)
+        validation_results = CausalDataValidator().validate(
+            ["x"], ["y"], df, [], [], None
+        )
 
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
@@ -137,7 +143,9 @@ class TestCausalDataValidator:
             }
         )
 
-        validation_results = CausalDataValidator().validate(["x"], ["y", "z"], df, [], [], 1)
+        validation_results = CausalDataValidator().validate(
+            ["x"], ["y", "z"], df, [], [], 1
+        )
 
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
