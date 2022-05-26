@@ -135,7 +135,12 @@ def infer_causal(
         controls = {}
     columns = effect_modifiers + common_causes
     data_validation_results = CausalDataValidator().validate(
-        treatments, outcomes, pd_table, effect_modifiers, common_causes
+        treatments,
+        outcomes,
+        pd_table,
+        effect_modifiers,
+        common_causes,
+        positive_outcome_value,
     )
     failed_checks = [x for x in data_validation_results if x is not None]
 
@@ -156,6 +161,10 @@ def infer_causal(
 
     is_single_treatment = len(treatments) == 1
     is_single_outcome = len(outcomes) == 1
+    if positive_outcome_value is not None:
+        assert (
+            len(outcomes) == 1
+        ), "Only one outcome is allowed when positive_outcome_value is not None"
 
     # if controls is provided, convert numeric to categorical
     for c in controls:

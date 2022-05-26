@@ -12,6 +12,7 @@ from actableai.data_validation.checkers import (
     IsNumericalChecker,
     IsSufficientClassSampleChecker,
     MaxTrainSamplesChecker,
+    PositiveOutcomeValueThreshold,
 )
 
 
@@ -214,4 +215,20 @@ class TestMaxTrainSamplesChecker:
         result = mtsc.check(n_cluster=3, max_samples=2)
         assert result is not None
         assert result.name == "MaxTrainSamplesChecker"
+        assert result.level == CheckLevels.CRITICAL
+
+
+class TestPositiveOutcomeValueThreshold:
+    def test_check(self):
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                "y": ["a", "a", "a", "b", "b", "b", "c", "c", "c", "d"],
+            }
+        )
+        result = PositiveOutcomeValueThreshold(
+            level=CheckLevels.CRITICAL, name="PositiveOutcomeValueThreshold"
+        ).check(df=df, outcomes=["x"], positive_outcome_value="tomato")
+        assert result is not None
+        assert result.name == "PositiveOutcomeValueThreshold"
         assert result.level == CheckLevels.CRITICAL
