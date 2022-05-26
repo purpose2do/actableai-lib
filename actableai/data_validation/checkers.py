@@ -4,7 +4,12 @@ from typing import List, Optional, Union
 import pandas as pd
 
 from actableai.data_imputation.error_detector.rule_parser import RulesBuilder
-from actableai.data_validation.base import CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE, IChecker, CheckResult, CheckLevels
+from actableai.data_validation.base import (
+    CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE,
+    IChecker,
+    CheckResult,
+    CheckLevels,
+)
 
 
 class IsNumericalChecker(IChecker):
@@ -861,3 +866,60 @@ class MaxTrainSamplesChecker(IChecker):
                 level=self.level,
                 message=f"If n_cluster ({n_cluster}) is specified, it should be less than max_samples ({max_samples})",
             )
+
+
+class IsUniqueOutcome(IChecker):
+    def __init__(self, level, name="IsUniqueOutcome"):
+        self.name = name
+        self.level = level
+
+    def check(
+        self, outcomes: List[str], positive_outcome_value: Optional[str]
+    ) -> Optional[CheckResult]:
+        """Check if the outcome is unique.
+
+        Args:
+            df: Dataframe to check.
+            outcome: Outcome to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
+        if positive_outcome_value is not None and len(outcomes) != 1:
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"If positive_outcome_value is specified, there should be only one outcome ({', '.join(outcomes)})",
+            )
+
+
+class PositiveOutcomeValueThreshold(IChecker):
+    def __init__(self, level, name="PositiveOutcomeValueThreshold"):
+        self.name = name
+        self.level = level
+
+    def check(
+        self,
+        df: pd.DataFrame,
+        outcomes: List[str],
+        positive_outcome_value: Optional[str],
+    ) -> Optional[CheckResult]:
+        """Check if the number of samples is enough for the model.
+
+        Args:
+            df: Dataframe to check.
+            positive_outcome_value: Positive outcome value to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
+        if positive_outcome_value is not None:
+            df[outcomes[0]] = df[outcomes[0]].astype(str)
+            positive_outcome_value = str(positive_outcome_value)
+            if (df[outcomes[0]] == positive_outcome_value).sum() < 2:
+                return CheckResult(
+                    name=self.name,
+                    level=self.level,
+                    message="There should be at least 2 samples with positive outcome"
+                    + f"value ({positive_outcome_value}) in the outcome column ({outcomes[0]})",
+                )

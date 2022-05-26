@@ -35,11 +35,13 @@ from actableai.data_validation.checkers import (
     IsSufficientDataChecker,
     IsSufficientNumberOfClassChecker,
     IsSufficientValidationSampleChecker,
+    IsUniqueOutcome,
     IsValidFrequencyChecker,
     IsValidNumberOfClusterChecker,
     IsValidPredictionLengthChecker,
     IsValidTypeNumberOfClusterChecker,
     MaxTrainSamplesChecker,
+    PositiveOutcomeValueThreshold,
     RegressionEvalMetricChecker,
     UniqueDateTimeChecker,
 )
@@ -552,6 +554,7 @@ class CausalDataValidator:
         df: pd.DataFrame,
         effect_modifiers: List[str],
         common_causes: List[str],
+        positive_outcome_value: Optional[str],
     ) -> List[Union[CheckResult, None]]:
         columns = effect_modifiers + common_causes
         validation_results = [
@@ -605,6 +608,21 @@ class CausalDataValidator:
                             n_rows=CAUSAL_INFERENCE_CATEGORICAL_MINIMUM_TREATMENT,
                         )
                     )
+
+        if positive_outcome_value is not None:
+            validation_results.append(
+                IsUniqueOutcome(level=CheckLevels.CRITICAL).check(
+                    outcomes, positive_outcome_value
+                )
+            )
+            validation_results.append(
+                PositiveOutcomeValueThreshold(level=CheckLevels.CRITICAL).check(
+                    df,
+                    outcomes,
+                    positive_outcome_value,
+                )
+            )
+
         return validation_results
 
 
