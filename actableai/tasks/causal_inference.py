@@ -135,7 +135,12 @@ def infer_causal(
         controls = {}
     columns = effect_modifiers + common_causes
     data_validation_results = CausalDataValidator().validate(
-        treatments, outcomes, pd_table, effect_modifiers, common_causes, positive_outcome_value
+        treatments,
+        outcomes,
+        pd_table,
+        effect_modifiers,
+        common_causes,
+        positive_outcome_value,
     )
     failed_checks = [x for x in data_validation_results if x is not None]
 
