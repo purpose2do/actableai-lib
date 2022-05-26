@@ -11,7 +11,6 @@ from actableai.data_validation.checkers import (
     IsDatetimeChecker,
     IsNumericalChecker,
     IsSufficientClassSampleChecker,
-    IsUniqueOutcome,
     MaxTrainSamplesChecker,
     PositiveOutcomeValueThreshold,
 )
@@ -217,17 +216,6 @@ class TestMaxTrainSamplesChecker:
         assert result is not None
         assert result.name == "MaxTrainSamplesChecker"
         assert result.level == CheckLevels.CRITICAL
-
-
-class TestIsUniqueOutcome:
-    def test_check(self):
-        result = IsUniqueOutcome(
-            level=CheckLevels.CRITICAL, name="IsUniqueOutcome"
-        ).check(outcomes=["a", "b", "c"], positive_outcome_value="tomato")
-        assert result is not None
-        assert result.name == "IsUniqueOutcome"
-        assert result.level == CheckLevels.CRITICAL
-
 
 class TestPositiveOutcomeValueThreshold:
     def test_check(self):

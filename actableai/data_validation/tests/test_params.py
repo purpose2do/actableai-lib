@@ -133,26 +133,6 @@ class TestCausalDataValidator:
         assert "PositiveOutcomeValueThreshold" in validations_dict
         assert validations_dict["PositiveOutcomeValueThreshold"] == CheckLevels.CRITICAL
 
-    def test_validate_outcomes_with_pos_val_outc(self):
-        df = pd.DataFrame(
-            {
-                "x": rands_array(100, 5),
-                "y": rands_array(100, 5),
-                "z": rands_array(100, 5),
-                "t": [1, 2, 3, 4, 5],
-            }
-        )
-
-        validation_results = CausalDataValidator().validate(
-            ["x"], ["y", "z"], df, [], [], 1
-        )
-
-        validations_dict = {
-            val.name: val.level for val in validation_results if val is not None
-        }
-        assert "IsUniqueOutcome" in validations_dict
-        assert validations_dict["IsUniqueOutcome"] == CheckLevels.CRITICAL
-
 
 class TestRegressionDataValidator:
     def test_validate_columnexistchecker_feature(self):

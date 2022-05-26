@@ -868,31 +868,6 @@ class MaxTrainSamplesChecker(IChecker):
             )
 
 
-class IsUniqueOutcome(IChecker):
-    def __init__(self, level, name="IsUniqueOutcome"):
-        self.name = name
-        self.level = level
-
-    def check(
-        self, outcomes: List[str], positive_outcome_value: Optional[str]
-    ) -> Optional[CheckResult]:
-        """Check if the outcome is unique.
-
-        Args:
-            df: Dataframe to check.
-            outcome: Outcome to check.
-
-        Returns:
-            Optional[CheckResult]: Check result.
-        """
-        if positive_outcome_value is not None and len(outcomes) != 1:
-            return CheckResult(
-                name=self.name,
-                level=self.level,
-                message=f"If positive_outcome_value is specified, there should be only one outcome ({', '.join(outcomes)})",
-            )
-
-
 class PositiveOutcomeValueThreshold(IChecker):
     def __init__(self, level, name="PositiveOutcomeValueThreshold"):
         self.name = name

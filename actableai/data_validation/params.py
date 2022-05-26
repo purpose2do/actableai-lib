@@ -35,7 +35,6 @@ from actableai.data_validation.checkers import (
     IsSufficientDataChecker,
     IsSufficientNumberOfClassChecker,
     IsSufficientValidationSampleChecker,
-    IsUniqueOutcome,
     IsValidFrequencyChecker,
     IsValidNumberOfClusterChecker,
     IsValidPredictionLengthChecker,
@@ -610,11 +609,6 @@ class CausalDataValidator:
                     )
 
         if positive_outcome_value is not None:
-            validation_results.append(
-                IsUniqueOutcome(level=CheckLevels.CRITICAL).check(
-                    outcomes, positive_outcome_value
-                )
-            )
             validation_results.append(
                 PositiveOutcomeValueThreshold(level=CheckLevels.CRITICAL).check(
                     df,
