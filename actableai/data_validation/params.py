@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
 import pandas as pd
 from actableai.causal import has_categorical_column, prepare_sanitize_data
@@ -554,7 +554,7 @@ class CausalDataValidator:
         df: pd.DataFrame,
         effect_modifiers: List[str],
         common_causes: List[str],
-        positive_outcome_value: Optional[str],
+        positive_outcome_value: Optional[Any],
     ) -> List[Union[CheckResult, None]]:
         columns = effect_modifiers + common_causes
         validation_results = [
