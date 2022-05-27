@@ -19,3 +19,4 @@ class TaskType(str, Enum):
     REGRESSION_TRAIN = "regression_train"
     BAYESIAN_REGRESSION = "bayesian_regression"
     SENTIMENT_ANALYSIS = "sentiment_analysis"
+    INTERVENTION = "intervention"

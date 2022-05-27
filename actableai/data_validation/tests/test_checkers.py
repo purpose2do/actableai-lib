@@ -4,15 +4,19 @@ import pytest
 
 from actableai.data_validation.base import CheckLevels, CheckResult
 from actableai.data_validation.checkers import (
+    CategoricalSameValuesChecker,
     CheckColumnInflateLimit,
     CheckNUnique,
     DoNotContainMixedChecker,
     IsCategoricalChecker,
+    IsCategoricalOrNumericalChecker,
     IsDatetimeChecker,
     IsNumericalChecker,
     IsSufficientClassSampleChecker,
     MaxTrainSamplesChecker,
     PositiveOutcomeValueThreshold,
+    SameTypeChecker,
+    StratifiedKFoldChecker,
 )
 
 
@@ -226,9 +230,76 @@ class TestPositiveOutcomeValueThreshold:
                 "y": ["a", "a", "a", "b", "b", "b", "c", "c", "c", "d"],
             }
         )
+
         result = PositiveOutcomeValueThreshold(
             level=CheckLevels.CRITICAL, name="PositiveOutcomeValueThreshold"
         ).check(df=df, outcomes=["x"], positive_outcome_value="tomato")
         assert result is not None
         assert result.name == "PositiveOutcomeValueThreshold"
+        assert result.level == CheckLevels.CRITICAL
+
+
+class TestIsCategoricalOrNumericalChecker:
+    def test_check(self):
+        checker = IsCategoricalOrNumericalChecker(
+            level=CheckLevels.CRITICAL, name="IsCategoricalOrNumericalChecker"
+        )
+
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                "y": ["a", "a", "a", "b", "b", "b", "c", "c", "c", "d"],
+            }
+        )
+
+        result = checker.check(df, ["x", "y"])
+        assert result is None
+
+
+class TestSameTypeChecker:
+    def test_check(self):
+        checker = SameTypeChecker(level=CheckLevels.CRITICAL, name="SameTypeChecker")
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                "y": ["a", "a", "a", "b", "b", "b", "c", "c", "c", "d"],
+            }
+        )
+        result = checker.check(df, ["x", "y"])
+        assert result is not None
+        assert result.name == "SameTypeChecker"
+        assert result.level == CheckLevels.CRITICAL
+
+
+class TestCategoricalSameValuesChecker:
+    def test_check(self):
+        checker = CategoricalSameValuesChecker(
+            level=CheckLevels.CRITICAL, name="CategoricalSameValuesChecker"
+        )
+        df = pd.DataFrame(
+            {
+                "x": ["a", "a", "a", "b", "b", "b", "c", "c", "c", "d"],
+                "y": ["a", "a", "a", "b", "b", "b", "c", "c", "c", "e"],
+            }
+        )
+        result = checker.check(df, "x", "y")
+        assert result is not None
+        assert result.name == "CategoricalSameValuesChecker"
+        assert result.level == CheckLevels.CRITICAL
+
+
+class TestStratifiedKFoldChecker:
+    def test_check(self):
+        checker = StratifiedKFoldChecker(
+            level=CheckLevels.CRITICAL, name="StratifiedKFoldChecker"
+        )
+        df = pd.DataFrame(
+            {
+                "x": ["a", "a", "a", "b", "b", "b", "c", "c", "c", "d"],
+                "y": ["a", "a", "a", "b", "b", "b", "c", "c", "c", "e"],
+            }
+        )
+        result = checker.check(df, "x", 20)
+        assert result is not None
+        assert result.name == "StratifiedKFoldChecker"
         assert result.level == CheckLevels.CRITICAL

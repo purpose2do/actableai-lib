@@ -10,6 +10,7 @@ from actableai.data_validation.base import (
     CheckResult,
     CheckLevels,
 )
+from actableai.utils import get_type_special_no_ag
 
 
 class IsNumericalChecker(IChecker):
@@ -856,10 +857,10 @@ class MaxTrainSamplesChecker(IChecker):
         Args:
             df: Dataframe to check.
             max_samples: Maximum number of samples.
-
         Returns:
             Optional[CheckResult]: Check result.
         """
+
         if type(n_cluster) == int and max_samples is not None and n_cluster > max_samples:  # type: ignore
             return CheckResult(
                 name=self.name,
@@ -898,3 +899,111 @@ class PositiveOutcomeValueThreshold(IChecker):
                     message="There should be at least 2 samples with positive outcome"
                     + f"value ({positive_outcome_value}) in the outcome column ({outcomes[0]})",
                 )
+class IsCategoricalOrNumericalChecker(IChecker):
+    def __init__(self, level, name="IsCategoricalNumericalChecker"):
+        self.name = name
+        self.level = level
+
+    def check(self, df: pd.DataFrame, features: List[str]) -> Optional[CheckResult]:
+        """Check if the types of the features are the same.
+
+        Args:
+            df: Dataframe to check.
+            features: Features to check.
+        """
+
+        bad_features = []
+        for feature in features:
+            if not (
+                get_type_special_no_ag(df[feature])
+                in ["integer", "numeric", "category"]
+            ):
+                bad_features.append(feature)
+        if len(bad_features) > 0:
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"{', '.join(bad_features)} are neither numerical nor categorical",
+            )
+
+
+class SameTypeChecker(IChecker):
+    def __init__(self, level, name="SameTypeChecker"):
+        self.name = name
+        self.level = level
+
+    def check(self, df: pd.DataFrame, features: List[str]) -> Optional[CheckResult]:
+        """Check if the features are categorical or numerical.
+
+        Args:
+            df: Dataframe to check.
+            features: Features to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
+        og_type = get_type_special_no_ag(df[features[0]])
+        for feature in features:
+            if get_type_special_no_ag(df[feature]) != og_type:
+                return CheckResult(
+                    name=self.name,
+                    level=self.level,
+                    message=f"{', '.join(features)} are not of the same type",
+                )
+
+
+class CategoricalSameValuesChecker(IChecker):
+    def __init__(self, level, name="CategoricalSameValuesChecker"):
+        self.name = name
+        self.level = level
+
+    def check(
+        self,
+        df: pd.DataFrame,
+        current_intervention_column: str,
+        new_intervention_column: str,
+    ) -> Optional[CheckResult]:
+        """Check if the categorical features have the same unique values.
+
+        Args:
+            df: Dataframe to check.
+            features: Features to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
+        og_values = df[current_intervention_column].unique()
+        for value in df[new_intervention_column].unique():
+            if not (value in og_values):
+                return CheckResult(
+                    name=self.name,
+                    level=self.level,
+                    message=f"New Intervention : {new_intervention_column} has unseen values than current intervetion : {current_intervention_column}."
+                    + "When intervention is categorical please make sure that the new intervention column has the same values as the current intervention column.",
+                )
+
+
+class StratifiedKFoldChecker(IChecker):
+    def __init__(self, level, name="StratifiedKFoldChecker"):
+        self.name = name
+        self.level = level
+
+    def check(
+        self, df: pd.DataFrame, intervention: str, causal_cv: int
+    ) -> Optional[CheckResult]:
+        """Check if the features can be splitted into stratified folds.
+
+        Args:
+            df: Dataframe to check.
+            features: Features to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
+
+        if df[intervention].value_counts().min() < causal_cv:
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"The count of each unique values in the intervention column ({intervention}) must be greater than or equal to causal_cv : {causal_cv}.",
+            )

@@ -74,7 +74,6 @@ class _AAIRegressionTrainTask(AAITask):
                 - Predicted shap values if explain_samples is true
                 - Leaderboard of the best model ran by AutoGluon
         """
-        import shap
         import pandas as pd
         from autogluon.tabular import TabularPredictor
         from autogluon.features.generators import AutoMLPipelineFeatureGenerator
@@ -212,192 +211,6 @@ class _AAIRegressionTrainTask(AAITask):
         )
 
 
-class _AAIInterventionTask(AAITask):
-    @AAITask.run_with_ray_remote(TaskType.CAUSAL_INFERENCE)
-    def run(
-        self,
-        df: pd.DataFrame,
-        df_predict: pd.DataFrame,
-        target: str,
-        run_model: bool,
-        current_intervention_column: str,
-        new_intervention_column: str,
-        common_causes: List[str],
-        causal_cv: int,
-        causal_hyperparameters: Dict,
-        cate_alpha: float,
-        presets: str,
-        model_directory: str,
-        num_gpus: int,
-    ):
-        """Runs an intervention on Input DataFrame
-
-        Args:
-            df: Input DataFrame
-            df_predict: DataFrame where we predicted the target
-            target: ?
-            run_model: Whether we run the model
-            current_intervention_column: Feature before intervention
-            new_intervention_column: Feature after intervention
-            common_causes: Common causes
-            causal_cv (int): _description_
-            causal_hyperparameters (Dict): _description_
-            cate_alpha (float): _description_
-            presets (str): _description_
-            model_directory (str): _description_
-            num_gpus (int): _description_
-            time_limit (Optional[int]): time limit of training.
-
-        Returns:
-            _type_: _description_
-        """
-        import numpy as np
-        import pandas as pd
-        from tempfile import mkdtemp
-        from econml.dml import LinearDML, NonParamDML
-        from sklearn.impute import SimpleImputer
-        from actableai.causal.predictors import SKLearnWrapper
-        from actableai.causal import OneHotEncodingTransformer
-        from autogluon.tabular import TabularPredictor
-
-        df_ = df.copy()
-        if run_model:
-            df_.loc[df_predict.index, target] = df_predict[target + "_predicted"]
-        df_ = df_[pd.notnull(df_[[current_intervention_column, target]]).all(axis=1)]
-
-        columns = [current_intervention_column, new_intervention_column] + common_causes
-        df_imputed = df_.copy()
-        num_cols = df_imputed[columns]._get_numeric_data().columns
-        cat_cols = list(set(df_imputed.columns) - set(num_cols))
-        if len(num_cols) > 0:
-            df_imputed[num_cols] = SimpleImputer(strategy="median").fit_transform(
-                df_imputed[num_cols]
-            )
-        if len(cat_cols) > 0:
-            df_imputed[cat_cols] = SimpleImputer(
-                strategy="most_frequent"
-            ).fit_transform(df_imputed[cat_cols])
-
-        X = df_imputed[common_causes] if len(common_causes) > 0 else None
-        model_t = TabularPredictor(
-            path=mkdtemp(prefix=str(model_directory)),
-            label="t",
-            problem_type="regression"
-            if current_intervention_column in num_cols
-            else "multiclass",
-        )
-        model_t = SKLearnWrapper(
-            model_t,
-            hyperparameters=causal_hyperparameters,
-            presets=presets,
-            ag_args_fit={
-                "num_gpus": num_gpus,
-            },
-        )
-
-        model_y = TabularPredictor(
-            path=mkdtemp(prefix=str(model_directory)),
-            label="y",
-            problem_type="regression",
-        )
-        model_y = SKLearnWrapper(
-            model_y,
-            hyperparameters=causal_hyperparameters,
-            presets=presets,
-            ag_args_fit={
-                "num_gpus": num_gpus,
-            },
-        )
-
-        if (
-            (X is None)
-            or (cate_alpha is not None)
-            or (
-                current_intervention_column not in num_cols
-                and len(df[current_intervention_column].unique()) > 2
-            )
-        ):
-            # Multiclass treatment
-            causal_model = LinearDML(
-                model_t=model_t,
-                model_y=model_y,
-                featurizer=None if X is None else OneHotEncodingTransformer(X),
-                cv=causal_cv,
-                linear_first_stages=False,
-                discrete_treatment=current_intervention_column not in num_cols,
-            )
-        else:
-            model_final = TabularPredictor(
-                path=mkdtemp(prefix=str(model_directory)),
-                label="y_res",
-                problem_type="regression",
-            )
-            model_final = SKLearnWrapper(
-                df_[[target]],
-                model_final,
-                hyperparameters=causal_hyperparameters,
-                presets=presets,
-                ag_args_fit={
-                    "num_gpus": num_gpus,
-                },
-            )
-            causal_model = NonParamDML(
-                model_t=model_t,
-                model_y=model_y,
-                model_final=model_final,
-                featurizer=None if X is None else OneHotEncodingTransformer(X),
-                cv=causal_cv,
-                discrete_treatment=current_intervention_column not in num_cols,
-            )
-
-        causal_model.fit(
-            df_[[target]].values,
-            df_[[current_intervention_column]].values,
-            X=X,
-        )
-
-        df_intervene = df_[
-            pd.notnull(df_[[current_intervention_column, new_intervention_column]]).all(
-                axis=1
-            )
-        ]
-        df_imputed = df_imputed.loc[df_intervene.index]
-        X = df_imputed[common_causes] if len(common_causes) > 0 else None
-        effects = causal_model.effect(
-            X,
-            T0=df_imputed[[current_intervention_column]],
-            T1=df_imputed[[new_intervention_column]],
-        )
-
-        targets = df_intervene[target].copy()
-        if run_model:
-            df_predict_index = df_predict.index.intersection(df_intervene.index)
-            df_intervene.loc[df_predict_index, target] = np.NaN
-            df_intervene.loc[df_predict_index, target + "_predicted"] = df_predict.loc[
-                df_predict_index, target + "_predicted"
-            ]
-        df_intervene[target + "_intervened"] = targets + effects.flatten()
-        if cate_alpha is not None:
-            lb, ub = causal_model.effect_interval(
-                X,
-                T0=df_intervene[[current_intervention_column]],
-                T1=df_intervene[[new_intervention_column]],
-                alpha=cate_alpha,
-            )
-            df_intervene[target + "_intervened_low"] = targets + lb.flatten()
-            df_intervene[target + "_intervened_high"] = targets + ub.flatten()
-
-        df_intervene["intervention_effect"] = effects.flatten()
-        if cate_alpha is not None:
-            df_intervene["intervention_effect_low"] = lb.flatten()
-            df_intervene["intervention_effect_high"] = ub.flatten()
-        df_intervene = df_intervene[
-            df[current_intervention_column] != df[new_intervention_column]
-        ]
-
-        return df_intervene
-
-
 class AAIRegressionTask(AAITask):
     """Regression task."""
 
@@ -418,15 +231,8 @@ class AAIRegressionTask(AAITask):
         presets: str = "medium_quality_faster_train",
         hyperparameters: Optional[dict] = None,
         train_task_params: Optional[dict] = None,
-        intervention_task_params: Optional[dict] = None,
         kfolds: int = 1,
         cross_validation_max_concurrency: int = 1,
-        current_intervention_column: Optional[str] = None,
-        new_intervention_column: Optional[str] = None,
-        cate_alpha: Optional[float] = None,
-        common_causes: List[str] = [],
-        causal_cv: int = 5,
-        causal_hyperparameters: Optional[dict] = None,
         residuals_hyperparameters: Optional[dict] = None,
         drop_duplicates: bool = True,
         return_residuals: bool = False,
@@ -470,24 +276,10 @@ class AAIRegressionTask(AAITask):
                 Defaults to "medium_quality_faster_train".
             train_task_params: Parameters for _AAITrainTask constructor.
                 Defaults to None.
-            intervention_task_params: Task parameters to be passed to build intervention
-                model and predictions. Defaults to None.
             kfolds: Number of folds for cross validation. If 1, train test split is used
                 instead.. Defaults to 1.
             cross_validation_max_concurrency: Maximum number of Ray actors used for
                 cross validation (each actor execute for one split). Defaults to 1.
-            current_intervention_column: Current values of intervention for
-                counterfactual prediction. Defaults to None.
-            new_intervention_column: New values of intervention for counterfactual
-                prediction. Defaults to None.
-            cate_alpha: Alpha value for CATE (conditional average treatment effect)
-                quantiles. Defaults to None.
-            common_causes: List of columns to be used as common causes in causal graph
-                of intervention model. Defaults to [].
-            causal_cv: Number of folds used in nuisance models in intervention model.
-                Defaults to 5.
-            causal_hyperparameters: Autogluon's hyperparameters used in nuisance models
-                of counterfactual prediction. Defaults to None.
             residuals_hyperparameters: Autogluon's hyperparameteres used in final model
                 of counterfactual predictions. Defaults to None.
             drop_duplicates: Whether duplicate values should be dropped before training.
@@ -530,10 +322,6 @@ class AAIRegressionTask(AAITask):
             UNIQUE_CATEGORY_THRESHOLD,
         )
         from actableai.regression.cross_validation import run_cross_validation
-        from actableai.tasks.regression import (
-            _AAIInterventionTask,
-            _AAIRegressionTrainTask,
-        )
         from actableai.utils.sanitize import sanitize_timezone
 
         start = time.time()
@@ -552,8 +340,6 @@ class AAIRegressionTask(AAITask):
             model_directory = mkdtemp(prefix="autogluon_model")
         if train_task_params is None:
             train_task_params = {}
-        if intervention_task_params is None:
-            intervention_task_params = {}
 
         run_debiasing = len(biased_groups) > 0 and len(debiased_features) > 0
 
@@ -826,29 +612,6 @@ class AAIRegressionTask(AAITask):
             "debiasing_charts": debiasing_charts,
             "leaderboard": leaderboard.astype(str),  # type: ignore
         }
-
-        if (
-            current_intervention_column is not None
-            and new_intervention_column is not None
-        ):
-            # Counterfactual predictions
-            intervention_task = _AAIInterventionTask(**intervention_task_params)
-            df_intervene = intervention_task.run(
-                df,
-                df_predict,
-                target,
-                run_model,
-                current_intervention_column,
-                new_intervention_column,
-                common_causes,
-                causal_cv,
-                causal_hyperparameters,
-                cate_alpha,
-                presets,
-                model_directory,
-                num_gpus,
-            )
-            data["intervention_table"] = df_intervene
 
         runtime = time.time() - start
         return {

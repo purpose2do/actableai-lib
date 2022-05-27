@@ -15,6 +15,7 @@ from actableai.data_validation.base import (
     CheckResult,
 )
 from actableai.data_validation.checkers import (
+    CategoricalSameValuesChecker,
     CategoryChecker,
     CheckColumnInflateLimit,
     CheckNUnique,
@@ -28,6 +29,7 @@ from actableai.data_validation.checkers import (
     DoNotContainTextChecker,
     InsufficientCategoricalRows,
     IsCategoricalChecker,
+    IsCategoricalOrNumericalChecker,
     IsDatetimeChecker,
     IsNumericalChecker,
     IsSufficientClassSampleChecker,
@@ -42,8 +44,11 @@ from actableai.data_validation.checkers import (
     MaxTrainSamplesChecker,
     PositiveOutcomeValueThreshold,
     RegressionEvalMetricChecker,
+    SameTypeChecker,
+    StratifiedKFoldChecker,
     UniqueDateTimeChecker,
 )
+from actableai.utils import get_type_special_no_ag
 
 
 class RegressionDataValidator:
@@ -648,3 +653,50 @@ class DataImputationDataValidator:
                 df, n_sample=MINIMUM_NUMBER_OF_SAMPLE
             ),
         ]
+
+
+class InterventionDataValidator:
+    def __init__(self):
+        pass
+
+    def validate(
+        self,
+        df,
+        target: str,
+        current_intervention_column: str,
+        new_intervention_column: str,
+        common_causes: List[str],
+        causal_cv,
+    ):
+        validations = [
+            ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
+                df,
+                [current_intervention_column, new_intervention_column, target]
+                + common_causes,
+            )
+        ]
+        if len([x for x in validations if x is not None]) > 0:
+            return validations
+        # Columns are sane now we treat
+        validations += [
+            IsNumericalChecker(level=CheckLevels.CRITICAL).check(df[target]),
+            IsCategoricalOrNumericalChecker(level=CheckLevels.CRITICAL).check(
+                df, [current_intervention_column, new_intervention_column]
+            ),
+            SameTypeChecker(level=CheckLevels.CRITICAL).check(
+                df, [current_intervention_column, new_intervention_column]
+            ),
+        ]
+        if get_type_special_no_ag(df[current_intervention_column]) == "category":
+            validations.append(
+                CategoricalSameValuesChecker(level=CheckLevels.CRITICAL).check(
+                    df, current_intervention_column, new_intervention_column
+                )
+            )
+            validations.append(
+                StratifiedKFoldChecker(level=CheckLevels.CRITICAL).check(
+                    df, current_intervention_column, causal_cv
+                )
+            )
+
+        return validations
