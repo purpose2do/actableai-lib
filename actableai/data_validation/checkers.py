@@ -944,11 +944,14 @@ class SameTypeChecker(IChecker):
         """
         og_type = get_type_special_no_ag(df[features[0]])
         for feature in features:
-            if get_type_special_no_ag(df[feature]) != og_type:
+            feature_type = get_type_special_no_ag(df[feature])
+            if feature_type in ["numeric", "integer"]:
+                feature_type = "numeric"
+            if feature_type != og_type:
                 return CheckResult(
                     name=self.name,
                     level=self.level,
-                    message=f"{', '.join(features)} are not of the same type",
+                    message=f"{', '.join(features)} have incompatible types.",
                 )
 
 
