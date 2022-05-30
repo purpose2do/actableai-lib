@@ -943,9 +943,11 @@ class SameTypeChecker(IChecker):
             Optional[CheckResult]: Check result.
         """
         og_type = get_type_special_no_ag(df[features[0]])
+        if og_type  == "integer":
+            og_type = "numeric"
         for feature in features:
             feature_type = get_type_special_no_ag(df[feature])
-            if feature_type in ["numeric", "integer"]:
+            if feature_type == "integer":
                 feature_type = "numeric"
             if feature_type != og_type:
                 return CheckResult(
