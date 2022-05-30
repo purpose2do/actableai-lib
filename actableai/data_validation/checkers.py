@@ -899,6 +899,8 @@ class PositiveOutcomeValueThreshold(IChecker):
                     message="There should be at least 2 samples with positive outcome"
                     + f"value ({positive_outcome_value}) in the outcome column ({outcomes[0]})",
                 )
+
+
 class IsCategoricalOrNumericalChecker(IChecker):
     def __init__(self, level, name="IsCategoricalNumericalChecker"):
         self.name = name
@@ -943,7 +945,7 @@ class SameTypeChecker(IChecker):
             Optional[CheckResult]: Check result.
         """
         og_type = get_type_special_no_ag(df[features[0]])
-        if og_type  == "integer":
+        if og_type == "integer":
             og_type = "numeric"
         for feature in features:
             feature_type = get_type_special_no_ag(df[feature])
