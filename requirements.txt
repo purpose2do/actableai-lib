@@ -3,7 +3,6 @@ absl-py==0.13.0
 aiohttp==3.7.4.post0
 aiohttp-cors==0.7.0
 aioredis==1.3.1
-alibi==0.5.8
 astunparse==1.6.3
 async-timeout==3.0.1
 attrs==20.3.0
