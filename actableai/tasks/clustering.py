@@ -59,6 +59,11 @@ class AAIClusteringTask(AAITask):
         Returns:
             Dict: Dictionnary of results
         """
+        import tensorflow as tf
+
+        # This needs to be done to make the shap library compatible
+        tf.compat.v1.disable_v2_behavior()
+
         import time
         import shap
         import pandas as pd
@@ -166,19 +171,29 @@ class AAIClusteringTask(AAITask):
         shap_values = []
         if explain_samples:
             background_samples = 100
-            if len(sampled_transformed_values) < 100:
-                background_samples = int(len(sampled_transformed_values) * 0.1)
+            if len(transformed_values) < 100:
+                background_samples = int(len(transformed_values) * 0.1)
 
-            background = sampled_transformed_values[
+            background = transformed_values[
                 np.random.choice(
-                    sampled_transformed_values.shape[0],
+                    transformed_values.shape[0],
                     background_samples,
                     replace=False,
                 )
             ]
 
-            explainer = shap.DeepExplainer(dec.encoder, background)
-            shap_values = explainer.shap_values(sampled_transformed_values)
+            explainer = shap.DeepExplainer(dec.model, background)
+
+            shap_values = explainer.shap_values(
+                transformed_values, check_additivity=False
+            )
+
+            # Extract only the shap values for the predicted values
+            shap_values = np.array(shap_values)
+            row_index, column_index = np.meshgrid(
+                np.arange(shap_values.shape[1]), np.arange(shap_values.shape[2])
+            )
+            shap_values = shap_values[cluster_ids, row_index, column_index].transpose(1, 0)
 
         try:
             lda = LinearDiscriminantAnalysis(n_components=2)
