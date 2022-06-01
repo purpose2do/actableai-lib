@@ -687,3 +687,17 @@ class InterventionDataValidator:
             )
 
         return validations
+
+
+class AssociationRuleDataValidator:
+    def __init__(self):
+        pass
+
+    def validate(
+        self, df: pd.DataFrame, individuals: str, items: str
+    ):
+        return [
+            ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
+                df, [individuals, items]
+            ),
+        ]
