@@ -48,7 +48,9 @@ class AutoGluonShapTreeExplainer:
 
         shap_values = np.array(shap_values)
 
-        pred = self.autogluon_predictor.predict_proba(data, as_pandas=False)
+        pred = self.autogluon_predictor.predict_proba(
+            data, as_pandas=False, as_multiclass=True
+        )
 
         row_index, column_index = np.meshgrid(
             np.arange(shap_values.shape[1]), np.arange(shap_values.shape[2])
