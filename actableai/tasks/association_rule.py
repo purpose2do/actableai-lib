@@ -77,7 +77,11 @@ class AAIAssociationRuleTask(AAITask):
         }
         frequent_func = frequent_dict[frequent_method]
         frequent_itemsets = frequent_func(
-            df_encoded, min_support=min_support, use_colnames=True, max_len=None, verbose=0
+            df_encoded,
+            min_support=min_support,
+            use_colnames=True,
+            max_len=None,
+            verbose=0,
         )
         rules = association_rules(frequent_itemsets, metric=metric, min_threshold=0.1)
 
