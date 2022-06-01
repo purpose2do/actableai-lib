@@ -13,8 +13,7 @@ import numpy as np
 import tensorflow.keras.backend as K
 from sklearn.cluster import KMeans
 from tensorflow.keras import callbacks
-from tensorflow.keras.layers import Dense, Input
-from tensorflow.keras.layers import Layer, InputSpec
+from tensorflow.keras.layers import Dense, Input, Layer, InputSpec, Normalization
 from tensorflow.keras.models import Model
 from time import time
 from typing import List, Tuple
@@ -145,7 +144,7 @@ class ClusteringLayer(Layer):
             )
         )
         q **= (self.alpha + 1.0) / 2.0
-        q = K.transpose(K.transpose(q) / K.sum(q, axis=1))
+        q = q / K.sum(q, axis=1, keepdims=True)
         return q
 
     def compute_output_shape(self, input_shape):
