@@ -1,37 +1,30 @@
 actableai.timeseries package
 ============================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   actableai.timeseries.models
+   actableai.timeseries.tests
+
 Submodules
 ----------
 
-actableai.timeseries.feedforward module
----------------------------------------
+actableai.timeseries.exceptions module
+--------------------------------------
 
-.. automodule:: actableai.timeseries.feedforward
+.. automodule:: actableai.timeseries.exceptions
    :members:
    :undoc-members:
    :show-inheritance:
 
-actableai.timeseries.models module
-----------------------------------
+actableai.timeseries.utils module
+---------------------------------
 
-.. automodule:: actableai.timeseries.models
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-actableai.timeseries.params module
-----------------------------------
-
-.. automodule:: actableai.timeseries.params
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-actableai.timeseries.util module
---------------------------------
-
-.. automodule:: actableai.timeseries.util
+.. automodule:: actableai.timeseries.utils
    :members:
    :undoc-members:
    :show-inheritance:

@@ -14,6 +14,7 @@ Subpackages
    actableai.data_imputation
    actableai.data_validation
    actableai.debiasing
+   actableai.explanation
    actableai.regression
    actableai.sentiment
    actableai.stats
@@ -21,6 +22,17 @@ Subpackages
    actableai.third_parties
    actableai.timeseries
    actableai.utils
+
+Submodules
+----------
+
+actableai.conftest module
+-------------------------
+
+.. automodule:: actableai.conftest
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Module contents
 ---------------
