@@ -324,10 +324,14 @@ class AAIInterventionTask(AAITask):
                     pair_dict[intervention_name] = {
                         "original_target": [],
                         "target_intervened": [],
+                        "intervention_effect": [],
                     }
                 pair_dict[intervention_name]["original_target"].append(val[target])
                 pair_dict[intervention_name]["target_intervened"].append(
                     val[target + "_intervened"]
+                )
+                pair_dict[intervention_name]["intervention_effect"].append(
+                    val["intervention_effect"]
                 )
         estimation_results["intervention_plot"] = {
             "type": "category"
