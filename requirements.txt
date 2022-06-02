@@ -196,6 +196,7 @@ rpy2==2.9.6b0
 dowhy==0.6
 econml==0.11.1
 nltk==3.7
+pyabsa==1.14.7
 
 ./third_parties/autogluon/core
 ./third_parties/autogluon/features
@@ -205,3 +206,4 @@ nltk==3.7
 autogluon-contrib-nlp==0.0.1b20210201
 
 gluonts==0.9.1
+./third_parties/multi_rake
