@@ -5,9 +5,9 @@ class AAISentimentExtractor:
 
     @classmethod
     def deploy(
-            cls,
-            num_replicas,
-            ray_options,
+        cls,
+        num_replicas,
+        ray_options,
     ):
         """
         TODO write documentation
@@ -27,8 +27,6 @@ class AAISentimentExtractor:
         """
         TODO write documentation
         """
-        from ray import serve
-
         return cls.get_deployment().get_handle()
 
     @classmethod
@@ -44,17 +42,16 @@ class AAISentimentExtractor:
         """
         TODO write documentation
         """
-        import pandas as pd
         import multi_rake
         from pyabsa import APCCheckpointManager
 
         self.rake = multi_rake.Rake(min_freq=1)
         self.sent_classifier = APCCheckpointManager.get_sentiment_classifier(
-            checkpoint='multilingual2',
+            checkpoint="multilingual2",
             auto_device=True,  # Use CUDA if available
         )
 
-    def predict(self, X, rake_threshold=1.):
+    def predict(self, X, rake_threshold=1.0):
         """
         TODO write documentation
         """
@@ -64,17 +61,21 @@ class AAISentimentExtractor:
         for candidate in candidates:
             if candidate.text in keywords:
                 sent = X[candidate.sentence_id]
-                annotated_sent = sent[:candidate.start_position] + \
-                                 "[ASP]" + \
-                                 sent[candidate.start_position:candidate.end_position] +\
-                                 "[ASP]" + \
-                                 sent[candidate.end_position:]
+                annotated_sent = (
+                    sent[: candidate.start_position]
+                    + "[ASP]"
+                    + sent[candidate.start_position : candidate.end_position]
+                    + "[ASP]"
+                    + sent[candidate.end_position :]
+                )
                 sentiment = self.sent_classifier.infer(annotated_sent)
-                results.append({
-                    "keyword": candidate.text,
-                    "sentiment": sentiment["sentiment"][0],
-                    "confidence": sentiment["confidence"][0],
-                })
+                results.append(
+                    {
+                        "keyword": candidate.text,
+                        "sentiment": sentiment["sentiment"][0],
+                        "confidence": sentiment["confidence"][0],
+                    }
+                )
 
         return results
 
