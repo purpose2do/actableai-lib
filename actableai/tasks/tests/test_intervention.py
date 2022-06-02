@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 
 from actableai import AAIInterventionTask
+from actableai.utils.testing import unittest_hyperparameters
 
 
 @pytest.fixture(scope="function")
@@ -28,6 +29,7 @@ class TestIntervention:
             "current_intervention",
             "new_intervention",
             model_directory=tmp_path,
+            causal_hyperparameters=unittest_hyperparameters(),
         )
 
         assert result["status"] == "SUCCESS"
@@ -53,6 +55,7 @@ class TestIntervention:
             "new_intervention",
             model_directory=tmp_path,
             cate_alpha=0.5,
+            causal_hyperparameters=unittest_hyperparameters(),
         )
 
         assert result["status"] == "SUCCESS"
@@ -79,6 +82,7 @@ class TestIntervention:
             "current_intervention",
             "new_intervention",
             model_directory=tmp_path,
+            causal_hyperparameters=unittest_hyperparameters(),
         )
 
         assert r["status"] == "SUCCESS"
@@ -106,6 +110,7 @@ class TestIntervention:
             "new_intervention",
             model_directory=tmp_path,
             cate_alpha=0.5,
+            causal_hyperparameters=unittest_hyperparameters(),
         )
 
         assert r["status"] == "SUCCESS"
@@ -134,6 +139,7 @@ class TestIntervention:
             "new_intervention",
             common_causes=["y", "z"],
             model_directory=tmp_path,
+            causal_hyperparameters=unittest_hyperparameters(),
         )
 
         assert r["status"] == "SUCCESS"
@@ -163,6 +169,7 @@ class TestIntervention:
             common_causes=["y", "z"],
             model_directory=tmp_path,
             cate_alpha=0.5,
+            causal_hyperparameters=unittest_hyperparameters(),
         )
 
         assert r["status"] == "SUCCESS"
@@ -193,6 +200,7 @@ class TestIntervention:
             common_causes=["y", "z", "d"],
             model_directory=tmp_path,
             cate_alpha=0.5,
+            causal_hyperparameters=unittest_hyperparameters(),
         )
 
         assert r["status"] == "SUCCESS"
