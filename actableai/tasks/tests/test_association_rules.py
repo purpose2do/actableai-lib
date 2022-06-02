@@ -4,7 +4,7 @@ from actableai import AAIAssociationRulesTask
 
 
 @pytest.fixture(scope="function")
-def intervention_task():
+def association_rules_task():
     yield AAIAssociationRulesTask(use_ray=False)
 
 

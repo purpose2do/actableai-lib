@@ -33,6 +33,9 @@ from actableai.utils.resources.predict.features.sentiment_analysis import (
 from actableai.utils.resources.predict.features.intervention import (
     InterventionFeaturesExtractor,
 )
+from actableai.utils.resources.predict.features.association_rules import (
+    AssociationRulesFeaturesExtractor,
+)
 
 _features_extractors = {
     TaskType.CLASSIFICATION: ClassificationFeaturesExtractor,
@@ -47,6 +50,7 @@ _features_extractors = {
     TaskType.BAYESIAN_REGRESSION: BayesianRegressionFeaturesExtractor,
     TaskType.SENTIMENT_ANALYSIS: SentimentAnalysisFeaturesExtractor,
     TaskType.INTERVENTION: InterventionFeaturesExtractor,
+    TaskType.ASSOCIATION_RULES: AssociationRulesFeaturesExtractor,
 }
 
 

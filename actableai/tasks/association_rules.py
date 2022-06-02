@@ -11,7 +11,7 @@ class AAIAssociationRulesTask(AAITask):
     def run(
         self,
         df: pd.DataFrame,
-        individuals: List[str],
+        group_by: List[str],
         items: str,
         frequent_method: str = "fpgrowth",
         min_support: float = 0.5,
@@ -47,7 +47,7 @@ class AAIAssociationRulesTask(AAITask):
 
         # Validate parameters
         data_validation_results = AssociationRulesDataValidator().validate(
-            df, individuals, items
+            df, group_by, items
         )
         failed_checks = [
             check for check in data_validation_results if check is not None
@@ -65,13 +65,13 @@ class AAIAssociationRulesTask(AAITask):
             }
 
         # Encode the data
-        df_list = df.groupby(individuals)[items].apply(list).reset_index()
+        df_list = df.groupby(group_by)[items].apply(list).reset_index()
         te = TransactionEncoder()
         df_encoded = te.fit_transform(df_list[items])
         df_encoded = pd.DataFrame(
             df_encoded,
             columns=te.columns_,
-            index=df_list[individuals].astype(str).apply(", ".join, axis=1),
+            index=df_list[group_by].astype(str).apply(", ".join, axis=1),
         )
 
         # Run the association rule analysis

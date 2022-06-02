@@ -11,6 +11,7 @@ from actableai.data_validation.params import (
     InterventionDataValidator,
     RegressionDataValidator,
     ClassificationDataValidator,
+    AssociationRulesDataValidator,
 )
 
 
@@ -331,3 +332,8 @@ class TestInterventionDataValidator:
         }
         assert "StratifiedKFoldChecker" in validations_dict
         assert validations_dict["StratifiedKFoldChecker"] == CheckLevels.CRITICAL
+
+
+class TestAssociationRulesDataValidator:
+    def test_validate(self):
+        raise NotImplementedError()
