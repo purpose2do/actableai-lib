@@ -689,7 +689,7 @@ class InterventionDataValidator:
         return validations
 
 
-class AssociationRuleDataValidator:
+class AssociationRulesDataValidator:
     def __init__(self):
         pass
 

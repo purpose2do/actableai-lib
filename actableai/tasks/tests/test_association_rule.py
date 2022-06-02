@@ -1,13 +1,13 @@
 import pytest
 
-from actableai import AAIAssociationRuleTask
+from actableai import AAIAssociationRulesTask
 
 
 @pytest.fixture(scope="function")
 def intervention_task():
-    yield AAIAssociationRuleTask(use_ray=False)
+    yield AAIAssociationRulesTask(use_ray=False)
 
 
-class TestAssociationRule:
-    def test_association_rule(self):
+class TestAssociationRules:
+    def test_association_rules(self):
         raise NotImplementedError()

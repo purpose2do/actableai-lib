@@ -1,2 +1,2 @@
 from .tasks.intervention import AAIInterventionTask  # noqa
-from .tasks.association_rule import AAIAssociationRuleTask  # noqa
+from .tasks.association_rules import AAIAssociationRulesTask  # noqa

@@ -76,7 +76,7 @@ def create_pipeline(
             pipeline = _create_default_pipeline()
         elif task == TaskType.INTERVENTION:
             pipeline = _create_default_pipeline()
-        elif task == TaskType.ASSOCIATION_RULE:
+        elif task == TaskType.ASSOCIATION_RULES:
             pipeline = _create_default_pipeline()
     elif resource_predicted == ResourcePredictorType.MAX_GPU_MEMORY:
         if task == TaskType.CLASSIFICATION:
@@ -103,7 +103,7 @@ def create_pipeline(
             pipeline = _create_default_pipeline()
         elif task == TaskType.INTERVENTION:
             pipeline = _create_default_pipeline()
-        elif task == TaskType.ASSOCIATION_RULE:
+        elif task == TaskType.ASSOCIATION_RULES:
             pipeline = _create_default_pipeline()
 
     return pipeline

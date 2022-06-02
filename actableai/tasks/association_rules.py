@@ -6,8 +6,8 @@ from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 
 
-class AAIAssociationRuleTask(AAITask):
-    @AAITask.run_with_ray_remote(TaskType.ASSOCIATION_RULE)
+class AAIAssociationRulesTask(AAITask):
+    @AAITask.run_with_ray_remote(TaskType.ASSOCIATION_RULES)
     def run(
         self,
         df: pd.DataFrame,
@@ -36,7 +36,7 @@ class AAIAssociationRuleTask(AAITask):
         )
 
         from actableai.data_validation.checkers import NoFrequentItemSet
-        from actableai.data_validation.params import AssociationRuleDataValidator
+        from actableai.data_validation.params import AssociationRulesDataValidator
         from actableai.data_validation.base import CheckLevels
 
         assert frequent_method in ["fpgrowth", "apriori", "fpmax"]
@@ -46,7 +46,7 @@ class AAIAssociationRuleTask(AAITask):
         df = df.copy()
 
         # Validate parameters
-        data_validation_results = AssociationRuleDataValidator().validate(
+        data_validation_results = AssociationRulesDataValidator().validate(
             df, individuals, items
         )
         failed_checks = [

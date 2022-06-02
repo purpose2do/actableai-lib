@@ -9,7 +9,7 @@ from actableai.utils.resources.predict.features.common import (
 from actableai.utils.resources.predict.features.method import MethodFeaturesExtractor
 
 
-class AssociationRuleFeaturesExtractor(MethodFeaturesExtractor):
+class AssociationRulesFeaturesExtractor(MethodFeaturesExtractor):
     """
     Correlation Features Extractor
     """
