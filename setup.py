@@ -59,6 +59,7 @@ setup(
         "autogluon.tabular @ file://./third_parties/autogluon/tabular",
         "autogluon.mxnet @ file://./third_parties/autogluon/mxnet",
         "autogluon.text @ file://./third_parties/autogluon/text",
+        "multi_rake @ file://./third_parties/multi_rake",
         "pandasql>=0.7.3",
         "fastai>=2.3.1",
         # gluonts

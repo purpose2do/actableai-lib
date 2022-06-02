@@ -68,11 +68,12 @@ class AAISentimentExtractor:
                     + "[ASP]"
                     + sent[candidate.end_position :]
                 )
-                sentiment = self.sent_classifier.infer(annotated_sent)
+                sentiment = self.sent_classifier.infer(
+                    annotated_sent, print_result=False)
                 results.append(
                     {
                         "keyword": candidate.text,
-                        "sentiment": sentiment["sentiment"][0],
+                        "sentiment": sentiment["sentiment"][0].lower(),
                         "confidence": sentiment["confidence"][0],
                     }
                 )
