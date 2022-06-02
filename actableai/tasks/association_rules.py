@@ -1,5 +1,5 @@
 import time
-from typing import Dict
+from typing import Dict, List
 import pandas as pd
 
 from actableai.tasks import TaskType
@@ -11,7 +11,7 @@ class AAIAssociationRulesTask(AAITask):
     def run(
         self,
         df: pd.DataFrame,
-        individuals: str,
+        individuals: List[str],
         items: str,
         frequent_method: str = "fpgrowth",
         min_support: float = 0.5,
@@ -69,7 +69,9 @@ class AAIAssociationRulesTask(AAITask):
         te = TransactionEncoder()
         df_encoded = te.fit_transform(df_list[items])
         df_encoded = pd.DataFrame(
-            df_encoded, columns=te.columns_, index=df_list[individuals]
+            df_encoded,
+            columns=te.columns_,
+            index=df_list[individuals].astype(str).apply(", ".join, axis=1),
         )
 
         # Run the association rule analysis
