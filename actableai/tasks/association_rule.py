@@ -1,7 +1,6 @@
 import time
 from typing import Dict
 import pandas as pd
-from actableai.data_validation.checkers import NoFrequentItemSet
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
@@ -36,6 +35,7 @@ class AAIAssociationRuleTask(AAITask):
             fpmax,
         )
 
+        from actableai.data_validation.checkers import NoFrequentItemSet
         from actableai.data_validation.params import AssociationRuleDataValidator
         from actableai.data_validation.base import CheckLevels
 
@@ -108,4 +108,9 @@ class AAIAssociationRuleTask(AAITask):
             min_threshold=min_association_metric,
         )
 
-        return rules
+        return {
+            "status": "SUCCESS",
+            "data": {"rules": rules},
+            "validations": [],
+            "runtime": time.time() - start,
+        }
