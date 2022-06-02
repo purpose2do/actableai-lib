@@ -336,4 +336,15 @@ class TestInterventionDataValidator:
 
 class TestAssociationRulesDataValidator:
     def test_validate(self):
+        df = pd.DataFrame(
+            {
+                "x": rands_array(10, 5),
+                "y": rands_array(10, 5),
+                "z": rands_array(10, 5),
+                "t": rands_array(10, 5),
+            }
+        )
+        validations_results = AssociationRulesDataValidator().validate(  # noqa
+            df=df, group_by=["x", "y"], items="z"
+        )
         raise NotImplementedError()

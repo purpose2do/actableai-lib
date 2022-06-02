@@ -693,9 +693,9 @@ class AssociationRulesDataValidator:
     def __init__(self):
         pass
 
-    def validate(self, df: pd.DataFrame, individuals: List[str], items: str):
+    def validate(self, df: pd.DataFrame, group_by: List[str], items: str):
         return [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
-                df, individuals + [items]
+                df, group_by + [items]
             ),
         ]
