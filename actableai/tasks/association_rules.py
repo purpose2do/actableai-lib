@@ -39,8 +39,16 @@ class AAIAssociationRulesTask(AAITask):
         from actableai.data_validation.params import AssociationRulesDataValidator
         from actableai.data_validation.base import CheckLevels
 
-        assert frequent_method in ["fpgrowth", "apriori", "fpmax"]
-        assert association_metric in ["confidence", "lift", "leverage", "conviction"]
+        # Check parameters
+        if frequent_method is None:
+            frequent_method = "fpgrowth"
+        if min_support is None:
+            min_support = 0.5
+        if association_metric is None:
+            association_metric = "confidence"
+        if min_association_metric is None:
+            min_association_metric = 0.5
+        self._check_params(locals())
 
         start = time.time()
         df = df.copy()
@@ -116,3 +124,12 @@ class AAIAssociationRulesTask(AAITask):
             "validations": [],
             "runtime": time.time() - start,
         }
+
+    def _check_params(self, params):
+        assert params["frequent_method"] in ["fpgrowth", "apriori", "fpmax"]
+        assert params["association_metric"] in [
+            "confidence",
+            "lift",
+            "leverage",
+            "conviction",
+        ]
