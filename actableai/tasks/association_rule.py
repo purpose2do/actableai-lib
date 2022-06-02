@@ -1,6 +1,7 @@
 import time
 from typing import Dict
 import pandas as pd
+from actableai.data_validation.checkers import NoFrequentItemSet
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
@@ -14,8 +15,9 @@ class AAIAssociationRuleTask(AAITask):
         individuals: str,
         items: str,
         frequent_method: str = "fpgrowth",
-        min_support: float = 0.01,
-        metric: str = "confidence",
+        min_support: float = 0.5,
+        association_metric: str = "confidence",
+        min_association_metric: float = 0.5,
     ) -> Dict:
         """A task to run an association rule analysis on the data.
 
@@ -25,6 +27,7 @@ class AAIAssociationRuleTask(AAITask):
         Returns:
             Dictionnary of results
         """
+
         from mlxtend.preprocessing import TransactionEncoder
         from mlxtend.frequent_patterns import (
             apriori,
@@ -37,7 +40,7 @@ class AAIAssociationRuleTask(AAITask):
         from actableai.data_validation.base import CheckLevels
 
         assert frequent_method in ["fpgrowth", "apriori", "fpmax"]
-        assert metric in ["confidence", "lift", "leverage", "conviction"]
+        assert association_metric in ["confidence", "lift", "leverage", "conviction"]
 
         start = time.time()
         df = df.copy()
@@ -76,13 +79,33 @@ class AAIAssociationRuleTask(AAITask):
             "fpmax": fpmax,
         }
         frequent_func = frequent_dict[frequent_method]
-        frequent_itemsets = frequent_func(
+        frequent_itemset = frequent_func(
             df_encoded,
             min_support=min_support,
             use_colnames=True,
             max_len=None,
             verbose=0,
         )
-        rules = association_rules(frequent_itemsets, metric=metric, min_threshold=0.1)
+        check_no_frequent_itemset = NoFrequentItemSet(level=CheckLevels.CRITICAL).check(
+            frequent_itemset
+        )
+        if check_no_frequent_itemset is not None:
+            return {
+                "status": "FAILURE",
+                "data": {},
+                "validations": [
+                    {
+                        "name": check_no_frequent_itemset.name,
+                        "level": check_no_frequent_itemset.level,
+                        "message": check_no_frequent_itemset.message,
+                    }
+                ],
+                "runtime": time.time() - start,
+            }
+        rules = association_rules(
+            frequent_itemset,
+            metric=association_metric,
+            min_threshold=min_association_metric,
+        )
 
         return rules
