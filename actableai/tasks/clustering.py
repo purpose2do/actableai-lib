@@ -206,7 +206,9 @@ class AAIClusteringTask(AAITask):
             row_index, column_index = np.meshgrid(
                 np.arange(shap_values.shape[1]), np.arange(shap_values.shape[2])
             )
-            shap_values = shap_values[cluster_ids, row_index, column_index].transpose(1, 0)
+            shap_values = shap_values[cluster_ids, row_index, column_index].transpose(
+                1, 0
+            )
 
         try:
             lda = LinearDiscriminantAnalysis(n_components=2)
@@ -274,8 +276,11 @@ class AAIClusteringTask(AAITask):
         runtime = time.time() - start
 
         return {
+            "data_v2": {
+                "clusters": clusters,
+                "shap_values": shap_values,
+            },
             "data": clusters,
-            "shap_values": shap_values,
             "status": "SUCCESS",
             "messenger": "",
             "runtime": runtime,
