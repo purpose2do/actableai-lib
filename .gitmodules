@@ -1,6 +1,3 @@
 [submodule "third_parties/autogluon"]
 	path = third_parties/autogluon
 	url = git@github.com:Actable-AI/autogluon.git
-[submodule "third_parties/multi_rake"]
-	path = actableai/third_parties/multi_rake
-	url = git@github.com:Actable-AI/multi_rake.git
