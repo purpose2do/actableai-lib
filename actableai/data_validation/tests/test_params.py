@@ -335,7 +335,7 @@ class TestInterventionDataValidator:
 
 
 class TestAssociationRulesDataValidator:
-    def test_validate(self):
+    def test_validate_column_present(self):
         df = pd.DataFrame(
             {
                 "x": rands_array(10, 5),
@@ -344,7 +344,11 @@ class TestAssociationRulesDataValidator:
                 "t": rands_array(10, 5),
             }
         )
-        validations_results = AssociationRulesDataValidator().validate(  # noqa
-            df=df, group_by=["x", "y"], items="z"
+        validation_results = AssociationRulesDataValidator().validate(
+            df=df, group_by=["x", "a"], items="z"
         )
-        raise NotImplementedError()
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "ColumnsExistChecker" in validations_dict
+        assert validations_dict["ColumnsExistChecker"] == CheckLevels.CRITICAL

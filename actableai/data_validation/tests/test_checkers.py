@@ -14,6 +14,7 @@ from actableai.data_validation.checkers import (
     IsNumericalChecker,
     IsSufficientClassSampleChecker,
     MaxTrainSamplesChecker,
+    NoFrequentItemSet,
     PositiveOutcomeValueThreshold,
     SameTypeChecker,
     StratifiedKFoldChecker,
@@ -313,4 +314,16 @@ class TestStratifiedKFoldChecker:
         result = checker.check(df, "x", 20)
         assert result is not None
         assert result.name == "StratifiedKFoldChecker"
+        assert result.level == CheckLevels.CRITICAL
+
+
+class TestNoFrequentItemSet:
+    def test_check(self):
+        checker = NoFrequentItemSet(
+            level=CheckLevels.CRITICAL, name="NoFrequentItemSet"
+        )
+        df = pd.DataFrame({})
+        result = checker.check(df)
+        assert result is not None
+        assert result.name == "NoFrequentItemSet"
         assert result.level == CheckLevels.CRITICAL

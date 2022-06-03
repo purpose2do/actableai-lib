@@ -100,7 +100,7 @@ class AAIAssociationRulesTask(AAITask):
             min_support=min_support,
             use_colnames=True,
             max_len=None,
-            verbose=0,
+            verbose=1,
         )
         check_no_frequent_itemset = NoFrequentItemSet(level=CheckLevels.CRITICAL).check(
             frequent_itemset
@@ -118,11 +118,19 @@ class AAIAssociationRulesTask(AAITask):
                 ],
                 "runtime": time.time() - start,
             }
-        rules = association_rules(
-            frequent_itemset,
-            metric=association_metric,
-            min_threshold=min_association_metric,
-        )
+        try:
+            rules = association_rules(
+                frequent_itemset,
+                metric=association_metric,
+                min_threshold=min_association_metric,
+            )
+        except KeyError:
+            rules = association_rules(
+                frequent_itemset,
+                metric="support",
+                min_threshold=0,
+                support_only=True,
+            )
 
         return {
             "status": "SUCCESS",
