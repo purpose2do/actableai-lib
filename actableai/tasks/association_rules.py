@@ -126,7 +126,11 @@ class AAIAssociationRulesTask(AAITask):
 
         return {
             "status": "SUCCESS",
-            "data": {"rules": rules},
+            "data": {
+                "rules": rules,
+                "frequent_itemset": frequent_itemset,
+                "df_list": df_list,
+            },
             "validations": [],
             "runtime": time.time() - start,
         }
