@@ -156,7 +156,7 @@ class AAIAssociationRulesTask(AAITask):
                 "rules": rules,
                 "frequent_itemset": frequent_itemset,
                 "df_list": df_list,
-                "graph": buffer.getvalue()
+                "graph": buffer.getvalue(),
             },
             "validations": [],
             "runtime": time.time() - start,
