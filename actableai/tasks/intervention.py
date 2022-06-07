@@ -72,6 +72,7 @@ class AAIInterventionTask(AAITask):
         from tempfile import mkdtemp
         from econml.dml import LinearDML, NonParamDML
         from autogluon.tabular import TabularPredictor
+        from autogluon.features.generators import AutoMLPipelineFeatureGenerator
         from dowhy import CausalModel
         import numpy as np
         import networkx as nx
@@ -153,7 +154,11 @@ class AAIInterventionTask(AAITask):
             presets=presets,
             ag_args_fit={
                 "num_gpus": num_gpus,
+                "drop_unique": False
             },
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                pre_drop_useless=False, post_generators=[]
+            ),
         )
 
         model_y = TabularPredictor(
@@ -168,7 +173,11 @@ class AAIInterventionTask(AAITask):
             presets=presets,
             ag_args_fit={
                 "num_gpus": num_gpus,
+                "drop_unique": False
             },
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                pre_drop_useless=False, post_generators=[]
+            ),
         )
 
         if (
@@ -200,7 +209,11 @@ class AAIInterventionTask(AAITask):
                 presets=presets,
                 ag_args_fit={
                     "num_gpus": num_gpus,
+                    "drop_unique": False,
                 },
+                feature_generator=AutoMLPipelineFeatureGenerator(
+                    pre_drop_useless=False, post_generators=[]
+                ),
             )
             causal_model = NonParamDML(
                 model_t=model_t,

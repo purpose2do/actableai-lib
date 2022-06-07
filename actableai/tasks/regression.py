@@ -213,8 +213,8 @@ class _AAIRegressionTrainTask(AAITask):
             )
 
         predictions = None
-        prediction_low = None
-        prediction_high = None
+        predictions_low = None
+        predictions_high = None
         predict_shap_values = None
         if run_model:
             if explain_samples:
