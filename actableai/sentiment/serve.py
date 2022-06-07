@@ -2,6 +2,7 @@ import traceback
 import logging
 logger = logging.getLogger(__name__)
 
+
 class AAISentimentExtractor:
     """
     TODO write documentation
@@ -83,7 +84,7 @@ class AAISentimentExtractor:
                             "confidence": sentiment["confidence"][0],
                         }
                     )
-                except Exception as err:
+                except Exception:
                     logging.error("Error in analyzing sentence: %s\n%s" %
                                   (annotated_sent, traceback.format_exc()))
 
