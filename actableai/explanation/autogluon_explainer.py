@@ -1,6 +1,9 @@
 import shap
 import numpy as np
 import pandas as pd
+from typing import Union, List, Any, Dict
+
+from autogluon.tabular.predictor import TabularPredictor
 
 from actableai.utils.autogluon import (
     transform_features,
@@ -10,13 +13,13 @@ from actableai.utils.autogluon import (
 
 
 class AutoGluonShapTreeExplainer:
-    """
-    TODO write documentation
-    """
+    """AutoGluon Shap Tree Explainer Wrapper."""
 
-    def __init__(self, autogluon_predictor):
-        """
-        TODO write documentation
+    def __init__(self, autogluon_predictor: TabularPredictor):
+        """AutoGluonShapTreeExplainer Constructor.
+
+        Args:
+            autogluon_predictor: The AutoGluon predictor to use for explanations.
         """
         self.autogluon_predictor = autogluon_predictor
         self.model_name = self.autogluon_predictor.get_model_best()
@@ -27,9 +30,14 @@ class AutoGluonShapTreeExplainer:
         self.explainer = shap.TreeExplainer(self.autogluon_model.model)
 
     @staticmethod
-    def is_predictor_compatible(autogluon_predictor):
-        """
-        TODO write documentation
+    def is_predictor_compatible(autogluon_predictor: TabularPredictor) -> bool:
+        """Check if an AutoGluon predictor is compatible with the Shap Tree Explainer.
+
+        Args:
+            autogluon_predictor: The AutoGluon predictor to check.
+
+        Returns:
+            True if the predictor is compatible.
         """
         model_name = autogluon_predictor.get_model_best()
         try:
@@ -40,9 +48,21 @@ class AutoGluonShapTreeExplainer:
             return False
         return True
 
-    def shap_values(self, data, *args, **kwargs):
-        """
-        TODO write documentation
+    def shap_values(
+        self,
+        data: Union[pd.DataFrame, np.ndarray],
+        *args: List[Any],
+        **kwargs: Dict[str, Any]
+    ) -> np.ndarray:
+        """Compute shap values.
+
+        Args:
+            data: The data to create the explanations for.
+            args: The arguments to pass to the underlying shap_values function.
+            kwargs: The named arguments to pass to the underlying shap_values function.
+
+        Returns:
+            The shap values.
         """
         # Transform features to use the model directly
         transformed_data = transform_features(
