@@ -274,3 +274,11 @@ def is_fitted(transformer):
     except NotFittedError as e:
         return False
     return True
+
+
+def is_text_column(X, text_ratio=0.1):
+    X_unique = X.unique()
+    num_unique = len(X_unique)
+    num_rows = len(X)
+    unique_ratio = num_unique / num_rows
+    return unique_ratio > text_ratio

@@ -69,15 +69,16 @@ class AAICorrelationTask(AAITask):
             DatetimeFeatureGenerator,
         )
         from nltk.corpus import stopwords
+        from pandas.api.types import is_datetime64_any_dtype, is_bool_dtype, is_object_dtype
 
         from actableai.stats import Stats
         from actableai.data_validation.params import CorrelationDataValidator
-        from actableai.utils import is_fitted
+        from actableai.utils import is_fitted, is_text_column
         from actableai.data_validation.base import CheckLevels
         from actableai.utils.preprocessors.preprocessing import (
             SKLearnAGFeatureWrapperBase,
         )
-        from actableai.utils import get_type_special_no_ag
+
         from actableai.utils.preprocessors.autogluon_preproc import (
             CustomeDateTimeFeatureGenerator,
         )
@@ -108,8 +109,7 @@ class AAICorrelationTask(AAITask):
             target_value = str(target_value)
 
         # Type reader
-        type_specials = df.apply(get_type_special_no_ag)
-        date_cols = list(type_specials == "datetime")
+        date_cols = df.apply(is_datetime64_any_dtype)
 
         ct = ColumnTransformer(
             [
@@ -127,16 +127,16 @@ class AAICorrelationTask(AAITask):
         df = pd.DataFrame(
             ct.fit_transform(df).tolist(), columns=ct.get_feature_names_out()
         )
-        type_specials = df.apply(get_type_special_no_ag)
 
-        bool_cols = type_specials == "boolean"
+        bool_cols = df.apply(is_bool_dtype)
         df.loc[:, bool_cols] = df.loc[:, bool_cols].astype(str)
 
-        str_cols = type_specials == "category"
-        cat_cols = list(str_cols | bool_cols)
-        df.loc[:, cat_cols] = df.loc[:, list(cat_cols)].fillna("None")
+        str_cols = df.apply(is_object_dtype)
+        cat_cols = str_cols | bool_cols
+        df.loc[:, cat_cols] = df.loc[:, cat_cols].fillna("None")
 
-        text_cols = list(type_specials == "text")
+        text_cols = df.apply(is_text_column) & cat_cols
+        cat_cols = cat_cols & ~text_cols
 
         og_df_col = df.columns
         og_target_col = df.loc[:, cat_cols]
