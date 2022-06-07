@@ -330,11 +330,9 @@ class AAIClassificationTask(AAITask):
         import pandas as pd
         from scipy.stats import spearmanr
         from sklearn.model_selection import train_test_split
-        from sklearn.preprocessing import OrdinalEncoder
         from actableai.utils import (
             memory_efficient_hyperparameters,
             handle_boolean_features,
-            preprocess_dataset,
         )
         from actableai.data_validation.params import ClassificationDataValidator
         from actableai.data_validation.base import (
