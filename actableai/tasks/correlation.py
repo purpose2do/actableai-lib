@@ -138,6 +138,12 @@ class AAICorrelationTask(AAITask):
         text_cols = df.apply(is_text_column) & cat_cols
         cat_cols = cat_cols & ~text_cols
 
+        # Set as categorical if target_value given
+        if target_value is not None:
+            mask_cols = df.columns == target_column
+            cat_cols = cat_cols | mask_cols
+            text_cols = text_cols & ~mask_cols
+
         og_df_col = df.columns
         og_target_col = df.loc[:, cat_cols]
 
