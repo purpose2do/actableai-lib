@@ -13,14 +13,12 @@ import numpy as np
 import tensorflow.keras.backend as K
 from sklearn.cluster import KMeans
 from tensorflow.keras import callbacks
-from tensorflow.keras.layers import Dense, Input, Layer, InputSpec, Normalization
+from tensorflow.keras.layers import Dense, Input, Layer, InputSpec
 from tensorflow.keras.models import Model
 from time import time
 from typing import List, Tuple
 
 from actableai.clustering import metrics, KMeans_pick_k
-from actableai.tasks import TaskType
-from actableai.tasks.base import AAITask
 
 
 def autoencoder(
