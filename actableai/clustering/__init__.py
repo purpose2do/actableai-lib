@@ -9,18 +9,33 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
     """Transform numeric columns using StandardScaler and categorical columns
     using OneHotEncoder."""
-
     def fit_transform(self, X, categorical_cols):
         self.transformers = []
         self.categorical_cols = categorical_cols
         result = []
+
+        self.feature_links = []
+        final_feature_count = 0
+
         for i in range(X.shape[1]):
+            self.feature_links.append([])
+
             if i not in categorical_cols:
                 t = StandardScaler()
                 result.append(t.fit_transform(X[:, i : i + 1]))
+
+                self.feature_links[-1].append(final_feature_count)
+                final_feature_count += 1
             else:
                 t = OneHotEncoder()
                 result.append(t.fit_transform(X[:, i : i + 1]).todense())
+
+                new_feature_count = len(t.get_feature_names_out())
+                self.feature_links[-1] += list(
+                    range(final_feature_count, final_feature_count + new_feature_count)
+                )
+                final_feature_count += new_feature_count
+
             self.transformers.append(t)
         return np.hstack(result)
 

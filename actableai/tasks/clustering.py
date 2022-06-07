@@ -195,10 +195,10 @@ class AAIClusteringTask(AAITask):
                 )
             ]
 
-            explainer = shap.DeepExplainer(dec.model, background)
+            explainer = shap.DeepExplainer(dec.model, np.array(background))
 
             shap_values = explainer.shap_values(
-                transformed_values, check_additivity=False
+                np.array(transformed_values), check_additivity=False
             )
 
             # Extract only the shap values for the predicted values
@@ -209,6 +209,17 @@ class AAIClusteringTask(AAITask):
             shap_values = shap_values[cluster_ids, row_index, column_index].transpose(
                 1, 0
             )
+
+            df_final_shap_values = pd.DataFrame(
+                0, index=np.arange(transformed_values.shape[0]), columns=features
+            )
+
+            for i, feature in enumerate(features):
+                df_final_shap_values[feature] = shap_values[
+                    :, preprocessor.feature_links[i]
+                ].sum(axis=1)
+
+            shap_values = df_final_shap_values.to_numpy()
 
         try:
             lda = LinearDiscriminantAnalysis(n_components=2)
