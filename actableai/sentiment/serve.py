@@ -1,3 +1,7 @@
+import traceback
+import logging
+logger = logging.getLogger(__name__)
+
 class AAISentimentExtractor:
     """
     TODO write documentation
@@ -68,15 +72,20 @@ class AAISentimentExtractor:
                     + "[ASP]"
                     + sent[candidate.end_position :]
                 )
-                sentiment = self.sent_classifier.infer(
-                    annotated_sent, print_result=False)
-                results.append(
-                    {
-                        "keyword": candidate.text,
-                        "sentiment": sentiment["sentiment"][0].lower(),
-                        "confidence": sentiment["confidence"][0],
-                    }
-                )
+
+                try:
+                    sentiment = self.sent_classifier.infer(
+                        annotated_sent, print_result=False)
+                    results.append(
+                        {
+                            "keyword": candidate.text,
+                            "sentiment": sentiment["sentiment"][0].lower(),
+                            "confidence": sentiment["confidence"][0],
+                        }
+                    )
+                except Exception as err:
+                    logging.error("Error in analyzing sentence: %s\n%s" %
+                                  (annotated_sent, traceback.format_exc()))
 
         return results
 
