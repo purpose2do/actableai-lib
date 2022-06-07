@@ -601,6 +601,11 @@ class AAIClassificationTask(AAITask):
 
         predictor.unpersist_models()
 
+        leaderboard_obj_cols = leaderboard.select_dtypes(include=["object"]).columns
+        leaderboard[leaderboard_obj_cols] = leaderboard[leaderboard_obj_cols].astype(
+            str
+        )
+
         runtime = time.time() - start
 
         return {
@@ -622,6 +627,6 @@ class AAIClassificationTask(AAITask):
                 "evaluate": evaluate,
                 "importantFeatures": important_features,
                 "debiasing_charts": debiasing_charts,
-                "leaderboard": leaderboard.astype(str),
+                "leaderboard": leaderboard,
             },
         }
