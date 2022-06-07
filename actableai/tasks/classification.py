@@ -624,6 +624,6 @@ class AAIClassificationTask(AAITask):
                 "evaluate": evaluate,
                 "importantFeatures": important_features,
                 "debiasing_charts": debiasing_charts,
-                "leaderboard": leaderboard,
+                "leaderboard": leaderboard.astype(str),
             },
         }
