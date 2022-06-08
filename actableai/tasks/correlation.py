@@ -69,7 +69,11 @@ class AAICorrelationTask(AAITask):
             DatetimeFeatureGenerator,
         )
         from nltk.corpus import stopwords
-        from pandas.api.types import is_datetime64_any_dtype, is_bool_dtype, is_object_dtype
+        from pandas.api.types import (
+            is_datetime64_any_dtype,
+            is_bool_dtype,
+            is_object_dtype,
+        )
 
         from actableai.stats import Stats
         from actableai.data_validation.params import CorrelationDataValidator
@@ -77,6 +81,7 @@ class AAICorrelationTask(AAITask):
         from actableai.data_validation.base import CheckLevels
         from actableai.utils.preprocessors.preprocessing import (
             SKLearnAGFeatureWrapperBase,
+            MultiCountVectorizer,
         )
 
         from actableai.utils.preprocessors.autogluon_preproc import (
@@ -151,13 +156,8 @@ class AAICorrelationTask(AAITask):
             [
                 (OneHotEncoder.__name__, OneHotEncoder(), cat_cols),
                 (
-                    TextNgramFeatureGenerator.__name__,
-                    SKLearnAGFeatureWrapperBase(
-                        TextNgramFeatureGenerator(
-                            vectorizer=CountVectorizer(stop_words=stopwords.words()),
-                            vectorizer_strategy="separate",
-                        )
-                    ),
+                    MultiCountVectorizer.__name__,
+                    MultiCountVectorizer(),
                     text_cols,
                 ),
             ],

@@ -3,6 +3,7 @@ import pandas as pd
 from scipy.stats import spearmanr
 from sklearn.neighbors import KernelDensity
 from typing import List, Optional
+from tqdm import tqdm
 
 
 class Stats(object):
@@ -65,7 +66,7 @@ class Stats(object):
                 and dummy_col_to_original[target_col] == dummy_col_to_original[col]
             ):
                 df = df.drop(col, axis=1)
-        for col in list(df.columns):
+        for col in tqdm(list(df.columns)):
             c = spearmanr(spearman_col, df[col], nan_policy="omit")
             if c.pvalue <= p_value:
                 original_col = dummy_col_to_original.get(col, col)
