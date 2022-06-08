@@ -602,6 +602,11 @@ class AAIRegressionTask(AAITask):
                     }
                 )
 
+        leaderboard_obj_cols = leaderboard.select_dtypes(include=["object"]).columns
+        leaderboard[leaderboard_obj_cols] = leaderboard[leaderboard_obj_cols].astype(
+            str
+        )
+
         data = {
             "validation_table": df_val if kfolds <= 1 else None,
             "prediction_table": df_predict,
@@ -610,7 +615,7 @@ class AAIRegressionTask(AAITask):
             "validation_shaps": eval_shap_values,
             "importantFeatures": important_features,
             "debiasing_charts": debiasing_charts,
-            "leaderboard": leaderboard.astype(str),  # type: ignore
+            "leaderboard": leaderboard,
         }
 
         runtime = time.time() - start

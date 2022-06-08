@@ -330,11 +330,9 @@ class AAIClassificationTask(AAITask):
         import pandas as pd
         from scipy.stats import spearmanr
         from sklearn.model_selection import train_test_split
-        from sklearn.preprocessing import OrdinalEncoder
         from actableai.utils import (
             memory_efficient_hyperparameters,
             handle_boolean_features,
-            preprocess_dataset,
         )
         from actableai.data_validation.params import ClassificationDataValidator
         from actableai.data_validation.base import (
@@ -602,6 +600,11 @@ class AAIClassificationTask(AAITask):
             exdata["schema"]["fields"].pop(0)
 
         predictor.unpersist_models()
+
+        leaderboard_obj_cols = leaderboard.select_dtypes(include=["object"]).columns
+        leaderboard[leaderboard_obj_cols] = leaderboard[leaderboard_obj_cols].astype(
+            str
+        )
 
         runtime = time.time() - start
 
