@@ -110,13 +110,15 @@ class MultiCountVectorizer(TransformerMixin, BaseEstimator):
         BaseEstimator (_type_): _description_
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         super().__init__()
         self.cols = None
 
     def fit_transform(self, X, y=None, **fit_params):
         full_res = pd.DataFrame()
-        cv = CountVectorizer(stop_words=stopwords.words(), ngram_range=(1, 2))
+        cv = CountVectorizer(
+            stop_words=stopwords.words(), ngram_range=(1, 2), max_features=1000
+        )
         for val in X.columns:
             res = pd.DataFrame(
                 cv.fit_transform(X[val]).toarray(),
@@ -128,7 +130,9 @@ class MultiCountVectorizer(TransformerMixin, BaseEstimator):
 
     def transform(self, X, y=None):
         full_res = pd.DataFrame()
-        cv = CountVectorizer(stop_words=stopwords.words(), ngram_range=(1, 2))
+        cv = CountVectorizer(
+            stop_words=stopwords.words(), ngram_range=(1, 2), max_features=1000
+        )
         for val in X.columns:
             res = pd.DataFrame(
                 cv.transform(X[val]).toarray(),

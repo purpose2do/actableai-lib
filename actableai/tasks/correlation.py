@@ -157,9 +157,7 @@ class AAICorrelationTask(AAITask):
                 (OneHotEncoder.__name__, OneHotEncoder(), cat_cols),
                 (
                     MultiCountVectorizer.__name__,
-                    MultiCountVectorizer(
-                        vectorizer=CountVectorizer(stop_words=stopwords.words()),
-                    ),
+                    MultiCountVectorizer(),
                     text_cols,
                 ),
             ],
