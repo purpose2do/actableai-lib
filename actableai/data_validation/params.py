@@ -276,14 +276,6 @@ class ClassificationDataValidator:
             ),
         ]
 
-        if explain_samples:
-            # We do not explain samples for more than n_unique_level categorical values
-            validation_results += [
-                CheckNUnique(level=CheckLevels.CRITICAL).check(
-                    df=df, n_unique_level=EXPLAIN_SAMPLES_UNIQUE_CATEGORICAL_LIMIT
-                )
-            ]
-
         if target in df.columns and not pd.isnull(df[target]).all():
             validation_results += [
                 IsCategoricalChecker(level=CheckLevels.CRITICAL).check(df[target]),
@@ -535,11 +527,6 @@ class ClusteringDataValidator:
                 n_cluster
             ),
             DoNotContainDatetimeChecker(level=CheckLevels.CRITICAL).check(df[target]),
-            CheckNUnique(level=CheckLevels.CRITICAL).check(
-                df=df, n_unique_level=EXPLAIN_SAMPLES_UNIQUE_CATEGORICAL_LIMIT
-            )
-            if explain_samples
-            else None,
             DoNotContainTextChecker(level=CheckLevels.CRITICAL).check(df, target),
             MaxTrainSamplesChecker(level=CheckLevels.CRITICAL).check(
                 n_cluster=n_cluster, max_samples=max_train_samples
