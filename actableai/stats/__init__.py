@@ -44,8 +44,8 @@ class Stats(object):
             list: List containing the correlation between the target and all
         """
         dummy_col_to_original = {}
-        for i, cat_col in tqdm(enumerate(categorical_columns)):
-            for gen_cat_col in tqdm(gen_categorical_columns[i]):
+        for i, cat_col in enumerate(categorical_columns):
+            for gen_cat_col in gen_categorical_columns[i]:
                 dummy_col_to_original[
                     cat_col + "_" + (gen_cat_col if gen_cat_col is not None else "None")
                 ] = cat_col
