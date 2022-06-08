@@ -1,5 +1,6 @@
 import traceback
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -62,8 +63,9 @@ class AAISentimentExtractor:
         """
         keywords, candidates = self.rake.apply_sentences(X)
         keywords = set([kw[0].text for kw in keywords if kw[1] >= rake_threshold])
-        results = [{"keyword": [], "sentiment": [], "confidence": []}\
-                   for i in range(len(X))]
+        results = [
+            {"keyword": [], "sentiment": [], "confidence": []} for i in range(len(X))
+        ]
         for candidate in candidates:
             if candidate.text in keywords:
                 sent = X[candidate.sentence_id]
@@ -77,15 +79,20 @@ class AAISentimentExtractor:
 
                 try:
                     sentiment = self.sent_classifier.infer(
-                        annotated_sent, print_result=False)
+                        annotated_sent, print_result=False
+                    )
                     results[candidate.sentence_id]["keyword"].append(candidate.text)
                     results[candidate.sentence_id]["sentiment"].append(
-                        sentiment["sentiment"][0].lower())
+                        sentiment["sentiment"][0].lower()
+                    )
                     results[candidate.sentence_id]["confidence"].append(
-                        sentiment["confidence"][0])
+                        sentiment["confidence"][0]
+                    )
                 except Exception:
-                    logger.error("Error in analyzing sentence: %s\n%s" %
-                                  (annotated_sent, traceback.format_exc()))
+                    logger.error(
+                        "Error in analyzing sentence: %s\n%s"
+                        % (annotated_sent, traceback.format_exc())
+                    )
 
         return results
 
