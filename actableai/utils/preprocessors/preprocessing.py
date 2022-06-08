@@ -96,3 +96,47 @@ class SKLearnAGFeatureWrapperBase(TransformerMixin, BaseEstimator):
         if self.transformed_df is None:
             raise Exception("Needs to be fit_transform first")
         return list(self.transformed_df.columns)
+
+
+from sklearn.feature_extraction.text import CountVectorizer
+from nltk.corpus import stopwords
+
+
+class MultiCountVectorizer(TransformerMixin, BaseEstimator):
+    """Repeated Count Vectorizer on multiple columns
+
+    Args:
+        TransformerMixin (_type_): _description_
+        BaseEstimator (_type_): _description_
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.cols = None
+
+    def fit_transform(self, X, y=None, **fit_params):
+        full_res = pd.DataFrame()
+        cv = CountVectorizer(stop_words=stopwords.words(), ngram_range=(1, 2))
+        for val in X.columns:
+            res = pd.DataFrame(
+                cv.fit_transform(X[val]).toarray(),
+                columns=[val + "_" + x for x in cv.get_feature_names_out()],
+            )
+            full_res = pd.concat([full_res, res], axis=1)
+        self.cols = full_res.columns
+        return full_res
+
+    def transform(self, X, y=None):
+        full_res = pd.DataFrame()
+        cv = CountVectorizer(stop_words=stopwords.words(), ngram_range=(1, 2))
+        for val in X.columns:
+            res = pd.DataFrame(
+                cv.transform(X[val]).toarray(),
+                columns=[val + "_" + x for x in cv.get_feature_names_out()],
+            )
+            full_res = pd.concat([full_res, res], axis=1)
+        self.cols = full_res.columns
+        return full_res
+
+    def get_feature_names_out(self, input_features=None):
+        return self.cols
