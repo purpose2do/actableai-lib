@@ -98,10 +98,6 @@ class SKLearnAGFeatureWrapperBase(TransformerMixin, BaseEstimator):
         return list(self.transformed_df.columns)
 
 
-from sklearn.feature_extraction.text import CountVectorizer
-from nltk.corpus import stopwords
-
-
 class MultiCountVectorizer(TransformerMixin, BaseEstimator):
     """Repeated Count Vectorizer on multiple columns
 
@@ -115,6 +111,8 @@ class MultiCountVectorizer(TransformerMixin, BaseEstimator):
         self.cols = None
 
     def fit_transform(self, X, y=None, **fit_params):
+        from sklearn.feature_extraction.text import CountVectorizer
+        from nltk.corpus import stopwords
         full_res = pd.DataFrame()
         cv = CountVectorizer(
             stop_words=stopwords.words(), ngram_range=(1, 2), max_features=1000
@@ -122,13 +120,15 @@ class MultiCountVectorizer(TransformerMixin, BaseEstimator):
         for val in X.columns:
             res = pd.DataFrame(
                 cv.fit_transform(X[val]).toarray(),
-                columns=[val + "_" + x for x in cv.get_feature_names_out()],
+                columns=[val + "." + x for x in cv.get_feature_names_out()],
             )
             full_res = pd.concat([full_res, res], axis=1)
         self.cols = full_res.columns
         return full_res
 
     def transform(self, X, y=None):
+        from sklearn.feature_extraction.text import CountVectorizer
+        from nltk.corpus import stopwords
         full_res = pd.DataFrame()
         cv = CountVectorizer(
             stop_words=stopwords.words(), ngram_range=(1, 2), max_features=1000
@@ -136,7 +136,7 @@ class MultiCountVectorizer(TransformerMixin, BaseEstimator):
         for val in X.columns:
             res = pd.DataFrame(
                 cv.transform(X[val]).toarray(),
-                columns=[val + "_" + x for x in cv.get_feature_names_out()],
+                columns=[val + "." + x for x in cv.get_feature_names_out()],
             )
             full_res = pd.concat([full_res, res], axis=1)
         self.cols = full_res.columns
