@@ -80,6 +80,9 @@ class AAIAssociationRulesTask(AAITask):
                 "runtime": time.time() - start,
             }
 
+        # Data Imputation
+        df = df.fillna("None")
+
         # Encode the data
         df_list = df.groupby(group_by)[items].apply(list).reset_index()
         te = TransactionEncoder()
