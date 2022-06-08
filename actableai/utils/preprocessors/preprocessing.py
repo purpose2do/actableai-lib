@@ -113,9 +113,13 @@ class MultiCountVectorizer(TransformerMixin, BaseEstimator):
     def fit_transform(self, X, y=None, **fit_params):
         from sklearn.feature_extraction.text import CountVectorizer
         from nltk.corpus import stopwords
+
         full_res = pd.DataFrame()
         cv = CountVectorizer(
-            stop_words=stopwords.words(), ngram_range=(1, 2), max_features=1000
+            stop_words=stopwords.words(),
+            ngram_range=(1, 2),
+            max_features=1000,
+            token_pattern=r"(?u)\b\w+\b",  # To allow one letter words
         )
         for val in X.columns:
             res = pd.DataFrame(
@@ -129,9 +133,13 @@ class MultiCountVectorizer(TransformerMixin, BaseEstimator):
     def transform(self, X, y=None):
         from sklearn.feature_extraction.text import CountVectorizer
         from nltk.corpus import stopwords
+
         full_res = pd.DataFrame()
         cv = CountVectorizer(
-            stop_words=stopwords.words(), ngram_range=(1, 2), max_features=1000
+            stop_words=stopwords.words(),
+            ngram_range=(1, 2),
+            max_features=1000,
+            token_pattern=r"(?u)\b\w+\b",  # To allow one letter words
         )
         for val in X.columns:
             res = pd.DataFrame(
