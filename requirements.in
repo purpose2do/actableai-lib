@@ -1,0 +1,20 @@
+scikit-learn==1.0.2
+pandasql==0.7.3
+ray[tune,default]==1.11.0 # TODO update
+autogluon.tabular[all]==0.4.1 # Cannot be updated (compatibility issues with protobuf)
+autogluon.text==0.4.1 # Cannot be updated (compatibility issues with protobuf)
+gluonts[Prophet,R]==0.9.1
+econml==0.13.0 # UPDATED
+ipython==7.32.0
+hyperopt==0.2.5 # TODO update
+ujson==4.0.2 # TODO update
+python-rapidjson==1.4 # TODO update
+visions==0.7.1 # TODO update
+shap==0.39.0 # DOWNGRADED
+nltk==3.7
+flake8==3.9.2 # Cannot be updated (compatibility issues with importlib-metadata)
+pytest==7.1.1 # UPDATED
+pytest-parallel==0.1.1
+pystan==2.19.1.1 # Cannot be updated (compatibility issues with fbprophet)
+pyabsa==1.14.7 # TODO update
+-e file:third_parties/multi_rake

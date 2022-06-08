@@ -1,0 +1,7 @@
+-f https://download.pytorch.org/whl/torch_stable.html
+
+mxnet-cu112==1.8.0.post0 # UPDATED, TODO update
+tensorflow-gpu==2.9.1
+torch==1.8.0+cu111 # TODO update
+torchvision==0.9.0+cu111 # TODO update
+torchaudio==0.8.0 # TODO update
