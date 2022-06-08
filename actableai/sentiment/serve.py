@@ -62,7 +62,8 @@ class AAISentimentExtractor:
         """
         keywords, candidates = self.rake.apply_sentences(X)
         keywords = set([kw[0].text for kw in keywords if kw[1] >= rake_threshold])
-        results = []
+        results = [{"keyword": [], "sentiment": [], "confidence": []}\
+                   for i in range(len(X))]
         for candidate in candidates:
             if candidate.text in keywords:
                 sent = X[candidate.sentence_id]
@@ -77,15 +78,13 @@ class AAISentimentExtractor:
                 try:
                     sentiment = self.sent_classifier.infer(
                         annotated_sent, print_result=False)
-                    results.append(
-                        {
-                            "keyword": candidate.text,
-                            "sentiment": sentiment["sentiment"][0].lower(),
-                            "confidence": sentiment["confidence"][0],
-                        }
-                    )
+                    results[candidate.sentence_id]["keyword"].append(candidate.text)
+                    results[candidate.sentence_id]["sentiment"].append(
+                        sentiment["sentiment"][0].lower())
+                    results[candidate.sentence_id]["confidence"].append(
+                        sentiment["confidence"][0])
                 except Exception:
-                    logging.error("Error in analyzing sentence: %s\n%s" %
+                    logger.error("Error in analyzing sentence: %s\n%s" %
                                   (annotated_sent, traceback.format_exc()))
 
         return results
