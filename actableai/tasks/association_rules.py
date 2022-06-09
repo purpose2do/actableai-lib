@@ -81,7 +81,8 @@ class AAIAssociationRulesTask(AAITask):
             }
 
         # Data Imputation
-        df = df.fillna("None")
+        df = df.fillna("empty")
+        df = df.astype(str)
 
         # Encode the data
         df_list = df.groupby(group_by)[items].apply(list).reset_index()
@@ -133,7 +134,7 @@ class AAIAssociationRulesTask(AAITask):
             association_metric = "support"
             rules = association_rules(
                 frequent_itemset,
-                metric="support",
+                metric=association_metric,
                 min_threshold=0,
                 support_only=True,
             )
