@@ -172,13 +172,13 @@ class AAIForecastTask(AAITask):
             params.RForecastParams(
                 method_name=("thetaf", "stlar", "arima", "ets"),
             ),
-            params.TreePredictorParams(
-                use_feat_dynamic_cat=len(cat_dynamic_feature_columns) > 0,
-                use_feat_dynamic_real=len(real_dynamic_feature_columns) > 0
-                or len(predicted_columns) > 1,
-                method=("QuantileRegression"),
-                context_length=(1, 2 * prediction_length),
-            ),
+            # params.TreePredictorParams(
+            #    use_feat_dynamic_cat=len(cat_dynamic_feature_columns) > 0,
+            #    use_feat_dynamic_real=len(real_dynamic_feature_columns) > 0
+            #    or len(predicted_columns) > 1,
+            #    method=("QRX", "QuantileRegression"),
+            #    context_length=(1, 2 * prediction_length),
+            # ),
             params.DeepVARParams(
                 epochs=(5, 20),
                 num_layers=(1, 3),
