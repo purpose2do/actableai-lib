@@ -435,7 +435,8 @@ class TestRemoteCorrelation:
             {
                 "x": [True, False, True, False, True, False, True, False, True, None]
                 * 10,
-                "y": [True, False, True, False, True, False, True, False, True, None] * 10,
+                "y": [True, False, True, False, True, False, True, False, True, None]
+                * 10,
                 "z": ["a", "a", "a", "a", "a", "b", "b", "b", "b", "b"] * 10,
             }
         )
