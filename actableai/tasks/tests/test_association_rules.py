@@ -178,6 +178,6 @@ class TestAssociationRules:
         )
 
         assert result["status"] == "FAILURE"
-        validations_dict = {val.name: val.level for val in result["validations"]}
+        validations_dict = {val["name"]: val["level"] for val in result["validations"]}
         assert "NoFrequentItemSet" in validations_dict
         assert validations_dict["NoFrequentItemSet"] == CheckLevels.CRITICAL
