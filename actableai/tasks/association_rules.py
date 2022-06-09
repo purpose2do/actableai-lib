@@ -130,6 +130,7 @@ class AAIAssociationRulesTask(AAITask):
                 min_threshold=min_association_metric,
             )
         except KeyError:
+            association_metric="support"
             rules = association_rules(
                 frequent_itemset,
                 metric="support",
@@ -137,18 +138,20 @@ class AAIAssociationRulesTask(AAITask):
                 support_only=True,
             )
 
-        temp_df = rules
+        temp_df = rules.copy()
+        temp_df["antecedents"] = temp_df["antecedents"].apply(list).astype(str)
+        temp_df["consequents"] = temp_df["consequents"].apply(list).astype(str)
         temp_df["weight"] = (temp_df["confidence"] - temp_df["confidence"].min()) / (
             temp_df["confidence"].max() - temp_df["confidence"].min()
         )
         temp_df["penwidth"] = temp_df["weight"]
-        temp_df["arrowsize"] = temp_df["weight"]
+        temp_df["arrowsize"] = temp_df["weight"] + 0.1
         buffer = StringIO()
         graph = nx.from_pandas_edgelist(
             temp_df,
             source="antecedents",
             target="consequents",
-            edge_attr=["weight", "penwidth", "arrowsize"],
+            edge_attr=["penwidth", "weight"],
             create_using=nx.DiGraph(),
         )
         nx.drawing.nx_pydot.write_dot(graph, buffer)  # type: ignore
@@ -160,6 +163,7 @@ class AAIAssociationRulesTask(AAITask):
                 "frequent_itemset": frequent_itemset,
                 "df_list": df_list,
                 "graph": buffer.getvalue(),
+                "association_metric": association_metric
             },
             "validations": [],
             "runtime": time.time() - start,
