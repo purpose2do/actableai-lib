@@ -32,9 +32,7 @@ class AAISentimentAnalysisTask(AAITask):
         """
         import math
         import time
-        import traceback
         import ray
-        from ray import serve
         from nltk.tokenize import sent_tokenize
         from actableai.sentiment.serve import AAISentimentExtractor
 
