@@ -11,13 +11,16 @@ class AAISentimentAnalysisTask(AAITask):
     """
 
     @AAITask.run_with_ray_remote(TaskType.SENTIMENT_ANALYSIS)
-    def run(self, df: pd.DataFrame, target: str, batch_size: int = 32) -> Dict:
+    def run(self, df: pd.DataFrame, target: str, batch_size: int = 32,
+            rake_threshold=1.0) -> Dict:
         """Run a sentiment analysis on Input DataFrame
 
         Args:
             df: Input DataFrame
             target: Target for sentiment analysis
             batch_size: Batch Size. Defaults to 32.
+            rake_threshold: Threshold for Rake scores used to extract keywords .
+                Defaults to 1.0.
 
         Examples:
             >>> df = pd.read_csv("path/to/dataframe")
