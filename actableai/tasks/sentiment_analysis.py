@@ -11,8 +11,9 @@ class AAISentimentAnalysisTask(AAITask):
     """
 
     @AAITask.run_with_ray_remote(TaskType.SENTIMENT_ANALYSIS)
-    def run(self, df: pd.DataFrame, target: str, batch_size: int = 32,
-            rake_threshold=1.0) -> Dict:
+    def run(
+        self, df: pd.DataFrame, target: str, batch_size: int = 32, rake_threshold=1.0
+    ) -> Dict:
         """Run a sentiment analysis on Input DataFrame
 
         Args:
@@ -60,7 +61,8 @@ class AAISentimentAnalysisTask(AAITask):
                 batch_index * batch_size : (batch_index + 1) * batch_size
             ]
             result += ray.get(
-                absa_handle.options(method_name="predict").remote(sentence_batch))
+                absa_handle.options(method_name="predict").remote(sentence_batch)
+            )
 
         data = []
         for i, re in enumerate(result):
