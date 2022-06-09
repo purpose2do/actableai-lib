@@ -12,7 +12,7 @@ class TreePredictorParams(BaseParams):
         use_feat_dynamic_real: bool,
         use_feat_dynamic_cat: bool,
         model_params: Optional[Dict] = None,
-        method: Union[Tuple[str, ...], str] = ("QRX", "QuantileRegression"),
+        method: Union[Tuple[str, ...], str] = ("QuantileRegression"),
         quantiles: List[float] = [0.05, 0.25, 0.5, 0.75, 0.95],
         context_length: Union[Tuple[int, int], int] = (1, 100),
         max_workers: Optional[int] = None,

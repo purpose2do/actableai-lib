@@ -176,7 +176,7 @@ class AAIForecastTask(AAITask):
                 use_feat_dynamic_cat=len(cat_dynamic_feature_columns) > 0,
                 use_feat_dynamic_real=len(real_dynamic_feature_columns) > 0
                 or len(predicted_columns) > 1,
-                method=("QRX", "QuantileRegression"),
+                method=("QuantileRegression"),
                 context_length=(1, 2 * prediction_length),
             ),
             params.DeepVARParams(
