@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from actableai.data_validation.base import *
 from actableai.tasks.correlation import AAICorrelationTask
+from actableai.data_validation.checkers import CheckLevels
 
 
 @pytest.fixture(scope="function")
