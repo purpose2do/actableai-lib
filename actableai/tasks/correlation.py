@@ -63,12 +63,9 @@ class AAICorrelationTask(AAITask):
         from sklearn.linear_model import BayesianRidge
         from sklearn.compose import ColumnTransformer
         from sklearn.preprocessing import OneHotEncoder
-        from sklearn.feature_extraction.text import CountVectorizer
         from autogluon.features import (
-            TextNgramFeatureGenerator,
             DatetimeFeatureGenerator,
         )
-        from nltk.corpus import stopwords
         from pandas.api.types import (
             is_datetime64_any_dtype,
             is_bool_dtype,
@@ -187,7 +184,7 @@ class AAICorrelationTask(AAITask):
                         target_value=target_value,
                         control_value=control_value,
                     )
-                except:
+                except Exception:
                     logging.exception("Fail to de-correlate.")
                     return {
                         "status": "FAILURE",
@@ -231,7 +228,10 @@ class AAICorrelationTask(AAITask):
             if uniques.size == 2
             else "others"
         )
-        kde_bandwidth = lambda x: max(0.5 * x.std() * (x.size ** (-0.2)), 1e-2)
+
+        def kde_bandwidth(x):
+            return max(0.5 * x.std() * (x.size ** (-0.2)), 1e-2)
+
         for corr in corrs:
             if type(corr["col"]) is list:
                 group, val = corr["col"]
