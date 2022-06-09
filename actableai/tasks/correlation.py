@@ -139,6 +139,7 @@ class AAICorrelationTask(AAITask):
         str_cols = df.apply(is_object_dtype)
         cat_cols = str_cols | bool_cols
         df.loc[:, cat_cols] = df.loc[:, cat_cols].fillna("None")
+        df.loc[:, cat_cols] = df.loc[:, cat_cols].astype(str)
 
         text_cols = df.apply(is_text_column) & cat_cols
         cat_cols = cat_cols & ~text_cols
