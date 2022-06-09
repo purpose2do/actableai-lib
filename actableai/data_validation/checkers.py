@@ -1035,5 +1035,5 @@ class NoFrequentItemSet(IChecker):
             return CheckResult(
                 name=self.name,
                 level=self.level,
-                message="No frequent item set found. Please lower the min_support parameter.",
+                message="No frequent item set found. Try to lower the minimum value for frequent itemset.",
             )
