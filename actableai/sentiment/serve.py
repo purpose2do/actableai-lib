@@ -26,7 +26,7 @@ class AAISentimentExtractor:
             name=cls.__name__,
             num_replicas=num_replicas,
             ray_actor_options=ray_options,
-            init_args=(pyabsa_checkpoint),
+            init_args=(pyabsa_checkpoint,),
         ).deploy()
 
     @classmethod
