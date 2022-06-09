@@ -429,3 +429,19 @@ class TestRemoteCorrelation:
         assert r["status"] == "SUCCESS"
         assert "corr" in r["data"]
         assert "charts" in r["data"]
+
+    def test_bool_missing_values(self, correlation_task):
+        df = pd.DataFrame(
+            {
+                "x": [True, False, True, False, True, False, True, False, True, None]
+                * 10,
+                "y": [True, False, True, False, True, False, True, False, True, None] * 10,
+                "z": ["a", "a", "a", "a", "a", "b", "b", "b", "b", "b"] * 10,
+            }
+        )
+
+        r = correlation_task.run(df, "z", target_value="a")
+
+        assert r["status"] == "SUCCESS"
+        assert "corr" in r["data"]
+        assert "charts" in r["data"]
