@@ -130,7 +130,7 @@ class AAIAssociationRulesTask(AAITask):
                 min_threshold=min_association_metric,
             )
         except KeyError:
-            association_metric="support"
+            association_metric = "support"
             rules = association_rules(
                 frequent_itemset,
                 metric="support",
@@ -163,7 +163,7 @@ class AAIAssociationRulesTask(AAITask):
                 "frequent_itemset": frequent_itemset,
                 "df_list": df_list,
                 "graph": buffer.getvalue(),
-                "association_metric": association_metric
+                "association_metric": association_metric,
             },
             "validations": [],
             "runtime": time.time() - start,
