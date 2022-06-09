@@ -13,7 +13,7 @@ env:
 
 jobs:
   build:
-    runs-on: [self-hosted]
+    runs-on: [docker-hosted]
     steps:
       - name: cleanup #https://github.com/actions/checkout/issues/211
         run: |
