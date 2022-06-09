@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from actableai.data_validation.base import *
 from actableai.tasks.correlation import AAICorrelationTask
+from actableai.data_validation.checkers import CheckLevels
 
 
 @pytest.fixture(scope="function")
@@ -425,6 +425,23 @@ class TestRemoteCorrelation:
         )
 
         r = correlation_task.run(df, target_column="x", target_value="True")
+
+        assert r["status"] == "SUCCESS"
+        assert "corr" in r["data"]
+        assert "charts" in r["data"]
+
+    def test_bool_missing_values(self, correlation_task):
+        df = pd.DataFrame(
+            {
+                "x": [True, False, True, False, True, False, True, False, True, None]
+                * 10,
+                "y": [True, False, True, False, True, False, True, False, True, None]
+                * 10,
+                "z": ["a", "a", "a", "a", "a", "b", "b", "b", "b", "b"] * 10,
+            }
+        )
+
+        r = correlation_task.run(df, "z", target_value="a")
 
         assert r["status"] == "SUCCESS"
         assert "corr" in r["data"]
