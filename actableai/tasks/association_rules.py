@@ -18,6 +18,7 @@ class AAIAssociationRulesTask(AAITask):
         min_support: float = 0.5,
         association_metric: str = "confidence",
         min_association_metric: float = 0.5,
+        graph_top_k: int = 50,
     ) -> Dict:
         """A task to run an association rule analysis on the data.
 
@@ -139,14 +140,15 @@ class AAIAssociationRulesTask(AAITask):
                 support_only=True,
             )
 
-        temp_df = rules.copy()
+        rules = rules.sort_values(by=association_metric, ascending=False)
+        temp_df = rules.head(graph_top_k).copy()
         temp_df["antecedents"] = temp_df["antecedents"].apply(list).astype(str)
         temp_df["consequents"] = temp_df["consequents"].apply(list).astype(str)
-        temp_df["weight"] = (temp_df["confidence"] - temp_df["confidence"].min()) / (
-            temp_df["confidence"].max() - temp_df["confidence"].min()
-        )
-        temp_df["penwidth"] = temp_df["weight"]
-        temp_df["arrowsize"] = temp_df["weight"] + 0.1
+        temp_df["weight"] = (
+            temp_df[association_metric] - temp_df[association_metric].min()
+        ) / (temp_df[association_metric].max() - temp_df[association_metric].min())
+        temp_df["penwidth"] = temp_df["weight"] + 0.5
+        temp_df["arrowsize"] = temp_df["weight"]
         buffer = StringIO()
         graph = nx.from_pandas_edgelist(
             temp_df,
