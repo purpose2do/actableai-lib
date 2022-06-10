@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, ANY
 
 from actableai.data_imputation.auto_fixer.auto_gluon_fixer import AutoGluonFixer
 from actableai.data_imputation.error_detector import CellErrors
@@ -105,5 +105,6 @@ def test__predict_missing_for_single_column(
         df_to_train,
         hyperparameters=memory_efficient_hyperparameters(),
         excluded_model_types=["CAT"],
+        holdout_frac=ANY,
     )
     mock_predictor.predict_proba.assert_called_with(df_to_test)
