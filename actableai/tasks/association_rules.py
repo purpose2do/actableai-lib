@@ -51,13 +51,18 @@ class AAIAssociationRulesTask(AAITask):
             association_metric = "confidence"
         if min_association_metric is None:
             min_association_metric = 0.5
-        assert frequent_method in ["fpgrowth", "apriori", "fpmax"]
+        assert frequent_method in [
+            "fpgrowth",
+            "apriori",
+            "fpmax",
+        ], f"frequent_method must be one of 'fpgrowth', 'apriori' or 'fpmax'. Got {frequent_method}."
         assert association_metric in [
+            "support",
             "confidence",
             "lift",
             "leverage",
             "conviction",
-        ]
+        ], f"frequent_method must be one of 'support', 'confidence', 'lift', 'leverage', 'conviction'. Got {association_metric}."
 
         start = time.time()
         df = df.copy()
@@ -147,7 +152,7 @@ class AAIAssociationRulesTask(AAITask):
         temp_df["weight"] = (
             temp_df[association_metric] - temp_df[association_metric].min()
         ) / (temp_df[association_metric].max() - temp_df[association_metric].min())
-        temp_df["penwidth"] = temp_df["weight"] + 0.5
+        temp_df["penwidth"] = temp_df["weight"] + 0.2
         temp_df["arrowsize"] = temp_df["weight"]
         buffer = StringIO()
         graph = nx.from_pandas_edgelist(
