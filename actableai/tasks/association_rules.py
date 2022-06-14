@@ -151,7 +151,7 @@ class AAIAssociationRulesTask(AAITask):
         temp_df["weight"] = (
             temp_df[association_metric] - temp_df[association_metric].min()
         ) / (temp_df[association_metric].max() - temp_df[association_metric].min())
-        temp_df = temp_df[["antecedents", "consequents", "weight"]]
+        temp_df = temp_df[["antecedents", "consequents", association_metric]]
         nodes = list(set(temp_df["antecedents"]) | set(temp_df["consequents"]))
         matrix = {}
         for source, target in product(nodes, nodes):
