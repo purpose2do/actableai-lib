@@ -1,4 +1,5 @@
 from io import StringIO
+from itertools import product
 import time
 from typing import Dict, List
 import pandas as pd
@@ -145,15 +146,32 @@ class AAIAssociationRulesTask(AAITask):
                 support_only=True,
             )
 
+        # Preparing a symetrical matrix like d3.chords calls for
+        temp_df = rules.copy()
+        temp_df["weight"] = (
+            temp_df[association_metric] - temp_df[association_metric].min()
+        ) / (temp_df[association_metric].max() - temp_df[association_metric].min())
+        temp_df = temp_df["antecedents", "consequents", "weight"]
+        nodes = list(set(temp_df["antecedents"]) | set(temp_df["consequents"]))
+        matrix = {}
+        for source, target in product(nodes, nodes):
+            matrix[(source, target)] = 0
+        for source, target, value in temp_df.to_records(index=False):
+            matrix[(source, target)] = value
+        m = [[matrix[(n1, n2)] for n1 in nodes] for n2 in nodes]
+        association_rules_chord = {
+            "nodes": list(nodes), "matrix": m
+        }
+
+        temp_df = rules.copy().head(graph_top_k)
         rules = rules.sort_values(by=association_metric, ascending=False)
-        temp_df = rules.head(graph_top_k).copy()
-        temp_df["antecedents"] = temp_df["antecedents"].apply(list).astype(str)
-        temp_df["consequents"] = temp_df["consequents"].apply(list).astype(str)
+        temp_df["antecedents"] = temp_df["antecedents"].apply(list).apply(", ".join)
+        temp_df["consequents"] = temp_df["consequents"].apply(list).apply(", ".join)
         temp_df["weight"] = (
             temp_df[association_metric] - temp_df[association_metric].min()
         ) / (temp_df[association_metric].max() - temp_df[association_metric].min())
         temp_df["penwidth"] = temp_df["weight"] + 0.2
-        temp_df["arrowsize"] = temp_df["weight"]
+        # temp_df["arrowsize"] = temp_df["weight"]
         buffer = StringIO()
         graph = nx.from_pandas_edgelist(
             temp_df,
@@ -172,6 +190,7 @@ class AAIAssociationRulesTask(AAITask):
                 "df_list": df_list,
                 "graph": buffer.getvalue(),
                 "association_metric": association_metric,
+                "association_rules_chord": association_rules_chord,
             },
             "validations": [],
             "runtime": time.time() - start,
