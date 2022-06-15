@@ -4,7 +4,6 @@ import pandas as pd
 import time
 import visions
 from functools import partial
-from gluonts.evaluation import Evaluator, MultivariateEvaluator
 from gluonts.mx.distribution import DistributionOutput
 from gluonts.mx.distribution.poisson import PoissonOutput
 from gluonts.mx.distribution.student_t import StudentTOutput
@@ -19,6 +18,7 @@ from actableai.timeseries.models.base import AAITimeSeriesBaseModel
 from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.params.base import BaseParams
 from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
+from actableai.timeseries.models.evaluator import AAITimeSeriesEvaluator
 from actableai.timeseries.utils import (
     dataframe_to_list_dataset,
     forecast_to_dataframe,
@@ -191,15 +191,11 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
             tune_data, num_samples=100
         )
 
-        evaluator_class = None
-        if target_dim <= 1:
-            evaluator_class = Evaluator
-        else:
-            evaluator_class = MultivariateEvaluator
-        evaluator = evaluator_class(
-            quantiles=[0.05, 0.25, 0.5, 0.75, 0.95], num_workers=None
+        evaluator = AAITimeSeriesEvaluator(
+            n_targets=target_dim,
+            quantiles=[0.05, 0.25, 0.5, 0.75, 0.95],
+            num_workers=None,
         )
-
         agg_metrics, _ = evaluator(ts_it, forecast_it, num_series=len(tune_data))
 
         if not use_ray:
@@ -609,17 +605,12 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         rmse = lambda target, forecast: np.sqrt(np.mean(np.square(target - forecast)))
 
         # Evaluate
-        evaluator_class = None
-        if len(self.target_columns) <= 1:
-            evaluator_class = Evaluator
-        else:
-            evaluator_class = MultivariateEvaluator
-        evaluator = evaluator_class(
+        evaluator = AAITimeSeriesEvaluator(
+            n_targets=len(self.target_columns),
             quantiles=quantiles,
             num_workers=num_workers,
             custom_eval_fn={"custom_RMSE": [rmse, "mean", "median"]},
         )
-
         agg_metrics, df_item_metrics = evaluator(
             ts_list, forecast_list, num_series=len(valid_data)
         )
