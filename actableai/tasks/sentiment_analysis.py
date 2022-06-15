@@ -33,8 +33,10 @@ class AAISentimentAnalysisTask(AAITask):
         import math
         import time
         import ray
+        from ray.exceptions import RayTaskError
         from nltk.tokenize import sent_tokenize
         from actableai.sentiment.serve import AAISentimentExtractor
+        from multi_rake.algorithm import UnsupportedLanguageError
 
         start = time.time()
 
@@ -54,12 +56,23 @@ class AAISentimentAnalysisTask(AAITask):
 
         # Call the deployed model batch by batch
         result = []
+        unsupported_language_codes = set()
         for batch_index in range(math.ceil(len(sentences) / batch_size)):
             sentence_batch = sentences[
                 batch_index * batch_size : (batch_index + 1) * batch_size
             ]
-            result += ray.get(
-                absa_handle.options(method_name="predict").remote(sentence_batch)
+            try:
+                result += ray.get(
+                    absa_handle.options(method_name="predict").remote(sentence_batch)
+                )
+            except RayTaskError as err:
+                if type(err.cause) is UnsupportedLanguageError:
+                    unsupported_language_codes.add(err.cause.language_code)
+
+        message = ""
+        if len(unsupported_language_codes) > 0:
+            message = "Unsupported language codes detected: {}".format(
+                ", ".join(unsupported_language_codes)
             )
 
         data = []
@@ -74,4 +87,9 @@ class AAISentimentAnalysisTask(AAITask):
                     }
                 )
 
-        return {"data": data, "status": "SUCCESS", "runtime": time.time() - start}
+        return {
+            "data": data,
+            "status": "SUCCESS",
+            "runtime": time.time() - start,
+            "message": message,
+        }
