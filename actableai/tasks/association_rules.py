@@ -44,14 +44,6 @@ class AAIAssociationRulesTask(AAITask):
         from actableai.data_validation.base import CheckLevels
 
         # Check parameters
-        if frequent_method is None:
-            frequent_method = "fpgrowth"
-        if min_support is None:
-            min_support = 0.5
-        if association_metric is None:
-            association_metric = "confidence"
-        if min_association_metric is None:
-            min_association_metric = 0.5
         assert frequent_method in [
             "fpgrowth",
             "apriori",
@@ -137,6 +129,10 @@ class AAIAssociationRulesTask(AAITask):
                 metric=association_metric,
                 min_threshold=min_association_metric,
             )
+        # When choosing fpmax as frequent_method, it discards the itemsets
+        # that are contained in other itemsets.
+        # This behavior of discarding itemsets makes it impossible to compute other
+        # metrics than the current support which raises an error.
         except KeyError:
             association_metric = "support"
             rules = association_rules(
