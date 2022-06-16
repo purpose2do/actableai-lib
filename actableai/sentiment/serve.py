@@ -15,6 +15,7 @@ class AAISentimentExtractor:
         num_replicas,
         ray_options,
         pyabsa_checkpoint,
+        device,
     ):
         """
         TODO write documentation
@@ -26,7 +27,7 @@ class AAISentimentExtractor:
             name=cls.__name__,
             num_replicas=num_replicas,
             ray_actor_options=ray_options,
-            init_args=(pyabsa_checkpoint,),
+            init_args=(pyabsa_checkpoint, device),
         ).deploy()
 
     @classmethod
@@ -45,7 +46,7 @@ class AAISentimentExtractor:
 
         return serve.get_deployment(cls.__name__)
 
-    def __init__(self, checkpoint) -> None:
+    def __init__(self, checkpoint, device) -> None:
         """
         TODO write documentation
         """
@@ -55,7 +56,7 @@ class AAISentimentExtractor:
         self.rake = multi_rake.Rake(min_freq=1)
         self.sent_classifier = APCCheckpointManager.get_sentiment_classifier(
             checkpoint=checkpoint,
-            auto_device=True,  # Use CUDA if available
+            auto_device=device,
         )
 
     def predict(self, X, rake_threshold=1.0):
