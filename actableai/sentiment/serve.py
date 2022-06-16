@@ -1,3 +1,9 @@
+import traceback
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class AAISentimentExtractor:
     """
     TODO write documentation
@@ -8,6 +14,7 @@ class AAISentimentExtractor:
         cls,
         num_replicas,
         ray_options,
+        pyabsa_checkpoint,
     ):
         """
         TODO write documentation
@@ -19,7 +26,7 @@ class AAISentimentExtractor:
             name=cls.__name__,
             num_replicas=num_replicas,
             ray_actor_options=ray_options,
-            init_args=(),
+            init_args=(pyabsa_checkpoint,),
         ).deploy()
 
     @classmethod
@@ -38,7 +45,7 @@ class AAISentimentExtractor:
 
         return serve.get_deployment(cls.__name__)
 
-    def __init__(self) -> None:
+    def __init__(self, checkpoint) -> None:
         """
         TODO write documentation
         """
@@ -47,7 +54,7 @@ class AAISentimentExtractor:
 
         self.rake = multi_rake.Rake(min_freq=1)
         self.sent_classifier = APCCheckpointManager.get_sentiment_classifier(
-            checkpoint="multilingual2",
+            checkpoint=checkpoint,
             auto_device=True,  # Use CUDA if available
         )
 
@@ -57,7 +64,9 @@ class AAISentimentExtractor:
         """
         keywords, candidates = self.rake.apply_sentences(X)
         keywords = set([kw[0].text for kw in keywords if kw[1] >= rake_threshold])
-        results = []
+        results = [
+            {"keyword": [], "sentiment": [], "confidence": []} for i in range(len(X))
+        ]
         for candidate in candidates:
             if candidate.text in keywords:
                 sent = X[candidate.sentence_id]
@@ -68,15 +77,23 @@ class AAISentimentExtractor:
                     + "[ASP]"
                     + sent[candidate.end_position :]
                 )
-                sentiment = self.sent_classifier.infer(
-                    annotated_sent, print_result=False)
-                results.append(
-                    {
-                        "keyword": candidate.text,
-                        "sentiment": sentiment["sentiment"][0].lower(),
-                        "confidence": sentiment["confidence"][0],
-                    }
-                )
+
+                try:
+                    sentiment = self.sent_classifier.infer(
+                        annotated_sent, print_result=False
+                    )
+                    results[candidate.sentence_id]["keyword"].append(candidate.text)
+                    results[candidate.sentence_id]["sentiment"].append(
+                        sentiment["sentiment"][0].lower()
+                    )
+                    results[candidate.sentence_id]["confidence"].append(
+                        sentiment["confidence"][0]
+                    )
+                except Exception:
+                    logger.error(
+                        "Error in analyzing sentence: %s\n%s"
+                        % (annotated_sent, traceback.format_exc())
+                    )
 
         return results
 
