@@ -135,12 +135,21 @@ class AAIInterventionTask(AAITask):
             )
 
         X = df[common_causes] if len(common_causes) > 0 else None
+
+        model_t_problem_type = (
+            "regression" if current_intervention_column in num_cols else "multiclass"
+        )
+
+        model_t_holdout_frac = None
+        if model_t_problem_type == "multiclass" and len(df) > 0:
+            model_t_holdout_frac = len(df[current_intervention_column].unique()) / len(
+                df
+            )
+
         model_t = TabularPredictor(
             path=mkdtemp(prefix=str(model_directory)),
             label="t",
-            problem_type="regression"
-            if current_intervention_column in num_cols
-            else "multiclass",
+            problem_type=model_t_problem_type,
         )
 
         xw_col = []
@@ -152,13 +161,11 @@ class AAIInterventionTask(AAITask):
             x_w_columns=xw_col,
             hyperparameters=causal_hyperparameters,
             presets=presets,
-            ag_args_fit={
-                "num_gpus": num_gpus,
-                "drop_unique": False
-            },
+            ag_args_fit={"num_gpus": num_gpus, "drop_unique": False},
             feature_generator=AutoMLPipelineFeatureGenerator(
                 pre_drop_useless=False, post_generators=[]
             ),
+            holdout_frac=model_t_holdout_frac,
         )
 
         model_y = TabularPredictor(
@@ -171,10 +178,7 @@ class AAIInterventionTask(AAITask):
             x_w_columns=xw_col,
             hyperparameters=causal_hyperparameters,
             presets=presets,
-            ag_args_fit={
-                "num_gpus": num_gpus,
-                "drop_unique": False
-            },
+            ag_args_fit={"num_gpus": num_gpus, "drop_unique": False},
             feature_generator=AutoMLPipelineFeatureGenerator(
                 pre_drop_useless=False, post_generators=[]
             ),

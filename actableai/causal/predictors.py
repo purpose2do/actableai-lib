@@ -79,6 +79,7 @@ class SKLearnWrapper:
         presets: Optional[str] = "best_quality",
         ag_args_fit: Optional[Dict] = None,
         feature_generator: Optional[AbstractFeatureGenerator] = None,
+        holdout_frac: Optional[float] = None,
     ):
         """Construct a sklearn wrapper object
 
@@ -108,6 +109,7 @@ class SKLearnWrapper:
         self.ag_args_fit = ag_args_fit
         self.train_data = None
         self.feature_generator = feature_generator
+        self.holdout_frac = holdout_frac
 
         if self.feature_generator is None:
             self.feature_generator = AutoMLPipelineFeatureGenerator()
@@ -125,6 +127,7 @@ class SKLearnWrapper:
             hyperparameters=self.hyperparameters,
             ag_args_fit=self.ag_args_fit or {},
             feature_generator=self.feature_generator,
+            holdout_frac=self.holdout_frac,
         )
         pd.set_option("chained_assignment", "warn")
         self.train_data = train_data
