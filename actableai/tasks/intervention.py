@@ -26,6 +26,8 @@ class AAIInterventionTask(AAITask):
         model_directory: Optional[str] = None,
         num_gpus: Optional[int] = 0,
         feature_importance: Optional[bool] = True,
+        drop_unique: bool = True,
+        drop_useless_features: bool = True,
     ) -> Dict:
         """Run this intervention task and return the results.
 
@@ -91,6 +93,11 @@ class AAIInterventionTask(AAITask):
         if presets is None:
             presets = "medium_quality_faster_train"
         causal_cv = 1 if causal_cv is None else causal_cv
+
+        automl_pipeline_feature_parameters = {}
+        if not drop_useless_features:
+            automl_pipeline_feature_parameters["pre_drop_useless"] = False
+            automl_pipeline_feature_parameters["post_generators"] = []
 
         df = df.copy()
 
@@ -161,9 +168,9 @@ class AAIInterventionTask(AAITask):
             x_w_columns=xw_col,
             hyperparameters=causal_hyperparameters,
             presets=presets,
-            ag_args_fit={"num_gpus": num_gpus, "drop_unique": False},
+            ag_args_fit={"num_gpus": num_gpus, "drop_unique": drop_unique},
             feature_generator=AutoMLPipelineFeatureGenerator(
-                pre_drop_useless=False, post_generators=[]
+                **automl_pipeline_feature_parameters
             ),
             holdout_frac=model_t_holdout_frac,
         )
@@ -178,9 +185,9 @@ class AAIInterventionTask(AAITask):
             x_w_columns=xw_col,
             hyperparameters=causal_hyperparameters,
             presets=presets,
-            ag_args_fit={"num_gpus": num_gpus, "drop_unique": False},
+            ag_args_fit={"num_gpus": num_gpus, "drop_unique": drop_unique},
             feature_generator=AutoMLPipelineFeatureGenerator(
-                pre_drop_useless=False, post_generators=[]
+                **automl_pipeline_feature_parameters
             ),
         )
 
@@ -213,10 +220,10 @@ class AAIInterventionTask(AAITask):
                 presets=presets,
                 ag_args_fit={
                     "num_gpus": num_gpus,
-                    "drop_unique": False,
+                    "drop_unique": drop_unique,
                 },
                 feature_generator=AutoMLPipelineFeatureGenerator(
-                    pre_drop_useless=False, post_generators=[]
+                    **automl_pipeline_feature_parameters
                 ),
             )
             causal_model = NonParamDML(

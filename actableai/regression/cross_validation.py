@@ -30,6 +30,8 @@ def run_cross_validation(
     num_gpus: int,
     eval_metric: str,
     time_limit: Optional[int],
+    drop_unique: bool,
+    drop_useless_features: bool,
 ) -> Tuple[Dict, Dict, List, float, float, List, List, List]:
     """Run cross validation on Regression Task. Data is divided in kfold groups and each
     run a regression. The returned values are means or lists of values from
@@ -109,6 +111,8 @@ def run_cross_validation(
                 "num_gpus": num_gpus,
                 "eval_metric": eval_metric,
                 "time_limit": time_limit,
+                "drop_unique": drop_unique,
+                "drop_useless_features": drop_useless_features,
             },
         )
         for kfold_index, (train_index, val_index) in enumerate(kfolds_index_list)

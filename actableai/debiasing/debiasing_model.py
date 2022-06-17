@@ -27,6 +27,7 @@ class DebiasingModel(AbstractModel):
 
         # Initialize Parameters
         self.drop_duplicates = self.params_aux["drop_duplicates"]
+        self.drop_useless_features = self.params_aux["drop_useless_features"]
         self.label = self.params_aux["label"]
         self.features = self.params_aux["features"]
         self.biased_groups = self.params_aux["biased_groups"]
@@ -81,6 +82,7 @@ class DebiasingModel(AbstractModel):
 
         extra_auxiliary_params = {
             "drop_duplicates": True,
+            "drop_useless_features": True,
             "label": uuid4(),
             "features": [],
             "biased_groups": [],
@@ -195,6 +197,11 @@ class DebiasingModel(AbstractModel):
 
         hyperparameters_final = debiasing_hyperparameters()
 
+        automl_pipeline_feature_parameters = {}
+        if not self.drop_useless_features:
+            automl_pipeline_feature_parameters["pre_drop_useless"] = False
+            automl_pipeline_feature_parameters["post_generators"] = []
+
         # Train final model
         self.final_model.fit(
             train_data=final_train_data,
@@ -203,7 +210,7 @@ class DebiasingModel(AbstractModel):
             presets=self.presets_final,
             ag_args_fit=self.params_aux,
             feature_generator=AutoMLPipelineFeatureGenerator(
-                pre_drop_useless=False, post_generators=[]
+                **automl_pipeline_feature_parameters
             ),
         )
 

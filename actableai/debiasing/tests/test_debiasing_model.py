@@ -36,6 +36,7 @@ class TestDebiasingModel:
             "presets_final": "medium_quality_faster_train",
             "num_cpus": 1,
             "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -80,6 +81,7 @@ class TestDebiasingModel:
             "presets_final": "medium_quality_faster_train",
             "num_cpus": 1,
             "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -122,6 +124,7 @@ class TestDebiasingModel:
             "presets_final": "medium_quality_faster_train",
             "num_cpus": 1,
             "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -166,6 +169,7 @@ class TestDebiasingModel:
             "presets_final": "medium_quality_faster_train",
             "num_cpus": 1,
             "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -208,6 +212,7 @@ class TestDebiasingModel:
             "presets_final": "medium_quality_faster_train",
             "num_cpus": 1,
             "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -252,6 +257,7 @@ class TestDebiasingModel:
             "presets_final": "medium_quality_faster_train",
             "num_cpus": 1,
             "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -294,6 +300,7 @@ class TestDebiasingModel:
             "presets_final": "medium_quality_faster_train",
             "num_cpus": 1,
             "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -342,6 +349,7 @@ class TestDebiasingModel:
             "presets_final": "medium_quality_faster_train",
             "num_cpus": 1,
             "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -390,6 +398,7 @@ class TestDebiasingModel:
             "presets_final": "medium_quality_faster_train",
             "num_cpus": 1,
             "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 

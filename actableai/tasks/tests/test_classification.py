@@ -27,6 +27,8 @@ def run_classification_task(
         hyperparameters=unittest_hyperparameters(),
         residuals_hyperparameters=unittest_hyperparameters(),
         drop_duplicates=drop_duplicates,
+        drop_unique=False,
+        drop_useless_features=False,
     )
 
 

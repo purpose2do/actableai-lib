@@ -52,6 +52,8 @@ def test_cross_validation():
         num_gpus=0,
         eval_metric="r2",
         time_limit=None,
+        drop_unique=False,
+        drop_useless_features=False,
     )
 
     assert important_features is not None

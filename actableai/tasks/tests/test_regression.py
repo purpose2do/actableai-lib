@@ -42,6 +42,8 @@ def run_regression_task(regression_task: AAIRegressionTask, tmp_path, *args, **k
         presets="medium_quality_faster_train",
         model_directory=tmp_path,
         residuals_hyperparameters=unittest_hyperparameters(),
+        drop_unique=False,
+        drop_useless_features=False,
     )
 
 

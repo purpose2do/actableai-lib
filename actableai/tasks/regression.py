@@ -33,6 +33,8 @@ class _AAIRegressionTrainTask(AAITask):
         num_gpus: int,
         eval_metric: Dict,
         time_limit: Optional[int],
+        drop_unique: bool,
+        drop_useless_features: bool,
     ):
         """Sub class for running a regression without cross validation
 
@@ -83,8 +85,13 @@ class _AAIRegressionTrainTask(AAITask):
         from actableai.debiasing.debiasing_model import DebiasingModel
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
 
-        ag_args_fit = {"drop_unique": False}
-        feature_generator_args = {"pre_drop_useless": False, "post_generators": []}
+        ag_args_fit = {"drop_unique": drop_unique}
+        feature_generator_args = {}
+
+        if not drop_useless_features:
+            feature_generator_args["pre_drop_useless"] = False
+            feature_generator_args["post_generators"] = []
+
         if run_debiasing:
             ag_args_fit["drop_duplicates"] = drop_duplicates
             ag_args_fit["label"] = target
@@ -95,6 +102,7 @@ class _AAIRegressionTrainTask(AAITask):
             ag_args_fit["presets_residuals"] = presets
             ag_args_fit["hyperparameters_non_residuals"] = hyperparameters
             ag_args_fit["presets_non_residuals"] = presets
+            ag_args_fit["drop_useless_features"] = drop_useless_features
 
             feature_generator_args = {
                 **feature_generator_args,
@@ -271,6 +279,8 @@ class AAIRegressionTask(AAITask):
         kde_steps: int = 10,
         num_gpus: int = 0,
         time_limit: Optional[int] = None,
+        drop_unique: bool = True,
+        drop_useless_features: bool = True,
     ):
         """Run this regression task and return results.
 
@@ -470,6 +480,8 @@ class AAIRegressionTask(AAITask):
                 num_gpus=num_gpus,
                 eval_metric=eval_metric,
                 time_limit=time_limit,
+                drop_unique=drop_unique,
+                drop_useless_features=drop_useless_features,
             )
         else:
             (
@@ -504,6 +516,8 @@ class AAIRegressionTask(AAITask):
                 num_gpus=num_gpus,
                 eval_metric=eval_metric,
                 time_limit=time_limit,
+                drop_unique=drop_unique,
+                drop_useless_features=drop_useless_features,
             )
 
         # Validation

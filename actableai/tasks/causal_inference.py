@@ -59,6 +59,8 @@ def infer_causal(
     mc_iters="auto",
     seed=123,
     num_gpus=0,
+    drop_unique: bool = True,
+    drop_useless_features: bool = False,
 ):
     """Causal analysis task
 
@@ -300,6 +302,8 @@ def infer_causal(
         hyperparameters=ag_hyperparameters,
         mc_iters=mc_iters,
         num_gpus=num_gpus,
+        drop_unique=drop_unique,
+        drop_useless_features=drop_useless_features,
     )
     X_test = None
     target_idx = pd.Series(np.full(len(pd_table), True, dtype=bool))
