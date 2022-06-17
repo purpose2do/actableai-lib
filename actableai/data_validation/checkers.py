@@ -1014,3 +1014,26 @@ class StratifiedKFoldChecker(IChecker):
                 level=self.level,
                 message=f"The count of each unique values in the intervention column ({intervention}) must be greater than or equal to causal_cv : {causal_cv}.",
             )
+
+
+class NoFrequentItemSet(IChecker):
+    def __init__(self, level, name="NoFrequentItemSet"):
+        self.name = name
+        self.level = level
+
+    def check(self, frequent_itemset) -> Optional[CheckResult]:
+        """Check if the frequent item set is empty.
+
+        Args:
+            df: Dataframe to check.
+            features: Features to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
+        if len(frequent_itemset) == 0:
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message="No frequent item set found. Try to lower the minimum value for frequent itemset.",
+            )

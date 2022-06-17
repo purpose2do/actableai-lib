@@ -11,6 +11,7 @@ from actableai.data_validation.params import (
     InterventionDataValidator,
     RegressionDataValidator,
     ClassificationDataValidator,
+    AssociationRulesDataValidator,
 )
 
 
@@ -331,3 +332,23 @@ class TestInterventionDataValidator:
         }
         assert "StratifiedKFoldChecker" in validations_dict
         assert validations_dict["StratifiedKFoldChecker"] == CheckLevels.CRITICAL
+
+
+class TestAssociationRulesDataValidator:
+    def test_validate_column_present(self):
+        df = pd.DataFrame(
+            {
+                "x": rands_array(10, 5),
+                "y": rands_array(10, 5),
+                "z": rands_array(10, 5),
+                "t": rands_array(10, 5),
+            }
+        )
+        validation_results = AssociationRulesDataValidator().validate(
+            df=df, group_by=["x", "a"], items="z"
+        )
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "ColumnsExistChecker" in validations_dict
+        assert validations_dict["ColumnsExistChecker"] == CheckLevels.CRITICAL
