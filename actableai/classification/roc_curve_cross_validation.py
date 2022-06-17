@@ -25,6 +25,8 @@ def cross_validation_curve(
             cross_val_auc_curves[x][i],
             cross_val_auc_curves[y][i],
         )
+        if x == "Recall":
+            cross_val_auc_curves[x][i].pop()
         interp_thresholds = np.interp(
             mean_fpr,
             cross_val_auc_curves[x][i],
