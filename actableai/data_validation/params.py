@@ -194,6 +194,15 @@ class RegressionDataValidator:
                 )
             )
 
+        if use_quantiles and explain_samples:
+            validation_results.append(
+                CheckResult(
+                    name="ExplanationChecker",
+                    level=CheckLevels.CRITICAL,
+                    message="Explanations are not compatile with quantiles"
+                )
+            )
+
         return validation_results
 
 

@@ -482,6 +482,32 @@ class TestRemoteRegression:
         assert len(r["data"]["validation_shaps"]) > 0
         assert "leaderboard" in r["data"]
 
+    def test_explain_samples_quantiles(self, regression_task, tmp_path):
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, None, None, 8, 9, 10] * 2,
+                "y": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2,
+            }
+        )
+
+        r = run_regression_task(
+            regression_task,
+            tmp_path,
+            df,
+            "x",
+            validation_ratio=0.2,
+            explain_samples=True,
+            prediction_quantile_high=95,
+            prediction_quantile_low=5,
+        )
+
+        assert r["status"] == "FAILURE"
+
+        validations_dict = {val["name"]: val["level"] for val in r["validations"]}
+
+        assert "ExplanationChecker" in validations_dict
+        assert validations_dict["ExplanationChecker"] == CheckLevels.CRITICAL
+
     def test_explain_samples_with_datetime(self, regression_task, tmp_path):
         rng = pd.date_range("2015-02-24", periods=20, freq="T")
         drop_indices = np.random.randint(0, 20, 5)
