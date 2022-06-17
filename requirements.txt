@@ -25,6 +25,8 @@ aiosignal==1.2.0
     #   ray
 antlr4-python3-runtime==4.8
     # via omegaconf
+arabic-stopwords==0.3
+    # via multi-rake
 astunparse==1.6.3
     # via tensorflow
 async-timeout==4.0.2
@@ -287,6 +289,7 @@ jmespath==1.0.0
 joblib==1.1.0
     # via
     #   econml
+    #   mlxtend
     #   nltk
     #   sacremoses
     #   scikit-learn
@@ -326,6 +329,7 @@ matplotlib==3.5.2
     #   fbprophet
     #   gluonts
     #   metric-visualizer
+    #   mlxtend
     #   tikzplotlib
 matplotlib-inline==0.1.3
     # via ipython
@@ -333,12 +337,16 @@ mccabe==0.6.1
     # via flake8
 metric-visualizer==0.4.22
     # via pyabsa
+mlxtend==0.20.0
+    # via -r requirements.in
 mpmath==1.2.1
     # via sympy
 msgpack==1.0.4
     # via
     #   distributed
     #   ray
+multi_rake @ git+https://github.com/Actable-AI/multi_rake@master
+    # via -r requirements.in
 multidict==6.0.2
     # via
     #   aiohttp
@@ -390,6 +398,8 @@ numpy==1.21.6
     #   keras-preprocessing
     #   lightgbm
     #   matplotlib
+    #   mlxtend
+    #   multi-rake
     #   mxnet
     #   nptyping
     #   numba
@@ -465,6 +475,7 @@ pandas==1.3.5
     #   fastai
     #   fbprophet
     #   gluonts
+    #   mlxtend
     #   pandasql
     #   ray
     #   shap
@@ -531,6 +542,8 @@ py-spy==0.3.12
     # via ray
 pyabsa==1.14.7
     # via -r requirements.in
+pyarabic==0.6.14
+    # via arabic-stopwords
 pyarrow==8.0.0
     # via autogluon-contrib-nlp
 pyasn1==0.4.8
@@ -539,6 +552,8 @@ pyasn1==0.4.8
     #   rsa
 pyasn1-modules==0.2.8
     # via google-auth
+pycld2==0.41
+    # via multi-rake
 pycodestyle==2.7.0
     # via flake8
 pydantic==1.8.2
@@ -564,7 +579,9 @@ pyparsing==3.0.9
     #   packaging
     #   pydot
 pyrsistent==0.18.1
-    # via jsonschema
+    # via
+    #   jsonschema
+    #   multi-rake
 pysocks==1.7.1
     # via requests
 pystan==2.19.1.1
@@ -615,6 +632,7 @@ redis==4.3.3
 regex==2022.6.2
     # via
     #   autogluon-contrib-nlp
+    #   multi-rake
     #   nltk
     #   sacrebleu
     #   sacremoses
@@ -661,6 +679,7 @@ scikit-learn==1.0.2
     #   econml
     #   fastai
     #   lightgbm
+    #   mlxtend
     #   seqeval
     #   shap
 scipy==1.7.3
@@ -675,6 +694,7 @@ scipy==1.7.3
     #   hyperopt
     #   lightgbm
     #   metric-visualizer
+    #   mlxtend
     #   scikit-image
     #   scikit-learn
     #   shap
@@ -707,6 +727,7 @@ six==1.16.0
     #   hyperopt
     #   keras-preprocessing
     #   patsy
+    #   pyarabic
     #   python-dateutil
     #   rpy2
     #   sacremoses

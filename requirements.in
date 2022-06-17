@@ -17,3 +17,5 @@ pytest==7.1.1 # UPDATED
 pytest-parallel==0.1.1
 pystan==2.19.1.1 # Cannot be updated (compatibility issues with fbprophet)
 pyabsa==1.14.7 # TODO update
+mlxtend==0.20.0
+git+https://github.com/Actable-AI/multi_rake@master#egg=multi_rake
