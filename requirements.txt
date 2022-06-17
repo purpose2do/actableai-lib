@@ -205,4 +205,4 @@ pyabsa==1.14.7
 autogluon-contrib-nlp==0.0.1b20210201
 
 gluonts==0.9.1
-./third_parties/multi_rake
+git+https://github.com/Actable-AI/multi_rake@master#egg=multi_rake
