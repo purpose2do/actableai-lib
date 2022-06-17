@@ -7,7 +7,7 @@ def transform_features(predictor, model_name, data):
     df_transformed_data = predictor.transform_features(data, model=model_name)
     transformed_data = autogluon_model.preprocess(df_transformed_data)
 
-    return transformed_data
+    return df_transformed_data, transformed_data
 
 
 def _get_features_to_drop(autogluon_model):
