@@ -2,8 +2,12 @@ import numpy as np
 import pandas as pd
 from typing import List, Optional, Tuple
 
+from actableai.classification.roc_curve_cross_validation import (
+    cross_validation_curve,
+)
 from actableai.classification.utils import leaderboard_cross_val
 from actableai.tasks.classification import _AAIClassificationTrainTask
+from sklearn.metrics import auc
 
 
 class AverageEnsembleClassifier:
@@ -232,13 +236,13 @@ def run_cross_validation(
         if problem_type == "binary":
             auc_curve = evaluate["auc_curve"]
             for metric in auc_curve:
-                if metric not in cross_val_evaluates:
+                if metric not in cross_val_auc_curves:
                     cross_val_auc_curves[metric] = []
                 cross_val_auc_curves[metric].append(auc_curve[metric])
 
             precision_recall_curve = evaluate["precision_recall_curve"]
             for metric in precision_recall_curve:
-                if metric not in cross_val_evaluates:
+                if metric not in cross_val_precision_recall_curves:
                     cross_val_precision_recall_curves[metric] = []
                 cross_val_precision_recall_curves[metric].append(
                     precision_recall_curve[metric]
@@ -289,56 +293,16 @@ def run_cross_validation(
     }
 
     if evaluate["problem_type"] == "binary":
-        auc_curve = {
-            "False Positive Rate": np.mean(
-                cross_val_auc_curves["False Positive Rate"], axis=0
-            ).tolist(),
-            "False Positive Rate std err": (
-                np.std(cross_val_auc_curves["False Positive Rate"], axis=0) / sqrt_k
-            ).tolist(),
-            "True Positive Rate": np.mean(
-                cross_val_auc_curves["True Positive Rate"], axis=0
-            ).tolist(),
-            "True Positive Rate std err": (
-                np.std(cross_val_auc_curves["True Positive Rate"], axis=0) / sqrt_k
-            ).tolist(),
-            "thresholds": np.mean(cross_val_auc_curves["thresholds"], axis=0).tolist(),
-            "thresholds_std_err": (
-                np.std(cross_val_auc_curves["thresholds"], axis=0) / sqrt_k
-            ).tolist(),
-            "positive_label": cross_val_auc_curves["positive_label"][0],
-            "negative_label": cross_val_auc_curves["negative_label"][0],
-            "threshold": cross_val_auc_curves["threshold"][0],
-        }
-        precision_recall_curve = {
-            "Precision": np.mean(
-                cross_val_precision_recall_curves["Precision"], axis=0
-            ).tolist(),
-            "Precision std err": (
-                np.std(cross_val_precision_recall_curves["Precision"], axis=0) / sqrt_k
-            ).tolist(),
-            "Recall": np.mean(
-                cross_val_precision_recall_curves["Recall"], axis=0
-            ).tolist(),
-            "Recall std err": (
-                np.std(cross_val_precision_recall_curves["Recall"], axis=0) / sqrt_k
-            ).tolist(),
-            "thresholds": np.mean(
-                cross_val_precision_recall_curves["thresholds"], axis=0
-            ).tolist(),
-            "thresholds_std_err": (
-                np.std(cross_val_precision_recall_curves["thresholds"], axis=0) / sqrt_k
-            ).tolist(),
-            "positive_label": cross_val_precision_recall_curves["positive_label"][0],
-            "negative_label": cross_val_precision_recall_curves["negative_label"][0],
-        }
-
-        evaluate["auc_score"] = np.mean(cross_val_evaluates["auc_score"], axis=0)
-        evaluate["auc_score_std_err"] = (
-            np.std(cross_val_evaluates["auc_score"], axis=0) / sqrt_k
-        ).tolist()
-        evaluate["auc_curve"] = auc_curve
-        evaluate["precision_recall_curve"] = precision_recall_curve
+        evaluate["auc_curve"] = cross_validation_curve(
+            cross_val_auc_curves, x="False Positive Rate", y="True Positive Rate"
+        )
+        evaluate["auc_score"] = auc(
+            evaluate["auc_curve"]["False Positive Rate"],
+            evaluate["auc_curve"]["True Positive Rate"],
+        )
+        evaluate["precision_recall_curve"] = cross_validation_curve(
+            cross_val_precision_recall_curves, x="Recall", y="Precision"
+        )
         evaluate["precision_score"] = np.mean(
             cross_val_evaluates["precision_score"], axis=0
         )
