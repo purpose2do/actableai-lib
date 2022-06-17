@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from pandas import DataFrame
 from pandas.api.types import is_string_dtype
 from sklearn.base import TransformerMixin, BaseEstimator, _OneToOneFeatureMixin
 from sklearn.impute import SimpleImputer
@@ -36,11 +35,15 @@ class PercentageTransformer(_OneToOneFeatureMixin, BaseEstimator, TransformerMix
     """
 
     def transform(self, X, y=None):
-        return X.apply(
-            lambda x: x.str.extract(
-                r"^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$"
-            )[0]
-        ).astype(float)
+        return (
+            X.fillna("None")
+            .apply(
+                lambda x: x.str.extract(
+                    r"^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$"
+                )[0]
+            )
+            .astype(float)
+        )
 
     @staticmethod
     def selector(df):
@@ -49,7 +52,7 @@ class PercentageTransformer(_OneToOneFeatureMixin, BaseEstimator, TransformerMix
         parsed_rate_check = (
             lambda x, min: x.isna().sum() >= min * len(x) if x is not None else False
         )
-        extracted = df.apply(
+        extracted = df.fillna("None").apply(
             lambda x: x.str.extract(
                 r"^[^\S\r\n]*(\d+(?:\.\d+)?)[^\S\r\n]*%[^\S\r\n]*$"
             )[0]
