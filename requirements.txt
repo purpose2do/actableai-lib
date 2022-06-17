@@ -417,7 +417,6 @@ numpy==1.21.6
     #   thinc
     #   tifffile
     #   tikzplotlib
-    #   torch
     #   torchmetrics
     #   torchvision
     #   transformers
@@ -802,7 +801,7 @@ toolz==0.11.2
     #   distributed
     #   gluonts
     #   partd
-torch==1.8.0+cpu
+torch==1.10.1+cpu
     # via
     #   -r requirements-cpu.in
     #   autogluon-tabular
@@ -816,13 +815,13 @@ torch==1.8.0+cpu
     #   torchaudio
     #   torchmetrics
     #   torchvision
-torchaudio==0.8.0
+torchaudio==0.10.1
     # via -r requirements-cpu.in
 torchmetrics==0.7.3
     # via
     #   autogluon-text
     #   pytorch-lightning
-torchvision==0.9.0+cpu
+torchvision==0.11.2+cpu
     # via
     #   -r requirements-cpu.in
     #   fastai
