@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from pandas import DataFrame
 from pandas.api.types import is_string_dtype
 from sklearn.base import TransformerMixin, BaseEstimator, _OneToOneFeatureMixin
 from sklearn.impute import SimpleImputer
