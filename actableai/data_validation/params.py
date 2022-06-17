@@ -174,7 +174,7 @@ class RegressionDataValidator:
                 CheckResult(
                     name="ExplanationChecker",
                     level=CheckLevels.CRITICAL,
-                    message="Debiasing is incompatible explanation",
+                    message="Debiasing is incompatible with explanation",
                 )
             )
 
@@ -363,7 +363,7 @@ class ClassificationDataValidator:
                 CheckResult(
                     name="ExplanationChecker",
                     level=CheckLevels.CRITICAL,
-                    message="Debiasing is incompatible explanation",
+                    message="Debiasing is incompatible with explanation",
                 )
             )
 
