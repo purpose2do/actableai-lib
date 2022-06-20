@@ -46,9 +46,11 @@ def cross_validation_curve(
         y_list.append(interp_y)
     x_mean = np.mean(x_list, axis=0)
     y_mean = np.mean(y_list, axis=0)
+    y_stdrs = np.std(y_list, axis=0)
     return {
         x: x_mean,
         y: y_mean,
+        f"{y} stderr": y_stdrs,
         "thresholds": thresholds,
         "positive_label": cross_val_auc_curves["positive_label"][0],
         "negative_label": cross_val_auc_curves["negative_label"][0],
