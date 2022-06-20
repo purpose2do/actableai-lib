@@ -15,32 +15,33 @@ def cross_validation_curve(
     Returns:
         A dictionnary containing the combined ROC curves for each classifier
     """
-    tprs = []
-    thresholds = []
-    mean_fpr = np.linspace(0, 1, 100)
+    thresholds = np.linspace(0, 1, 100)
     first_key = list(cross_val_auc_curves.keys())[0]
+    x_list = []
+    y_list = []
     for i, _ in enumerate(cross_val_auc_curves[first_key]):
-        interp_tpr = np.interp(
-            mean_fpr,
+        if x == "Recall":
+            cross_val_auc_curves[x][i] = cross_val_auc_curves[x][i].pop()
+        interp_x = np.interp(
+            thresholds,
+            cross_val_auc_curves["thresholds"][i],
             cross_val_auc_curves[x][i],
+        )
+        if x == "Precision":
+            cross_val_auc_curves[y][i] = cross_val_auc_curves[y][i].pop()
+        interp_y = np.interp(
+            thresholds,
+            cross_val_auc_curves["thresholds"][i],
             cross_val_auc_curves[y][i],
         )
-        if x == "Recall":
-            cross_val_auc_curves[x][i].pop()
-        interp_thresholds = np.interp(
-            mean_fpr,
-            cross_val_auc_curves[x][i],
-            cross_val_auc_curves["thresholds"][i],
-        )
-        tprs.append(interp_tpr)
-        thresholds.append(interp_thresholds)
-    mean_tpr = np.mean(tprs, axis=0)
-    mean_thresholds = np.mean(thresholds, axis=0)
+        x_list.append(interp_x)
+        y_list.append(interp_y)
+    x_mean = np.mean(x_list, axis=0)
+    y_mean = np.mean(y_list, axis=0)
     return {
-        x: mean_fpr,
-        y: mean_tpr,
-        y + " std err": np.std(tprs, axis=0),
-        "thresholds": mean_thresholds,
+        x: x_mean,
+        y: y_mean,
+        "thresholds": thresholds,
         "positive_label": cross_val_auc_curves["positive_label"][0],
         "negative_label": cross_val_auc_curves["negative_label"][0],
     }
