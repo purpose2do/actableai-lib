@@ -21,14 +21,14 @@ def cross_validation_curve(
     y_list = []
     for i, _ in enumerate(cross_val_auc_curves[first_key]):
         if x == "Recall":
-            cross_val_auc_curves[x][i] = cross_val_auc_curves[x][i].pop()
+            cross_val_auc_curves[x][i].pop()
         interp_x = np.interp(
             thresholds,
             cross_val_auc_curves["thresholds"][i],
             cross_val_auc_curves[x][i],
         )
-        if x == "Precision":
-            cross_val_auc_curves[y][i] = cross_val_auc_curves[y][i].pop()
+        if y == "Precision":
+            cross_val_auc_curves[y][i].pop()
         interp_y = np.interp(
             thresholds,
             cross_val_auc_curves["thresholds"][i],
