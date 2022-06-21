@@ -41,7 +41,6 @@ from actableai.data_validation.checkers import (
     IsValidNumberOfClusterChecker,
     IsValidPredictionLengthChecker,
     IsValidTypeNumberOfClusterChecker,
-    MCCChecker,
     MaxTrainSamplesChecker,
     PositiveOutcomeValueThreshold,
     ROCAUCChecker,
@@ -360,9 +359,6 @@ class ClassificationDataValidator:
         # Check evaluation metrics
         validation_results += [
             ROCAUCChecker(level=CheckLevels.CRITICAL).check(
-                df, eval_metric=eval_metric, target=target
-            ),
-            MCCChecker(level=CheckLevels.CRITICAL).check(
                 df, eval_metric=eval_metric, target=target
             ),
         ]

@@ -221,32 +221,6 @@ class TestClassificationDataValidator:
         assert "ROCAUCChecker" in validations_dict
         assert validations_dict["ROCAUCChecker"] == CheckLevels.CRITICAL
 
-    def test_validate_eval_metric_mcc(self):
-        df = pd.DataFrame(
-            {
-                "x": rands_array(10, 5),
-                "y": rands_array(10, 5),
-                "z": rands_array(10, 5),
-                "t": rands_array(10, 5),
-            }
-        )
-
-        validation_results = ClassificationDataValidator().validate(
-            target="x",
-            features=["y"],
-            debiased_features=[],
-            debiasing_features=[],
-            df=df,
-            eval_metric="mcc",
-            presets="medium_quality_faster_train",
-        )
-
-        validations_dict = {
-            val.name: val.level for val in validation_results if val is not None
-        }
-        assert "MCCChecker" in validations_dict
-        assert validations_dict["MCCChecker"] == CheckLevels.CRITICAL
-
 
 class TestCorrelationDataValidator:
     def test_validate(self):

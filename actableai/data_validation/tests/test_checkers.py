@@ -13,7 +13,6 @@ from actableai.data_validation.checkers import (
     IsDatetimeChecker,
     IsNumericalChecker,
     IsSufficientClassSampleChecker,
-    MCCChecker,
     MaxTrainSamplesChecker,
     NoFrequentItemSet,
     PositiveOutcomeValueThreshold,
@@ -338,14 +337,4 @@ class TestROCAUCChecker:
         result = checker.check(df, "x", eval_metric="roc_auc")
         assert result is not None
         assert result.name == "ROCAUCChecker"
-        assert result.level == CheckLevels.CRITICAL
-
-
-class TestMCChecker:
-    def test_check(self):
-        checker = MCCChecker(level=CheckLevels.CRITICAL)
-        df = pd.DataFrame({"x": [1, 2, 3]})
-        result = checker.check(df, "x", eval_metric="mcc")
-        assert result is not None
-        assert result.name == "MCCChecker"
         assert result.level == CheckLevels.CRITICAL

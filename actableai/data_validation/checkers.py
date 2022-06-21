@@ -1062,28 +1062,3 @@ class ROCAUCChecker(IChecker):
                 level=self.level,
                 message=f"ROC AUC eval metric is only available for binary classification. Your target column has {df[target].nunique()} unique values",
             )
-
-
-class MCCChecker(IChecker):
-    def __init__(self, level: str, name: str = "MCCChecker"):
-        self.name = name
-        self.level = level
-
-    def check(
-        self, df: pd.DataFrame, target: str, eval_metric: str = "mcc"
-    ) -> Optional[CheckResult]:
-        """Check if the MCC is usable.
-
-        Args:
-            df: Dataframe to check.
-            features: Features to check.
-
-        Returns:
-            Optional[CheckResult]: Check result.
-        """
-        if eval_metric == "mcc" and df[target].nunique() > 2:
-            return CheckResult(
-                name=self.name,
-                level=self.level,
-                message=f"MCC eval metric is only available for binary classification. Your target column has {df[target].nunique()} unique values",
-            )
