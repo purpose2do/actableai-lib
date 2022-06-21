@@ -597,6 +597,36 @@ class TestRemoteClassification:
         assert r["validations"][0]["name"] == "IsSufficientDataChecker"
         assert r["validations"][0]["level"] == CheckLevels.CRITICAL
 
+    def test_run_eval_metric_roc_auc_task_binary(self, classification_task, tmp_path):
+        df = pd.DataFrame(
+            {
+                "x": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1] * 2,
+                "y": [1, 2, 1, 2, 1, None, 1, 2, 1, 2] * 2,
+            }
+        )
+
+        r = run_classification_task(
+            classification_task,
+            tmp_path,
+            df,
+            "y",
+            ["x"],
+            validation_ratio=0.2,
+            drop_duplicates=False,
+            eval_metric="roc_auc",
+        )
+
+        assert r["status"] == "SUCCESS"
+        assert "fields" in r["data"]
+        assert "exdata" in r["data"]
+        assert "predictData" in r["data"]
+        assert "predict_shaps" in r["data"]
+        assert "evaluate" in r["data"]
+        assert "validation_shaps" in r["data"]
+        assert "importantFeatures" in r["data"]
+        assert len(r["data"]["validation_shaps"]) == 0
+        assert len(r["data"]["predict_shaps"]) == 0
+
 
 class TestRemoteClassificationCrossValidation:
     def test_cross_val(self, classification_task, tmp_path):
