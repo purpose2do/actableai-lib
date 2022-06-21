@@ -343,7 +343,7 @@ class TestROCAUCChecker:
 
 class TestMCChecker:
     def test_check(self):
-        checker = MCCChecker(level=CheckLevels.CRITICAL, name="MCChecker")
+        checker = MCCChecker(level=CheckLevels.CRITICAL)
         df = pd.DataFrame({"x": [1, 2, 3]})
         result = checker.check(df, "x", eval_metric="mcc")
         assert result is not None
