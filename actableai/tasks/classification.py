@@ -377,6 +377,7 @@ class AAIClassificationTask(AAITask):
             kfolds=kfolds,
             drop_duplicates=drop_duplicates,
             explain_samples=explain_samples,
+            eval_metric=eval_metric,
         )
         failed_checks = [
             check for check in data_validation_results if check is not None

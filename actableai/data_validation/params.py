@@ -43,6 +43,7 @@ from actableai.data_validation.checkers import (
     IsValidTypeNumberOfClusterChecker,
     MaxTrainSamplesChecker,
     PositiveOutcomeValueThreshold,
+    ROCAUCChecker,
     RegressionEvalMetricChecker,
     SameTypeChecker,
     StratifiedKFoldChecker,
@@ -232,6 +233,7 @@ class ClassificationDataValidator:
         kfolds=None,
         drop_duplicates=True,
         explain_samples=False,
+        eval_metric: str = "accuracy",
     ):
         validation_results = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
@@ -353,6 +355,13 @@ class ClassificationDataValidator:
                     df, debiasing_features + debiased_features
                 )
             )
+
+        # Check evaluation metrics
+        validation_results += [
+            ROCAUCChecker(level=CheckLevels.CRITICAL).check(
+                df, eval_metric=eval_metric, target=target
+            ),
+        ]
 
         return validation_results
 

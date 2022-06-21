@@ -16,6 +16,7 @@ from actableai.data_validation.checkers import (
     MaxTrainSamplesChecker,
     NoFrequentItemSet,
     PositiveOutcomeValueThreshold,
+    ROCAUCChecker,
     SameTypeChecker,
     StratifiedKFoldChecker,
 )
@@ -326,4 +327,14 @@ class TestNoFrequentItemSet:
         result = checker.check(df)
         assert result is not None
         assert result.name == "NoFrequentItemSet"
+        assert result.level == CheckLevels.CRITICAL
+
+
+class TestROCAUCChecker:
+    def test_check(self):
+        checker = ROCAUCChecker(level=CheckLevels.CRITICAL, name="ROCAUCChecker")
+        df = pd.DataFrame({"x": [1, 2, 3]})
+        result = checker.check(df, "x", eval_metric="roc_auc")
+        assert result is not None
+        assert result.name == "ROCAUCChecker"
         assert result.level == CheckLevels.CRITICAL

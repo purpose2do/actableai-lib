@@ -195,6 +195,32 @@ class TestClassificationDataValidator:
         assert "ColumnsExistChecker" in validations_dict
         assert validations_dict["ColumnsExistChecker"] == CheckLevels.CRITICAL
 
+    def test_validate_eval_metric_roc_auc(self):
+        df = pd.DataFrame(
+            {
+                "x": rands_array(10, 5),
+                "y": rands_array(10, 5),
+                "z": rands_array(10, 5),
+                "t": rands_array(10, 5),
+            }
+        )
+
+        validation_results = ClassificationDataValidator().validate(
+            target="x",
+            features=["y"],
+            debiased_features=[],
+            debiasing_features=[],
+            df=df,
+            eval_metric="roc_auc",
+            presets="medium_quality_faster_train",
+        )
+
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "ROCAUCChecker" in validations_dict
+        assert validations_dict["ROCAUCChecker"] == CheckLevels.CRITICAL
+
 
 class TestCorrelationDataValidator:
     def test_validate(self):

@@ -1017,11 +1017,11 @@ class StratifiedKFoldChecker(IChecker):
 
 
 class NoFrequentItemSet(IChecker):
-    def __init__(self, level, name="NoFrequentItemSet"):
+    def __init__(self, level: str, name: str = "NoFrequentItemSet"):
         self.name = name
         self.level = level
 
-    def check(self, frequent_itemset) -> Optional[CheckResult]:
+    def check(self, frequent_itemset: pd.DataFrame) -> Optional[CheckResult]:
         """Check if the frequent item set is empty.
 
         Args:
@@ -1036,4 +1036,29 @@ class NoFrequentItemSet(IChecker):
                 name=self.name,
                 level=self.level,
                 message="No frequent item set found. Try to lower the minimum value for frequent itemset.",
+            )
+
+
+class ROCAUCChecker(IChecker):
+    def __init__(self, level: str, name: str = "ROCAUCChecker"):
+        self.name = name
+        self.level = level
+
+    def check(
+        self, df: pd.DataFrame, target: str, eval_metric: str = "roc_auc"
+    ) -> Optional[CheckResult]:
+        """Check if the ROC AUC is usable.
+
+        Args:
+            df: Dataframe to check.
+            features: Features to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
+        if eval_metric == "roc_auc" and df[target].nunique() > 2:
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"ROC AUC eval metric is only available for binary classification. Your target column has {df[target].nunique()} unique values",
             )
