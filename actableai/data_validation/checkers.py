@@ -1017,11 +1017,11 @@ class StratifiedKFoldChecker(IChecker):
 
 
 class NoFrequentItemSet(IChecker):
-    def __init__(self, level, name="NoFrequentItemSet"):
+    def __init__(self, level: str, name: str = "NoFrequentItemSet"):
         self.name = name
         self.level = level
 
-    def check(self, frequent_itemset) -> Optional[CheckResult]:
+    def check(self, frequent_itemset: pd.DataFrame) -> Optional[CheckResult]:
         """Check if the frequent item set is empty.
 
         Args:
@@ -1040,11 +1040,13 @@ class NoFrequentItemSet(IChecker):
 
 
 class ROCAUCChecker(IChecker):
-    def __init__(self, level, name="ROCAUCChecker"):
+    def __init__(self, level: str, name: str = "ROCAUCChecker"):
         self.name = name
         self.level = level
 
-    def check(self, df, target, eval_metric="roc_auc") -> Optional[CheckResult]:
+    def check(
+        self, df: pd.DataFrame, target: str, eval_metric: str = "roc_auc"
+    ) -> Optional[CheckResult]:
         """Check if the ROC AUC is usable.
 
         Args:
@@ -1063,11 +1065,13 @@ class ROCAUCChecker(IChecker):
 
 
 class MCCChecker(IChecker):
-    def __init__(self, level, name="MCCChecker"):
+    def __init__(self, level: str, name: str = "MCCChecker"):
         self.name = name
         self.level = level
 
-    def check(self, df, target, eval_metric="mcc") -> Optional[CheckResult]:
+    def check(
+        self, df: pd.DataFrame, target: str, eval_metric: str = "mcc"
+    ) -> Optional[CheckResult]:
         """Check if the MCC is usable.
 
         Args:

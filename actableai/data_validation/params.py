@@ -234,7 +234,7 @@ class ClassificationDataValidator:
         kfolds=None,
         drop_duplicates=True,
         explain_samples=False,
-        eval_metric=None,
+        eval_metric: str = "accuracy",
     ):
         validation_results = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
