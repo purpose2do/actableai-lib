@@ -164,13 +164,13 @@ class _AAIClassificationTrainTask(AAITask):
 
         label_val = df_val[target]
         label_pred = predictor.predict(df_val)
+        pred_prob_val = predictor.predict_proba(df_val, as_multiclass=True)
         perf = predictor.evaluate_predictions(
             y_true=label_val,
-            y_pred=label_pred,
+            y_pred=pred_prob_val,
             auxiliary_metrics=True,
             detailed_report=False,
         )
-        pred_prob_val = predictor.predict_proba(df_val, as_multiclass=True)
 
         evaluate = {
             # TODO: to be removed (legacy)
