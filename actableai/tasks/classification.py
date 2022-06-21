@@ -333,6 +333,7 @@ class AAIClassificationTask(AAITask):
         from actableai.utils import (
             memory_efficient_hyperparameters,
             handle_boolean_features,
+            explanation_hyperparameters,
         )
         from actableai.data_validation.params import ClassificationDataValidator
         from actableai.data_validation.base import (
@@ -398,7 +399,10 @@ class AAIClassificationTask(AAITask):
         df = handle_boolean_features(df)
 
         if hyperparameters is None:
-            hyperparameters = memory_efficient_hyperparameters()
+            if explain_samples:
+                hyperparameters = explanation_hyperparameters()
+            else:
+                hyperparameters = memory_efficient_hyperparameters()
 
         # Split data
         df_train = df[pd.notnull(df[target])]
