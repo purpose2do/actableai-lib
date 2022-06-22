@@ -176,6 +176,15 @@ class RegressionDataValidator:
                 )
             )
 
+        if explain_samples and presets == "best_quality":
+            validation_results.append(
+                CheckResult(
+                    name="PresetsChecker",
+                    level=CheckLevels.CRITICAL,
+                    message="Optimize for performance is incompatible with explanation",
+                )
+            )
+
         return validation_results
 
 
@@ -353,6 +362,15 @@ class ClassificationDataValidator:
             validation_results.append(
                 DoNotContainTextChecker(level=CheckLevels.CRITICAL).check(
                     df, debiasing_features + debiased_features
+                )
+            )
+
+        if explain_samples and presets == "best_quality":
+            validation_results.append(
+                CheckResult(
+                    name="PresetsChecker",
+                    level=CheckLevels.CRITICAL,
+                    message="Optimize for performance is incompatible with explanation",
                 )
             )
 
