@@ -308,6 +308,8 @@ def run_cross_validation(
         )
         evaluate["recall_score"] = np.mean(cross_val_evaluates["recall_score"], axis=0)
         evaluate["f1_score"] = np.mean(cross_val_evaluates["f1_score"], axis=0)
+        evaluate["positive_count"] = np.mean(cross_val_evaluates["positive_count"])
+        evaluate["negative_count"] = np.mean(cross_val_evaluates["negative_count"])
 
     # Create ensemble model
     ensemble_model = AverageEnsembleClassifier(cross_val_predictors)
