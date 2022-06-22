@@ -190,13 +190,9 @@ class _AAIClassificationTrainTask(AAITask):
 
         if evaluate["problem_type"] == "binary":
             pos_label = (
-                positive_label if positive_label is not None else evaluate["labels"][1]
+                positive_label if positive_label is not None else evaluate["labels"][0]
             )
-            neg_label = (
-                evaluate["labels"][0]
-                if evaluate["labels"][0] != pos_label
-                else evaluate["labels"][1]
-            )
+            neg_label = evaluate["labels"][1]
             fpr, tpr, thresholds = roc_curve(
                 label_val, pred_prob_val[pos_label], pos_label=pos_label
             )
@@ -226,6 +222,8 @@ class _AAIClassificationTrainTask(AAITask):
                 "negative_label": str(neg_label),
             }
             evaluate["f1_score"] = f1_score(label_val, label_pred, pos_label=pos_label)
+            evaluate["positive_count"] = len(label_val[label_val == pos_label])
+            evaluate["negative_count"] = len(label_val) - evaluate["positive_count"]
 
         predict_shap_values = []
 
