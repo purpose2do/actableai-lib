@@ -19,6 +19,18 @@ def cross_validation_curve(
     first_key = list(cross_val_auc_curves.keys())[0]
     x_list = []
     y_list = []
+    if type(cross_val_auc_curves["thresholds"][0]) != list:
+        # If the thresholds are not in a list, we need to create a list of lists
+        cross_val_auc_curves[x] = [cross_val_auc_curves[x]]
+        cross_val_auc_curves[y] = [cross_val_auc_curves[y]]
+        cross_val_auc_curves["thresholds"] = [cross_val_auc_curves["thresholds"]]
+        cross_val_auc_curves["positive_label"] = [
+            cross_val_auc_curves["positive_label"]
+        ]
+        cross_val_auc_curves["negative_label"] = [
+            cross_val_auc_curves["negative_label"]
+        ]
+
     for i, _ in enumerate(cross_val_auc_curves[first_key]):
         if x == "Recall":
             cross_val_auc_curves[x][i].pop()

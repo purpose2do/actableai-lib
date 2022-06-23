@@ -96,6 +96,9 @@ class _AAIClassificationTrainTask(AAITask):
         from actableai.debiasing.debiasing_model import DebiasingModel
         from actableai.utils import debiasing_feature_generator_args
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
+        from actableai.classification.roc_curve_cross_validation import (
+            cross_validation_curve,
+        )
 
         ag_args_fit = {}
         feature_generator_args = {}
@@ -205,6 +208,10 @@ class _AAIClassificationTrainTask(AAITask):
                 "negative_label": str(neg_label),
                 "threshold": 0.5,
             }
+            # Same treatment as cross validation for pair wise metrics
+            evaluate["auc_curve"] = cross_validation_curve(
+                evaluate["auc_curve"], "False Positive Rate", "True Positive Rate"
+            )
             evaluate["precision_score"] = precision_score(
                 label_val, label_pred, pos_label=pos_label
             )
@@ -221,6 +228,10 @@ class _AAIClassificationTrainTask(AAITask):
                 "positive_label": str(pos_label),
                 "negative_label": str(neg_label),
             }
+            # Same treatment as cross validation for pair wise metrics
+            evaluate["precision_recall_curve"] = cross_validation_curve(
+                evaluate["precision_recall_curve"], "Precision", "Recall"
+            )
             evaluate["f1_score"] = f1_score(label_val, label_pred, pos_label=pos_label)
             evaluate["positive_count"] = len(label_val[label_val == pos_label])
             evaluate["negative_count"] = len(label_val) - evaluate["positive_count"]
