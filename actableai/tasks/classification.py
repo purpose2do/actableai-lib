@@ -230,7 +230,7 @@ class _AAIClassificationTrainTask(AAITask):
             }
             # Same treatment as cross validation for pair wise metrics
             evaluate["precision_recall_curve"] = cross_validation_curve(
-                evaluate["precision_recall_curve"], "Precision", "Recall"
+                evaluate["precision_recall_curve"], "Recall", "Precision"
             )
             evaluate["f1_score"] = f1_score(label_val, label_pred, pos_label=pos_label)
             evaluate["positive_count"] = len(label_val[label_val == pos_label])
