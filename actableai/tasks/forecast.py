@@ -199,6 +199,12 @@ class AAIForecastTask(AAITask):
                     or len(predicted_columns) > 1,
                 ),
             )
+            model_params.append(
+                params.NBEATSParams(
+                    context_length=(prediction_length, 2 * prediction_length),
+                    epochs=(5, 20),
+                )
+            )
 
         return model_params
 

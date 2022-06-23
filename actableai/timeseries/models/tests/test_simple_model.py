@@ -109,6 +109,7 @@ class TestAAITimeSeriesSingleModel:
             [True, "tree_predictor_qrx"],
             [True, "tree_predictor_quantile_regression"],
             [False, "deep_var"],
+            [True, "n_beats"],
         ],
     )
     def test_simple_model(
@@ -204,6 +205,10 @@ class TestAAITimeSeriesSingleModel:
         elif model_type == "deep_var":
             model_param = params.DeepVARParams(
                 epochs=2, num_layers=1, num_cells=1, context_length=None
+            )
+        elif model_type == "n_beats":
+            model_param = params.NBEATSParams(
+                epochs=2, context_length=prediction_length, meta_bagging_size=1
             )
 
         validations, predictions = self._fit_predict_model(

@@ -3,7 +3,6 @@ from gluonts.model.predictor import Predictor
 from gluonts.mx.distribution import DistributionOutput
 from hyperopt import hp
 from mxnet.context import Context
-from torch import device as torch_device_type
 from typing import Callable, Any, Dict, Union, Tuple, Optional
 
 
