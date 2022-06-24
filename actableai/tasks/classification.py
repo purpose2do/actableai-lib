@@ -602,7 +602,11 @@ class AAIClassificationTask(AAITask):
             exdata = json.loads(df_val.to_json(orient="table"))
             exdata["schema"]["fields"].pop(0)
 
-        predictor.unpersist_models()
+        # FIXME we need better logic here, this is done so we can return models
+        if kfolds <= 1:
+            predictor.persist_models()
+        else:
+            predictor.unpersist_models()
 
         leaderboard_obj_cols = leaderboard.select_dtypes(include=["object"]).columns
         leaderboard[leaderboard_obj_cols] = leaderboard[leaderboard_obj_cols].astype(
@@ -632,4 +636,6 @@ class AAIClassificationTask(AAITask):
                 "debiasing_charts": debiasing_charts,
                 "leaderboard": leaderboard,
             },
+            "model": predictor if kfolds <= 1 else None,
+            # FIXME this predictor is not really usable as is for now
         }

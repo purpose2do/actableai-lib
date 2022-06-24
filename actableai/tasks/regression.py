@@ -490,7 +490,9 @@ class AAIRegressionTask(AAITask):
                     df_val, quantile=prediction_quantile_high
                 )
 
-            predictor.unpersist_models()
+            # FIXME this should not be done, but we need this for now so we can return the models
+            predictor.persist_models()
+            #predictor.unpersist_models()
 
             if explain_samples:
                 eval_shap_values = explainer.shap_values(
@@ -628,4 +630,6 @@ class AAIRegressionTask(AAITask):
             ],
             "runtime": runtime,
             "data": data,
+            "model": predictor if kfolds <= 1 else None,
+            # FIXME this predictor is not really usable as is for now
         }
