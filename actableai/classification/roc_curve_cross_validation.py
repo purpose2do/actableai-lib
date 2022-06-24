@@ -16,12 +16,9 @@ def cross_validation_curve(
         A dictionnary containing the combined ROC curves for each classifier
     """
     thresholds = np.linspace(0, 1, 100)
-    first_key = list(cross_val_auc_curves.keys())[0]
     x_list = []
     y_list = []
-    for i, _ in enumerate(cross_val_auc_curves[first_key]):
-        if x == "Recall":
-            cross_val_auc_curves[x][i].pop()
+    for i, _ in enumerate(cross_val_auc_curves["thresholds"]):
         interp_x = np.interp(
             thresholds,
             cross_val_auc_curves["thresholds"][i]
@@ -31,11 +28,9 @@ def cross_validation_curve(
             if x == "Recall"
             else cross_val_auc_curves[x][i][::-1],
         )
-        if y == "Precision":
-            cross_val_auc_curves[y][i].pop()
         interp_y = np.interp(
             thresholds,
-            np.sort(cross_val_auc_curves["thresholds"][i])
+            cross_val_auc_curves["thresholds"][i]
             if y == "Precision"
             else cross_val_auc_curves["thresholds"][i][::-1],
             cross_val_auc_curves[y][i]

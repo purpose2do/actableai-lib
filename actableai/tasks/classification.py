@@ -83,7 +83,6 @@ class _AAIClassificationTrainTask(AAITask):
         import pandas as pd
         from autogluon.tabular import TabularPredictor
         from autogluon.features.generators import AutoMLPipelineFeatureGenerator
-        from sklearn.metrics import precision_recall_curve
         from sklearn.metrics import (
             f1_score,
             precision_score,
@@ -93,6 +92,7 @@ class _AAIClassificationTrainTask(AAITask):
             auc,
         )
 
+        from actableai.utils import custom_precision_recall_curve
         from actableai.debiasing.debiasing_model import DebiasingModel
         from actableai.utils import debiasing_feature_generator_args
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
@@ -194,13 +194,16 @@ class _AAIClassificationTrainTask(AAITask):
             )
             neg_label = evaluate["labels"][1]
             fpr, tpr, thresholds = roc_curve(
-                label_val, pred_prob_val[pos_label], pos_label=pos_label
+                label_val,
+                pred_prob_val[pos_label],
+                pos_label=pos_label,
+                drop_intermediate=False,
             )
             evaluate["auc_score"] = auc(fpr, tpr)
             evaluate["auc_curve"] = {
-                "False Positive Rate": fpr.tolist(),
-                "True Positive Rate": tpr.tolist(),
-                "thresholds": thresholds.tolist(),
+                "False Positive Rate": fpr[1:].tolist(),
+                "True Positive Rate": tpr[1:].tolist(),
+                "thresholds": thresholds[1:].tolist(),
                 "positive_label": str(pos_label),
                 "negative_label": str(neg_label),
                 "threshold": 0.5,
@@ -211,7 +214,7 @@ class _AAIClassificationTrainTask(AAITask):
             evaluate["recall_score"] = recall_score(
                 label_val, label_pred, pos_label=pos_label
             )
-            precision, recall, thresholds = precision_recall_curve(
+            precision, recall, thresholds = custom_precision_recall_curve(
                 label_val, pred_prob_val[pos_label], pos_label=pos_label
             )
             evaluate["precision_recall_curve"] = {
