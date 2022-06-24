@@ -19,7 +19,7 @@ COPY . .
 
 RUN pip install --no-deps -e .
 
-RUN sphinx-apidoc -o ./docs actableai
+RUN sphinx-apidoc -f -o ./docs actableai
 RUN cd ./docs && make html
 
 

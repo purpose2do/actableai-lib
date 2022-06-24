@@ -68,6 +68,14 @@ actableai.utils.resources.predict.features.forecast module
    :undoc-members:
    :show-inheritance:
 
+actableai.utils.resources.predict.features.intervention module
+--------------------------------------------------------------
+
+.. automodule:: actableai.utils.resources.predict.features.intervention
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 actableai.utils.resources.predict.features.method module
 --------------------------------------------------------
 

@@ -1,6 +1,14 @@
 actableai.tasks package
 =======================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   actableai.tasks.tests
+
 Submodules
 ----------
 
@@ -64,6 +72,14 @@ actableai.tasks.forecast module
 -------------------------------
 
 .. automodule:: actableai.tasks.forecast
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+actableai.tasks.intervention module
+-----------------------------------
+
+.. automodule:: actableai.tasks.intervention
    :members:
    :undoc-members:
    :show-inheritance:

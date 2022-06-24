@@ -7,7 +7,9 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   actableai.utils.preprocessors
    actableai.utils.resources
+   actableai.utils.tests
 
 Submodules
 ----------
@@ -24,14 +26,6 @@ actableai.utils.multilabel\_predictor module
 --------------------------------------------
 
 .. automodule:: actableai.utils.multilabel_predictor
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-actableai.utils.preprocessing module
-------------------------------------
-
-.. automodule:: actableai.utils.preprocessing
    :members:
    :undoc-members:
    :show-inheritance:

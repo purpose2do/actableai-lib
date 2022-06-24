@@ -27,24 +27,47 @@ class AAIInterventionTask(AAITask):
         num_gpus: Optional[int] = 0,
         feature_importance: Optional[bool] = True,
     ) -> Dict:
-        """Runs an intervention on Input DataFrame
+        """Run this intervention task and return the results.
 
         Args:
             df: Input DataFrame
-            target: Target column name
-            current_intervention_column: Feature before intervention
-            new_intervention_column: Feature after intervention
-            common_causes: Common causes
-            causal_cv: Cross-validation folds for causal inference
-            causal_hyperparameters: Hyperparameters for causal inference
-            cate_alpha: CATE alpha
-            presets: Presets for causal inference
+            target: Column name of target variable
+            current_intervention_column: Column name of the current intervention.
+            new_intervention_column: Column name of the new intervention.
+            common_causes: List of common causes to be used for the intervention.
+            causal_cv: Number of folds for causal cross validation.
+            causal_hyperparameters: Hyperparameters for AutoGluon.
+                See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
+            presets: Presets for AutoGluon.
+                See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
+            cate_alpha: Alpha for intervention effect.
             model_directory: Model directory
-            num_gpus: Number of GPUs to use by the causal model
+            num_gpus: Number of GPUs used by causal models.
+
+        Examples:
+            >>> import pandas as pd
+            >>> from actableai import AAIInterventionTask
+            >>> df = pd.read_csv("path/to/csv")
+            >>> result = AAIRegressionTask().run(
+            ...     df,
+            ...     'target_column',
+            ... )
 
         Returns:
             Dict: Dictionnay containing the following keys:
-                - 'df': DataFrame with the intervention
+                - status: Status of the task
+                - messenger: Message of the task
+                - validations: Validations for the tasks parameters
+                - data: Dictionnay containing the following keys:
+                    - df: DataFrame with the intervention
+                    - causal_graph_dot: Causal graph in dot format
+                    - T_res: Residuals of the treatment
+                    - Y_res: Residuals of the outcome
+                    - X: Common causes
+                    - model_t_scores: Model scores for the treatment
+                    - model_y_scores: Model scores for the outcome
+                    - intervention_plot: Data for plotting the intervention
+                - runtime: Runtime of the task
         """
         from tempfile import mkdtemp
         from econml.dml import LinearDML, NonParamDML

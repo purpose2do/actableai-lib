@@ -13,7 +13,7 @@ Main API
 ----------
 
 ActableAI maintains tasks that are the core of our Analytics.
-All the tasks and they are usage are listed in this module.
+All the tasks and their usage are listed in this module.
 
 .. toctree::
    :maxdepth: 2
@@ -46,6 +46,7 @@ To contribute as a developer (see *Contributions* section):
    cd actableai-lib
    pip install -r requirements.txt
    pip install -e .
+   ./scripts/setup_hooks.sh
 
 Contributions
 -------------
