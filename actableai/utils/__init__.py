@@ -5,6 +5,7 @@ import uuid
 from copy import deepcopy
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
+from sklearn.metrics._ranking import _binary_clf_curve
 
 
 def fill_na(df, fillna_dict=None, fill_median=True):
@@ -282,3 +283,18 @@ def is_text_column(X, text_ratio=0.1):
     num_rows = len(X)
     unique_ratio = num_unique / num_rows
     return unique_ratio > text_ratio
+
+
+def custom_precision_recall_curve(
+    y_true, probas_pred, *, pos_label=None, sample_weight=None
+):
+    fps, tps, thresholds = _binary_clf_curve(
+        y_true, probas_pred, pos_label=pos_label, sample_weight=sample_weight
+    )
+
+    precision = tps / (tps + fps)
+    precision[np.isnan(precision)] = 0
+    recall = tps / tps[-1]
+
+    sl = slice(-1, None, -1)
+    return precision[sl], recall[sl], thresholds[sl]

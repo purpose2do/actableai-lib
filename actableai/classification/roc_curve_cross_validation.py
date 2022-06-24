@@ -1,6 +1,5 @@
 import numpy as np
 from typing import Dict
-from collections.abc import Iterable
 
 
 def cross_validation_curve(
@@ -19,25 +18,7 @@ def cross_validation_curve(
     thresholds = np.linspace(0, 1, 100)
     x_list = []
     y_list = []
-    if isinstance(cross_val_auc_curves["thresholds"][0], Iterable) is False:
-        # If the thresholds are not in a list, we need to create a list of lists
-        cross_val_auc_curves[x] = [cross_val_auc_curves[x]]
-        cross_val_auc_curves[y] = [cross_val_auc_curves[y]]
-        cross_val_auc_curves["thresholds"] = [cross_val_auc_curves["thresholds"]]
-        cross_val_auc_curves["positive_label"] = [
-            cross_val_auc_curves["positive_label"]
-        ]
-        cross_val_auc_curves["negative_label"] = [
-            cross_val_auc_curves["negative_label"]
-        ]
-
-    for i, _ in enumerate(cross_val_auc_curves[x]):
-        if x == "Recall" and len(cross_val_auc_curves[x][i]) != len(
-            cross_val_auc_curves["thresholds"][i]
-        ):
-            cross_val_auc_curves[x][i] = cross_val_auc_curves[x][i][
-                : len(cross_val_auc_curves[x][i]) - 1
-            ]
+    for i, _ in enumerate(cross_val_auc_curves["thresholds"]):
         interp_x = np.interp(
             thresholds,
             cross_val_auc_curves["thresholds"][i]
@@ -47,15 +28,9 @@ def cross_validation_curve(
             if x == "Recall"
             else cross_val_auc_curves[x][i][::-1],
         )
-        if y == "Precision" and len(cross_val_auc_curves[y][i]) != len(
-            cross_val_auc_curves["thresholds"][i]
-        ):
-            cross_val_auc_curves[y][i] = cross_val_auc_curves[y][i][
-                : len(cross_val_auc_curves[y][i]) - 1
-            ]
         interp_y = np.interp(
             thresholds,
-            np.sort(cross_val_auc_curves["thresholds"][i])
+            cross_val_auc_curves["thresholds"][i]
             if y == "Precision"
             else cross_val_auc_curves["thresholds"][i][::-1],
             cross_val_auc_curves[y][i]
