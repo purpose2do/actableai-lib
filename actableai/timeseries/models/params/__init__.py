@@ -6,3 +6,4 @@ from .gp_var import GPVarParams
 from .prophet import ProphetParams
 from .r_forecast import RForecastParams
 from .tree_predictor import TreePredictorParams
+from .n_beats import NBEATSParams

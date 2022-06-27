@@ -147,6 +147,7 @@ class AAIForecastTask(AAITask):
     def _get_default_model_params(
         train_size: int,
         prediction_length: int,
+        n_groups: int,
         predicted_columns: List[str],
         real_dynamic_feature_columns: List[str],
         cat_dynamic_feature_columns: List[str],
@@ -156,6 +157,7 @@ class AAIForecastTask(AAITask):
         Args:
             train_size: size of the training dataset.
             prediction_length: Length of the prediction to forecast.
+            n_groups: Number of groups.
             predicted_columns: List of columns to forecast.
             real_dynamic_feature_columns: List of columns containing real dynamic
                 features.
@@ -199,6 +201,13 @@ class AAIForecastTask(AAITask):
                     or len(predicted_columns) > 1,
                 ),
             )
+            if n_groups >= 10:
+                model_params.append(
+                    params.NBEATSParams(
+                        context_length=(prediction_length, 2 * prediction_length),
+                        epochs=(5, 20),
+                    )
+                )
 
         return model_params
 
@@ -539,6 +548,7 @@ class AAIForecastTask(AAITask):
             model_params = self._get_default_model_params(
                 len(group_df_train_dict[first_group]),
                 prediction_length,
+                len(group_df_dict),
                 predicted_columns,
                 real_dynamic_feature_columns,
                 cat_dynamic_feature_columns,
