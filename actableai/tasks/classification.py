@@ -196,12 +196,9 @@ class _AAIClassificationTrainTask(AAITask):
             if pos_label is None:
                 pos_i_label = None
                 for i, label in enumerate(evaluate["labels"]):
-                    if (
-                        (isinstance(label, int) and label == 1)
-                        or (isinstance(label, float) and label == 1.0)
-                        or (isinstance(label, str) and label == "1")
-                        or (isinstance(label, str) and label.lower() == "true")
-                        or (isinstance(label, str) and label.lower() == "yes")
+                    list_pos_label = [1, 1.0, "1", "1.0", "true", "yes"]
+                    if (isinstance(label, str) and label.lower() in list_pos_label) or (
+                        label in list_pos_label
                     ):
                         pos_label = label
                         pos_i_label = i
