@@ -197,6 +197,12 @@ class _AAIClassificationTrainTask(AAITask):
                 else:
                     pos_label = evaluate["labels"][1]
                     neg_label = evaluate["labels"][0]
+            else:
+                neg_label = (
+                    evaluate["labels"][0]
+                    if pos_label != evaluate["labels"][0]
+                    else evaluate["labels"][1]
+                )
 
             fpr, tpr, thresholds = roc_curve(
                 label_val,
