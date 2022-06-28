@@ -18,7 +18,7 @@ class AAITask(ABC):
     def __init__(
         self,
         use_ray: bool = False,
-        ray_params: dict = None,
+        ray_params: Optional[dict] = None,
         optimize_memory_allocation: bool = False,
         collect_memory_usage: bool = False,
         optimize_memory_allocation_nrmse_threshold: float = 0.2,
@@ -27,12 +27,12 @@ class AAITask(ABC):
         collect_gpu_memory_usage: bool = False,
         optimize_gpu_memory_allocation_nrmse_threshold: float = 0.2,
         max_gpu_memory_offset: float = 0.1,
-        resources_predictors_actor: ray.actor.ActorHandle = None,
+        resources_predictors_actor: Optional[ray.actor.ActorHandle] = None,
         cpu_percent_interval: float = 1.0,
         return_model: bool = True,
         upload_model: bool = False,
-        s3_models_bucket: str = None,
-        s3_models_prefix: str = None,
+        s3_models_bucket: Optional[str] = None,
+        s3_models_prefix: Optional[str] = None,
     ):
         """
         AAITask Constructor
@@ -69,7 +69,14 @@ class AAITask(ABC):
             The actor used to predict the resources usage
         cpu_percent_interval:
             Compare cpu usage before and after interval in seconds
-        # TODO fix documentation
+        return_model:
+            If False the model field will be deleted from the data if it exists
+        upload_model:
+            If True it will upload the pickled model with the name `model.p` at the AWS location given
+        s3_models_bucket:
+            The AWS S3 bucket name where the models will be stored
+        s3_models_prefix:
+            The AWS S3 prefix to use when saving the models
         """
         self.use_ray = use_ray
         self.ray_params = ray_params if ray_params is not None else {}

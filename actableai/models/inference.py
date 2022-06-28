@@ -59,7 +59,7 @@ class AAIModelInference:
 
         try:
             raw_model = obj.get()["Body"].read()
-        except ClientError as exception:
+        except ClientError:
             return False
 
         self.task_models[task_id] = pickle.loads(raw_model)
