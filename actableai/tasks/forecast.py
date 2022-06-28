@@ -134,6 +134,9 @@ class AAIForecastTask(AAITask):
                 ]
             )
 
+            if not has_dynamic_features:
+                last_valid_index = group_df_dict[group].shape[0]
+
             # Split train/validation/test
             group_df_train_dict[group] = group_df_dict[group].iloc[
                 : last_valid_index - prediction_length
