@@ -18,7 +18,7 @@ class AAITask(ABC):
     def __init__(
         self,
         use_ray: bool = False,
-        ray_params: dict = None,
+        ray_params: Optional[dict] = None,
         optimize_memory_allocation: bool = False,
         collect_memory_usage: bool = False,
         optimize_memory_allocation_nrmse_threshold: float = 0.2,
@@ -27,8 +27,12 @@ class AAITask(ABC):
         collect_gpu_memory_usage: bool = False,
         optimize_gpu_memory_allocation_nrmse_threshold: float = 0.2,
         max_gpu_memory_offset: float = 0.1,
-        resources_predictors_actor: ray.actor.ActorHandle = None,
+        resources_predictors_actor: Optional[ray.actor.ActorHandle] = None,
         cpu_percent_interval: float = 1.0,
+        return_model: bool = True,
+        upload_model: bool = False,
+        s3_models_bucket: Optional[str] = None,
+        s3_models_prefix: Optional[str] = None,
     ):
         """
         AAITask Constructor
@@ -65,6 +69,14 @@ class AAITask(ABC):
             The actor used to predict the resources usage
         cpu_percent_interval:
             Compare cpu usage before and after interval in seconds
+        return_model:
+            If False the model field will be deleted from the data if it exists
+        upload_model:
+            If True it will upload the pickled model with the name `model.p` at the AWS location given
+        s3_models_bucket:
+            The AWS S3 bucket name where the models will be stored
+        s3_models_prefix:
+            The AWS S3 prefix to use when saving the models
         """
         self.use_ray = use_ray
         self.ray_params = ray_params if ray_params is not None else {}
@@ -86,6 +98,14 @@ class AAITask(ABC):
         self.resources_predictors_actor = resources_predictors_actor
 
         self.cpu_percent_interval = cpu_percent_interval
+
+        self.return_model = return_model
+        self.upload_model = upload_model
+        self.s3_models_bucket = s3_models_bucket
+        self.s3_models_prefix = s3_models_prefix
+
+        if self.s3_models_prefix is None:
+            self.s3_models_prefix = ""
 
         if self.optimize_memory_allocation and not self.use_ray:
             self.optimize_memory_allocation = False
@@ -131,6 +151,10 @@ class AAITask(ABC):
             logging.warning(
                 "`collect_gpu_memory_usage` is set to False: `resources_predictors_actor` is None"
             )
+
+        if self.upload_model and self.s3_models_bucket is None:
+            self.upload_model = False
+            logging.warning("`upload_model` is set to False: `s3_model_bucket` is None")
 
     def _predict_resource(
         self, resource_predicted: ResourcePredictorType, task: TaskType, features: dict
@@ -268,13 +292,29 @@ class AAITask(ABC):
                         )
                         process.cpu_affinity(new_cpu_affinity)
 
-                results = function(task_object, *args, **kwargs)
+                data = function(task_object, *args, **kwargs)
 
                 # Restore default affinity
                 if cpu_affinity is not None:
                     process.cpu_affinity(cpu_affinity)
 
-                return results
+                if type(data) == dict and "model" in data and data["model"] is not None:
+                    if task_object.upload_model:
+                        # Upload model
+                        import os
+                        import boto3
+                        import pickle
+
+                        s3 = boto3.resource("s3")
+                        bucket = s3.Bucket(task_object.s3_models_bucket)
+                        path = os.path.join(task_object.s3_models_prefix, "model.p")
+                        bucket.put_object(Key=path, Body=pickle.dumps(data["model"]))
+
+                    # Delete model if needed
+                    if not task_object.return_model:
+                        del data["model"]
+
+                return data
 
             @wraps(function)
             def wrapper(task_object: AAITask, *args, **kwargs):
