@@ -189,10 +189,21 @@ class _AAIClassificationTrainTask(AAITask):
         ).tolist()
 
         if evaluate["problem_type"] == "binary":
-            pos_label = (
-                positive_label if positive_label is not None else evaluate["labels"][0]
-            )
-            neg_label = evaluate["labels"][1]
+            if evaluate["labels"][0] in [
+                1,
+                1.0,
+                "1",
+                "1.0",
+                "true",
+                "yes",
+                positive_label,
+            ]:
+                pos_label = evaluate["labels"][0]
+                neg_label = evaluate["labels"][1]
+            else:
+                pos_label = evaluate["labels"][1]
+                neg_label = evaluate["labels"][0]
+
             fpr, tpr, thresholds = roc_curve(
                 label_val,
                 pred_prob_val[pos_label],
