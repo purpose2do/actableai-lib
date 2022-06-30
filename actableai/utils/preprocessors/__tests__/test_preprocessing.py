@@ -1,8 +1,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-from datetime import datetime
-from dateutil import tz
 from pandas.testing import assert_frame_equal
 from unittest.mock import Mock, MagicMock
 
@@ -10,7 +8,7 @@ from actableai.utils.preprocessors.preprocessing import (
     impute_df,
     PercentageTransformer,
     CopyTransformer,
-    SKLearnAGFeatureWrapperBase,
+    MultiCountVectorizer,
 )
 
 
@@ -78,3 +76,21 @@ class TestCopyTransformer:
         assert arr is not None
         assert arr.columns == ["x"]
         assert list(arr["x"]) == ["a", "b", "c", "d"]
+
+
+class TestMultiCountVectorizer:
+    def test_init(self):
+        mcv = MultiCountVectorizer(ngram_range=(1, 1), max_features=10)
+        assert mcv.ngram_range == (1, 1)
+        assert mcv.max_features == 10
+
+    def test_fit_transform(self):
+        mcv = MultiCountVectorizer(ngram_range=(1, 2), max_features=10)
+        arr = mcv.fit_transform(pd.DataFrame({"x": ["a", "b", "c", "d"]}))
+        assert arr is not None
+        assert arr.shape == (4, 1)
+
+    def test_get_feature_names_out(self):
+        mcv = MultiCountVectorizer(ngram_range=(1, 1), max_features=10)
+        mcv.fit_transform(pd.DataFrame({"x": ["a", "b", "c", "d"]}))
+        assert list(mcv.get_feature_names_out()) == ["x.b"]  # type: ignore

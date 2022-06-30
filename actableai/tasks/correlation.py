@@ -80,9 +80,13 @@ class AAICorrelationTask(AAITask):
             SKLearnAGFeatureWrapperBase,
             MultiCountVectorizer,
         )
-
         from actableai.utils.preprocessors.autogluon_preproc import (
             CustomeDateTimeFeatureGenerator,
+        )
+        from actableai.correlation.config import (
+            N_GRAM_RANGE_MIN,
+            N_GRAM_RANGE_MAX,
+            N_GRAM_MAX_FEATURES,
         )
 
         if use_bonferroni:
@@ -155,7 +159,10 @@ class AAICorrelationTask(AAITask):
                 (OneHotEncoder.__name__, OneHotEncoder(), cat_cols),
                 (
                     MultiCountVectorizer.__name__,
-                    MultiCountVectorizer(),
+                    MultiCountVectorizer(
+                        ngram_range=(N_GRAM_RANGE_MIN, N_GRAM_RANGE_MAX),
+                        max_features=N_GRAM_MAX_FEATURES,
+                    ),
                     text_cols,
                 ),
             ],
