@@ -21,21 +21,13 @@ def cross_validation_curve(
     for i, _ in enumerate(cross_val_auc_curves["thresholds"]):
         interp_x = np.interp(
             thresholds,
-            cross_val_auc_curves["thresholds"][i]
-            if x == "Recall"
-            else cross_val_auc_curves["thresholds"][i][::-1],
-            cross_val_auc_curves[x][i]
-            if x == "Recall"
-            else cross_val_auc_curves[x][i][::-1],
+            cross_val_auc_curves["thresholds"][i],
+            cross_val_auc_curves[x][i],
         )
         interp_y = np.interp(
             thresholds,
-            cross_val_auc_curves["thresholds"][i]
-            if y == "Precision"
-            else cross_val_auc_curves["thresholds"][i][::-1],
-            cross_val_auc_curves[y][i]
-            if y == "Precision"
-            else cross_val_auc_curves[y][i][::-1],
+            cross_val_auc_curves["thresholds"][i],
+            cross_val_auc_curves[y][i],
         )
         x_list.append(interp_x)
         y_list.append(interp_y)

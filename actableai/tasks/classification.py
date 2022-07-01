@@ -89,7 +89,6 @@ class _AAIClassificationTrainTask(AAITask):
             recall_score,
             confusion_matrix,
             roc_curve,
-            auc,
         )
 
         from actableai.utils import custom_precision_recall_curve
@@ -214,11 +213,10 @@ class _AAIClassificationTrainTask(AAITask):
                 pos_label=pos_label,
                 drop_intermediate=False,
             )
-            evaluate["auc_score"] = auc(fpr, tpr)
             evaluate["auc_curve"] = {
-                "False Positive Rate": fpr[1:].tolist(),
-                "True Positive Rate": tpr[1:].tolist(),
-                "thresholds": thresholds[1:].tolist(),
+                "False Positive Rate": fpr[1:].tolist()[::-1],
+                "True Positive Rate": tpr[1:].tolist()[::-1],
+                "thresholds": thresholds[1:].tolist()[::-1],
                 "positive_label": str(pos_label),
                 "negative_label": str(neg_label),
                 "threshold": 0.5,

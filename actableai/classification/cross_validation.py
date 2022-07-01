@@ -7,7 +7,6 @@ from actableai.classification.roc_curve_cross_validation import (
 )
 from actableai.classification.utils import leaderboard_cross_val
 from actableai.tasks.classification import _AAIClassificationTrainTask
-from sklearn.metrics import auc
 
 
 class AverageEnsembleClassifier:
@@ -295,10 +294,6 @@ def run_cross_validation(
     if evaluate["problem_type"] == "binary":
         evaluate["auc_curve"] = cross_validation_curve(
             cross_val_auc_curves, x="False Positive Rate", y="True Positive Rate"
-        )
-        evaluate["auc_score"] = auc(
-            evaluate["auc_curve"]["False Positive Rate"],
-            evaluate["auc_curve"]["True Positive Rate"],
         )
         evaluate["precision_recall_curve"] = cross_validation_curve(
             cross_val_precision_recall_curves, x="Recall", y="Precision"
