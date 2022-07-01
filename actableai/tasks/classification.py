@@ -240,6 +240,38 @@ class _AAIClassificationTrainTask(AAITask):
             evaluate["f1_score"] = f1_score(label_val, label_pred, pos_label=pos_label)
             evaluate["positive_count"] = len(label_val[label_val == pos_label])
             evaluate["negative_count"] = len(label_val) - evaluate["positive_count"]
+        else:
+            evaluate["auc_curve"] = []
+            evaluate["precision_recall_curve"] = []
+            evaluate["pos_label"] = []
+            for pos_label in evaluate["labels"]:
+                fpr, tpr, thresholds = roc_curve(
+                    label_val,
+                    pred_prob_val[pos_label],
+                    pos_label=pos_label,
+                    drop_intermediate=False,
+                )
+                evaluate["auc_curve"].append(
+                    {
+                        "False Positive Rate": fpr[1:].tolist()[::-1],
+                        "True Positive Rate": tpr[1:].tolist()[::-1],
+                        "thresholds": thresholds[1:].tolist()[::-1],
+                        "positive_label": str(pos_label),
+                        "threshold": 0.5,
+                    }
+                )
+                precision, recall, thresholds = custom_precision_recall_curve(
+                    label_val, pred_prob_val[pos_label], pos_label=pos_label
+                )
+                evaluate["precision_recall_curve"].append(
+                    {
+                        "Precision": precision.tolist(),
+                        "Recall": recall.tolist(),
+                        "thresholds": thresholds.tolist(),
+                        "positive_label": str(pos_label),
+                    }
+                )
+                evaluate["pos_label"].append(str(pos_label))
 
         predict_shap_values = []
 

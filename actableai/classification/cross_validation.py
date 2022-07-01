@@ -232,20 +232,19 @@ def run_cross_validation(
 
             cross_val_evaluates[metric].append(evaluate[metric])
 
-        if problem_type == "binary":
-            auc_curve = evaluate["auc_curve"]
-            for metric in auc_curve:
-                if metric not in cross_val_auc_curves:
-                    cross_val_auc_curves[metric] = []
-                cross_val_auc_curves[metric].append(auc_curve[metric])
+        auc_curve = evaluate["auc_curve"]
+        for metric in auc_curve:
+            if metric not in cross_val_auc_curves:
+                cross_val_auc_curves[metric] = []
+            cross_val_auc_curves[metric].append(auc_curve[metric])
 
-            precision_recall_curve = evaluate["precision_recall_curve"]
-            for metric in precision_recall_curve:
-                if metric not in cross_val_precision_recall_curves:
-                    cross_val_precision_recall_curves[metric] = []
-                cross_val_precision_recall_curves[metric].append(
-                    precision_recall_curve[metric]
-                )
+        precision_recall_curve = evaluate["precision_recall_curve"]
+        for metric in precision_recall_curve:
+            if metric not in cross_val_precision_recall_curves:
+                cross_val_precision_recall_curves[metric] = []
+            cross_val_precision_recall_curves[metric].append(
+                precision_recall_curve[metric]
+            )
 
         df_val_cross_val_pred_prob.append(
             json.loads(df_val_pred_prob.to_json(orient="table"))["data"]
@@ -305,6 +304,15 @@ def run_cross_validation(
         evaluate["f1_score"] = np.mean(cross_val_evaluates["f1_score"], axis=0)
         evaluate["positive_count"] = np.mean(cross_val_evaluates["positive_count"])
         evaluate["negative_count"] = np.mean(cross_val_evaluates["negative_count"])
+    else:
+        for i, _ in enumerate(cross_val_evaluates):
+            evaluate["auc_curve"][i] = cross_validation_curve(
+                cross_val_auc_curves[i], x="False Positive Rate", y="True Positive Rate"
+            )
+            evaluate["precision_recall_curve"][i] = cross_validation_curve(
+                cross_val_precision_recall_curves[i], x="Recall", y="Precision"
+            )
+            evaluate["pos_label"] = cross_val_evaluates["pos_label"][i]
 
     # Create ensemble model
     ensemble_model = AverageEnsembleClassifier(cross_val_predictors)
