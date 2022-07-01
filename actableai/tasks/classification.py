@@ -204,6 +204,10 @@ class _AAIClassificationTrainTask(AAITask):
                 pos_label = evaluate["labels"][1]
                 neg_label = evaluate["labels"][0]
 
+            evaluate["confusion_matrix"] = confusion_matrix(
+                label_val, label_pred, labels=[pos_label, neg_label], normalize="true"
+            )
+
             fpr, tpr, thresholds = roc_curve(
                 label_val,
                 pred_prob_val[pos_label],
