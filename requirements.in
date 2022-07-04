@@ -14,7 +14,7 @@ shap==0.39.0 # DOWNGRADED
 nltk==3.7
 flake8==3.9.2 # Cannot be updated (compatibility issues with importlib-metadata)
 pytest==7.1.1 # UPDATED
-pytest-parallel==0.1.1
+pytest-xdist==2.5.0
 pystan==2.19.1.1 # Cannot be updated (compatibility issues with fbprophet)
 pyabsa==1.14.7 # TODO update
 mlxtend==0.20.0
