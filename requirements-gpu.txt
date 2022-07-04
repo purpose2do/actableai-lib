@@ -17,18 +17,28 @@ aiohttp==3.8.1
     #   ray
 aiohttp-cors==0.7.0
     # via ray
+aioredis==1.3.1
+    # via -r requirements.in
+aiorwlock==1.3.0
+    # via ray
 aiosignal==1.2.0
     # via
     #   aiohttp
     #   ray
 antlr4-python3-runtime==4.8
     # via omegaconf
+anyio==3.6.1
+    # via starlette
 arabic-stopwords==0.3
     # via multi-rake
+asgiref==3.5.2
+    # via uvicorn
 astunparse==1.6.3
     # via tensorflow-gpu
 async-timeout==4.0.2
-    # via aiohttp
+    # via
+    #   aiohttp
+    #   aioredis
 asynctest==0.13.0
     # via aiohttp
 attrs==21.4.0
@@ -104,6 +114,7 @@ click==8.0.4
     #   ray
     #   sacremoses
     #   typer
+    #   uvicorn
 cloudpickle==2.1.0
     # via
     #   dask
@@ -155,6 +166,8 @@ fairscale==0.4.6
     # via autogluon-multimodal
 fastai==2.5.6
     # via autogluon-tabular
+fastapi==0.78.0
+    # via ray
 fastcore==1.4.5
     # via
     #   fastai
@@ -233,12 +246,16 @@ grpcio==1.43.0
     #   ray
     #   tensorboard
     #   tensorflow-gpu
+h11==0.13.0
+    # via uvicorn
 h5py==3.7.0
     # via tensorflow-gpu
 heapdict==1.0.1
     # via zict
 hijri-converter==2.2.4
     # via holidays
+hiredis==2.0.0
+    # via aioredis
 holidays==0.14.2
     # via
     #   fbprophet
@@ -251,6 +268,7 @@ hyperopt==0.2.7
     #   autogluon-core
 idna==3.3
     # via
+    #   anyio
     #   requests
     #   yarl
 imageio==2.19.3
@@ -571,6 +589,7 @@ pycodestyle==2.7.0
     # via flake8
 pydantic==1.8.2
     # via
+    #   fastapi
     #   gluonts
     #   spacy
     #   thinc
@@ -643,10 +662,12 @@ pyyaml==6.0
     #   ray
     #   transformers
     #   yacs
-ray[default,tune]==1.13.0
+ray[default,serve,tune]==1.13.0
     # via
     #   -r requirements.in
     #   autogluon-core
+redis==3.5.3
+    # via -r requirements.in
 regex==2022.6.2
     # via
     #   autogluon-contrib-nlp
@@ -760,6 +781,8 @@ smart-open==5.2.1
     #   ray
 smmap==5.0.0
     # via gitdb
+sniffio==1.2.0
+    # via anyio
 sortedcontainers==2.4.0
     # via distributed
 soupsieve==2.3.2.post1
@@ -780,6 +803,10 @@ srsly==2.4.3
     # via
     #   spacy
     #   thinc
+starlette==0.19.1
+    # via
+    #   fastapi
+    #   ray
 statsmodels==0.13.2
     # via
     #   dowhy
@@ -900,10 +927,13 @@ typer==0.4.2
 typing-extensions==4.1.1
     # via
     #   aiohttp
+    #   anyio
+    #   asgiref
     #   async-timeout
     #   catalogue
     #   gitpython
     #   gluonts
+    #   h11
     #   huggingface-hub
     #   immutables
     #   importlib-metadata
@@ -913,9 +943,11 @@ typing-extensions==4.1.1
     #   pydantic
     #   pytorch-lightning
     #   spacy
+    #   starlette
     #   tensorflow-gpu
     #   thinc
     #   torch
+    #   uvicorn
     #   yarl
 typish==1.9.3
     # via nptyping
@@ -927,6 +959,8 @@ urllib3==1.26.9
     # via
     #   botocore
     #   requests
+uvicorn==0.16.0
+    # via ray
 virtualenv==20.15.1
     # via ray
 visions==0.7.1
