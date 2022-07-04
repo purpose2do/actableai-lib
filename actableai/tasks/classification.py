@@ -243,7 +243,6 @@ class _AAIClassificationTrainTask(AAITask):
         else:
             evaluate["auc_curve"] = []
             evaluate["precision_recall_curve"] = []
-            evaluate["pos_label"] = []
             for pos_label in evaluate["labels"]:
                 fpr, tpr, thresholds = roc_curve(
                     label_val,
@@ -271,7 +270,6 @@ class _AAIClassificationTrainTask(AAITask):
                         "positive_label": str(pos_label),
                     }
                 )
-                evaluate["pos_label"].append(str(pos_label))
 
         predict_shap_values = []
 
