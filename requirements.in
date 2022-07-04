@@ -1,12 +1,12 @@
 scikit-learn==1.0.2
 pandasql==0.7.3
-ray[tune,default]==1.11.0 # TODO update
-autogluon.tabular[all]==0.4.1 # Cannot be updated (compatibility issues with protobuf)
-autogluon.text==0.4.1 # Cannot be updated (compatibility issues with protobuf)
+ray[tune,default]==1.13.0 # UPDATED
+autogluon.tabular[all]==0.5.0 # UPDATED
+autogluon.text==0.5.0 # UPDATED
 gluonts[Prophet,R]==0.9.1
 econml==0.13.0 # UPDATED
 ipython==7.32.0
-hyperopt==0.2.5 # TODO update
+hyperopt==0.2.7 # UPDATED
 ujson==4.0.2 # TODO update
 python-rapidjson==1.4 # TODO update
 visions==0.7.1 # TODO update

@@ -28,6 +28,8 @@ def post_install():
     import nltk
 
     nltk.download("stopwords")
+    nltk.download("punk")
+    nltk.download("averaged_perceptron_tagger")
 
 
 class CustomInstallCommand(install):
