@@ -116,7 +116,7 @@ class _AAIClassificationTrainTask(AAITask):
             ag_args_fit["presets_residuals"] = presets
             ag_args_fit["hyperparameters_non_residuals"] = hyperparameters
             ag_args_fit["presets_non_residuals"] = presets
-            ag_args_fit["drop_useless_features"] = drop_useless_features
+            ag_args_fit["drop_useless_features"] = False
 
             feature_generator_args = {
                 **feature_generator_args,
