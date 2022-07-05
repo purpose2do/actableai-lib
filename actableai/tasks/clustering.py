@@ -133,21 +133,10 @@ class AAIClusteringTask(AAITask):
                 columns=numeric_columns,
             )
 
-        category_map = {}
-        label_encoder = {}
-        for i, c in enumerate(features):
-            if df_train[c].dtype in ["object", "bool"]:
-                df_train[c] = df_train[c].fillna("NA")
-                le = LabelEncoder()
-                df_train[c] = le.fit_transform(df_train[c])
-                category_map[i] = le.classes_
-                label_encoder[c] = le
-
         # Process data
-        categorical_features = list(category_map.keys())
         preprocessor = ClusteringDataTransformer()
         transformed_values = preprocessor.fit_transform(
-            df_train.values, categorical_cols=categorical_features
+            df_train.values
         )
         if num_clusters == "auto" and max_train_samples is not None:
             auto_num_clusters_max = min(auto_num_clusters_max, max_train_samples)
