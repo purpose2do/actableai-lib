@@ -532,7 +532,7 @@ class AAIRegressionTask(AAITask):
 
             # FIXME this should not be done, but we need this for now so we can return the models
             predictor.persist_models()
-            #predictor.unpersist_models()
+            # predictor.unpersist_models()
 
             if explain_samples:
                 eval_shap_values = explainer.shap_values(

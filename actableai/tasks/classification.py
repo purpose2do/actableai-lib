@@ -91,7 +91,6 @@ class _AAIClassificationTrainTask(AAITask):
             recall_score,
             confusion_matrix,
             roc_curve,
-            auc,
         )
 
         from actableai.utils import custom_precision_recall_curve
@@ -216,17 +215,20 @@ class _AAIClassificationTrainTask(AAITask):
                 pos_label = evaluate["labels"][1]
                 neg_label = evaluate["labels"][0]
 
+            evaluate["confusion_matrix"] = confusion_matrix(
+                label_val, label_pred, labels=[pos_label, neg_label], normalize="true"
+            )
+
             fpr, tpr, thresholds = roc_curve(
                 label_val,
                 pred_prob_val[pos_label],
                 pos_label=pos_label,
                 drop_intermediate=False,
             )
-            evaluate["auc_score"] = auc(fpr, tpr)
             evaluate["auc_curve"] = {
-                "False Positive Rate": fpr[1:].tolist(),
-                "True Positive Rate": tpr[1:].tolist(),
-                "thresholds": thresholds[1:].tolist(),
+                "False Positive Rate": fpr[1:].tolist()[::-1],
+                "True Positive Rate": tpr[1:].tolist()[::-1],
+                "thresholds": thresholds[1:].tolist()[::-1],
                 "positive_label": str(pos_label),
                 "negative_label": str(neg_label),
                 "threshold": 0.5,
@@ -250,6 +252,36 @@ class _AAIClassificationTrainTask(AAITask):
             evaluate["f1_score"] = f1_score(label_val, label_pred, pos_label=pos_label)
             evaluate["positive_count"] = len(label_val[label_val == pos_label])
             evaluate["negative_count"] = len(label_val) - evaluate["positive_count"]
+        else:
+            evaluate["auc_curve"] = []
+            evaluate["precision_recall_curve"] = []
+            for pos_label in evaluate["labels"]:
+                fpr, tpr, thresholds = roc_curve(
+                    label_val,
+                    pred_prob_val[pos_label],
+                    pos_label=pos_label,
+                    drop_intermediate=False,
+                )
+                evaluate["auc_curve"].append(
+                    {
+                        "False Positive Rate": fpr[1:].tolist()[::-1],
+                        "True Positive Rate": tpr[1:].tolist()[::-1],
+                        "thresholds": thresholds[1:].tolist()[::-1],
+                        "positive_label": str(pos_label),
+                        "threshold": 0.5,
+                    }
+                )
+                precision, recall, thresholds = custom_precision_recall_curve(
+                    label_val, pred_prob_val[pos_label], pos_label=pos_label
+                )
+                evaluate["precision_recall_curve"].append(
+                    {
+                        "Precision": precision.tolist(),
+                        "Recall": recall.tolist(),
+                        "thresholds": thresholds.tolist(),
+                        "positive_label": str(pos_label),
+                    }
+                )
 
         predict_shap_values = []
 

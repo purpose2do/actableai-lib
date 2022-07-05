@@ -56,14 +56,9 @@ class AAIModelInference:
 
         path = os.path.join(self.s3_prefix, task_id, "model.p")
         obj = self.bucket.Object(path)
-
-        try:
-            raw_model = obj.get()["Body"].read()
-        except ClientError:
-            return False
+        raw_model = obj.get()["Body"].read()
 
         self.task_models[task_id] = pickle.loads(raw_model)
-
         return True
 
     def predict(self, task_id, df):
