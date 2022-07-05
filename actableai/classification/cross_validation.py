@@ -308,56 +308,69 @@ def run_cross_validation(
     else:
         auc_curves_multi_label = []
         precision_recall_curves_multi_label = []
-        for i in range(len(cross_val_evaluates["auc_curve"][0])):
-            cross_validated_curve = {
+        for n_label in range(len(cross_val_evaluates["auc_curve"][0])):
+            cross_validated_curve_list = {
                 "True Positive Rate": [],
                 "False Positive Rate": [],
                 "thresholds": [],
                 "positive_label": [],
             }
-            for j in range(len(cross_val_evaluates["auc_curve"])):
-                cross_validated_curve["True Positive Rate"].append(
-                    cross_val_evaluates["auc_curve"][j][i]["True Positive Rate"]
+            for n_cross in range(len(cross_val_evaluates["auc_curve"])):
+                cross_validated_curve_list["True Positive Rate"].append(
+                    cross_val_evaluates["auc_curve"][n_cross][n_label][
+                        "True Positive Rate"
+                    ]
                 )
-                cross_validated_curve["False Positive Rate"].append(
-                    cross_val_evaluates["auc_curve"][j][i]["False Positive Rate"]
+                cross_validated_curve_list["False Positive Rate"].append(
+                    cross_val_evaluates["auc_curve"][n_cross][n_label][
+                        "False Positive Rate"
+                    ]
                 )
-                cross_validated_curve["thresholds"].append(
-                    cross_val_evaluates["auc_curve"][j][i]["thresholds"]
+                cross_validated_curve_list["thresholds"].append(
+                    cross_val_evaluates["auc_curve"][n_cross][n_label]["thresholds"]
                 )
-                cross_validated_curve["positive_label"].append(
-                    cross_val_evaluates["auc_curve"][j][i]["positive_label"]
+                cross_validated_curve_list["positive_label"].append(
+                    cross_val_evaluates["auc_curve"][n_cross][n_label]["positive_label"]
                 )
             cross_validated_curve = cross_validation_curve(
-                cross_validated_curve,
+                cross_validated_curve_list,
                 x="False Positive Rate",
                 y="True Positive Rate",
                 negative_label=False,
             )
             auc_curves_multi_label.append(cross_validated_curve)
-            cross_validated_curve = {
+            cross_validated_curve_list = {
                 "Precision": [],
                 "Recall": [],
                 "thresholds": [],
                 "positive_label": [],
             }
-            for j in range(len(cross_val_evaluates["precision_recall_curve"])):
-                cross_validated_curve["Precision"].append(
-                    cross_val_evaluates["precision_recall_curve"][j][i]["Precision"]
+            for n_cross in range(len(cross_val_evaluates["precision_recall_curve"])):
+                cross_validated_curve_list["Precision"].append(
+                    cross_val_evaluates["precision_recall_curve"][n_cross][n_label][
+                        "Precision"
+                    ]
                 )
-                cross_validated_curve["Recall"].append(
-                    cross_val_evaluates["precision_recall_curve"][j][i]["Recall"]
+                cross_validated_curve_list["Recall"].append(
+                    cross_val_evaluates["precision_recall_curve"][n_cross][n_label][
+                        "Recall"
+                    ]
                 )
-                cross_validated_curve["thresholds"].append(
-                    cross_val_evaluates["precision_recall_curve"][j][i]["thresholds"]
+                cross_validated_curve_list["thresholds"].append(
+                    cross_val_evaluates["precision_recall_curve"][n_cross][n_label][
+                        "thresholds"
+                    ]
                 )
-                cross_validated_curve["positive_label"].append(
-                    cross_val_evaluates["precision_recall_curve"][j][i][
+                cross_validated_curve_list["positive_label"].append(
+                    cross_val_evaluates["precision_recall_curve"][n_cross][n_label][
                         "positive_label"
                     ]
                 )
             cross_validated_curve = cross_validation_curve(
-                cross_validated_curve, x="Recall", y="Precision", negative_label=False
+                cross_validated_curve_list,
+                x="Recall",
+                y="Precision",
+                negative_label=False,
             )
             precision_recall_curves_multi_label.append(cross_validated_curve)
         evaluate["auc_curve"] = auc_curves_multi_label
