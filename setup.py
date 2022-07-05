@@ -28,7 +28,7 @@ def post_install():
     import nltk
 
     nltk.download("stopwords")
-    nltk.download("punk")
+    nltk.download("punkt")
     nltk.download("averaged_perceptron_tagger")
 
 
