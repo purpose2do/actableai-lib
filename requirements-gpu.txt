@@ -254,7 +254,7 @@ gpustat==1.0.0b1
 graphviz==0.8.4
     # via
     #   catboost
-    #   mxnet-cu112
+    #   mxnet-cu110
 greenlet==1.1.2
     # via sqlalchemy
 grpcio==1.43.0
@@ -408,7 +408,7 @@ murmurhash==1.0.7
     #   preshed
     #   spacy
     #   thinc
-mxnet-cu112==1.8.0.post0
+mxnet-cu110==1.8.0.post0
     # via -r requirements-gpu.in
 networkx==2.6.3
     # via
@@ -456,7 +456,7 @@ numpy==1.21.6
     #   matplotlib
     #   mlxtend
     #   multi-rake
-    #   mxnet-cu112
+    #   mxnet-cu110
     #   nlpaug
     #   nptyping
     #   numba
@@ -726,7 +726,7 @@ requests[socks]==2.28.1
     #   gdown
     #   google-api-core
     #   huggingface-hub
-    #   mxnet-cu112
+    #   mxnet-cu110
     #   nlpaug
     #   ray
     #   requests-oauthlib
