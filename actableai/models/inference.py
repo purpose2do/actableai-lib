@@ -102,6 +102,28 @@ class AAIModelInference:
 
         return task_model.predict(df)
 
+    def predict_proba(self, task_id, df):
+        """
+        TODO write documentation
+        """
+        from actableai.exceptions.models import MissingFeaturesError
+
+        task_model = self._get_model(task_id)
+
+        # FIXME this considers that the model we have is an AutoGluon which will not
+        #  be the case in the future
+        feature_generator = task_model._learner.feature_generator
+        first_feature_links = feature_generator.get_feature_links()
+
+        missing_features = list(
+            set(first_feature_links.keys()).difference(set(df.columns))
+        )
+
+        if len(missing_features) > 0:
+            raise MissingFeaturesError(missing_features=missing_features)
+
+        return task_model.predict_proba(df, as_multiclass=True)
+
     def get_metadata(self, task_id):
         """
         TODO write documentation
