@@ -67,23 +67,26 @@ class AAIModelInference:
         self.task_models[task_id] = pickle.loads(raw_model)
         return True
 
-    def _get_model(self, task_id):
+    def _get_model(self, task_id, raise_error=True):
         """
         TODO write documentation
         """
+        from actableai.exceptions.models import InvalidTaskIdError
+
         if task_id not in self.task_models and not self._load_model(task_id):
-            return None
+            if raise_error:
+                raise InvalidTaskIdError()
+            else:
+                return None
         return self.task_models[task_id]
 
     def predict(self, task_id, df):
         """
         TODO write documentation
         """
-        from actableai.exceptions.models import MissingFeaturesError, InvalidTaskIdError
+        from actableai.exceptions.models import MissingFeaturesError
 
         task_model = self._get_model(task_id)
-        if task_model is None:
-            raise InvalidTaskIdError()
 
         # FIXME this considers that the model we have is an AutoGluon which will not
         #  be the case in the future
@@ -98,3 +101,19 @@ class AAIModelInference:
             raise MissingFeaturesError(missing_features=missing_features)
 
         return task_model.predict(df)
+
+    def get_metadata(self, task_id):
+        """
+        TODO write documentation
+        """
+        task_model = self._get_model(task_id)
+
+        # FIXME this considers that the model we have is an AutoGluon which will not
+        #  be the case in the future
+        feature_generator = task_model._learner.feature_generator
+        first_feature_links = feature_generator.get_feature_links()
+        features = list(first_feature_links.keys())
+
+        return {
+            "features": features,
+        }
