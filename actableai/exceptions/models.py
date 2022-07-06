@@ -1,7 +1,7 @@
 from typing import List
 
 
-class MissingFeaturesException(KeyError):
+class MissingFeaturesError(KeyError):
     """Exception representing missing features when doing model inference"""
 
     def __init__(self, missing_features: List[str], *args):
@@ -13,3 +13,8 @@ class MissingFeaturesException(KeyError):
 
     def __str__(self):
         return f"The following features are missing: {self.missing_features}"
+
+
+class InvalidTaskIdError(KeyError):
+    """Exception representing invalid task id when doing model inference"""
+    pass

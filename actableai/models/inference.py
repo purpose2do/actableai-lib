@@ -52,24 +52,38 @@ class AAIModelInference:
         """
         import os
         import pickle
+        from botocore.exceptions import ClientError
 
         path = os.path.join(self.s3_prefix, task_id, "model.p")
         obj = self.bucket.Object(path)
-        raw_model = obj.get()["Body"].read()
+        try:
+            raw_model = obj.get()["Body"].read()
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "404":
+                return False
+            else:
+                raise
 
         self.task_models[task_id] = pickle.loads(raw_model)
         return True
+
+    def _get_model(self, task_id):
+        """
+        TODO write documentation
+        """
+        if task_id not in self.task_models and not self._load_model(task_id):
+            return None
+        return self.task_models[task_id]
 
     def predict(self, task_id, df):
         """
         TODO write documentation
         """
-        from actableai.exceptions.models import MissingFeaturesException
+        from actableai.exceptions.models import MissingFeaturesError, InvalidTaskIdError
 
-        if task_id not in self.task_models and not self._load_model(task_id):
-            return None
-
-        task_model = self.task_models[task_id]
+        task_model = self._get_model(task_id)
+        if task_model is None:
+            raise InvalidTaskIdError()
 
         # FIXME this considers that the model we have is an AutoGluon which will not
         #  be the case in the future
@@ -81,6 +95,6 @@ class AAIModelInference:
         )
 
         if len(missing_features) > 0:
-            raise MissingFeaturesException(missing_features=missing_features)
+            raise MissingFeaturesError(missing_features=missing_features)
 
         return task_model.predict(df)
