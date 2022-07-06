@@ -199,7 +199,7 @@ class RegressionDataValidator:
                 CheckResult(
                     name="ExplanationChecker",
                     level=CheckLevels.CRITICAL,
-                    message="Explanations are not compatile with quantiles"
+                    message="Explanations are not compatile with quantiles",
                 )
             )
 

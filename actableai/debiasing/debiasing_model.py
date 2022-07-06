@@ -122,6 +122,9 @@ class DebiasingModel(AbstractModel):
             return
 
         # Prepare data
+        self.non_residuals_features = [
+            x for x in self.non_residuals_features if x in train_data.columns
+        ]
         train_data = train_data[self.non_residuals_features + [self.label]]
         if tuning_data is not None:
             tuning_data = tuning_data[self.non_residuals_features + [self.label]]

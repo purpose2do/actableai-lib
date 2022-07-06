@@ -254,8 +254,8 @@ def debiasing_feature_generator_args():
         "enable_text_ngram_features": False,
         "enable_raw_text_features": False,
         "enable_vision_features": True,
-        "pre_drop_useless": False,
-        "post_generators": [],
+        # "pre_drop_useless": False,
+        # "post_generators": [],
     }
 
 
