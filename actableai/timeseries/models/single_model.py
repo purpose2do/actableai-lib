@@ -13,7 +13,7 @@ from ray.tune.suggest import ConcurrencyLimiter
 from ray.tune.suggest.hyperopt import HyperOptSearch
 from typing import Dict, List, Optional, Tuple, Any, Iterable, Union
 
-from actableai.timeseries.exceptions import UntrainedModelException
+from actableai.exceptions.timeseries import UntrainedModelException
 from actableai.timeseries.models.base import AAITimeSeriesBaseModel
 from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.params.base import BaseParams

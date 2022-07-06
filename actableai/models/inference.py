@@ -52,7 +52,6 @@ class AAIModelInference:
         """
         import os
         import pickle
-        from botocore.exceptions import ClientError
 
         path = os.path.join(self.s3_prefix, task_id, "model.p")
         obj = self.bucket.Object(path)
@@ -65,8 +64,23 @@ class AAIModelInference:
         """
         TODO write documentation
         """
+        from actableai.exceptions.models import MissingFeaturesException
+
         if task_id not in self.task_models and not self._load_model(task_id):
             return None
 
         task_model = self.task_models[task_id]
+
+        # FIXME this considers that the model we have is an AutoGluon which will not
+        #  be the case in the future
+        feature_generator = task_model._learner.feature_generator
+        first_feature_links = feature_generator.get_feature_links()
+
+        missing_features = list(
+            set(first_feature_links.keys()).difference(set(df.columns))
+        )
+
+        if len(missing_features) > 0:
+            raise MissingFeaturesException(missing_features=missing_features)
+
         return task_model.predict(df)
