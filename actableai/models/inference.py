@@ -59,7 +59,7 @@ class AAIModelInference:
         try:
             raw_model = obj.get()["Body"].read()
         except ClientError as e:
-            if e.response["Error"]["Code"] == "404":
+            if e.response["Error"]["Code"] == "NoSuchKey":
                 return False
             else:
                 raise
