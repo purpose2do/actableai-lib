@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 import ray
 
-from actableai.timeseries.exceptions import UntrainedModelException
+from actableai.exceptions.timeseries import UntrainedModelException
 from actableai.timeseries.models import params
 from actableai.timeseries.models.independent_multivariate_model import (
     AAITimeSeriesIndependentMultivariateModel,

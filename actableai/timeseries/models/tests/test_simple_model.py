@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 import ray
 
-from actableai.timeseries.exceptions import UntrainedModelException
+from actableai.exceptions.timeseries import UntrainedModelException
 from actableai.timeseries.models import params
 from actableai.timeseries.models.single_model import AAITimeSeriesSingleModel
 from actableai.utils.testing import init_ray, generate_forecast_group_df_dict

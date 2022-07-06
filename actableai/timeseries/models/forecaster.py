@@ -3,7 +3,7 @@ import pandas as pd
 from time import time
 from typing import List, Union, Tuple, Any, Dict, Optional
 
-from actableai.timeseries.exceptions import UntrainedModelException
+from actableai.exceptions.timeseries import UntrainedModelException
 from actableai.timeseries.models.independent_multivariate_model import (
     AAITimeSeriesIndependentMultivariateModel,
 )

@@ -2,7 +2,7 @@ import mxnet as mx
 import pandas as pd
 from typing import List, Optional, Dict, Tuple, Any, Union
 
-from actableai.timeseries.exceptions import UntrainedModelException
+from actableai.exceptions.timeseries import UntrainedModelException
 from actableai.timeseries.models.base import AAITimeSeriesBaseModel
 from actableai.timeseries.models.params.base import BaseParams
 from actableai.timeseries.models.single_model import AAITimeSeriesSingleModel
