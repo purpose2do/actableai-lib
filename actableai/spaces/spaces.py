@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from enum import Enum
 
 
-class ControlType(str, Enum):
+class SpaceType(str, Enum):
     """
     TODO write documentation
     """
@@ -27,13 +27,13 @@ class Option(BaseModel, Generic[OptionT]):
     display_name: str
     value: OptionT
 
-    def dict(self, *args, **kwargs) -> "DictStrAny":
+    def dict(self, *args, **kwargs) -> Dict[str, Any]:
         original_dict = super().dict(*args, **kwargs)
 
         return {"label": original_dict["display_name"], "value": original_dict["value"]}
 
 
-class BaseControl(BaseModel):
+class BaseSpace(BaseModel):
     """
     TODO write documentation
     """
@@ -41,9 +41,9 @@ class BaseControl(BaseModel):
     name: str
     display_name: str
     description: Optional[str]
-    type: ControlType
+    type: SpaceType
 
-    def dict(self, *args, **kwargs) -> "DictStrAny":
+    def dict(self, *args, **kwargs) -> Dict[str, Any]:
         original_dict = super().dict(*args, **kwargs)
 
         return {
@@ -54,28 +54,28 @@ class BaseControl(BaseModel):
         }
 
 
-class FloatControl(BaseControl):
+class FloatSpace(BaseSpace):
     """
     TODO write documentation
     """
 
-    type: ControlType = ControlType.FLOAT
+    type: SpaceType = SpaceType.FLOAT
     default: float
     min: Optional[float]
     max: Optional[float]
 
 
-class OptionsControl(BaseControl, Generic[OptionT]):
+class OptionsSpace(BaseSpace, Generic[OptionT]):
     """
     TODO write documentation
     """
 
-    type: ControlType = ControlType.OPTIONS
+    type: SpaceType = SpaceType.OPTIONS
     is_multi: bool
     default: List[OptionT]
     options: Dict[OptionT, Option[OptionT]]
 
-    def dict(self, *args, **kwargs) -> "DictStrAny":
+    def dict(self, *args, **kwargs) -> Dict[str, Any]:
         original_dict = super().dict(*args, **kwargs)
 
         return {
@@ -88,38 +88,38 @@ class OptionsControl(BaseControl, Generic[OptionT]):
         }
 
 
-class StringControl(BaseControl):
+class StringSpace(BaseSpace):
     """
     TODO write documentation
     """
 
-    type: ControlType = ControlType.STRING
+    type: SpaceType = SpaceType.STRING
     default: str
 
 
-class IntegerControl(BaseControl):
+class IntegerSpace(BaseSpace):
     """
     TODO write documentation
     """
 
-    type: ControlType = ControlType.INT
+    type: SpaceType = SpaceType.INT
     default: int
     min: Optional[int]
     max: Optional[int]
 
 
-class BooleanControl(BaseControl):
+class BooleanSpace(BaseSpace):
     """
     TODO write documentation
     """
 
-    type: ControlType = ControlType.BOOL
+    type: SpaceType = SpaceType.BOOL
     default: bool
 
 
-class ControlPanel(BaseModel):
+class SearchSpace(BaseModel):
     """
     TODO write documentation
     """
 
-    parameters: List[BaseControl]
+    parameters: List[BaseSpace]
