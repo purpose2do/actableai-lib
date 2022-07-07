@@ -2,7 +2,7 @@ from typing import List
 
 
 class MissingFeaturesError(KeyError):
-    """Exception representing missing features when doing model inference"""
+    """Exception representing missing features when doing model inference."""
 
     def __init__(self, missing_features: List[str], *args):
         """
@@ -16,5 +16,12 @@ class MissingFeaturesError(KeyError):
 
 
 class InvalidTaskIdError(KeyError):
-    """Exception representing invalid task id when doing model inference"""
+    """Exception representing invalid task id when doing model inference."""
+
+    pass
+
+
+class InvalidPositiveLabelError(KeyError):
+    """Exception representing a positive label which does not exist."""
+
     pass
