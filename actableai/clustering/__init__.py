@@ -23,7 +23,7 @@ class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
         for i in range(X.shape[1]):
             self.feature_links.append([])
             # Skipping columns with only unique values
-            if len(X[:, i].unique()) == len(X[:, i]):
+            if len(np.unique(X[:, i])) == len(X[:, i]):
                 t = FunctionTransformer(lambda x: x)
                 self.feature_links[-1].append(final_feature_count)
                 final_feature_count += 1
@@ -35,16 +35,16 @@ class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
                     self.feature_links[-1].append(final_feature_count)
                     final_feature_count += 1
                 else:
-                    if len(X[:, i].unique()) > MAX_UNIQUE_FEATURES_CLUSTERING:
+                    if len(np.unique(X[:, i])) > MAX_UNIQUE_FEATURES_CLUSTERING:
                         t = FeatureHasher(
                             n_features=MAX_UNIQUE_FEATURES_CLUSTERING,
                             input_type="string",
                         )
                     else:
                         t = OneHotEncoder(sparse=False)
-                    result.append(t.fit_transform(X[:, i : i + 1]).todense())
+                    result.append(t.fit_transform(X[:, i : i + 1]))
 
-                    new_feature_count = len(result[-1].shape[1])
+                    new_feature_count = result[-1].shape[0]
                     self.feature_links[-1] += list(
                         range(
                             final_feature_count, final_feature_count + new_feature_count
