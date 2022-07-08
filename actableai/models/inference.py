@@ -110,16 +110,16 @@ class AAIModelInference:
 
         # Binary
         if positive_label is None:
-            positive_label = class_labels[0]
+            positive_label = class_labels[1]
 
         if positive_label not in class_labels:
             raise InvalidPositiveLabelError()
 
-        other_label = list(set(class_labels).difference({positive_label}))[0]
+        negative_label = list(set(class_labels).difference({positive_label}))[0]
 
         df_true_label = df_proba[positive_label] >= probability_threshold
         df_true_label = df_true_label.astype(str).map(
-            {"True": positive_label, "False": other_label}
+            {"True": positive_label, "False": negative_label}
         )
 
         if return_probabilities:
