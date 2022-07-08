@@ -8,6 +8,7 @@ from actableai.data_validation.base import CheckLevels
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
+from actableai.utils import memory_efficient_hyperparameters
 
 
 class AAIInterventionTask(AAITask):
@@ -92,6 +93,8 @@ class AAIInterventionTask(AAITask):
             common_causes = []
         if presets is None:
             presets = "medium_quality_faster_train"
+        if causal_hyperparameters is None:
+            causal_hyperparameters = memory_efficient_hyperparameters()
         causal_cv = 1 if causal_cv is None else causal_cv
 
         automl_pipeline_feature_parameters = {}
