@@ -75,7 +75,6 @@ class AAIClusteringTask(AAITask):
         from collections import defaultdict
         from tensorflow.keras.optimizers import SGD
         from sklearn.impute import SimpleImputer
-        from sklearn.preprocessing import LabelEncoder
         from sklearn.manifold import TSNE
         from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
         from sklearn.tree import DecisionTreeClassifier
