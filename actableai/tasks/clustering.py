@@ -18,6 +18,7 @@ class AAIClusteringTask(AAITask):
         df: pd.DataFrame,
         features: Optional[List[str]] = None,
         num_clusters: Union[int, str] = "auto",
+        drop_low_info: bool = False,
         explain_samples: bool = False,
         auto_num_clusters_min: int = 2,
         auto_num_clusters_max: int = 20,
@@ -133,10 +134,21 @@ class AAIClusteringTask(AAITask):
             )
 
         # Process data
-        preprocessor = ClusteringDataTransformer()
-        transformed_values = preprocessor.fit_transform(
-            df_train.values
-        )
+        preprocessor = ClusteringDataTransformer(drop_low_info=drop_low_info)
+        transformed_values = preprocessor.fit_transform(df_train.values)
+        if transformed_values is None:
+            return {
+                "status": "FAILURE",
+                "validations": [
+                    {
+                        "name": "Data Transformation",
+                        "level": "CRITICAL",
+                        "message": "Every columns have only unique values and cannot be used for clustering",
+                    }
+                ],
+                "runtime": time.time() - start,
+                "data": {},
+            }
         if num_clusters == "auto" and max_train_samples is not None:
             auto_num_clusters_max = min(auto_num_clusters_max, max_train_samples)
         dec = DEC(

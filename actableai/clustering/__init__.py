@@ -13,6 +13,10 @@ class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
     """Transform numeric columns using StandardScaler and categorical columns
     using OneHotEncoder."""
 
+    def __init__(self, drop_low_info=True) -> None:
+        super().__init__()
+        self.drop_low_info = drop_low_info
+
     def fit_transform(self, X):
         self.transformers = []
         result = []
@@ -23,7 +27,7 @@ class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
         for i in range(X.shape[1]):
             self.feature_links.append([])
             # Skipping columns with only unique values
-            if len(np.unique(X[:, i])) == len(X[:, i]):
+            if self.drop_low_info and len(np.unique(X[:, i])) == len(X[:, i]):
                 t = FunctionTransformer(lambda x: x)
                 self.feature_links[-1].append(final_feature_count)
                 final_feature_count += 1
@@ -53,7 +57,8 @@ class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
                     final_feature_count += new_feature_count
 
             self.transformers.append(t)
-        return np.hstack(result)
+        if len(result) > 0:
+            return np.hstack(result)
 
     def transform(self, X):
         result = []
