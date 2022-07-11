@@ -225,7 +225,7 @@ def run_cross_validation(
             "MEDIAN_ABSOLUTE_ERROR_std_err": np.std(
                 cross_val_evaluates["MEDIAN_ABSOLUTE_ERROR"]
             )
-                                             / sqrt_k,
+            / sqrt_k,
         }
 
         evaluate["metrics"] = pd.DataFrame(
