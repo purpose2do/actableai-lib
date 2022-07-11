@@ -162,16 +162,17 @@ class _AAIRegressionTrainTask(AAITask):
 
         important_features = []
         if quantile_levels is None:
-            for feature, importance in predictor.feature_importance(df_train)[
-                "importance"
-            ].iteritems():
-                if feature in biased_groups:
+            feature_importance = predictor.feature_importance(df_train)
+            for i in range(len(feature_importance)):
+                if feature_importance.index[i] in biased_groups:
                     continue
-
                 important_features.append(
-                    {"feature": feature, "importance": importance}
+                    {
+                        "feature": feature_importance.index[i],
+                        "importance": feature_importance["importance"][i],
+                        "p_value": feature_importance["p_value"][i],
+                    }
                 )
-
         y_pred = predictor.predict(df_val)
         metrics = predictor.evaluate_predictions(
             y_true=df_val[target], y_pred=y_pred, auxiliary_metrics=True
@@ -550,7 +551,9 @@ class AAIRegressionTask(AAITask):
         debiasing_charts = []
         # Generate debiasing charts
         if run_debiasing:
-            kde_bandwidth = lambda x: max(0.5 * x.std() * (x.size ** (-0.2)), 1e-2)
+
+            def kde_bandwidth(x):
+                return max(0.5 * x.std() * (x.size ** (-0.2)), 1e-2)
 
             kde_x_axis_gt = np.linspace(
                 df_val[target].min(), df_val[target].max(), kde_steps
