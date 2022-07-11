@@ -19,7 +19,6 @@ class ParameterType(str, Enum):
 
 
 OptionT = TypeVar("OptionT")
-NumberT = TypeVar("NumberT", float, int)
 
 
 class BaseParameter(BaseModel):
@@ -70,30 +69,26 @@ class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
         return output_dict
 
 
-class NumberParameter(BaseParameter, GenericModel, Generic[NumberT]):
+class FloatParameter(BaseParameter):
     """
     TODO write documentation
     """
 
     parameter_type: ParameterType = ParameterType.FLOAT
-    default: NumberT
-    min: Optional[NumberT]
-    max: Optional[NumberT]
+    default: float
+    min: Optional[float]
+    max: Optional[float]
 
-    @root_validator(skip_on_failure=True)
-    def set_type(cls, values):
-        type_val = values["default"]
 
-        if isinstance(type_val, int):
-            values["parameter_type"] = ParameterType.INT
-        elif isinstance(type_val, float):
-            values["parameter_type"] = ParameterType.FLOAT
-        else:
-            raise TypeError(
-                "Wrong type for 'parameter_type', must be a float or an int"
-            )
+class IntegerParameter(BaseParameter):
+    """
+    TODO write documentation
+    """
 
-        return values
+    parameter_type: ParameterType = ParameterType.INT
+    default: int
+    min: Optional[int]
+    max: Optional[int]
 
 
 class BooleanParameter(BaseParameter):

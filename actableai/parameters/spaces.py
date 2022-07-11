@@ -8,7 +8,6 @@ from actableai.parameters.parameters import (
     OptionT,
     Option,
     BaseParameter,
-    NumberT,
     OptionsParameter,
 )
 
@@ -21,32 +20,26 @@ class OptionsSpace(OptionsParameter[OptionT], Generic[OptionT]):
     is_multi: bool = True
 
 
-class RangeSpace(BaseParameter, GenericModel, Generic[NumberT]):
+class FloatRangeSpace(BaseParameter):
     """
     TODO write documentation
     """
 
     parameter_type: ParameterType = ParameterType.FLOAT_RANGE
-    default: Union[NumberT, Tuple[NumberT, NumberT]]
-    min: Optional[NumberT]
-    max: Optional[NumberT]
+    default: Union[float, Tuple[float, float]]
+    min: Optional[float]
+    max: Optional[float]
 
-    @root_validator(skip_on_failure=True)
-    def set_type(cls, values):
-        type_val = values["default"]
-        if isinstance(type_val, tuple):
-            type_val = type_val[0]
 
-        if isinstance(type_val, int):
-            values["parameter_type"] = ParameterType.INT_RANGE
-        elif isinstance(type_val, float):
-            values["parameter_type"] = ParameterType.FLOAT_RANGE
-        else:
-            raise TypeError(
-                "Wrong type for 'parameter_type', must be a float or an int"
-            )
+class IntegerRangeSpace(BaseParameter):
+    """
+    TODO write documentation
+    """
 
-        return values
+    parameter_type: ParameterType = ParameterType.INT_RANGE
+    default: Union[int, Tuple[int, int]]
+    min: Optional[int]
+    max: Optional[int]
 
 
 class SearchSpace(BaseModel):
