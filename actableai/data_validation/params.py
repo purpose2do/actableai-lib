@@ -67,8 +67,17 @@ class RegressionDataValidator:
         explain_samples=False,
         drop_duplicates=True,
     ):
+        use_quantiles = (
+            prediction_quantile_low is not None and prediction_quantile_high is not None
+        )
+
         validation_results = [
-            RegressionEvalMetricChecker(level=CheckLevels.CRITICAL).check(eval_metric),
+            RegressionEvalMetricChecker(
+                level=CheckLevels.CRITICAL if not use_quantiles else CheckLevels.WARNING
+            ).check(
+                eval_metric,
+                use_quantiles=use_quantiles,
+            ),
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
                 df, features + [target]
             ),
@@ -165,7 +174,7 @@ class RegressionDataValidator:
                 CheckResult(
                     name="ExplanationChecker",
                     level=CheckLevels.CRITICAL,
-                    message="Debiasing is incompatible explanation",
+                    message="Debiasing is incompatible with explanation",
                 )
             )
 
@@ -182,6 +191,15 @@ class RegressionDataValidator:
                     name="PresetsChecker",
                     level=CheckLevels.CRITICAL,
                     message="Optimize for performance is incompatible with explanation",
+                )
+            )
+
+        if use_quantiles and explain_samples:
+            validation_results.append(
+                CheckResult(
+                    name="ExplanationChecker",
+                    level=CheckLevels.CRITICAL,
+                    message="Explanations are not compatile with quantiles",
                 )
             )
 
@@ -354,7 +372,7 @@ class ClassificationDataValidator:
                 CheckResult(
                     name="ExplanationChecker",
                     level=CheckLevels.CRITICAL,
-                    message="Debiasing is incompatible explanation",
+                    message="Debiasing is incompatible with explanation",
                 )
             )
 

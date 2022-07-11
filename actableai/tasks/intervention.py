@@ -26,6 +26,8 @@ class AAIInterventionTask(AAITask):
         model_directory: Optional[str] = None,
         num_gpus: Optional[int] = 0,
         feature_importance: Optional[bool] = True,
+        drop_unique: bool = True,
+        drop_useless_features: bool = True,
     ) -> Dict:
         """Run this intervention task and return the results.
 
@@ -72,6 +74,7 @@ class AAIInterventionTask(AAITask):
         from tempfile import mkdtemp
         from econml.dml import LinearDML, NonParamDML
         from autogluon.tabular import TabularPredictor
+        from autogluon.features.generators import AutoMLPipelineFeatureGenerator
         from dowhy import CausalModel
         import numpy as np
         import networkx as nx
@@ -90,6 +93,11 @@ class AAIInterventionTask(AAITask):
         if presets is None:
             presets = "medium_quality_faster_train"
         causal_cv = 1 if causal_cv is None else causal_cv
+
+        automl_pipeline_feature_parameters = {}
+        if not drop_useless_features:
+            automl_pipeline_feature_parameters["pre_drop_useless"] = False
+            automl_pipeline_feature_parameters["post_generators"] = []
 
         df = df.copy()
 
@@ -134,12 +142,21 @@ class AAIInterventionTask(AAITask):
             )
 
         X = df[common_causes] if len(common_causes) > 0 else None
+
+        model_t_problem_type = (
+            "regression" if current_intervention_column in num_cols else "multiclass"
+        )
+
+        model_t_holdout_frac = None
+        if model_t_problem_type == "multiclass" and len(df) > 0:
+            model_t_holdout_frac = len(df[current_intervention_column].unique()) / len(
+                df
+            )
+
         model_t = TabularPredictor(
             path=mkdtemp(prefix=str(model_directory)),
             label="t",
-            problem_type="regression"
-            if current_intervention_column in num_cols
-            else "multiclass",
+            problem_type=model_t_problem_type,
         )
 
         xw_col = []
@@ -151,9 +168,11 @@ class AAIInterventionTask(AAITask):
             x_w_columns=xw_col,
             hyperparameters=causal_hyperparameters,
             presets=presets,
-            ag_args_fit={
-                "num_gpus": num_gpus,
-            },
+            ag_args_fit={"num_gpus": num_gpus, "drop_unique": drop_unique},
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                **automl_pipeline_feature_parameters
+            ),
+            holdout_frac=model_t_holdout_frac,
         )
 
         model_y = TabularPredictor(
@@ -166,9 +185,10 @@ class AAIInterventionTask(AAITask):
             x_w_columns=xw_col,
             hyperparameters=causal_hyperparameters,
             presets=presets,
-            ag_args_fit={
-                "num_gpus": num_gpus,
-            },
+            ag_args_fit={"num_gpus": num_gpus, "drop_unique": drop_unique},
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                **automl_pipeline_feature_parameters
+            ),
         )
 
         if (
@@ -200,7 +220,11 @@ class AAIInterventionTask(AAITask):
                 presets=presets,
                 ag_args_fit={
                     "num_gpus": num_gpus,
+                    "drop_unique": drop_unique,
                 },
+                feature_generator=AutoMLPipelineFeatureGenerator(
+                    **automl_pipeline_feature_parameters
+                ),
             )
             causal_model = NonParamDML(
                 model_t=model_t,

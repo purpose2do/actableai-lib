@@ -35,6 +35,8 @@ class _AAIClassificationTrainTask(AAITask):
         num_gpus: int,
         eval_metric: str,
         time_limit: Optional[int],
+        drop_unique: bool,
+        drop_useless_features: bool,
     ) -> Tuple[object, List, Dict, object, pd.DataFrame]:
         """Runs a sub Classification Task for cross-validation.
 
@@ -96,8 +98,13 @@ class _AAIClassificationTrainTask(AAITask):
         from actableai.utils import debiasing_feature_generator_args
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
 
-        ag_args_fit = {}
+        ag_args_fit = {"drop_unique": drop_unique}
         feature_generator_args = {}
+
+        if not drop_useless_features:
+            feature_generator_args["pre_drop_useless"] = False
+            feature_generator_args["post_generators"] = []
+
         if run_debiasing:
             ag_args_fit["drop_duplicates"] = drop_duplicates
             ag_args_fit["label"] = target
@@ -108,11 +115,16 @@ class _AAIClassificationTrainTask(AAITask):
             ag_args_fit["presets_residuals"] = presets
             ag_args_fit["hyperparameters_non_residuals"] = hyperparameters
             ag_args_fit["presets_non_residuals"] = presets
+            ag_args_fit["drop_useless_features"] = False
 
-            feature_generator_args = debiasing_feature_generator_args()
+            feature_generator_args = {
+                **feature_generator_args,
+                **debiasing_feature_generator_args(),
+            }
 
             hyperparameters = {DebiasingModel: {}}
 
+        ag_args_fit["num_cpus"] = 1
         ag_args_fit["num_gpus"] = num_gpus
 
         df_train = df_train[features + biased_groups + [target]]
@@ -316,6 +328,8 @@ class AAIClassificationTask(AAITask):
         num_gpus: int = 0,
         eval_metric: str = "accuracy",
         time_limit: Optional[int] = None,
+        drop_unique: bool = True,
+        drop_useless_features: bool = True,
     ) -> Dict:
         """Run this classification task and return results.
 
@@ -511,6 +525,8 @@ class AAIClassificationTask(AAITask):
                 num_gpus=num_gpus,
                 eval_metric=eval_metric,
                 time_limit=time_limit,
+                drop_unique=drop_unique,
+                drop_useless_features=drop_useless_features,
             )
         else:
             (
@@ -542,6 +558,8 @@ class AAIClassificationTask(AAITask):
                 num_gpus=num_gpus,
                 eval_metric=eval_metric,
                 time_limit=time_limit,
+                drop_unique=drop_unique,
+                drop_useless_features=drop_useless_features,
             )
 
         if not use_cross_validation:

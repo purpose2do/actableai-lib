@@ -823,22 +823,29 @@ class RegressionEvalMetricChecker(IChecker):
         self.name = name
         self.level = level
 
-    def check(self, eval_metric: str) -> Optional[CheckResult]:
+    def check(self, eval_metric: str, use_quantiles: bool) -> Optional[CheckResult]:
         """Check if the eval metric is valid for regression.
 
         Args:
             eval_metric: Eval metric to check.
+            use_quantiles: True if quantiles will be used (different metric).
 
         Returns:
             Optional[CheckResult]: Check result.
         """
-        if eval_metric not in [
-            "root_mean_squared_error",
-            "mean_squared_error",
-            "mean_absolute_error",
-            "median_absolute_error",
-            "r2",
-        ]:
+        possible_metrics = []
+        if use_quantiles:
+            possible_metrics = ["pinball_loss"]
+        else:
+            possible_metrics = [
+                "root_mean_squared_error",
+                "mean_squared_error",
+                "mean_absolute_error",
+                "median_absolute_error",
+                "r2",
+            ]
+
+        if eval_metric not in possible_metrics:
             return CheckResult(
                 name=self.name, level=self.level, message="Invalid eval_metric"
             )

@@ -3,6 +3,7 @@ import pandas as pd
 from autogluon.core.constants import REGRESSION, QUANTILE
 from autogluon.core.models.abstract.abstract_model import AbstractModel
 from autogluon.tabular import TabularPredictor
+from autogluon.features.generators import AutoMLPipelineFeatureGenerator
 from copy import deepcopy
 from uuid import uuid4
 
@@ -20,11 +21,13 @@ class DebiasingModel(AbstractModel):
         TODO write documentation
         """
         super().__init__(**kwargs)
+        self.initialize()
 
         self.models_fit = False
 
         # Initialize Parameters
         self.drop_duplicates = self.params_aux["drop_duplicates"]
+        self.drop_useless_features = self.params_aux["drop_useless_features"]
         self.label = self.params_aux["label"]
         self.features = self.params_aux["features"]
         self.biased_groups = self.params_aux["biased_groups"]
@@ -79,6 +82,7 @@ class DebiasingModel(AbstractModel):
 
         extra_auxiliary_params = {
             "drop_duplicates": True,
+            "drop_useless_features": True,
             "label": uuid4(),
             "features": [],
             "biased_groups": [],
@@ -107,6 +111,7 @@ class DebiasingModel(AbstractModel):
             train_data,
             hyperparameters=self.hyperparameters_residuals,
             presets=self.presets_residuals,
+            ag_args_fit=self.params_aux,
         )
 
     def _fit_non_residuals(self, train_data, tuning_data=None):
@@ -117,6 +122,9 @@ class DebiasingModel(AbstractModel):
             return
 
         # Prepare data
+        self.non_residuals_features = [
+            x for x in self.non_residuals_features if x in train_data.columns
+        ]
         train_data = train_data[self.non_residuals_features + [self.label]]
         if tuning_data is not None:
             tuning_data = tuning_data[self.non_residuals_features + [self.label]]
@@ -128,6 +136,7 @@ class DebiasingModel(AbstractModel):
             tuning_data=tuning_data,
             hyperparameters=self.hyperparameters_non_residuals,
             presets=self.presets_non_residuals,
+            ag_args_fit=self.params_aux,
         )
 
     def _fit(self, X, y, X_val=None, y_val=None, **kwargs):
@@ -191,12 +200,21 @@ class DebiasingModel(AbstractModel):
 
         hyperparameters_final = debiasing_hyperparameters()
 
+        automl_pipeline_feature_parameters = {}
+        if not self.drop_useless_features:
+            automl_pipeline_feature_parameters["pre_drop_useless"] = False
+            automl_pipeline_feature_parameters["post_generators"] = []
+
         # Train final model
         self.final_model.fit(
             train_data=final_train_data,
             tuning_data=final_tuning_data,
             hyperparameters=hyperparameters_final,
             presets=self.presets_final,
+            ag_args_fit=self.params_aux,
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                **automl_pipeline_feature_parameters
+            ),
         )
 
         self.models_fit = True

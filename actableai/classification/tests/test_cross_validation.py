@@ -25,7 +25,7 @@ def test_run_cross_validation():
         leaderboard,
     ) = run_cross_validation(
         classification_train_task=task,
-        problem_type="multiclass",
+        problem_type="binary",
         explain_samples=False,
         positive_label=None,
         kfolds=5,
@@ -46,6 +46,8 @@ def test_run_cross_validation():
         num_gpus=0,
         eval_metric="accuracy",
         time_limit=None,
+        drop_unique=False,
+        drop_useless_features=False,
     )
 
     assert important_features is not None

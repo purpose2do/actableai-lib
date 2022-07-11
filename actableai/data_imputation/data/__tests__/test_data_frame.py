@@ -94,14 +94,11 @@ def test_data_frame_auto_fix_should_call_fix(
     mock_determine_fix_strategy.return_value = FixStrategy.AUTOGLUON
     mock_validation_refiner = MagicMock()
     mock_validation_refiner_mod.return_value = mock_validation_refiner
-    mock_validation_refiner.refine.return_value = MagicMock(pd.DataFrame), MagicMock(
-        FixInfoList
-    )
+    mock_validation_refiner.refine.return_value = pd.DataFrame, FixInfoList
+
     mock_misplaced_refiner = MagicMock()
     mock_misplaced_refiner_mod.return_value = mock_misplaced_refiner
-    mock_misplaced_refiner.refine.return_value = MagicMock(pd.DataFrame), MagicMock(
-        FixInfoList
-    )
+    mock_misplaced_refiner.refine.return_value = pd.DataFrame, FixInfoList
 
     df = DataFrame("any_thing")
     setattr(df, "detect_error", mock_detect_error)
@@ -145,14 +142,11 @@ def test_data_frame_auto_fix_should_not_call_fix(
     mock_type_detector.return_value.detect.return_value = MagicMock()
     mock_validation_refiner = MagicMock()
     mock_validation_refiner_mod.return_value = mock_validation_refiner
-    mock_validation_refiner.refine.return_value = MagicMock(pd.DataFrame), MagicMock(
-        FixInfoList
-    )
+    mock_validation_refiner.refine.return_value = pd.DataFrame, FixInfoList
+
     mock_misplaced_refiner = MagicMock()
     mock_misplaced_refiner_mod.return_value = mock_misplaced_refiner
-    mock_misplaced_refiner.refine.return_value = MagicMock(pd.DataFrame), MagicMock(
-        FixInfoList
-    )
+    mock_misplaced_refiner.refine.return_value = pd.DataFrame, FixInfoList
 
     mock_group_by_column = [MagicMock()]
     mock_errors.group_by_column = mock_group_by_column

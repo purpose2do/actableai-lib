@@ -31,12 +31,19 @@ def run_regression_task(regression_task: AAIRegressionTask, tmp_path, *args, **k
     if "drop_duplicates" not in kwargs:
         kwargs["drop_duplicates"] = False
 
+    if "prediction_quantile_low" not in kwargs:
+        kwargs["prediction_quantile_low"] = None
+    if "prediction_quantile_high" not in kwargs:
+        kwargs["prediction_quantile_high"] = None
+
     return regression_task.run(
         *args,
         **kwargs,
         presets="medium_quality_faster_train",
         model_directory=tmp_path,
         residuals_hyperparameters=unittest_hyperparameters(),
+        drop_unique=False,
+        drop_useless_features=False,
     )
 
 
@@ -127,7 +134,9 @@ class TestRemoteRegression:
 
         assert r["status"] == "FAILURE"
         assert len(r["data"]) == 0
-        assert r["validations"][0]["name"] == "IsNumericalChecker"
+
+        validations_dict = {val["name"]: val["level"] for val in r["validations"]}
+        assert "IsNumericalChecker" in validations_dict
 
     def test_num_vs_categorical(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -278,10 +287,12 @@ class TestRemoteRegression:
         assert r["status"] == "SUCCESS"
         assert "validation_table" in r["data"]
         assert "prediction_table" in r["data"]
-        assert len(r["validations"]) > 0
-        assert r["validations"][0]["name"] == "DoNotContainMixedChecker"
-        assert r["validations"][0]["level"] == CheckLevels.WARNING
         assert "leaderboard" in r["data"]
+
+        validations_dict = {val["name"]: val["level"] for val in r["validations"]}
+
+        assert "DoNotContainMixedChecker" in validations_dict
+        assert validations_dict["DoNotContainMixedChecker"] == CheckLevels.WARNING
 
     def test_mixed_target_column(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -294,9 +305,11 @@ class TestRemoteRegression:
         r = run_regression_task(regression_task, tmp_path, df, "y")
 
         assert r["status"] == "FAILURE"
-        assert len(r["validations"]) > 0
-        assert r["validations"][0]["name"] == "IsNumericalChecker"
-        assert r["validations"][0]["level"] == CheckLevels.CRITICAL
+
+        validations_dict = {val["name"]: val["level"] for val in r["validations"]}
+
+        assert "IsNumericalChecker" in validations_dict
+        assert validations_dict["IsNumericalChecker"] == CheckLevels.CRITICAL
 
     def test_insufficient_data(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -309,16 +322,20 @@ class TestRemoteRegression:
         r = run_regression_task(regression_task, tmp_path, df, "y")
 
         assert r["status"] == "FAILURE"
-        assert len(r["validations"]) > 0
-        assert r["validations"][0]["name"] == "IsSufficientDataChecker"
-        assert r["validations"][0]["level"] == CheckLevels.CRITICAL
+
+        validations_dict = {val["name"]: val["level"] for val in r["validations"]}
+
+        assert "IsSufficientDataChecker" in validations_dict
+        assert validations_dict["IsSufficientDataChecker"] == CheckLevels.CRITICAL
 
     def test_invalid_eval_metric(self, regression_task, tmp_path, data):
         r = run_regression_task(regression_task, tmp_path, data, "y", eval_metric="abc")
         assert r["status"] == "FAILURE"
-        assert len(r["validations"]) > 0
-        assert r["validations"][0]["name"] == "RegressionEvalMetricChecker"
-        assert r["validations"][0]["level"] == CheckLevels.CRITICAL
+
+        validations_dict = {val["name"]: val["level"] for val in r["validations"]}
+
+        assert "RegressionEvalMetricChecker" in validations_dict
+        assert validations_dict["RegressionEvalMetricChecker"] == CheckLevels.CRITICAL
 
     def test_validation_has_prediction(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -358,9 +375,11 @@ class TestRemoteRegression:
         )
 
         assert r["status"] == "FAILURE"
-        assert len(r["validations"]) > 0
-        assert r["validations"][0]["name"] == "ColumnsExistChecker"
-        assert r["validations"][0]["level"] == CheckLevels.CRITICAL
+
+        validations_dict = {val["name"]: val["level"] for val in r["validations"]}
+
+        assert "ColumnsExistChecker" in validations_dict
+        assert validations_dict["ColumnsExistChecker"] == CheckLevels.CRITICAL
 
     def test_empty_feature_column(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -383,10 +402,14 @@ class TestRemoteRegression:
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
         assert "prediction_table" in r["data"]
-        assert len(r["validations"]) > 0
-        assert r["validations"][0]["name"] == "DoNotContainEmptyColumnsChecker"
-        assert r["validations"][0]["level"] == CheckLevels.WARNING
         assert "leaderboard" in r["data"]
+
+        validations_dict = {val["name"]: val["level"] for val in r["validations"]}
+
+        assert "DoNotContainEmptyColumnsChecker" in validations_dict
+        assert (
+            validations_dict["DoNotContainEmptyColumnsChecker"] == CheckLevels.WARNING
+        )
 
     def test_empty_target_column(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -402,9 +425,13 @@ class TestRemoteRegression:
         )
 
         assert r["status"] == "FAILURE"
-        assert len(r["validations"]) > 0
-        assert r["validations"][0]["name"] == "DoNotContainEmptyColumnsChecker"
-        assert r["validations"][0]["level"] == CheckLevels.CRITICAL
+
+        validations_dict = {val["name"]: val["level"] for val in r["validations"]}
+
+        assert "DoNotContainEmptyColumnsChecker" in validations_dict
+        assert (
+            validations_dict["DoNotContainEmptyColumnsChecker"] == CheckLevels.CRITICAL
+        )
 
     def test_suggest_analytic(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -426,10 +453,12 @@ class TestRemoteRegression:
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
         assert "prediction_table" in r["data"]
-        assert len(r["validations"]) > 0
-        assert r["validations"][0]["name"] == "CorrectAnalyticChecker"
-        assert r["validations"][0]["level"] == CheckLevels.WARNING
         assert "leaderboard" in r["data"]
+
+        validations_dict = {val["name"]: val["level"] for val in r["validations"]}
+
+        assert "CorrectAnalyticChecker" in validations_dict
+        assert validations_dict["CorrectAnalyticChecker"] == CheckLevels.WARNING
 
     def test_explain_samples(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -452,6 +481,32 @@ class TestRemoteRegression:
         assert len(r["data"]["predict_shaps"]) > 0
         assert len(r["data"]["validation_shaps"]) > 0
         assert "leaderboard" in r["data"]
+
+    def test_explain_samples_quantiles(self, regression_task, tmp_path):
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, None, None, 8, 9, 10] * 2,
+                "y": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2,
+            }
+        )
+
+        r = run_regression_task(
+            regression_task,
+            tmp_path,
+            df,
+            "x",
+            validation_ratio=0.2,
+            explain_samples=True,
+            prediction_quantile_high=95,
+            prediction_quantile_low=5,
+        )
+
+        assert r["status"] == "FAILURE"
+
+        validations_dict = {val["name"]: val["level"] for val in r["validations"]}
+
+        assert "ExplanationChecker" in validations_dict
+        assert validations_dict["ExplanationChecker"] == CheckLevels.CRITICAL
 
     def test_explain_samples_with_datetime(self, regression_task, tmp_path):
         rng = pd.date_range("2015-02-24", periods=20, freq="T")
@@ -546,9 +601,11 @@ class TestRemoteRegression:
         )
 
         assert r["status"] == "FAILURE"
-        assert len(r["validations"]) >= 1
-        assert r["validations"][0]["name"] == "IsSufficientDataChecker"
-        assert r["validations"][0]["level"] == CheckLevels.CRITICAL
+
+        validations_dict = {val["name"]: val["level"] for val in r["validations"]}
+
+        assert "IsSufficientDataChecker" in validations_dict
+        assert validations_dict["IsSufficientDataChecker"] == CheckLevels.CRITICAL
 
 
 class TestRemoteRegressionCrossValidation:
@@ -635,7 +692,6 @@ class TestRemoteRegressionCrossValidation:
             kfolds=1,
             prediction_quantile_high=95,
             prediction_quantile_low=5,
-            hyperparameters=ag_quantile_hyperparameters(),
         )
 
         evaluate = r["data"]["evaluate"]
@@ -648,9 +704,7 @@ class TestRemoteRegressionCrossValidation:
         assert "x_predicted" in r["data"]["validation_table"].columns
         assert "x_low" in r["data"]["validation_table"].columns
         assert "x_high" in r["data"]["validation_table"].columns
-        assert "RMSE" in evaluate
-        assert "R2" in evaluate
-        assert "MAE" in evaluate
+        assert "PINBALL_LOSS" in evaluate
         for feat in important_features:
             assert "feature" in feat
             assert "importance" in feat
@@ -673,7 +727,6 @@ class TestRemoteRegressionCrossValidation:
             kfolds=4,
             prediction_quantile_high=95,
             prediction_quantile_low=5,
-            hyperparameters=ag_quantile_hyperparameters(),
         )
 
         evaluate = r["data"]["evaluate"]
@@ -683,12 +736,7 @@ class TestRemoteRegressionCrossValidation:
         assert "x_predicted" in r["data"]["prediction_table"].columns
         assert "x_low" in r["data"]["prediction_table"].columns
         assert "x_high" in r["data"]["prediction_table"].columns
-        assert "RMSE" in evaluate
-        assert "RMSE_std_err" in evaluate
-        assert "R2" in evaluate
-        assert "R2_std_err" in evaluate
-        assert "MAE" in evaluate
-        assert "MAE_std_err" in evaluate
+        assert "PINBALL_LOSS" in evaluate
         for feat in important_features:
             assert "feature" in feat
             assert "importance" in feat
@@ -881,9 +929,11 @@ class TestDebiasing:
         )
 
         assert r["status"] == "FAILURE"
-        assert len(r["validations"]) > 0
-        assert r["validations"][-1]["name"] == "DoNotContainTextChecker"
-        assert r["validations"][-1]["level"] == CheckLevels.CRITICAL
+
+        validations_dict = {val["name"]: val["level"] for val in r["validations"]}
+
+        assert "DoNotContainTextChecker" in validations_dict
+        assert validations_dict["DoNotContainTextChecker"] == CheckLevels.CRITICAL
 
     def test_mixed_debiasing_feature_cat(self, regression_task, tmp_path):
         df = pd.DataFrame(

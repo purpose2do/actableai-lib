@@ -2,8 +2,10 @@ import pandas as pd
 import pytest
 import shutil
 from autogluon.tabular import TabularPredictor
+from autogluon.features.generators import AutoMLPipelineFeatureGenerator
 
 from actableai.debiasing.debiasing_model import DebiasingModel
+from actableai.utils import debiasing_feature_generator_args
 from actableai.utils.testing import unittest_hyperparameters
 
 
@@ -32,6 +34,9 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
+            "num_cpus": 1,
+            "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -43,6 +48,9 @@ class TestDebiasingModel:
             hyperparameters=hyperparameters,
             presets="medium_quality_faster_train",
             ag_args_fit=ag_args_fit,
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                **debiasing_feature_generator_args()
+            ),
         )
 
         assert predictor._learner.is_fit
@@ -71,6 +79,9 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
+            "num_cpus": 1,
+            "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -80,6 +91,9 @@ class TestDebiasingModel:
             hyperparameters=hyperparameters,
             presets="medium_quality_faster_train",
             ag_args_fit=ag_args_fit,
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                **debiasing_feature_generator_args()
+            ),
         )
 
         assert predictor._learner.is_fit
@@ -108,6 +122,9 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
+            "num_cpus": 1,
+            "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -119,6 +136,9 @@ class TestDebiasingModel:
             hyperparameters=hyperparameters,
             presets="medium_quality_faster_train",
             ag_args_fit=ag_args_fit,
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                **debiasing_feature_generator_args()
+            ),
         )
 
         assert predictor._learner.is_fit
@@ -147,6 +167,9 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
+            "num_cpus": 1,
+            "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -156,6 +179,9 @@ class TestDebiasingModel:
             hyperparameters=hyperparameters,
             presets="medium_quality_faster_train",
             ag_args_fit=ag_args_fit,
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                **debiasing_feature_generator_args()
+            ),
         )
 
         assert predictor._learner.is_fit
@@ -184,6 +210,9 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
+            "num_cpus": 1,
+            "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -195,6 +224,9 @@ class TestDebiasingModel:
             hyperparameters=hyperparameters,
             presets="medium_quality_faster_train",
             ag_args_fit=ag_args_fit,
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                **debiasing_feature_generator_args()
+            ),
         )
 
         assert predictor._learner.is_fit
@@ -223,6 +255,9 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
+            "num_cpus": 1,
+            "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -232,6 +267,9 @@ class TestDebiasingModel:
             hyperparameters=hyperparameters,
             presets="medium_quality_faster_train",
             ag_args_fit=ag_args_fit,
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                **debiasing_feature_generator_args()
+            ),
         )
 
         assert predictor._learner.is_fit
@@ -260,6 +298,9 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
+            "num_cpus": 1,
+            "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -271,6 +312,9 @@ class TestDebiasingModel:
             hyperparameters=hyperparameters,
             presets="medium_quality_faster_train",
             ag_args_fit=ag_args_fit,
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                **debiasing_feature_generator_args()
+            ),
         )
         predictor.persist_models()
 
@@ -303,6 +347,9 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
+            "num_cpus": 1,
+            "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -314,6 +361,9 @@ class TestDebiasingModel:
             hyperparameters=hyperparameters,
             presets="medium_quality_faster_train",
             ag_args_fit=ag_args_fit,
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                **debiasing_feature_generator_args()
+            ),
         )
         predictor.unpersist_models()
 
@@ -346,6 +396,9 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
+            "num_cpus": 1,
+            "drop_unique": False,
+            "drop_useless_features": False,
         }
         hyperparameters = {DebiasingModel: {}}
 
@@ -357,6 +410,9 @@ class TestDebiasingModel:
             hyperparameters=hyperparameters,
             presets="medium_quality_faster_train",
             ag_args_fit=ag_args_fit,
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                **debiasing_feature_generator_args()
+            ),
         )
 
         predictor.save()

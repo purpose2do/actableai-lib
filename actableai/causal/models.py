@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import time
 from autogluon.tabular import TabularPredictor
+from autogluon.features.generators import AutoMLPipelineFeatureGenerator
 from econml.dml import DML, CausalForestDML, NonParamDML, SparseLinearDML, LinearDML
 from econml.drlearner import DRLearner
 from econml.iv.nnet import DeepIV
@@ -106,6 +107,8 @@ class AAICausalEstimator:
         remove_outliers: bool = True,
         contamination: float = 0.05,
         num_gpus: int = 0,
+        drop_unique: bool = True,
+        drop_useless_features: bool = True,
     ):
         """Function fits a causal model with a single deterministic model.
 
@@ -152,6 +155,11 @@ class AAICausalEstimator:
             num_gpus: Number of GPUs to use. Defaults to 0.
         """
         start = time.time()
+
+        automl_pipeline_feature_parameters = {}
+        if not drop_useless_features:
+            automl_pipeline_feature_parameters["pre_drop_useless"] = False
+            automl_pipeline_feature_parameters["post_generators"] = []
 
         try:
             if T.shape[1] > 1:
@@ -202,7 +210,11 @@ class AAICausalEstimator:
             presets=presets,
             ag_args_fit={
                 "num_gpus": num_gpus,
+                "drop_unique": drop_unique,
             },
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                **automl_pipeline_feature_parameters
+            ),
         )
         model_y = TabularPredictor(
             path=random_directory(model_directory),
@@ -216,7 +228,11 @@ class AAICausalEstimator:
             presets=presets,
             ag_args_fit={
                 "num_gpus": num_gpus,
+                "drop_unique": drop_unique,
             },
+            feature_generator=AutoMLPipelineFeatureGenerator(
+                **automl_pipeline_feature_parameters
+            ),
         )
         self.estimator = LinearDML(
             model_y=model_y,

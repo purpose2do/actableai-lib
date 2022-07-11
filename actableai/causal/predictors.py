@@ -2,6 +2,10 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 import pandas as pd
 from autogluon.tabular import TabularDataset, TabularPredictor
+from autogluon.features.generators import (
+    AutoMLPipelineFeatureGenerator,
+    AbstractFeatureGenerator,
+)
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import accuracy_score
@@ -74,6 +78,8 @@ class SKLearnWrapper:
         hyperparameters: Optional[Union[List, Dict]] = None,
         presets: Optional[str] = "best_quality",
         ag_args_fit: Optional[Dict] = None,
+        feature_generator: Optional[AbstractFeatureGenerator] = None,
+        holdout_frac: Optional[float] = None,
     ):
         """Construct a sklearn wrapper object
 
@@ -102,6 +108,11 @@ class SKLearnWrapper:
         self._df_transformer = DataFrameTransformer(x_w_columns)
         self.ag_args_fit = ag_args_fit
         self.train_data = None
+        self.feature_generator = feature_generator
+        self.holdout_frac = holdout_frac
+
+        if self.feature_generator is None:
+            self.feature_generator = AutoMLPipelineFeatureGenerator()
 
     def fit(self, X, y, sample_weight=None):
         label = self.ag_predictor.label
@@ -115,6 +126,8 @@ class SKLearnWrapper:
             presets=self.presets,
             hyperparameters=self.hyperparameters,
             ag_args_fit=self.ag_args_fit or {},
+            feature_generator=self.feature_generator,
+            holdout_frac=self.holdout_frac,
         )
         pd.set_option("chained_assignment", "warn")
         self.train_data = train_data

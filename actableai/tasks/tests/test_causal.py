@@ -224,6 +224,8 @@ class TestRemoteCausal:
             ag_hyperparameters=unittest_hyperparameters(),
             cv=2,
             mc_iters=2,
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert r["status"] == "SUCCESS"
         assert all(
@@ -258,6 +260,8 @@ class TestRemoteCausal:
             feature_importance=True,
             cv=2,
             mc_iters=2,
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert results["status"] == "SUCCESS"
         assert all(
@@ -302,6 +306,8 @@ class TestRemoteCausal:
             ag_hyperparameters=unittest_hyperparameters(),
             cv=2,
             mc_iters=2,
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert results["status"] == "SUCCESS"
         assert all(
@@ -326,7 +332,7 @@ class TestRemoteCausal:
             common_causes,
         ) = single_cont_treatment_dataset
         pd_table[outcomes] = np.random.choice(
-            ["A", "B", "C"], size=len(pd_table), replace=True
+            ["A", "B", "C"], size=(len(pd_table), len(outcomes)), replace=True
         )
 
         model_params = [LinearDMLSingleContTreatmentParams()]
@@ -342,6 +348,8 @@ class TestRemoteCausal:
                 ag_hyperparameters=unittest_hyperparameters(),
                 cv=2,
                 mc_iters=2,
+                drop_unique=False,
+                drop_useless_features=False,
             )
 
     def test_single_binary_treatment(self, single_binary_treatment_dataset, init_ray):
@@ -374,6 +382,8 @@ class TestRemoteCausal:
             feature_importance=True,
             cv=2,
             mc_iters=2,
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert results["status"] == "SUCCESS"
         assert all(
@@ -429,6 +439,8 @@ class TestRemoteCausal:
             feature_importance=True,
             cv=2,
             mc_iters=2,
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert results["status"] == "SUCCESS"
         assert all(
@@ -472,6 +484,8 @@ class TestRemoteCausal:
             common_causes=common_causes,
             model_params=model_params,
             ag_hyperparameters=unittest_hyperparameters(),
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert results["status"] == "FAILURE"
         assert len(results["validations"]) > 0
@@ -501,6 +515,8 @@ class TestRemoteCausal:
             ag_hyperparameters=unittest_hyperparameters(),
             cv=2,
             mc_iters=2,
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert results["status"] == "FAILURE"
         assert len(results["validations"]) > 0
@@ -530,6 +546,8 @@ class TestRemoteCausal:
             common_causes=common_causes,
             model_params=model_params,
             ag_hyperparameters=unittest_hyperparameters(),
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert results["status"] == "SUCCESS"
         assert all(
@@ -568,6 +586,8 @@ class TestRemoteCausal:
             ag_hyperparameters=unittest_hyperparameters(),
             cv=2,
             mc_iters=2,
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert results["status"] == "FAILURE"
         assert len(results["validations"]) > 0
@@ -597,6 +617,8 @@ class TestRemoteCausal:
             common_causes=None,
             model_params=model_params,
             ag_hyperparameters=unittest_hyperparameters(),
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert results["status"] == "SUCCESS"
         assert all(
@@ -635,6 +657,8 @@ class TestRemoteCausal:
             ag_hyperparameters=unittest_hyperparameters(),
             cv=2,
             mc_iters=2,
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert results["status"] == "FAILURE"
         assert len(results["validations"]) > 0
@@ -668,6 +692,8 @@ class TestRemoteCausal:
             ag_hyperparameters=unittest_hyperparameters(),
             cv=2,
             mc_iters=2,
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert results["status"] == "SUCCESS"
         assert all(
@@ -712,6 +738,8 @@ class TestRemoteCausal:
             ag_hyperparameters=unittest_hyperparameters(),
             cv=2,
             mc_iters=2,
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert results["status"] == "SUCCESS"
         assert all(
@@ -746,6 +774,8 @@ class TestRemoteCausal:
             ag_hyperparameters=unittest_hyperparameters(),
             cv=2,
             mc_iters=2,
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert r["status"] == "SUCCESS"
         assert all(
@@ -780,6 +810,8 @@ class TestRemoteCausal:
             ag_hyperparameters=unittest_hyperparameters(),
             cv=2,
             mc_iters=2,
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert r["status"] == "SUCCESS"
         assert all(
@@ -870,6 +902,8 @@ class TestRemoteCausal:
             ag_hyperparameters=unittest_hyperparameters(),
             cv=2,
             mc_iters=2,
+            drop_unique=False,
+            drop_useless_features=False,
         )
         assert results["status"] == "FAILURE"
         assert len(results["validations"]) > 0

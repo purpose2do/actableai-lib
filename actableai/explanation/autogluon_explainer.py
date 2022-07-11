@@ -65,7 +65,7 @@ class AutoGluonShapTreeExplainer:
             The shap values.
         """
         # Transform features to use the model directly
-        transformed_data = transform_features(
+        df_transformed_data, transformed_data = transform_features(
             self.autogluon_predictor, self.model_name, data
         )
 
@@ -84,9 +84,12 @@ class AutoGluonShapTreeExplainer:
         if len(shap_values.shape) == 3:
             shap_values = np.array(shap_values)
 
-            pred = self.autogluon_predictor.predict_proba(
-                data, as_pandas=False, as_multiclass=True
-            )
+            pred = self.autogluon_model.predict_proba(df_transformed_data)
+
+            if len(pred.shape) == 1:
+                pred = np.concatenate(
+                    [(1 - pred).reshape(-1, 1), pred.reshape(-1, 1)], axis=1
+                )
 
             row_index, column_index = np.meshgrid(
                 np.arange(shap_values.shape[1]), np.arange(shap_values.shape[2])

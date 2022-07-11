@@ -7,7 +7,17 @@ def transform_features(predictor, model_name, data):
     df_transformed_data = predictor.transform_features(data, model=model_name)
     transformed_data = autogluon_model.preprocess(df_transformed_data)
 
-    return transformed_data
+    return df_transformed_data, transformed_data
+
+
+def _get_features_to_drop(autogluon_model):
+    """
+    TODO write documentation
+    """
+    if autogluon_model._is_features_in_same_as_ex:
+        return {}
+
+    return set(autogluon_model.features).difference(set(autogluon_model._features))
 
 
 def _get_xgboost_feature_links(xgboost_model):
@@ -43,8 +53,11 @@ def get_feature_links(predictor, model_name):
 
     # Second preprocessing level links
     second_feature_links = None
+    features_to_drop = []
     if model_name == "XGBoost":
         second_feature_links = _get_xgboost_feature_links(autogluon_model)
+    else:
+        features_to_drop = _get_features_to_drop(autogluon_model)
 
     # Merge layers
     feature_links = {}
@@ -57,6 +70,11 @@ def get_feature_links(predictor, model_name):
                 if first_link in second_feature_links:
                     second_links = second_feature_links[first_link]
                     feature_links[feature] += second_links
+
+    for feature in feature_links.keys():
+        feature_links[feature] = [
+            link for link in feature_links[feature] if link not in features_to_drop
+        ]
 
     return feature_links
 
@@ -80,6 +98,6 @@ def get_final_features(predictor, model_name):
         final_features = _get_xgboost_final_features(autogluon_model)
 
     if final_features is None:
-        final_features = feature_generator.features_out
+        final_features = autogluon_model._features
 
     return final_features

@@ -30,6 +30,8 @@ class TestIntervention:
             "new_intervention",
             model_directory=tmp_path,
             causal_hyperparameters=unittest_hyperparameters(),
+            drop_unique=False,
+            drop_useless_features=False,
         )
 
         assert result["status"] == "SUCCESS"
@@ -56,6 +58,8 @@ class TestIntervention:
             model_directory=tmp_path,
             cate_alpha=0.5,
             causal_hyperparameters=unittest_hyperparameters(),
+            drop_unique=False,
+            drop_useless_features=False,
         )
 
         assert result["status"] == "SUCCESS"
@@ -83,6 +87,8 @@ class TestIntervention:
             "new_intervention",
             model_directory=tmp_path,
             causal_hyperparameters=unittest_hyperparameters(),
+            drop_unique=False,
+            drop_useless_features=False,
         )
 
         assert r["status"] == "SUCCESS"
@@ -111,6 +117,8 @@ class TestIntervention:
             model_directory=tmp_path,
             cate_alpha=0.5,
             causal_hyperparameters=unittest_hyperparameters(),
+            drop_unique=False,
+            drop_useless_features=False,
         )
 
         assert r["status"] == "SUCCESS"
@@ -140,6 +148,8 @@ class TestIntervention:
             common_causes=["y", "z"],
             model_directory=tmp_path,
             causal_hyperparameters=unittest_hyperparameters(),
+            drop_unique=False,
+            drop_useless_features=False,
         )
 
         assert r["status"] == "SUCCESS"
@@ -170,6 +180,8 @@ class TestIntervention:
             model_directory=tmp_path,
             cate_alpha=0.5,
             causal_hyperparameters=unittest_hyperparameters(),
+            drop_unique=False,
+            drop_useless_features=False,
         )
 
         assert r["status"] == "SUCCESS"
@@ -201,6 +213,8 @@ class TestIntervention:
             model_directory=tmp_path,
             cate_alpha=0.5,
             causal_hyperparameters=unittest_hyperparameters(),
+            drop_unique=False,
+            drop_useless_features=False,
         )
 
         assert r["status"] == "SUCCESS"

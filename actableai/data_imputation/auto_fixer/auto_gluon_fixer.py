@@ -116,6 +116,12 @@ class AutoGluonFixer(AutoFixer):
             target_values=set(df_to_train[column_to_predict.name]),
         )
 
+        holdout_frac = None
+        if len(df_to_train) > 0:
+            holdout_frac = len(df_to_train[column_to_predict.name].unique()) / len(
+                df_to_train
+            )
+
         predictor = TabularPredictor(
             label=column_to_predict.name,
             problem_type=problem_type.value,
@@ -125,6 +131,7 @@ class AutoGluonFixer(AutoFixer):
             df_to_train,
             hyperparameters=hyperparameters,
             excluded_model_types=["CAT"],
+            holdout_frac=holdout_frac,
         )
         pd.set_option("chained_assignment", "warn")
 

@@ -30,6 +30,8 @@ def run_cross_validation(
     num_gpus: int,
     eval_metric: str,
     time_limit: Optional[int],
+    drop_unique: bool,
+    drop_useless_features: bool,
 ) -> Tuple[Dict, Dict, List, float, float, List, List, List]:
     """Run cross validation on Regression Task. Data is divided in kfold groups and each
     run a regression. The returned values are means or lists of values from
@@ -109,6 +111,8 @@ def run_cross_validation(
                 "num_gpus": num_gpus,
                 "eval_metric": eval_metric,
                 "time_limit": time_limit,
+                "drop_unique": drop_unique,
+                "drop_useless_features": drop_useless_features,
             },
         )
         for kfold_index, (train_index, val_index) in enumerate(kfolds_index_list)
@@ -149,6 +153,8 @@ def run_cross_validation(
         cross_val_leaderboard.append(leaderboard)
 
         df_k_val = df_train.iloc[val_index].copy()
+        if prediction_quantile_low is not None and prediction_quantile_high is not None:
+            y_pred = y_pred[0.5]
         df_k_val[f"{target}_predicted"] = y_pred
         df_val = df_val.append(df_k_val, ignore_index=True)
 
@@ -198,43 +204,65 @@ def run_cross_validation(
         important_features, key=lambda k: k["importance"], reverse=True
     )
 
-    # Legacy (TODO: to be removed)
-    evaluate = {
-        "RMSE": np.mean(cross_val_evaluates["RMSE"]),
-        "RMSE_std_err": np.std(cross_val_evaluates["RMSE"]) / sqrt_k,
-        "R2": np.mean(cross_val_evaluates["R2"]),
-        "R2_std_err": np.std(cross_val_evaluates["R2"]) / sqrt_k,
-        "MAE": np.mean(cross_val_evaluates["MAE"]),
-        "MAE_std_err": np.std(cross_val_evaluates["MAE"]) / sqrt_k,
-        "MEDIAN_ABSOLUTE_ERROR": np.mean(cross_val_evaluates["MEDIAN_ABSOLUTE_ERROR"]),
-        "MEDIAN_ABSOLUTE_ERROR_std_err": np.std(
-            cross_val_evaluates["MEDIAN_ABSOLUTE_ERROR"]
-        )
-        / sqrt_k,
-    }
-
-    evaluate["metrics"] = pd.DataFrame(
-        {
-            "metric": [
-                "Root Mean Squared Error",
-                "R2",
-                "Mean Absolute Error",
-                "Median Absolute Error",
-            ],
-            "value": [
-                np.mean(cross_val_evaluates["RMSE"]),
-                np.mean(cross_val_evaluates["R2"]),
-                np.mean(cross_val_evaluates["MAE"]),
-                np.mean(cross_val_evaluates["MEDIAN_ABSOLUTE_ERROR"]),
-            ],
-            "stderr": [
-                np.std(cross_val_evaluates["RMSE"]) / sqrt_k,
-                np.std(cross_val_evaluates["R2"]) / sqrt_k,
-                np.std(cross_val_evaluates["MAE"]) / sqrt_k,
-                np.std(cross_val_evaluates["MEDIAN_ABSOLUTE_ERROR"]) / sqrt_k,
-            ],
+    if prediction_quantile_low is None or prediction_quantile_high is None:
+        # Legacy (TODO: to be removed)
+        evaluate = {
+            "RMSE": np.mean(cross_val_evaluates["RMSE"]),
+            "RMSE_std_err": np.std(cross_val_evaluates["RMSE"]) / sqrt_k,
+            "R2": np.mean(cross_val_evaluates["R2"]),
+            "R2_std_err": np.std(cross_val_evaluates["R2"]) / sqrt_k,
+            "MAE": np.mean(cross_val_evaluates["MAE"]),
+            "MAE_std_err": np.std(cross_val_evaluates["MAE"]) / sqrt_k,
+            "MEDIAN_ABSOLUTE_ERROR": np.mean(
+                cross_val_evaluates["MEDIAN_ABSOLUTE_ERROR"]
+            ),
+            "MEDIAN_ABSOLUTE_ERROR_std_err": np.std(
+                cross_val_evaluates["MEDIAN_ABSOLUTE_ERROR"]
+            )
+                                             / sqrt_k,
         }
-    )
+
+        evaluate["metrics"] = pd.DataFrame(
+            {
+                "metric": [
+                    "Root Mean Squared Error",
+                    "R2",
+                    "Mean Absolute Error",
+                    "Median Absolute Error",
+                ],
+                "value": [
+                    np.mean(cross_val_evaluates["RMSE"]),
+                    np.mean(cross_val_evaluates["R2"]),
+                    np.mean(cross_val_evaluates["MAE"]),
+                    np.mean(cross_val_evaluates["MEDIAN_ABSOLUTE_ERROR"]),
+                ],
+                "stderr": [
+                    np.std(cross_val_evaluates["RMSE"]) / sqrt_k,
+                    np.std(cross_val_evaluates["R2"]) / sqrt_k,
+                    np.std(cross_val_evaluates["MAE"]) / sqrt_k,
+                    np.std(cross_val_evaluates["MEDIAN_ABSOLUTE_ERROR"]) / sqrt_k,
+                ],
+            }
+        )
+    else:
+        # Legacy (TODO: to be removed)
+        evaluate = {
+            "PINBALL_LOSS": np.mean(cross_val_evaluates["PINBALL_LOSS"]) / sqrt_k,
+        }
+
+        evaluate["metrics"] = pd.DataFrame(
+            {
+                "metric": [
+                    "Pinball Loss",
+                ],
+                "value": [
+                    np.mean(cross_val_evaluates["PINBALL_LOSS"]),
+                ],
+                "stderr": [
+                    np.std(cross_val_evaluates["PINBALL_LOSS"]) / sqrt_k,
+                ],
+            }
+        )
 
     predictions = []
     predict_shap_values = []
