@@ -44,11 +44,12 @@ class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
                             n_features=MAX_UNIQUE_FEATURES_CLUSTERING,
                             input_type="string",
                         )
+                        result.append(t.fit_transform(X.iloc[:, i]).todense())
                     else:
                         t = OneHotEncoder(sparse=False)
-                    result.append(t.fit_transform(X.iloc[:, i : i + 1]))
+                        result.append(t.fit_transform(X.iloc[:, i : i + 1]))
 
-                    new_feature_count = result[-1].shape[0]
+                    new_feature_count = result[-1].shape[1]
                     self.feature_links[-1] += list(
                         range(
                             final_feature_count, final_feature_count + new_feature_count
