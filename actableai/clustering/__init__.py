@@ -27,26 +27,26 @@ class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
         for i in range(X.shape[1]):
             self.feature_links.append([])
             # Skipping columns with only unique values
-            if self.drop_low_info and len(np.unique(X[:, i])) == len(X[:, i]):
+            if self.drop_low_info and len(np.unique(X.iloc[:, i])) == len(X.iloc[:, i]):
                 t = FunctionTransformer(lambda x: x)
                 self.feature_links[-1].append(final_feature_count)
                 final_feature_count += 1
             else:
-                if is_numeric_dtype(X[:, i]):
+                if is_numeric_dtype(X.iloc[:, i]):
                     t = StandardScaler()
-                    result.append(t.fit_transform(X[:, i : i + 1]))
+                    result.append(t.fit_transform(X.iloc[:, i : i + 1]))
 
                     self.feature_links[-1].append(final_feature_count)
                     final_feature_count += 1
                 else:
-                    if len(np.unique(X[:, i])) > MAX_UNIQUE_FEATURES_CLUSTERING:
+                    if len(np.unique(X.iloc[:, i])) > MAX_UNIQUE_FEATURES_CLUSTERING:
                         t = FeatureHasher(
                             n_features=MAX_UNIQUE_FEATURES_CLUSTERING,
                             input_type="string",
                         )
                     else:
                         t = OneHotEncoder(sparse=False)
-                    result.append(t.fit_transform(X[:, i : i + 1]))
+                    result.append(t.fit_transform(X.iloc[:, i : i + 1]))
 
                     new_feature_count = result[-1].shape[0]
                     self.feature_links[-1] += list(
@@ -64,8 +64,6 @@ class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
         result = []
         for i in range(X.shape[1]):
             x = self.transformers[i].transform(X[:, i : i + 1])
-            if i in self.categorical_cols:
-                x = x.todense()
             result.append(x)
         return np.hstack(result)
 

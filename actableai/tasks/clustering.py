@@ -135,7 +135,7 @@ class AAIClusteringTask(AAITask):
 
         # Process data
         preprocessor = ClusteringDataTransformer(drop_low_info=drop_low_info)
-        transformed_values = preprocessor.fit_transform(df_train.values)
+        transformed_values = preprocessor.fit_transform(df_train)
         if transformed_values is None:
             return {
                 "status": "FAILURE",
