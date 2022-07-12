@@ -132,6 +132,14 @@ class AAIClusteringTask(AAITask):
                 ),
                 columns=numeric_columns,
             )
+        categorical_columns = list(df_train.select_dtypes(exclude=["number"]).columns)
+        if len(categorical_columns):
+            df_train[categorical_columns] = pd.DataFrame(
+                SimpleImputer(strategy="constant", fill_value="None").fit_transform(
+                    df_train[categorical_columns]
+                ),
+                columns=categorical_columns,
+            )
 
         # Process data
         preprocessor = ClusteringDataTransformer(drop_low_info=drop_low_info)
