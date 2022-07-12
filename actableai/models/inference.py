@@ -80,7 +80,53 @@ class AAIModelInference:
                 return None
         return self.task_models[task_id]
 
-    def predict(self, task_id, df):
+    def predict(
+        self,
+        task_id,
+        df,
+        return_probabilities=False,
+        probability_threshold=0.5,
+        positive_label=None,
+    ):
+        """
+        TODO write documentation
+        """
+        from actableai.exceptions.models import InvalidPositiveLabelError
+
+        df_proba = self.predict_proba(task_id, df)
+
+        class_labels = list(df_proba.columns)
+
+        # Regression
+        if len(class_labels) <= 1:
+            return df_proba
+
+        # Multiclass
+        if len(class_labels) > 2:
+            df = df_proba.idxmax(axis="columns")
+            if return_probabilities:
+                return df, df_proba
+            return df
+
+        # Binary
+        if positive_label is None:
+            positive_label = class_labels[1]
+
+        if positive_label not in class_labels:
+            raise InvalidPositiveLabelError()
+
+        negative_label = list(set(class_labels).difference({positive_label}))[0]
+
+        df_true_label = df_proba[positive_label] >= probability_threshold
+        df_true_label = df_true_label.astype(str).map(
+            {"True": positive_label, "False": negative_label}
+        )
+
+        if return_probabilities:
+            return df_true_label, df_proba
+        return df_true_label
+
+    def predict_proba(self, task_id, df):
         """
         TODO write documentation
         """
@@ -100,7 +146,7 @@ class AAIModelInference:
         if len(missing_features) > 0:
             raise MissingFeaturesError(missing_features=missing_features)
 
-        return task_model.predict(df)
+        return task_model.predict_proba(df, as_multiclass=True)
 
     def get_metadata(self, task_id):
         """
@@ -114,6 +160,16 @@ class AAIModelInference:
         first_feature_links = feature_generator.get_feature_links()
         features = list(first_feature_links.keys())
 
-        return {
+        problem_type = task_model.problem_type
+
+        metadata = {
             "features": features,
+            "problem_type": problem_type,
+            "class_labels": None,
         }
+
+        if problem_type == "multiclass" or problem_type == "binary":
+            class_labels = task_model.class_labels
+            metadata["class_labels"] = class_labels
+
+        return metadata
