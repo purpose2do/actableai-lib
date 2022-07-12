@@ -72,12 +72,15 @@ class AAISentimentAnalysisTask(AAITask):
 
         validations = []
         if len(unsupported_language_codes) > 0:
-            validations.append({
-                "name": "UnsupportedLanguage",
-                "level": CheckLevels.WARNING,
-                "message": "Unsupported language codes detected: {}".format(
-                    ", ".join(unsupported_language_codes))
-            })
+            validations.append(
+                {
+                    "name": "UnsupportedLanguage",
+                    "level": CheckLevels.WARNING,
+                    "message": "Unsupported language codes detected: {}".format(
+                        ", ".join(unsupported_language_codes)
+                    ),
+                }
+            )
 
         data = []
         for i, re in enumerate(result):
