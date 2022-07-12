@@ -63,7 +63,7 @@ jobs:
 
     - name: Unit Tests
       run: |
-        python -m pytest -v --durations=0 -n=auto --ignore actableai/third_parties actableai
+        python -m pytest -v --durations=0 -n=auto --ignore actableai/third_parties -k "not test_memory_profiling_child and not test_gpu_memory_profiling_child" actableai
       env:
         TUNE_DISABLE_SIGINT_HANDLER: 1
 
