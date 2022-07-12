@@ -1,9 +1,8 @@
 import numpy as np
 import pandas as pd
 import pytest
+from actableai.data_validation.base import CheckLevels
 
-from actableai.data_validation.base import *
-from actableai.regression.quantile import ag_quantile_hyperparameters
 from actableai.tasks.regression import AAIRegressionTask
 from actableai.utils.dataset_generator import DatasetGenerator
 from actableai.utils.testing import unittest_hyperparameters
@@ -67,6 +66,10 @@ class TestRemoteRegression:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["y"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert "leaderboard" in r["data"]
 
     def test_datetime(self, regression_task, tmp_path):
@@ -88,6 +91,10 @@ class TestRemoteRegression:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert "leaderboard" in r["data"]
 
     def test_mixed_datetime(self, regression_task, tmp_path):
@@ -118,6 +125,10 @@ class TestRemoteRegression:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x", "y"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert "leaderboard" in r["data"]
 
     def test_datetime_target(self, regression_task, tmp_path):
@@ -157,6 +168,10 @@ class TestRemoteRegression:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["y"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert "leaderboard" in r["data"]
 
     def test_num_vs_mix(self, regression_task, tmp_path):
@@ -179,6 +194,10 @@ class TestRemoteRegression:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["y", "z"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert "leaderboard" in r["data"]
 
     def test_complex_text(self, regression_task, tmp_path):
@@ -200,6 +219,10 @@ class TestRemoteRegression:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["z"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert "leaderboard" in r["data"]
 
     def test_feature_missing_value(self, regression_task, tmp_path):
@@ -222,6 +245,10 @@ class TestRemoteRegression:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["z"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert "leaderboard" in r["data"]
 
     def test_hyperparam_multimodal(self, regression_task, tmp_path):
@@ -249,6 +276,10 @@ class TestRemoteRegression:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["y"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert "leaderboard" in r["data"]
 
     def test_autogluon_multiclass_case(self, regression_task, tmp_path):
@@ -271,6 +302,10 @@ class TestRemoteRegression:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["y"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert "leaderboard" in r["data"]
 
     def test_mixed_feature_column(self, regression_task, tmp_path):
@@ -361,6 +396,11 @@ class TestRemoteRegression:
         assert "x_low" in r["data"]["validation_table"].columns
         assert "x_high" in r["data"]["validation_table"].columns
         assert "leaderboard" in r["data"]
+        assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
 
     def test_invalid_column(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -401,6 +441,10 @@ class TestRemoteRegression:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x", "z"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert "prediction_table" in r["data"]
         assert "leaderboard" in r["data"]
 
@@ -452,6 +496,10 @@ class TestRemoteRegression:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["y"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert "prediction_table" in r["data"]
         assert "leaderboard" in r["data"]
 
@@ -481,6 +529,11 @@ class TestRemoteRegression:
         assert len(r["data"]["predict_shaps"]) > 0
         assert len(r["data"]["validation_shaps"]) > 0
         assert "leaderboard" in r["data"]
+        assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["y"]
+            assert "importance" in feat
+            assert "p_value" in feat
 
     def test_explain_samples_quantiles(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -532,6 +585,11 @@ class TestRemoteRegression:
         assert len(r["data"]["predict_shaps"]) > 0
         assert len(r["data"]["validation_shaps"]) > 0
         assert "leaderboard" in r["data"]
+        assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["y", "z"]
+            assert "importance" in feat
+            assert "p_value" in feat
 
     def test_drop_duplicates(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -580,6 +638,10 @@ class TestRemoteRegression:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert "leaderboard" in r["data"]
 
     def test_drop_duplicates_insufficient(self, regression_task, tmp_path):
@@ -628,7 +690,6 @@ class TestRemoteRegressionCrossValidation:
         )
 
         evaluate = r["data"]["evaluate"]
-        important_features = r["data"]["importantFeatures"]
         assert r["status"] == "SUCCESS"
         assert len(r["data"]["prediction_table"]) > 0
         assert "RMSE" in evaluate
@@ -637,10 +698,13 @@ class TestRemoteRegressionCrossValidation:
         assert "R2_std_err" in evaluate
         assert "MAE" in evaluate
         assert "MAE_std_err" in evaluate
-        for feat in important_features:
-            assert "feature" in feat
+        assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["y", "z"]
             assert "importance" in feat
             assert "importance_std_err" in feat
+            assert "p_value" in feat
+            assert "p_value_std_err" in feat
         assert "leaderboard" in r["data"]
 
     def test_cross_val_with_explain(self, regression_task, tmp_path):
@@ -659,7 +723,6 @@ class TestRemoteRegressionCrossValidation:
         )
 
         evaluate = r["data"]["evaluate"]
-        important_features = r["data"]["importantFeatures"]
         assert r["status"] == "SUCCESS"
         assert len(r["data"]["predict_shaps"]) > 0
         assert len(r["data"]["prediction_table"]) > 0
@@ -669,10 +732,13 @@ class TestRemoteRegressionCrossValidation:
         assert "R2_std_err" in evaluate
         assert "MAE" in evaluate
         assert "MAE_std_err" in evaluate
-        for feat in important_features:
-            assert "feature" in feat
+        assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["y", "z"]
             assert "importance" in feat
             assert "importance_std_err" in feat
+            assert "p_value" in feat
+            assert "p_value_std_err" in feat
         assert "leaderboard" in r["data"]
 
     def test_with_quantile(self, regression_task, tmp_path):
@@ -695,7 +761,6 @@ class TestRemoteRegressionCrossValidation:
         )
 
         evaluate = r["data"]["evaluate"]
-        important_features = r["data"]["importantFeatures"]
         assert r["status"] == "SUCCESS"
         assert len(r["data"]["prediction_table"]) > 0
         assert "x_predicted" in r["data"]["prediction_table"].columns
@@ -705,9 +770,13 @@ class TestRemoteRegressionCrossValidation:
         assert "x_low" in r["data"]["validation_table"].columns
         assert "x_high" in r["data"]["validation_table"].columns
         assert "PINBALL_LOSS" in evaluate
-        for feat in important_features:
-            assert "feature" in feat
+        assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
             assert "importance" in feat
+            assert "importance_std_err" in feat
+            assert "p_value" in feat
+            assert "p_value_std_err" in feat
         assert "leaderboard" in r["data"]
 
     def test_cross_val_with_quantiles(self, regression_task, tmp_path):
@@ -730,17 +799,19 @@ class TestRemoteRegressionCrossValidation:
         )
 
         evaluate = r["data"]["evaluate"]
-        important_features = r["data"]["importantFeatures"]
         assert r["status"] == "SUCCESS"
         assert len(r["data"]["prediction_table"]) > 0
         assert "x_predicted" in r["data"]["prediction_table"].columns
         assert "x_low" in r["data"]["prediction_table"].columns
         assert "x_high" in r["data"]["prediction_table"].columns
         assert "PINBALL_LOSS" in evaluate
-        for feat in important_features:
-            assert "feature" in feat
+        assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "importance_std_err" in feat
+            assert "p_value" in feat
+            assert "p_value_std_err" in feat
         assert "leaderboard" in r["data"]
 
     def test_debiasing_feature(self, regression_task, tmp_path):
@@ -778,6 +849,12 @@ class TestRemoteRegressionCrossValidation:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x", "y"]
+            assert "importance" in feat
+            assert "importance_std_err" in feat
+            assert "p_value" in feat
+            assert "p_value_std_err" in feat
         assert "debiasing_charts" in r["data"]
         assert "leaderboard" in r["data"]
 
@@ -855,6 +932,10 @@ class TestDebiasing:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x", "y"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert "debiasing_charts" in r["data"]
         assert "leaderboard" in r["data"]
 
@@ -968,6 +1049,10 @@ class TestDebiasing:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x", "y"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert "debiasing_charts" in r["data"]
         assert "leaderboard" in r["data"]
 
@@ -1043,6 +1128,10 @@ class TestDebiasing:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x", "y"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert "debiasing_charts" in r["data"]
         assert "leaderboard" in r["data"]
 
@@ -1100,3 +1189,8 @@ class TestDebiasing:
         assert "MSE" in r["data"]["evaluate"]
         assert "MEDIAN_ABSOLUTE_ERROR" in r["data"]["evaluate"]
         assert "metrics" in r["data"]["evaluate"]
+        assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
