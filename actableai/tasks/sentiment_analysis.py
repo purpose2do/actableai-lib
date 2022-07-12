@@ -36,6 +36,7 @@ class AAISentimentAnalysisTask(AAITask):
         from ray.exceptions import RayTaskError
         from nltk.tokenize import sent_tokenize
         from actableai.sentiment.serve import AAISentimentExtractor
+        from actableai.data_validation.checkers import CheckLevels
         from multi_rake.algorithm import UnsupportedLanguageError
 
         start = time.time()
@@ -69,10 +70,16 @@ class AAISentimentAnalysisTask(AAITask):
                 if type(err.cause) is UnsupportedLanguageError:
                     unsupported_language_codes.add(err.cause.language_code)
 
-        message = ""
+        validations = []
         if len(unsupported_language_codes) > 0:
-            message = "Unsupported language codes detected: {}".format(
-                ", ".join(unsupported_language_codes)
+            validations.append(
+                {
+                    "name": "UnsupportedLanguage",
+                    "level": CheckLevels.WARNING,
+                    "message": "Unsupported language codes detected: {}".format(
+                        ", ".join(unsupported_language_codes)
+                    ),
+                }
             )
 
         data = []
@@ -91,5 +98,6 @@ class AAISentimentAnalysisTask(AAITask):
             "data": data,
             "status": "SUCCESS",
             "runtime": time.time() - start,
-            "message": message,
+            "message": "",
+            "validations": validations,
         }
