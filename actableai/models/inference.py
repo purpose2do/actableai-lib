@@ -130,6 +130,7 @@ class AAIModelInference:
         """
         TODO write documentation
         """
+        import pandas as pd
         from actableai.exceptions.models import MissingFeaturesError
 
         task_model = self._get_model(task_id)
@@ -146,7 +147,10 @@ class AAIModelInference:
         if len(missing_features) > 0:
             raise MissingFeaturesError(missing_features=missing_features)
 
-        return task_model.predict_proba(df, as_multiclass=True)
+        df_proba = task_model.predict_proba(df, as_multiclass=True)
+        if isinstance(df_proba, pd.Series):
+            df_proba = df_proba.to_frame()
+        return df_proba
 
     def get_metadata(self, task_id):
         """
