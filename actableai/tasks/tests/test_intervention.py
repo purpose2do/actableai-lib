@@ -220,3 +220,36 @@ class TestIntervention:
         assert r["status"] == "SUCCESS"
         assert "df" in r["data"]
         assert r["data"]["df"].shape == (20, 12)
+
+    def test_intervention_no_common_causes_drop_features(
+        self, intervention_task: AAIInterventionTask, tmp_path
+    ):
+        current_intervention = ["a", None, "a", "a", "a", "b", "b", "b", "b", "b"]
+        new_intervention = ["b", "b", "b", "b", "b", None, None, "a", "a", "a"]
+        df = pd.DataFrame(
+            {
+                "x": [2, 2, 2, 2, 2, None, 3, 3, 4, 4] * 2,
+                "y": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2,
+                "z": ["a", "a", "a", "b", "b", "b", "b", "b", "b", "b"] * 2,
+                "d": pd.date_range("2020-01-01", periods=20),
+                "current_intervention": current_intervention * 2,
+                "new_intervention": new_intervention * 2,
+            }
+        )
+
+        r = intervention_task.run(
+            df,
+            "y",
+            "current_intervention",
+            "new_intervention",
+            common_causes=[],
+            model_directory=tmp_path,
+            cate_alpha=0.5,
+            causal_hyperparameters=unittest_hyperparameters(),
+            drop_unique=True,
+            drop_useless_features=True,
+        )
+
+        assert r["status"] == "SUCCESS"
+        assert "df" in r["data"]
+        assert r["data"]["df"].shape == (20, 12)
