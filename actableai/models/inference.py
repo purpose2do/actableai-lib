@@ -103,7 +103,7 @@ class AAIModelInference:
 
         # Multiclass
         if len(class_labels) > 2:
-            df = df_proba.idxmax(axis="columns")
+            df = df_proba.idxmax(axis="columns").to_frame()
             if return_probabilities:
                 return df, df_proba
             return df
@@ -118,8 +118,10 @@ class AAIModelInference:
         negative_label = list(set(class_labels).difference({positive_label}))[0]
 
         df_true_label = df_proba[positive_label] >= probability_threshold
-        df_true_label = df_true_label.astype(str).map(
-            {"True": positive_label, "False": negative_label}
+        df_true_label = (
+            df_true_label.astype(str)
+            .map({"True": positive_label, "False": negative_label})
+            .to_frame()
         )
 
         if return_probabilities:
