@@ -13,6 +13,7 @@ from actableai.causal.params import (
 from actableai.causal.tree_utils import make_pretty_tree
 from actableai.data_validation.base import (
     CAUSAL_INFERENCE_CATEGORICAL_MINIMUM_TREATMENT,
+    CheckLevels,
 )
 from actableai.tasks.causal_inference import (
     LogCategoricalOutcomeNotAllowed,
