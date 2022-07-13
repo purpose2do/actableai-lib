@@ -1069,3 +1069,29 @@ class ROCAUCChecker(IChecker):
                 level=self.level,
                 message=f"ROC AUC eval metric is only available for binary classification. Your target column has {df[target].nunique()} unique values",
             )
+
+
+class OnlyOneValueChecker(IChecker):
+    def __init__(self, level, name="OnlyOneValueChecker"):
+        self.name = name
+        self.level = level
+
+    def check(self, df: pd.DataFrame, features: List[str]) -> Optional[CheckResult]:
+        """Check that all features have only one value.
+
+        Args:
+            df: Dataframe to check.
+            features: Features to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
+        all_unique = df[features].apply(lambda x: x.unique().size == 1).all()
+        if all_unique:
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"{', '.join(features)} are columns with only one value."
+                + " These columns have no predictive power and are removed."
+                + " Nothing can be inferred from these columns.",
+            )

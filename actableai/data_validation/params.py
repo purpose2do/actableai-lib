@@ -42,6 +42,7 @@ from actableai.data_validation.checkers import (
     IsValidPredictionLengthChecker,
     IsValidTypeNumberOfClusterChecker,
     MaxTrainSamplesChecker,
+    OnlyOneValueChecker,
     PositiveOutcomeValueThreshold,
     ROCAUCChecker,
     RegressionEvalMetricChecker,
@@ -121,6 +122,7 @@ class RegressionDataValidator:
             ColumnsInList(level=CheckLevels.CRITICAL).check(
                 features, debiased_features
             ),
+            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features),
         ]
 
         if target in df.columns and not pd.isnull(df[target]).all():
@@ -303,6 +305,7 @@ class ClassificationDataValidator:
             ColumnsInList(level=CheckLevels.CRITICAL).check(
                 features, debiased_features
             ),
+            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features),
         ]
 
         if target in df.columns and not pd.isnull(df[target]).all():
@@ -618,6 +621,10 @@ class CausalDataValidator:
             IsSufficientDataChecker(level=CheckLevels.CRITICAL).check(
                 df, n_sample=MINIMUM_NUMBER_OF_SAMPLE
             ),
+            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, common_causes),
+            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, treatments)
+            if len(common_causes) != 0
+            else None,
         ]
         for t in set(treatments):
             validation_results.append(
@@ -718,6 +725,12 @@ class InterventionDataValidator:
             SameTypeChecker(level=CheckLevels.CRITICAL).check(
                 df, [current_intervention_column, new_intervention_column]
             ),
+            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, common_causes),
+            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(
+                df, [current_intervention_column]
+            )
+            if len(common_causes) != 0
+            else None,
         ]
         if get_type_special_no_ag(df[current_intervention_column]) == "category":
             validations.append(
