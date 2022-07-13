@@ -127,7 +127,7 @@ class AAIInterventionTask(AAITask):
                 "runtime": time.time() - start,
             }
 
-        # Preprocess drop
+        # Preprocess data
         type_special = df.apply(get_type_special_no_ag)
         num_cols = (type_special == "numeric") | (type_special == "integer")
         num_cols = list(df.loc[:, num_cols].columns)
