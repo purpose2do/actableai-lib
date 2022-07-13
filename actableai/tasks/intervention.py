@@ -90,6 +90,8 @@ class AAIInterventionTask(AAITask):
             model_directory = mkdtemp(prefix="autogluon_model")
         if common_causes is None:
             common_causes = []
+        if len(common_causes) == 0:
+            drop_unique = False
         if presets is None:
             presets = "medium_quality_faster_train"
         causal_cv = 1 if causal_cv is None else causal_cv
@@ -125,7 +127,7 @@ class AAIInterventionTask(AAITask):
                 "runtime": time.time() - start,
             }
 
-        # Preprocess data
+        # Preprocess drop
         type_special = df.apply(get_type_special_no_ag)
         num_cols = (type_special == "numeric") | (type_special == "integer")
         num_cols = list(df.loc[:, num_cols].columns)
