@@ -157,6 +157,8 @@ class AAICausalEstimator:
         start = time.time()
 
         automl_pipeline_feature_parameters = {}
+        if X is None:
+            drop_unique = False
         if not drop_useless_features:
             automl_pipeline_feature_parameters["pre_drop_useless"] = False
             automl_pipeline_feature_parameters["post_generators"] = []
