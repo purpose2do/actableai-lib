@@ -3,28 +3,19 @@ import numpy as np
 import pandas as pd
 import pytest
 import string
-from networkx.algorithms.structuralholes import effective_size
 from tempfile import mkdtemp
 
 from actableai.causal.params import (
-    LinearDMLCategoricalTreatmentParams,
-    LinearDMLCategoricalTreatmentAGParams,
     LinearDMLSingleContTreatmentParams,
-    LinearDMLSingleContTreatmentAGParams,
     LinearDMLSingleBinaryTreatmentParams,
     LinearDMLSingleBinaryTreatmentAGParams,
-    SparseLinearDMLSingleBinaryTreatmentParams,
-    SparseLinearDMLSingleContTreatmentParams,
 )
 from actableai.causal.tree_utils import make_pretty_tree
-from actableai.data_validation.base import *
 from actableai.data_validation.base import (
     CAUSAL_INFERENCE_CATEGORICAL_MINIMUM_TREATMENT,
 )
-from actableai.data_validation.checkers import *
 from actableai.tasks.causal_inference import (
     LogCategoricalOutcomeNotAllowed,
-    LogCategoricalTreatmentNotAllowed,
     infer_causal,
 )
 from actableai.utils.testing import unittest_hyperparameters
@@ -915,3 +906,43 @@ class TestRemoteCausal:
             results["validations"][i]["level"]
             for i in range(len(results["validations"]))
         ]
+
+    def test_no_common_causes(self, simple_linear_dataset, init_ray):
+        np.random.seed(123)
+        (
+            pd_table,
+            treatments,
+            outcomes,
+            effect_modifiers,
+            common_causes,
+        ) = simple_linear_dataset
+
+        # Ensure there is enough treatment control values
+        pd_table = treatment_values_filler(pd_table=pd_table)
+
+        model_params = [LinearDMLSingleBinaryTreatmentParams(min_samples_leaf=5)]
+
+        results = infer_causal(
+            pd_table=pd_table,
+            treatments=treatments,
+            outcomes=outcomes,
+            effect_modifiers=effect_modifiers,
+            common_causes=None,
+            model_params=model_params,
+            ag_hyperparameters=unittest_hyperparameters(),
+            drop_unique=True,
+            drop_useless_features=False,
+        )
+        assert results["status"] == "SUCCESS"
+        assert all(
+            [
+                k in results["data"]
+                for k in [
+                    "effect",
+                    "controls",
+                    "causal_graph_dot",
+                    "tree_interpreter_dot",
+                    "refutation_results",
+                ]
+            ]
+        )
