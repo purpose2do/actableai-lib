@@ -42,19 +42,27 @@ class AAIModelInference:
 
         self.task_models = {}
         self.s3_prefix = s3_prefix
+        self.s3_bucket_name = s3_bucket
 
         s3 = boto3.resource("s3")
-        self.bucket = s3.Bucket(s3_bucket)
+        self.bucket = s3.Bucket(self.s3_bucket_name)
+
+    def _get_model_path(self, task_id):
+        """
+        TODO write documentation
+        """
+        import os
+
+        return os.path.join(self.s3_prefix, task_id, "model.p")
 
     def _load_model(self, task_id):
         """
         TODO write documentation
         """
-        import os
         import pickle
         from botocore.exceptions import ClientError
 
-        path = os.path.join(self.s3_prefix, task_id, "model.p")
+        path = self._get_model_path(task_id)
         obj = self.bucket.Object(path)
         try:
             raw_model = obj.get()["Body"].read()
@@ -78,6 +86,7 @@ class AAIModelInference:
                 raise InvalidTaskIdError()
             else:
                 return None
+
         return self.task_models[task_id]
 
     def predict(
@@ -179,3 +188,32 @@ class AAIModelInference:
             metadata["class_labels"] = class_labels
 
         return metadata
+
+    def is_model_available(self, task_id):
+        """
+        TODO write documentation
+        """
+        import boto3
+
+        if self.is_model_loaded(task_id):
+            return True
+
+        s3_client = boto3.client("s3")
+        object_list = s3_client.list_objects_v2(
+            Bucket=self.s3_bucket_name, Prefix=self._get_model_path(task_id)
+        )
+
+        return "Contents" in object_list and len(object_list["Contents"]) > 0
+
+    def is_model_loaded(self, task_id):
+        """
+        TODO write documentation
+        """
+        return task_id in self.task_models
+
+    def unload_model(self, task_id):
+        """
+        TODO write documentation
+        """
+        if self.is_model_loaded(task_id):
+            del self.task_models[task_id]
