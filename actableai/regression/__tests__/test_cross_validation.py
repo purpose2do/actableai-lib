@@ -57,6 +57,14 @@ def test_cross_validation():
     )
 
     assert important_features is not None
+    assert isinstance(important_features, list)
+    assert len(important_features) == 1
+    assert set([x["feature"] for x in important_features]) == set(["x"])
+    assert "feature" in important_features[0]
+    assert "importance" in important_features[0]
+    assert "importance_std_err" in important_features[0]
+    assert "p_value" in important_features[0]
+    assert "p_value_std_err" in important_features[0]
     assert evaluate is not None
     assert predictions is not None
     assert predict_shap_values is not None

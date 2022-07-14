@@ -100,7 +100,15 @@ def run_cross_validation(
     time_limit: Optional[int],
     drop_unique: bool,
     drop_useless_features: bool,
-) -> Tuple[AverageEnsembleClassifier, list, dict, list, pd.DataFrame, pd.DataFrame]:
+) -> Tuple[
+    AverageEnsembleClassifier,
+    list,
+    dict,
+    list,
+    pd.DataFrame,
+    pd.DataFrame,
+    pd.DataFrame,
+]:
     """Runs a cross validation for a classification task.
 
     Args:
@@ -195,6 +203,7 @@ def run_cross_validation(
     # Combine results
     cross_val_predictors = []
     cross_val_leaderboard = []
+    cross_val_important_p_value_features = {}
     cross_val_important_features = {}
     cross_val_evaluates = {}
     cross_val_auc_curves = {}
@@ -225,9 +234,13 @@ def run_cross_validation(
         for feature in important_features:
             if feature["feature"] not in cross_val_important_features:
                 cross_val_important_features[feature["feature"]] = []
-
+            if feature["feature"] not in cross_val_important_p_value_features:
+                cross_val_important_p_value_features[feature["feature"]] = []
             cross_val_important_features[feature["feature"]].append(
-                feature["importance"]
+                feature["importance"],
+            )
+            cross_val_important_p_value_features[feature["feature"]].append(
+                feature["p_value"],
             )
 
         for metric in evaluate:
@@ -267,6 +280,9 @@ def run_cross_validation(
                 "feature": k,
                 "importance": np.mean(cross_val_important_features[k]),
                 "importance_std_err": np.std(cross_val_important_features[k]) / sqrt_k,
+                "p_value": np.mean(cross_val_important_p_value_features[k]),
+                "p_value_std_err": np.std(cross_val_important_p_value_features[k])
+                / sqrt_k,
             }
         )
     important_features = sorted(

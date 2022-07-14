@@ -53,6 +53,10 @@ class TestRemoteClassification:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
 
@@ -77,6 +81,10 @@ class TestRemoteClassification:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
 
@@ -100,6 +108,10 @@ class TestRemoteClassification:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
 
     def test_datetime(self, classification_task, tmp_path):
         from datetime import datetime
@@ -124,6 +136,10 @@ class TestRemoteClassification:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
 
     def test_extra_columns(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -137,6 +153,10 @@ class TestRemoteClassification:
         r = run_classification_task(classification_task, tmp_path, df, "y", ["x1"])
         assert r["status"] == "SUCCESS"
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x1"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert len(r["data"]["importantFeatures"]) == 1
 
     def test_numeric_and_categorical_and_datetime(self, classification_task, tmp_path):
@@ -169,6 +189,10 @@ class TestRemoteClassification:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x1", "x2", "x3"]
+            assert "importance" in feat
+            assert "p_value" in feat
 
     def test_multiclass_num(self, classification_task, tmp_path):
         """
@@ -193,6 +217,10 @@ class TestRemoteClassification:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
 
     def test_multiclass_cat(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -214,6 +242,10 @@ class TestRemoteClassification:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
 
     def test_mix_target_column(self, classification_task, tmp_path):
         from datetime import datetime
@@ -340,6 +372,10 @@ class TestRemoteClassification:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x1", "x2"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert len(r["validations"]) > 0
         assert r["validations"][0]["name"] == "DoNotContainEmptyColumnsChecker"
         assert r["validations"][0]["level"] == CheckLevels.WARNING
@@ -382,6 +418,10 @@ class TestRemoteClassification:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x1"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert len(r["validations"]) >= 1
         assert r["validations"][0]["name"] == "IsSufficientClassSampleChecker"
 
@@ -421,6 +461,10 @@ class TestRemoteClassification:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
 
     def test_suggest_analytic(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -442,6 +486,10 @@ class TestRemoteClassification:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["y"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert len(r["validations"]) >= 1
         assert r["validations"][0]["name"] == "CorrectAnalyticChecker"
         assert r["validations"][0]["level"] == CheckLevels.WARNING
@@ -469,6 +517,11 @@ class TestRemoteClassification:
         assert r["status"] == "SUCCESS"
         assert len(r["data"]["validation_shaps"]) > 0
         assert len(r["data"]["predict_shaps"]) > 0
+        assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x", "z"]
+            assert "importance" in feat
+            assert "p_value" in feat
 
     def test_boolean_str_target_column(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -502,6 +555,10 @@ class TestRemoteClassification:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
 
     def test_boolean_target_column(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -524,6 +581,10 @@ class TestRemoteClassification:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
 
     def test_drop_duplicates(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -573,6 +634,10 @@ class TestRemoteClassification:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
 
@@ -626,6 +691,10 @@ class TestRemoteClassification:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
 
@@ -657,10 +726,13 @@ class TestRemoteClassificationCrossValidation:
         assert "accuracy_std_err" in evaluate
         assert "confusion_matrix" in evaluate
         assert "confusion_matrix_std_err" in evaluate
+        assert "importantFeatures" in r["data"]
         for feat in important_features:
             assert "feature" in feat
             assert "importance" in feat
             assert "importance_std_err" in feat
+            assert "p_value" in feat
+            assert "p_value_std_err" in feat
 
     # def test_cross_val_with_explain(self):
     # import ray
@@ -703,10 +775,13 @@ class TestRemoteClassificationCrossValidation:
         assert "accuracy_std_err" in evaluate
         assert "confusion_matrix" in evaluate
         assert "confusion_matrix_std_err" in evaluate
+        assert "importantFeatures" in r["data"]
         for feat in important_features:
             assert "feature" in feat
             assert "importance" in feat
             assert "importance_std_err" in feat
+            assert "p_value" in feat
+            assert "p_value_std_err" in feat
 
     def test_cross_val_with_text_fail(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -768,6 +843,12 @@ class TestRemoteClassificationCrossValidation:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert "feature" in feat
+            assert "importance" in feat
+            assert "importance_std_err" in feat
+            assert "p_value" in feat
+            assert "p_value_std_err" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
         assert "debiasing_charts" in r["data"]
@@ -845,6 +926,10 @@ class TestDebiasing:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert "feature" in feat
+            assert "importance" in feat
+            assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
         assert "debiasing_charts" in r["data"]
@@ -954,6 +1039,10 @@ class TestDebiasing:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert "feature" in feat
+            assert "importance" in feat
+            assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
         assert "debiasing_charts" in r["data"]
@@ -1029,6 +1118,10 @@ class TestDebiasing:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert "feature" in feat
+            assert "importance" in feat
+            assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
         assert "debiasing_charts" in r["data"]

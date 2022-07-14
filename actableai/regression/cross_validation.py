@@ -2,8 +2,6 @@ import pandas as pd
 from typing import Dict, List, Optional, Tuple
 
 from actableai.classification.utils import leaderboard_cross_val
-from actableai.tasks import TaskType
-from actableai.tasks.base import AAITask
 from actableai.tasks.regression import _AAIRegressionTrainTask
 
 
@@ -77,7 +75,6 @@ def run_cross_validation(
     import pandas as pd
     from multiprocessing.pool import ThreadPool
     from sklearn.model_selection import KFold
-    from functools import reduce
 
     # Run trainers
     kf = KFold(n_splits=kfolds, shuffle=True)
@@ -124,6 +121,7 @@ def run_cross_validation(
 
     # Combine results
     cross_val_important_features = {}
+    cross_val_important_p_value_features = {}
     cross_val_evaluates = {}
     cross_val_predict_shap_values = []
     cross_val_predictions = []
@@ -161,8 +159,13 @@ def run_cross_validation(
         for feature in important_features:
             if feature["feature"] not in cross_val_important_features:
                 cross_val_important_features[feature["feature"]] = []
+            if feature["feature"] not in cross_val_important_p_value_features:
+                cross_val_important_p_value_features[feature["feature"]] = []
             cross_val_important_features[feature["feature"]].append(
-                feature["importance"]
+                feature["importance"],
+            )
+            cross_val_important_p_value_features[feature["feature"]].append(
+                feature["p_value"],
             )
 
         for metric in evaluate:
@@ -198,6 +201,9 @@ def run_cross_validation(
                 "feature": k,
                 "importance": np.mean(cross_val_important_features[k]),
                 "importance_std_err": np.std(cross_val_important_features[k]) / sqrt_k,
+                "p_value": np.mean(cross_val_important_p_value_features[k]),
+                "p_value_std_err": np.std(cross_val_important_p_value_features[k])
+                / sqrt_k,
             }
         )
     important_features = sorted(
@@ -219,7 +225,7 @@ def run_cross_validation(
             "MEDIAN_ABSOLUTE_ERROR_std_err": np.std(
                 cross_val_evaluates["MEDIAN_ABSOLUTE_ERROR"]
             )
-                                             / sqrt_k,
+            / sqrt_k,
         }
 
         evaluate["metrics"] = pd.DataFrame(
@@ -270,9 +276,7 @@ def run_cross_validation(
     prediction_high = None
     if run_model:
         if explain_samples:
-            predict_shap_values = np.mean(
-                cross_val_predict_shap_values, axis=0
-            )
+            predict_shap_values = np.mean(cross_val_predict_shap_values, axis=0)
 
         predictions = np.mean(cross_val_predictions, axis=0).tolist()
         if prediction_quantile_low is not None:

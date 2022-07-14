@@ -165,13 +165,17 @@ class _AAIClassificationTrainTask(AAITask):
 
         # Evaluate results
         important_features = []
-        for feature, importance in predictor.feature_importance(df_val)[
-            "importance"
-        ].iteritems():
-            if feature in biased_groups:
+        feature_importance = predictor.feature_importance(df_train)
+        for i in range(len(feature_importance)):
+            if feature_importance.index[i] in biased_groups:
                 continue
-
-            important_features.append({"feature": feature, "importance": importance})
+            important_features.append(
+                {
+                    "feature": feature_importance.index[i],
+                    "importance": feature_importance["importance"][i],
+                    "p_value": feature_importance["p_value"][i],
+                }
+            )
 
         label_val = df_val[target]
         label_pred = predictor.predict(df_val)

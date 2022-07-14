@@ -1,5 +1,4 @@
 import pandas as pd
-from numpy import positive
 from tempfile import mkdtemp
 
 from actableai.classification.cross_validation import run_cross_validation
@@ -12,6 +11,7 @@ def test_run_cross_validation():
     df_train = pd.DataFrame(
         {
             "x": [x for x in range(0, 100)],
+            "z": [x for x in range(100, 200)],
             "y": ["a" for y in range(100, 150)] + ["b" for y in range(150, 200)],
         }
     )
@@ -34,7 +34,7 @@ def test_run_cross_validation():
         hyperparameters=unittest_hyperparameters(),
         model_directory=mkdtemp(prefix="autogluon_model"),
         target="y",
-        features=["x"],
+        features=["x", "z"],
         run_model=False,
         df_train=df_train,
         df_test=None,
@@ -51,6 +51,15 @@ def test_run_cross_validation():
     )
 
     assert important_features is not None
+    assert isinstance(important_features, list)
+    assert len(important_features) == 2
+    assert set([x["feature"] for x in important_features]) == set(["x", "z"])
+    for i in range(2):
+        assert "feature" in important_features[i]
+        assert "importance" in important_features[i]
+        assert "importance_std_err" in important_features[i]
+        assert "p_value" in important_features[i]
+        assert "p_value_std_err" in important_features[i]
     assert evaluate is not None
     assert ensemble_model is not None
     assert df_val_cross_val_pred_prob is not None
