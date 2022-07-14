@@ -9,9 +9,9 @@ RUN apt-get update -y \
 
 COPY ./requirements.txt ./
 
-RUN pip install --upgrade pip setuptools && \
-    pip install -r requirements.txt && \
-    pip install sphinx==4.5.0 maisie-sphinx-theme==0.1.2
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt \
+    && pip install sphinx==4.5.0 maisie-sphinx-theme==0.1.2
 
 COPY . .
 
