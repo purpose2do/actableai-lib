@@ -96,6 +96,31 @@ class TestCausalDataValidator:
         assert "IsSufficientDataChecker" in validations_dict
         assert validations_dict["IsSufficientDataChecker"] == CheckLevels.CRITICAL
 
+    def test_validate_only_one_value_checker(self):
+        df = pd.DataFrame(
+            {
+                "x": ["a", "a", "a", "a", "a"],
+                "y": ["a", "a", "a", "a", "a"],
+                "z": ["a", "a", "a", "a", "a"],
+                "t": rands_array(10, 5),
+            }
+        )
+
+        validation_results = CausalDataValidator().validate(
+            treatments=["x"],
+            outcomes=["t"],
+            df=df,
+            effect_modifiers=[],
+            common_causes=["y", "z"],
+            positive_outcome_value=None,
+        )
+
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "OnlyOneValueChecker" in validations_dict
+        assert validations_dict["OnlyOneValueChecker"] == CheckLevels.CRITICAL
+
     def test_validate_nan_outcome(self):
         df = pd.DataFrame(
             {
@@ -173,6 +198,36 @@ class TestRegressionDataValidator:
         assert "ColumnsExistChecker" in validations_dict
         assert validations_dict["ColumnsExistChecker"] == CheckLevels.CRITICAL
 
+    def test_validate_only_one_value_checker(self):
+        df = pd.DataFrame(
+            {
+                "x": ["a", "a", "a", "a", "a"],
+                "y": ["a", "a", "a", "a", "a"],
+                "z": ["a", "a", "a", "a", "a"],
+                "t": rands_array(10, 5),
+            }
+        )
+
+        validation_results = RegressionDataValidator().validate(
+            target="t",
+            features=["x", "y", "z"],
+            df=df,
+            debiasing_features=[],
+            debiased_features=[],
+            eval_metric="r2",
+            prediction_quantile_low=None,
+            prediction_quantile_high=None,
+            presets="medium_quality_faster_train",
+            explain_samples=False,
+            drop_duplicates=True,
+        )
+
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "OnlyOneValueChecker" in validations_dict
+        assert validations_dict["OnlyOneValueChecker"] == CheckLevels.CRITICAL
+
 
 class TestClassificationDataValidator:
     def test_validate(self):
@@ -220,6 +275,32 @@ class TestClassificationDataValidator:
         }
         assert "ROCAUCChecker" in validations_dict
         assert validations_dict["ROCAUCChecker"] == CheckLevels.CRITICAL
+
+    def test_validate_only_one_value_checker(self):
+        df = pd.DataFrame(
+            {
+                "x": ["a", "a", "a", "a", "a"],
+                "y": ["a", "a", "a", "a", "a"],
+                "z": ["a", "a", "a", "a", "a"],
+                "t": rands_array(10, 5),
+            }
+        )
+
+        validation_results = ClassificationDataValidator().validate(
+            target="x",
+            features=["x", "y", "z"],
+            debiased_features=[],
+            debiasing_features=[],
+            df=df,
+            eval_metric="roc_auc",
+            presets="medium_quality_faster_train",
+        )
+
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "OnlyOneValueChecker" in validations_dict
+        assert validations_dict["OnlyOneValueChecker"] == CheckLevels.CRITICAL
 
 
 class TestCorrelationDataValidator:
@@ -358,6 +439,31 @@ class TestInterventionDataValidator:
         }
         assert "StratifiedKFoldChecker" in validations_dict
         assert validations_dict["StratifiedKFoldChecker"] == CheckLevels.CRITICAL
+
+    def test_validate_only_one_value_checker(self):
+        df = pd.DataFrame(
+            {
+                "x": ["a", "a", "a", "a", "a"],
+                "y": ["a", "a", "a", "a", "a"],
+                "z": ["a", "a", "a", "a", "a"],
+                "t": ["a", "a", "a", "a", "a"],
+            }
+        )
+
+        validation_results = InterventionDataValidator().validate(
+            df=df,
+            target="x",
+            current_intervention_column="y",
+            new_intervention_column="z",
+            common_causes=["t"],
+            causal_cv=1,
+        )
+
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "OnlyOneValueChecker" in validations_dict
+        assert validations_dict["OnlyOneValueChecker"] == CheckLevels.CRITICAL
 
 
 class TestAssociationRulesDataValidator:
