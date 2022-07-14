@@ -23,7 +23,7 @@ def test_run_cross_validation():
         predict_shap_values,
         df_val,
         leaderboard,
-    ) = run_cross_validation(  # type: ignore
+    ) = run_cross_validation(
         classification_train_task=task,
         problem_type="binary",
         explain_samples=False,

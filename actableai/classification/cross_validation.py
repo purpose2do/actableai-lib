@@ -100,7 +100,15 @@ def run_cross_validation(
     time_limit: Optional[int],
     drop_unique: bool,
     drop_useless_features: bool,
-) -> Tuple[AverageEnsembleClassifier, list, dict, list, pd.DataFrame, pd.DataFrame]:
+) -> Tuple[
+    AverageEnsembleClassifier,
+    list,
+    dict,
+    list,
+    pd.DataFrame,
+    pd.DataFrame,
+    pd.DataFrame,
+]:
     """Runs a cross validation for a classification task.
 
     Args:
