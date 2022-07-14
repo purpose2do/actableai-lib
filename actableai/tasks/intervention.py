@@ -91,6 +91,8 @@ class AAIInterventionTask(AAITask):
             model_directory = mkdtemp(prefix="autogluon_model")
         if common_causes is None:
             common_causes = []
+        if len(common_causes) == 0:
+            drop_unique = False
         if presets is None:
             presets = "medium_quality_faster_train"
         if causal_hyperparameters is None:

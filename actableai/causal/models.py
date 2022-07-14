@@ -3,37 +3,20 @@ import pandas as pd
 import time
 from autogluon.tabular import TabularPredictor
 from autogluon.features.generators import AutoMLPipelineFeatureGenerator
-from econml.dml import DML, CausalForestDML, NonParamDML, SparseLinearDML, LinearDML
-from econml.drlearner import DRLearner
+from econml.dml import LinearDML
 from econml.iv.nnet import DeepIV
-from econml.metalearners import DomainAdaptationLearner, SLearner, XLearner
-from econml.score.rscorer import RScorer
+from econml.metalearners import DomainAdaptationLearner
 from hyperopt import hp
-from itertools import product
 from ray import tune
 from ray.tune.suggest import ConcurrencyLimiter
 from ray.tune.suggest.hyperopt import HyperOptSearch
 from sklearn.ensemble import IsolationForest
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.ensemble import VotingRegressor, VotingClassifier
-from sklearn.inspection import permutation_importance
-from sklearn.linear_model import (
-    Lasso,
-    LassoCV,
-    LinearRegression,
-    LogisticRegression,
-    LogisticRegressionCV,
-    MultiTaskElasticNet,
-    MultiTaskElasticNetCV,
-)
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import PolynomialFeatures
 from typing import Optional, Union
 
 from actableai.causal import autogluon_hyperparameters
-from actableai.causal.params import SparseLinearDMLSingleContTreatmentAGParams
-from actableai.causal.predictors import SKLearnWrapper, LinearRegressionWrapper
+from actableai.causal.predictors import SKLearnWrapper
 from actableai.regression import PolynomialLinearPredictor
 from actableai.utils import random_directory
 from actableai.utils.sklearn import sklearn_canonical_pipeline
@@ -157,6 +140,8 @@ class AAICausalEstimator:
         start = time.time()
 
         automl_pipeline_feature_parameters = {}
+        if X is None:
+            drop_unique = False
         if not drop_useless_features:
             automl_pipeline_feature_parameters["pre_drop_useless"] = False
             automl_pipeline_feature_parameters["post_generators"] = []
