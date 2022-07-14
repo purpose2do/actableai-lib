@@ -11,7 +11,6 @@ COPY ./requirements.txt ./
 
 RUN pip install --upgrade pip setuptools && \
     pip install -r requirements.txt && \
-    pip install --no-deps -vvv -e . && \
     pip install sphinx==4.5.0 maisie-sphinx-theme==0.1.2
 
 COPY . .
