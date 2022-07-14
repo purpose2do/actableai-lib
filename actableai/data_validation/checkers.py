@@ -1086,6 +1086,8 @@ class OnlyOneValueChecker(IChecker):
         Returns:
             Optional[CheckResult]: Check result.
         """
+        if features is None or len(features) == 0:
+            return None
         all_unique = df[features].apply(lambda x: x.unique().size == 1).all()
         if all_unique:
             return CheckResult(
