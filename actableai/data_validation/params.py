@@ -67,6 +67,7 @@ class RegressionDataValidator:
         presets="medium_quality_faster_train",
         explain_samples=False,
         drop_duplicates=True,
+        drop_unique=True,
     ):
         use_quantiles = (
             prediction_quantile_low is not None and prediction_quantile_high is not None
@@ -122,7 +123,9 @@ class RegressionDataValidator:
             ColumnsInList(level=CheckLevels.CRITICAL).check(
                 features, debiased_features
             ),
-            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features),
+            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(
+                df, features, drop_unique=drop_unique
+            ),
         ]
 
         if target in df.columns and not pd.isnull(df[target]).all():
@@ -263,6 +266,7 @@ class ClassificationDataValidator:
         drop_duplicates=True,
         explain_samples=False,
         eval_metric: str = "accuracy",
+        drop_unique=True,
     ):
         validation_results = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
@@ -305,7 +309,9 @@ class ClassificationDataValidator:
             ColumnsInList(level=CheckLevels.CRITICAL).check(
                 features, debiased_features
             ),
-            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features),
+            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(
+                df, features, drop_unique
+            ),
         ]
 
         if target in df.columns and not pd.isnull(df[target]).all():

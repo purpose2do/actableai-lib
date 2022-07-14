@@ -1076,7 +1076,9 @@ class OnlyOneValueChecker(IChecker):
         self.name = name
         self.level = level
 
-    def check(self, df: pd.DataFrame, features: List[str]) -> Optional[CheckResult]:
+    def check(
+        self, df: pd.DataFrame, features: List[str], drop_unique=True
+    ) -> Optional[CheckResult]:
         """Check that all features have only one value.
 
         Args:
@@ -1086,7 +1088,7 @@ class OnlyOneValueChecker(IChecker):
         Returns:
             Optional[CheckResult]: Check result.
         """
-        if features is None or len(features) == 0:
+        if not drop_unique or features is None or len(features) == 0:
             return None
         all_unique = df[features].apply(lambda x: x.unique().size == 1).all()
         if all_unique:
