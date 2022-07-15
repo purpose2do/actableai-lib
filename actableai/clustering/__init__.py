@@ -27,10 +27,11 @@ class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
         for i in range(X.shape[1]):
             self.feature_links.append([])
             # Skipping columns with only unique values
+            column_value = X.iloc[:, i]
+            unique_column_value = np.unique(column_value)
             if self.drop_low_info and (
-                len(np.unique(X.iloc[:, i]))
-                == len(X.iloc[:, i])  # Every values are unique
-                or len(np.unique(X.iloc[:, i])) == 1  # Only one value
+                unique_column_value == len(column_value)  # Every values are unique
+                or len(unique_column_value) == 1  # Only one value
             ):
                 t = FunctionTransformer(lambda x: x)
                 self.feature_links[-1].append(final_feature_count)
