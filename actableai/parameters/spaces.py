@@ -47,4 +47,4 @@ class SearchSpace(BaseModel):
     TODO write documentation
     """
 
-    space: List[BaseParameter]
+    space: Dict[str, BaseParameter]

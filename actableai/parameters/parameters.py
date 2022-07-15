@@ -88,4 +88,4 @@ class Parameters(BaseModel):
     TODO write documentation
     """
 
-    parameters: List[BaseParameter]
+    parameters: Dict[str, BaseParameter]
