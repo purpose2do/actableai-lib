@@ -114,6 +114,7 @@ class AAIInterventionTask(AAITask):
             new_intervention_column,
             common_causes,
             causal_cv,
+            drop_unique,
         )
         failed_checks = [
             check for check in data_validation_results if check is not None

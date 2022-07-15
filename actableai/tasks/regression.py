@@ -408,6 +408,7 @@ class AAIRegressionTask(AAITask):
             presets,
             explain_samples,
             drop_duplicates,
+            drop_unique=drop_unique,
         )
         failed_checks = [
             check for check in data_validation_results if check is not None

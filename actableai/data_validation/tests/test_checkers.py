@@ -15,6 +15,7 @@ from actableai.data_validation.checkers import (
     IsSufficientClassSampleChecker,
     MaxTrainSamplesChecker,
     NoFrequentItemSet,
+    OnlyOneValueChecker,
     PositiveOutcomeValueThreshold,
     ROCAUCChecker,
     SameTypeChecker,
@@ -338,3 +339,23 @@ class TestROCAUCChecker:
         assert result is not None
         assert result.name == "ROCAUCChecker"
         assert result.level == CheckLevels.CRITICAL
+
+
+class TestOnlyOneValueChecker:
+    def test_check(self):
+        checker = OnlyOneValueChecker(
+            level=CheckLevels.CRITICAL, name="OnlyOneValueChecker"
+        )
+        df = pd.DataFrame({"x": [1, 1, 1], "y": [1, 1, 1], "z": [1, 2, 3]})
+        result = checker.check(df, ["x", "y"])
+        assert result is not None
+        assert result.name == "OnlyOneValueChecker"
+        assert result.level == CheckLevels.CRITICAL
+
+    def test_none_check(self):
+        checker = OnlyOneValueChecker(
+            level=CheckLevels.CRITICAL, name="OnlyOneValueChecker"
+        )
+        df = pd.DataFrame({"x": [1, 1, 1], "y": [1, 1, 1], "z": [1, 2, 3]})
+        result = checker.check(df, ["x", "y", "z"])
+        assert result is None

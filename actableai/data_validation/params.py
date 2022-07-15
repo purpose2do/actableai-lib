@@ -42,6 +42,7 @@ from actableai.data_validation.checkers import (
     IsValidPredictionLengthChecker,
     IsValidTypeNumberOfClusterChecker,
     MaxTrainSamplesChecker,
+    OnlyOneValueChecker,
     PositiveOutcomeValueThreshold,
     ROCAUCChecker,
     RegressionEvalMetricChecker,
@@ -66,6 +67,7 @@ class RegressionDataValidator:
         presets="medium_quality_faster_train",
         explain_samples=False,
         drop_duplicates=True,
+        drop_unique=True,
     ):
         use_quantiles = (
             prediction_quantile_low is not None and prediction_quantile_high is not None
@@ -122,6 +124,10 @@ class RegressionDataValidator:
                 features, debiased_features
             ),
         ]
+        if drop_unique:
+            validation_results.append(
+                OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features)
+            )
 
         if target in df.columns and not pd.isnull(df[target]).all():
             validation_results += [
@@ -261,6 +267,7 @@ class ClassificationDataValidator:
         drop_duplicates=True,
         explain_samples=False,
         eval_metric: str = "accuracy",
+        drop_unique=True,
     ):
         validation_results = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
@@ -304,6 +311,10 @@ class ClassificationDataValidator:
                 features, debiased_features
             ),
         ]
+        if drop_unique:
+            validation_results.append(
+                OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features)
+            )
 
         if target in df.columns and not pd.isnull(df[target]).all():
             validation_results += [
@@ -591,6 +602,7 @@ class CausalDataValidator:
         effect_modifiers: List[str],
         common_causes: List[str],
         positive_outcome_value: Optional[Any],
+        drop_unique: bool,
     ) -> List[Union[CheckResult, None]]:
         columns = effect_modifiers + common_causes
         validation_results = [
@@ -619,6 +631,17 @@ class CausalDataValidator:
                 df, n_sample=MINIMUM_NUMBER_OF_SAMPLE
             ),
         ]
+        if drop_unique:
+            validation_results.append(
+                OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, common_causes)
+            )
+            if len(common_causes) == 0:
+                validation_results.append(
+                    OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(
+                        df, treatments
+                    )
+                )
+
         for t in set(treatments):
             validation_results.append(
                 DoNotContainMixedChecker(level=CheckLevels.CRITICAL).check(df, [t])
@@ -699,6 +722,7 @@ class InterventionDataValidator:
         new_intervention_column: str,
         common_causes: List[str],
         causal_cv,
+        drop_unique: bool,
     ):
         validations = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
@@ -719,6 +743,16 @@ class InterventionDataValidator:
                 df, [current_intervention_column, new_intervention_column]
             ),
         ]
+        if drop_unique:
+            validations.append(
+                OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, common_causes)
+            )
+            if len(common_causes) == 0:
+                validations.append(
+                    OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(
+                        df, [current_intervention_column]
+                    )
+                )
         if get_type_special_no_ag(df[current_intervention_column]) == "category":
             validations.append(
                 CategoricalSameValuesChecker(level=CheckLevels.CRITICAL).check(
