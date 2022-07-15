@@ -66,7 +66,7 @@ class TestCausalDataValidator:
         )
 
         validation_results = CausalDataValidator().validate(
-            ["x"], ["y"], df, [], [], None
+            ["x"], ["y"], df, [], [], None, False
         )
 
         validations_dict = {
@@ -87,7 +87,7 @@ class TestCausalDataValidator:
         df["x"] = np.nan
 
         validation_results = CausalDataValidator().validate(
-            ["x"], ["y"], df, [], [], None
+            ["x"], ["y"], df, [], [], None, False
         )
 
         validations_dict = {
@@ -113,6 +113,7 @@ class TestCausalDataValidator:
             effect_modifiers=[],
             common_causes=["y", "z"],
             positive_outcome_value=None,
+            drop_unique=True,
         )
 
         validations_dict = {
@@ -133,7 +134,7 @@ class TestCausalDataValidator:
         df["y"] = np.nan
 
         validation_results = CausalDataValidator().validate(
-            ["x"], ["y"], df, [], [], None
+            ["x"], ["y"], df, [], [], None, False
         )
 
         validations_dict = {
@@ -152,7 +153,9 @@ class TestCausalDataValidator:
             }
         )
 
-        validation_results = CausalDataValidator().validate(["x"], ["y"], df, [], [], 1)
+        validation_results = CausalDataValidator().validate(
+            ["x"], ["y"], df, [], [], 1, False
+        )
 
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
@@ -360,6 +363,7 @@ class TestInterventionDataValidator:
             new_intervention_column="b",
             common_causes=["t"],
             causal_cv=1,
+            drop_unique=False,
         )
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
@@ -384,6 +388,7 @@ class TestInterventionDataValidator:
             new_intervention_column="z",
             common_causes=["t"],
             causal_cv=1,
+            drop_unique=False,
         )
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
@@ -408,6 +413,7 @@ class TestInterventionDataValidator:
             new_intervention_column="z",
             common_causes=["t"],
             causal_cv=1,
+            drop_unique=False,
         )
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
@@ -432,6 +438,7 @@ class TestInterventionDataValidator:
             new_intervention_column="z",
             common_causes=["t"],
             causal_cv=2,
+            drop_unique=False,
         )
 
         validations_dict = {
@@ -457,6 +464,7 @@ class TestInterventionDataValidator:
             new_intervention_column="z",
             common_causes=["t"],
             causal_cv=1,
+            drop_unique=True,
         )
 
         validations_dict = {
