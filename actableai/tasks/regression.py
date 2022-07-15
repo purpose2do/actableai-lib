@@ -385,6 +385,9 @@ class AAIRegressionTask(AAITask):
 
         run_debiasing = len(biased_groups) > 0 and len(debiased_features) > 0
 
+        if run_debiasing:
+            drop_useless_features = False
+
         # Pre process data
         df = df.fillna(np.nan)
 

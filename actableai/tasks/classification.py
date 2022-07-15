@@ -428,6 +428,9 @@ class AAIClassificationTask(AAITask):
         use_cross_validation = kfolds > 1
         run_debiasing = len(biased_groups) > 0 and len(debiased_features) > 0
 
+        if run_debiasing:
+            drop_useless_features = False
+
         # Validate parameters
         data_validation_results = ClassificationDataValidator().validate(
             target,
