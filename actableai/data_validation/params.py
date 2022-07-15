@@ -123,10 +123,11 @@ class RegressionDataValidator:
             ColumnsInList(level=CheckLevels.CRITICAL).check(
                 features, debiased_features
             ),
-            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(
-                df, features, drop_unique=drop_unique
-            ),
         ]
+        if drop_unique:
+            validation_results.append(
+                OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features)
+            )
 
         if target in df.columns and not pd.isnull(df[target]).all():
             validation_results += [
@@ -309,10 +310,11 @@ class ClassificationDataValidator:
             ColumnsInList(level=CheckLevels.CRITICAL).check(
                 features, debiased_features
             ),
-            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(
-                df, features, drop_unique
-            ),
         ]
+        if drop_unique:
+            validation_results.append(
+                OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features)
+            )
 
         if target in df.columns and not pd.isnull(df[target]).all():
             validation_results += [
@@ -600,6 +602,7 @@ class CausalDataValidator:
         effect_modifiers: List[str],
         common_causes: List[str],
         positive_outcome_value: Optional[Any],
+        drop_unique: bool,
     ) -> List[Union[CheckResult, None]]:
         columns = effect_modifiers + common_causes
         validation_results = [
@@ -627,11 +630,18 @@ class CausalDataValidator:
             IsSufficientDataChecker(level=CheckLevels.CRITICAL).check(
                 df, n_sample=MINIMUM_NUMBER_OF_SAMPLE
             ),
-            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, common_causes),
-            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, treatments)
-            if len(common_causes) == 0
-            else None,
         ]
+        if drop_unique:
+            validation_results.append(
+                OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, common_causes)
+            )
+            if len(common_causes) == 0:
+                validation_results.append(
+                    OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(
+                        df, treatments
+                    )
+                )
+
         for t in set(treatments):
             validation_results.append(
                 DoNotContainMixedChecker(level=CheckLevels.CRITICAL).check(df, [t])
@@ -712,6 +722,7 @@ class InterventionDataValidator:
         new_intervention_column: str,
         common_causes: List[str],
         causal_cv,
+        drop_unique: bool,
     ):
         validations = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
@@ -731,13 +742,17 @@ class InterventionDataValidator:
             SameTypeChecker(level=CheckLevels.CRITICAL).check(
                 df, [current_intervention_column, new_intervention_column]
             ),
-            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, common_causes),
-            OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(
-                df, [current_intervention_column]
-            )
-            if len(common_causes) == 0
-            else None,
         ]
+        if drop_unique:
+            validations.append(
+                OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, common_causes)
+            )
+            if len(common_causes) == 0:
+                validations.append(
+                    OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(
+                        df, [current_intervention_column]
+                    )
+                )
         if get_type_special_no_ag(df[current_intervention_column]) == "category":
             validations.append(
                 CategoricalSameValuesChecker(level=CheckLevels.CRITICAL).check(

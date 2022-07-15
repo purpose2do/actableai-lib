@@ -143,6 +143,7 @@ def infer_causal(
         effect_modifiers,
         common_causes,
         positive_outcome_value,
+        drop_unique,
     )
     failed_checks = [x for x in data_validation_results if x is not None]
 
