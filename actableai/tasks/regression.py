@@ -1,3 +1,4 @@
+import logging
 import pandas as pd
 from typing import Dict, List, Optional
 
@@ -384,6 +385,12 @@ class AAIRegressionTask(AAITask):
             train_task_params = {}
 
         run_debiasing = len(biased_groups) > 0 and len(debiased_features) > 0
+
+        if run_debiasing and drop_useless_features:
+            drop_useless_features = False
+            logging.warning(
+                "`drop_useless_features` is set to False: `run_debiasing` is True"
+            )
 
         # Pre process data
         df = df.fillna(np.nan)
