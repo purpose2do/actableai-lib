@@ -40,13 +40,6 @@ class Option(BaseModel, Generic[OptionT]):
     display_name: str
     value: OptionT
 
-    def dict(self, *args, **kwargs) -> Dict[str, Any]:
-        output_dict = super().dict(*args, **kwargs).copy()
-
-        output_dict["_label"] = output_dict["display_name"]
-
-        return output_dict
-
 
 class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
     """
@@ -57,16 +50,6 @@ class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
     is_multi: bool
     default: List[OptionT]
     options: Dict[OptionT, Option[OptionT]]
-
-    def dict(self, *args, **kwargs) -> Dict[str, Any]:
-        output_dict = super().dict(*args, **kwargs).copy()
-
-        output_dict["_default"] = [
-            output_dict["options"][option] for option in output_dict["default"]
-        ]
-        output_dict["_options"] = list(output_dict["options"].values())
-
-        return output_dict
 
 
 class FloatParameter(BaseParameter):
@@ -105,4 +88,4 @@ class Parameters(BaseModel):
     TODO write documentation
     """
 
-    parameters: List[BaseParameter]
+    parameters: Dict[str, BaseParameter]
