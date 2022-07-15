@@ -629,7 +629,7 @@ class CausalDataValidator:
             ),
             OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, common_causes),
             OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, treatments)
-            if len(common_causes) != 0
+            if len(common_causes) == 0
             else None,
         ]
         for t in set(treatments):
@@ -735,7 +735,7 @@ class InterventionDataValidator:
             OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(
                 df, [current_intervention_column]
             )
-            if len(common_causes) != 0
+            if len(common_causes) == 0
             else None,
         ]
         if get_type_special_no_ag(df[current_intervention_column]) == "category":
