@@ -1090,7 +1090,7 @@ class OnlyOneValueChecker(IChecker):
         """
         if not drop_unique or features is None or len(features) == 0:
             return None
-        all_unique = df[features].apply(lambda x: x.unique().size == 1).all()
+        all_unique = (df[features].nunique() == 1).all()
         if all_unique:
             return CheckResult(
                 name=self.name,
