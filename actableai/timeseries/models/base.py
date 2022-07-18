@@ -83,7 +83,7 @@ class AAITimeSeriesBaseModel(ABC):
         ray_tune_kwargs: Optional[Dict[str, Any]] = None,
         verbose: int = 1,
         fit_full: bool = True,
-    ) -> float:
+    ) -> Tuple[float, pd.DataFrame]:
         """Tune and fit the model.
 
         Args:
@@ -104,7 +104,8 @@ class AAITimeSeriesBaseModel(ABC):
                 (tuning data).
 
         Returns:
-            Total time spent for tuning.
+            - Total time spent for tuning.
+            - Leaderboard
         """
         raise NotImplementedError()
 

@@ -567,7 +567,7 @@ class AAIForecastTask(AAITask):
             real_dynamic_feature_columns=real_dynamic_feature_columns,
             cat_dynamic_feature_columns=cat_dynamic_feature_columns,
         )
-        total_trials_times = model.fit(
+        total_trials_times, df_leaderboard = model.fit(
             model_params=model_params,
             mx_ctx=mx_ctx,
             group_df_dict=group_df_train_dict,
@@ -626,6 +626,7 @@ class AAIForecastTask(AAITask):
                     "agg_metrics": df_agg_metrics,
                     "item_metrics": df_item_metrics,
                 },
+                "leaderboard": df_leaderboard,
             },
             "data": data,  # TODO remove legacy code
             "validations": [

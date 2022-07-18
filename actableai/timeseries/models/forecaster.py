@@ -158,7 +158,7 @@ class AAITimeSeriesForecaster:
         ray_tune_kwargs: Optional[Dict[str, Any]] = None,
         verbose: int = 1,
         fit_full: bool = True,
-    ) -> float:
+    ) -> Tuple[float, pd.DataFrame]:
         """Tune and fit the model.
 
         Args:
@@ -184,7 +184,8 @@ class AAITimeSeriesForecaster:
                 (tuning data).
 
         Returns:
-            Total time spent for tuning.
+            - Total time spent for tuning.
+            - Leaderboard
         """
         if df is None and group_df_dict is None:
             raise Exception("df or group_df_dict must be provided")
@@ -224,7 +225,7 @@ class AAITimeSeriesForecaster:
             real_dynamic_feature_columns=self.real_dynamic_feature_columns,
             cat_dynamic_feature_columns=self.cat_dynamic_feature_columns,
         )
-        multi_target_fit_time = multi_target_model.fit(
+        multi_target_fit_time, df_multi_target_leaderboard = multi_target_model.fit(
             group_df_dict=group_df_dict,
             model_params=univariate_model_params,
             mx_ctx=mx_ctx,
@@ -243,6 +244,7 @@ class AAITimeSeriesForecaster:
         # Train multivariate models
         multivariate_model = None
         multivariate_fit_time = 0
+        df_multivariate_leaderboard = None
         if len(self.target_columns) > 1 and len(multivariate_model_params) > 0:
             multivariate_model = AAITimeSeriesSingleModel(
                 target_columns=self.target_columns,
@@ -255,7 +257,7 @@ class AAITimeSeriesForecaster:
                 cat_dynamic_feature_columns=self.cat_dynamic_feature_columns,
             )
 
-            multivariate_fit_time = multivariate_model.fit(
+            multivariate_fit_time, df_multivariate_leaderboard = multivariate_model.fit(
                 group_df_dict=group_df_dict,
                 model_params=multivariate_model_params,
                 mx_ctx=mx_ctx,
@@ -295,7 +297,13 @@ class AAITimeSeriesForecaster:
         if fit_full:
             self.model.refit(group_df_dict=group_df_dict)
 
-        return multi_target_fit_time + multivariate_fit_time + time() - start_time
+        return (
+            multi_target_fit_time + multivariate_fit_time + time() - start_time,
+            pd.concat(
+                [df_multi_target_leaderboard, df_multivariate_leaderboard],
+                ignore_index=True,
+            ),
+        )
 
     def refit(
         self,
