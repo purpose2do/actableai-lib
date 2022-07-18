@@ -335,6 +335,7 @@ class AAIClassificationTask(AAITask):
         time_limit: Optional[int] = None,
         drop_unique: bool = True,
         drop_useless_features: bool = True,
+        temporal_splitter: Optional[str] = None,
     ) -> Dict:
         """Run this classification task and return results.
 
@@ -483,9 +484,14 @@ class AAIClassificationTask(AAITask):
         )
         df_val = None
         if not use_cross_validation:
-            df_train, df_val = train_test_split(
-                df_train, test_size=validation_ratio, stratify=df_train[target]
-            )
+            if temporal_splitter is not None:
+                sorted_df = df_train.sort_values(by=temporal_splitter, ascending=True)
+                df_train = sorted_df.head(int(len(sorted_df) * validation_ratio))
+                df_val = sorted_df.tail(int(len(sorted_df) * (1 - validation_ratio)))
+            else:
+                df_train, df_val = train_test_split(
+                    df_train, test_size=validation_ratio, stratify=df_train[target]
+                )
 
         df_test = df[pd.isnull(df[target])]
 
