@@ -30,7 +30,7 @@ class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
             column_value = X.iloc[:, i]
             unique_column_value = np.unique(column_value)
             if self.drop_low_info and (
-                unique_column_value == len(column_value)  # Every values are unique
+                len(unique_column_value) == len(column_value)  # Every values are unique
                 or len(unique_column_value) == 1  # Only one value
             ):
                 t = FunctionTransformer(lambda x: x)
