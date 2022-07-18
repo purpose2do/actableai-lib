@@ -147,6 +147,7 @@ class _AAIClassificationTrainTask(AAITask):
             feature_generator=AutoMLPipelineFeatureGenerator(**feature_generator_args),
             time_limit=time_limit,
             ag_args_ensemble={"fold_fitting_strategy": "sequential_local"},
+            feature_prune_kwargs={},
         )
 
         explainer = None
