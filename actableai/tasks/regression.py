@@ -283,7 +283,7 @@ class AAIRegressionTask(AAITask):
         time_limit: Optional[int] = None,
         drop_unique: bool = True,
         drop_useless_features: bool = True,
-        temporal_splitter: Optional[str] = None,
+        temporal_split_column: Optional[str] = None,
     ):
         """Run this regression task and return results.
 
@@ -384,7 +384,7 @@ class AAIRegressionTask(AAITask):
             model_directory = mkdtemp(prefix="autogluon_model")
         if train_task_params is None:
             train_task_params = {}
-        if temporal_splitter is not None and kfolds > 1:
+        if temporal_split_column is not None and kfolds > 1:
             raise ValueError(
                 "Temporal splitter is not supported for cross validation."
                 + "Set kfolds to 1 or temporal_splitter to None."
@@ -446,8 +446,10 @@ class AAIRegressionTask(AAITask):
             df_train = df_train.drop_duplicates(subset=features + [target])
         df_val = None
         if kfolds <= 1:
-            if temporal_splitter is not None:
-                sorted_df = df_train.sort_values(by=temporal_splitter, ascending=True)
+            if temporal_split_column is not None:
+                sorted_df = df_train.sort_values(
+                    by=temporal_split_column, ascending=True
+                )
                 df_train = sorted_df.head(int(len(sorted_df) * validation_ratio))
                 df_val = sorted_df.tail(int(len(sorted_df) * (1 - validation_ratio)))
             else:
