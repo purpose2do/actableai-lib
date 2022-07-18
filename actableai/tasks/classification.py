@@ -493,8 +493,8 @@ class AAIClassificationTask(AAITask):
                 sorted_df = df_train.sort_values(
                     by=temporal_split_column, ascending=True
                 )
-                df_train = sorted_df.head(int(len(sorted_df) * validation_ratio))
-                df_val = sorted_df.tail(int(len(sorted_df) * (1 - validation_ratio)))
+                df_train = sorted_df.head(int(len(sorted_df) * (1 - validation_ratio)))
+                df_val = sorted_df.tail(int(len(sorted_df) * (validation_ratio)))
             else:
                 df_train, df_val = train_test_split(
                     df_train, test_size=validation_ratio, stratify=df_train[target]
