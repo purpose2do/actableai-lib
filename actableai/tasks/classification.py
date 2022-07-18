@@ -435,6 +435,11 @@ class AAIClassificationTask(AAITask):
             logging.warning(
                 "`drop_useless_features` is set to False: `run_debiasing` is True"
             )
+        if temporal_split_column is not None and kfolds > 1:
+            raise ValueError(
+                "Temporal splitter is not supported for cross validation."
+                + "Set kfolds to 1 or temporal_splitter to None."
+            )
 
         # Validate parameters
         data_validation_results = ClassificationDataValidator().validate(
