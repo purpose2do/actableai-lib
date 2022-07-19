@@ -732,16 +732,12 @@ class TestRemoteClassification:
             assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
-        assert (
-            (
-                r["data"]["validation_table"]
-                == r["data"]["validation_table"].sort_values(
-                    by=["temporal_split"], ascending=True
-                )
-            )
-            .all()
-            .all()
+        validation_table = r["data"]["evaluate"]["validation_table"]
+        sorted_validation_table = validation_table.sort_values(
+            by="temporal_split", ascending=True
         )
+        # check that the validation table is sorted by temporal split
+        assert (validation_table == sorted_validation_table).all().all()
 
 
 class TestRemoteClassificationCrossValidation:
@@ -1022,10 +1018,7 @@ class TestDebiasing:
         df = DatasetGenerator.generate(
             columns_parameters=[
                 {"name": "x", "values": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2},
-                {
-                    "name": "y",
-                    "values": [1, 2, 1, 2, 1, None, 1, 2, 1, 2] * 2,
-                },
+                {"name": "y", "values": [1, 2, 1, 2, 1, None, 1, 2, 1, 2] * 2},
                 {"name": "z", "type": "text", "word_range": (5, 10)},
                 {"name": "t", "values": [1, 2, 1, 2, 1, None, None, 2, 1, 2] * 2},
             ],

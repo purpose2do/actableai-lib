@@ -330,7 +330,8 @@ class AAIClassificationTask(AAITask):
         time_limit: Optional[int] = None,
         drop_unique: bool = True,
         drop_useless_features: bool = True,
-        temporal_split_column: Optional[str] = None,
+        datetime_column: Optional[str] = None,
+        split_by_datetime: bool = False,
     ) -> Dict:
         """Run this classification task and return results.
 
@@ -430,10 +431,14 @@ class AAIClassificationTask(AAITask):
             logging.warning(
                 "`drop_useless_features` is set to False: `run_debiasing` is True"
             )
-        if temporal_split_column is not None and kfolds > 1:
+        if split_by_datetime and kfolds > 1:
             raise ValueError(
                 "Temporal splitter is not supported for cross validation."
-                + "Set kfolds to 1 or temporal_splitter to None."
+                + "Set kfolds to 1 or split_by_datetime to False."
+            )
+        if split_by_datetime and datetime_column is None:
+            raise ValueError(
+                "datetime_column is required when using split_by_datetime."
             )
 
         # Validate parameters
@@ -484,16 +489,11 @@ class AAIClassificationTask(AAITask):
         )
         df_val = None
         if not use_cross_validation:
-            if temporal_split_column is not None:
-                sorted_df = df_train.sort_values(
-                    by=temporal_split_column, ascending=True
-                )
-                df_train = sorted_df.head(
-                    int(len(sorted_df) * (1 - validation_ratio))
-                ).sample(frac=1)
-                df_val = sorted_df.tail(
-                    int(len(sorted_df) * (validation_ratio))
-                ).sample(frac=1)
+            if split_by_datetime:
+                sorted_df = df_train.sort_values(by=datetime_column, ascending=True)
+                split_datetime_index = int((1 - validation_ratio) * len(sorted_df))
+                df_train = sorted_df.iloc[:split_datetime_index].sample(frac=1)
+                df_val = sorted_df.iloc[split_datetime_index:]
             else:
                 df_train, df_val = train_test_split(
                     df_train, test_size=validation_ratio, stratify=df_train[target]

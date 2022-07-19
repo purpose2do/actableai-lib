@@ -701,16 +701,12 @@ class TestRemoteRegression:
             assert "importance" in feat
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
-        assert (
-            (
-                r["data"]["validation_table"]
-                == r["data"]["validation_table"].sort_values(
-                    by=["temporal_split"], ascending=True
-                )
-            )
-            .all()
-            .all()
+        validation_table = r["data"]["evaluate"]["validation_table"]
+        sorted_validation_table = validation_table.sort_values(
+            by="temporal_split", ascending=True
         )
+        # check that the validation table is sorted by temporal split
+        assert (validation_table == sorted_validation_table).all().all()
 
 
 class TestRemoteRegressionCrossValidation:
@@ -1025,10 +1021,7 @@ class TestDebiasing:
         df = DatasetGenerator.generate(
             columns_parameters=[
                 {"name": "x", "values": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2},
-                {
-                    "name": "y",
-                    "values": [1, 2, 1, 2, 1, None, 1, 2, 1, 2] * 2,
-                },
+                {"name": "y", "values": [1, 2, 1, 2, 1, None, 1, 2, 1, 2] * 2},
                 {"name": "z", "type": "text", "word_range": (5, 10)},
                 {"name": "t", "values": [1, 2, 1, 2, 1, None, None, 2, 1, 2] * 2},
             ],
@@ -1218,12 +1211,7 @@ class TestDebiasing:
                     assert type(chart["y"]) is list
 
     def test_evaluate_has_data(self, regression_task, data, tmp_path):
-        r = run_regression_task(
-            regression_task,
-            tmp_path,
-            data,
-            target="y",
-        )
+        r = run_regression_task(regression_task, tmp_path, data, target="y")
         assert r["status"] == "SUCCESS"
         assert "evaluate" in r["data"]
         assert "RMSE" in r["data"]["evaluate"]
