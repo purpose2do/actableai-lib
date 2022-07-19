@@ -80,9 +80,7 @@ class _AAIRegressionTrainTask(AAITask):
         import pandas as pd
         from autogluon.tabular import TabularPredictor
         from autogluon.features.generators import AutoMLPipelineFeatureGenerator
-        from actableai.utils import (
-            debiasing_feature_generator_args,
-        )
+        from actableai.utils import debiasing_feature_generator_args
         from actableai.debiasing.debiasing_model import DebiasingModel
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
 
@@ -207,19 +205,10 @@ class _AAIRegressionTrainTask(AAITask):
             )
         else:
             # Legacy (TODO: to be removed)
-            evaluate = {
-                "PINBALL_LOSS": metrics["pinball_loss"],
-            }
+            evaluate = {"PINBALL_LOSS": metrics["pinball_loss"]}
 
             evaluate["metrics"] = pd.DataFrame(
-                {
-                    "metric": [
-                        "Pinball Loss",
-                    ],
-                    "value": [
-                        metrics["pinball_loss"],
-                    ],
-                }
+                {"metric": ["Pinball Loss"], "value": [metrics["pinball_loss"]]}
             )
 
         predictions = None
@@ -450,8 +439,12 @@ class AAIRegressionTask(AAITask):
                 sorted_df = df_train.sort_values(
                     by=temporal_split_column, ascending=True
                 )
-                df_train = sorted_df.head(int(len(sorted_df) * (1 - validation_ratio)))
-                df_val = sorted_df.tail(int(len(sorted_df) * validation_ratio))
+                df_train = sorted_df.head(
+                    int(len(sorted_df) * (1 - validation_ratio))
+                ).sample(frac=1)
+                df_val = sorted_df.tail(int(len(sorted_df) * validation_ratio)).sample(
+                    frac=1
+                )
             else:
                 df_train, df_val = train_test_split(
                     df_train, test_size=validation_ratio
@@ -626,10 +619,7 @@ class AAIRegressionTask(AAITask):
                                 "x_label": plot_target,
                                 "x": x_axis.tolist(),
                                 "lines": [
-                                    {
-                                        "y": np.exp(y).tolist(),
-                                        "name": biased_class,
-                                    }
+                                    {"y": np.exp(y).tolist(), "name": biased_class}
                                     for biased_class, y in y_prob.items()
                                 ],
                                 "corr": corr,
