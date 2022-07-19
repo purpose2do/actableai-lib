@@ -686,7 +686,8 @@ class TestRemoteRegression:
             ["x"],
             validation_ratio=0.2,
             drop_duplicates=False,
-            temporal_split_column="temporal_split",
+            split_by_datetime=True,
+            datetime_column="temporal_split",
         )
 
         assert r["status"] == "SUCCESS"
