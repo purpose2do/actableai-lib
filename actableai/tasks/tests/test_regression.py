@@ -702,7 +702,7 @@ class TestRemoteRegression:
             assert "importance" in feat
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
-        validation_table = r["data"]["evaluate"]["validation_table"]
+        validation_table = r["data"]["validation_table"]
         sorted_validation_table = validation_table.sort_values(
             by="temporal_split", ascending=True
         )

@@ -733,7 +733,7 @@ class TestRemoteClassification:
             assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
-        validation_table = r["data"]["evaluate"]["validation_table"]
+        validation_table = r["data"]["validation_table"]
         sorted_validation_table = validation_table.sort_values(
             by="temporal_split", ascending=True
         )
