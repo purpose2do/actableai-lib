@@ -18,6 +18,7 @@ class AAIClusteringTask(AAITask):
         df: pd.DataFrame,
         features: Optional[List[str]] = None,
         num_clusters: Union[int, str] = "auto",
+        drop_low_info: bool = False,
         explain_samples: bool = False,
         auto_num_clusters_min: int = 2,
         auto_num_clusters_max: int = 20,
@@ -75,7 +76,6 @@ class AAIClusteringTask(AAITask):
         from collections import defaultdict
         from tensorflow.keras.optimizers import SGD
         from sklearn.impute import SimpleImputer
-        from sklearn.preprocessing import LabelEncoder
         from sklearn.manifold import TSNE
         from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
         from sklearn.tree import DecisionTreeClassifier
@@ -132,23 +132,26 @@ class AAIClusteringTask(AAITask):
                 ),
                 columns=numeric_columns,
             )
-
-        category_map = {}
-        label_encoder = {}
-        for i, c in enumerate(features):
-            if df_train[c].dtype in ["object", "bool"]:
-                df_train[c] = df_train[c].fillna("NA")
-                le = LabelEncoder()
-                df_train[c] = le.fit_transform(df_train[c])
-                category_map[i] = le.classes_
-                label_encoder[c] = le
+        categorical_columns = list(df_train.select_dtypes(exclude=["number"]).columns)
+        if len(categorical_columns):
+            df_train[categorical_columns] = df_train[categorical_columns].fillna("None")
 
         # Process data
-        categorical_features = list(category_map.keys())
-        preprocessor = ClusteringDataTransformer()
-        transformed_values = preprocessor.fit_transform(
-            df_train.values, categorical_cols=categorical_features
-        )
+        preprocessor = ClusteringDataTransformer(drop_low_info=drop_low_info)
+        transformed_values = preprocessor.fit_transform(df_train)
+        if transformed_values is None:
+            return {
+                "status": "FAILURE",
+                "validations": [
+                    {
+                        "name": "Data Transformation",
+                        "level": "CRITICAL",
+                        "message": "Every columns have only unique values and cannot be used for clustering",
+                    }
+                ],
+                "runtime": time.time() - start,
+                "data": {},
+            }
         if num_clusters == "auto" and max_train_samples is not None:
             auto_num_clusters_max = min(auto_num_clusters_max, max_train_samples)
         dec = DEC(
@@ -237,9 +240,6 @@ class AAIClusteringTask(AAITask):
         data = []
         points_x = x_embedded[:, 0]
         points_y = x_embedded[:, 1]
-
-        for c in label_encoder:
-            df_train[c] = label_encoder[c].inverse_transform(df_train[c])
 
         origin_dict = df_train.to_dict("record")
         for idx, (i, j, k, l) in enumerate(

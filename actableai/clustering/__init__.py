@@ -2,16 +2,23 @@ import numpy as np
 import pandas as pd
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.cluster import KMeans
+from sklearn.feature_extraction import FeatureHasher
 from sklearn.metrics import silhouette_score
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, FunctionTransformer
+from pandas.api.types import is_numeric_dtype
+from actableai.clustering.config import MAX_UNIQUE_FEATURES_CLUSTERING
 
 
 class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
     """Transform numeric columns using StandardScaler and categorical columns
     using OneHotEncoder."""
-    def fit_transform(self, X, categorical_cols):
+
+    def __init__(self, drop_low_info=True) -> None:
+        super().__init__()
+        self.drop_low_info = drop_low_info
+
+    def fit_transform(self, X):
         self.transformers = []
-        self.categorical_cols = categorical_cols
         result = []
 
         self.feature_links = []
@@ -19,32 +26,50 @@ class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
 
         for i in range(X.shape[1]):
             self.feature_links.append([])
-
-            if i not in categorical_cols:
-                t = StandardScaler()
-                result.append(t.fit_transform(X[:, i : i + 1]))
-
+            # Skipping columns with only unique values
+            column_value = X.iloc[:, i]
+            unique_column_value = np.unique(column_value)
+            if self.drop_low_info and (
+                len(unique_column_value) == len(column_value)  # Every values are unique
+                or len(unique_column_value) == 1  # Only one value
+            ):
+                t = FunctionTransformer(lambda x: x)
                 self.feature_links[-1].append(final_feature_count)
                 final_feature_count += 1
             else:
-                t = OneHotEncoder()
-                result.append(t.fit_transform(X[:, i : i + 1]).todense())
+                if is_numeric_dtype(X.iloc[:, i]):
+                    t = StandardScaler()
+                    result.append(t.fit_transform(X.iloc[:, i : i + 1]))
 
-                new_feature_count = len(t.get_feature_names_out())
-                self.feature_links[-1] += list(
-                    range(final_feature_count, final_feature_count + new_feature_count)
-                )
-                final_feature_count += new_feature_count
+                    self.feature_links[-1].append(final_feature_count)
+                    final_feature_count += 1
+                else:
+                    if len(np.unique(X.iloc[:, i])) > MAX_UNIQUE_FEATURES_CLUSTERING:
+                        t = FeatureHasher(
+                            n_features=MAX_UNIQUE_FEATURES_CLUSTERING,
+                            input_type="string",
+                        )
+                        result.append(t.fit_transform(X.iloc[:, i]).todense())
+                    else:
+                        t = OneHotEncoder(sparse=False)
+                        result.append(t.fit_transform(X.iloc[:, i : i + 1]))
+
+                    new_feature_count = result[-1].shape[1]
+                    self.feature_links[-1] += list(
+                        range(
+                            final_feature_count, final_feature_count + new_feature_count
+                        )
+                    )
+                    final_feature_count += new_feature_count
 
             self.transformers.append(t)
-        return np.hstack(result)
+        if len(result) > 0:
+            return np.hstack(result)
 
     def transform(self, X):
         result = []
         for i in range(X.shape[1]):
             x = self.transformers[i].transform(X[:, i : i + 1])
-            if i in self.categorical_cols:
-                x = x.todense()
             result.append(x)
         return np.hstack(result)
 
