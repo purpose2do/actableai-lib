@@ -479,8 +479,8 @@ class AAIClassificationTask(AAITask):
             lambda x: len(x) >= CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE
         )
         df_val = None
-        if not use_cross_validation and datetime_column is not None:
-            if split_by_datetime:
+        if not use_cross_validation:
+            if split_by_datetime and datetime_column is not None:
                 sorted_df = df_train.sort_values(by=datetime_column, ascending=True)
                 split_datetime_index = int((1 - validation_ratio) * len(sorted_df))
                 df_train = sorted_df.iloc[:split_datetime_index].sample(frac=1)
