@@ -707,7 +707,7 @@ class TestRemoteRegression:
             by="temporal_split", ascending=True
         )
         # check that the validation table is sorted by temporal split
-        assert (validation_table == sorted_validation_table).all().all()
+        assert (validation_table == sorted_validation_table).all(axis=None)
 
 
 class TestRemoteRegressionCrossValidation:

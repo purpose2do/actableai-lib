@@ -440,10 +440,8 @@ class AAIRegressionTask(AAITask):
             df_train = df_train.drop_duplicates(subset=features + [target])
         df_val = None
         if kfolds <= 1:
-            if split_by_datetime:
-                sorted_df = df_train.sort_values(
-                    by=datetime_column, ascending=True  # type: ignore
-                )
+            if split_by_datetime and datetime_column is not None:
+                sorted_df = df_train.sort_values(by=datetime_column, ascending=True)
                 split_datetime_index = int((1 - validation_ratio) * len(sorted_df))
                 df_train = sorted_df.iloc[:split_datetime_index].sample(frac=1)
                 df_val = sorted_df.iloc[split_datetime_index:]
