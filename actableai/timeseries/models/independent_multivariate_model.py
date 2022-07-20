@@ -130,7 +130,7 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
         ray_tune_kwargs: Optional[Dict[str, Any]] = None,
         verbose: int = 1,
         fit_full: bool = True,
-    ) -> float:
+    ) -> Tuple[float, pd.DataFrame]:
         """Tune and fit the model.
 
         Args:
@@ -151,14 +151,16 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
                 (tuning data).
 
         Returns:
-            Total time spent for tuning.
+            - Total time spent for tuning.
+            - Leaderboard
         """
         group_df_dict_clean = self._pre_process_data(group_df_dict, keep_future=False)
 
         total_time = 0
 
+        df_target_leaderboard_list = []
+
         # Train one model per target
-        # TODO make this parallel
         for target_column in self.target_columns:
             shift_target_column = self.shift_target_columns_dict[target_column]
 
@@ -178,7 +180,9 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
                 real_dynamic_feature_columns=real_dynamic_feature_columns,
                 cat_dynamic_feature_columns=self.cat_dynamic_feature_columns,
             )
-            target_total_time = self.predictor_dict[target_column].fit(
+            target_total_time, df_target_leaderboard = self.predictor_dict[
+                target_column
+            ].fit(
                 group_df_dict=group_df_dict_clean,
                 model_params=model_params,
                 mx_ctx=mx_ctx,
@@ -196,7 +200,9 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
 
             total_time += target_total_time
 
-        return total_time
+            df_target_leaderboard_list.append(df_target_leaderboard)
+
+        return total_time, pd.concat(df_target_leaderboard_list, ignore_index=True)
 
     def refit(
         self,

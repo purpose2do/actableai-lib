@@ -3,11 +3,12 @@ import numpy as np
 import pandas as pd
 import time
 import visions
+from copy import deepcopy
 from functools import partial
 from gluonts.mx.distribution import DistributionOutput
 from gluonts.mx.distribution.poisson import PoissonOutput
 from gluonts.mx.distribution.student_t import StudentTOutput
-from hyperopt import hp, fmin, tpe, space_eval
+from hyperopt import hp, fmin, tpe, space_eval, Trials
 from ray import tune
 from ray.tune.suggest import ConcurrencyLimiter
 from ray.tune.suggest.hyperopt import HyperOptSearch
@@ -152,10 +153,10 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         freq_gluon: str,
         distr_output: DistributionOutput,
         prediction_length: int,
-        target_dim: int,
+        target_columns: List[str],
         use_ray: bool,
         mx_ctx: mx.Context,
-    ) -> Optional[float]:
+    ) -> Optional[pd.DataFrame]:
         """Create, train, and evaluate a model with specific hyperparameter.
 
         Args:
@@ -168,7 +169,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
             freq_gluon: GluonTS frequency of the time series.
             distr_output: Distribution output to use.
             prediction_length: Length of the prediction that will be forecasted.
-            target_dim: Target dimension (number of columns to predict).
+            target_columns: List of columns to forecast.
             use_ray: Whether ray is used for tuning or not.
             mx_ctx: mxnet context.
 
@@ -183,7 +184,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
             freq_gluon,
             distr_output,
             prediction_length,
-            target_dim,
+            len(target_columns),
             mx_ctx,
         )
 
@@ -192,16 +193,21 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         )
 
         evaluator = AAITimeSeriesEvaluator(
-            n_targets=target_dim,
+            target_columns=target_columns,
             quantiles=[0.05, 0.25, 0.5, 0.75, 0.95],
             num_workers=None,
         )
-        agg_metrics, _ = evaluator(ts_it, forecast_it, num_series=len(tune_data))
+        _, df_agg_metrics = evaluator(ts_it, forecast_it, num_series=len(tune_data))
 
         if not use_ray:
-            return agg_metrics[loss]
+            return df_agg_metrics
 
-        tune.report(**{loss: agg_metrics[loss]})
+        tune.report(
+            **{
+                loss: df_agg_metrics[loss].mean(),
+                "df_agg_metrics": df_agg_metrics.to_dict(),
+            }
+        )
 
     @classmethod
     def _objective(
@@ -215,7 +221,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         freq_gluon: str,
         distr_output: DistributionOutput,
         prediction_length: int,
-        target_dim: int,
+        target_columns: List[str],
         use_ray: bool,
         mx_ctx: mx.Context,
     ) -> Dict[str, Any]:
@@ -231,7 +237,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
             loss: Loss to return.
             freq_gluon: GluonTS frequency of the time series.
             distr_output: Distribution output to use.
-            prediction_length: Length of the prediction that will be forecasted.
+            target_columns: List of columns to forecast.
             target_dim: Target dimension (number of columns to predict).
             use_ray: Whether ray is used for tuning or not.
             mx_ctx: mxnet context.
@@ -239,20 +245,23 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         Returns:
             Dictionary containing the loss and the status.
         """
+        df_agg_metrics = cls._trainable(
+            params,
+            model_params_dict=model_params_dict,
+            train_data_partial=train_data_partial,
+            tune_data=tune_data,
+            loss=loss,
+            freq_gluon=freq_gluon,
+            distr_output=distr_output,
+            prediction_length=prediction_length,
+            target_columns=target_columns,
+            use_ray=use_ray,
+            mx_ctx=mx_ctx,
+        )
+
         return {
-            "loss": cls._trainable(
-                params,
-                model_params_dict=model_params_dict,
-                train_data_partial=train_data_partial,
-                tune_data=tune_data,
-                loss=loss,
-                freq_gluon=freq_gluon,
-                distr_output=distr_output,
-                prediction_length=prediction_length,
-                target_dim=target_dim,
-                use_ray=use_ray,
-                mx_ctx=mx_ctx,
-            ),
+            "loss": df_agg_metrics[loss].mean(),
+            "df_agg_metrics": df_agg_metrics.to_dict(),
             "status": "ok",
         }
 
@@ -366,7 +375,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         ray_tune_kwargs: Optional[Dict[str, Any]] = None,
         verbose: int = 1,
         fit_full: bool = True,
-    ) -> float:
+    ) -> Tuple[float, pd.DataFrame]:
         """Tune and fit the model.
 
         Args:
@@ -387,7 +396,8 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
                 (tuning data).
 
         Returns:
-            Total time spent for tuning.
+            - Total time spent for tuning.
+            - Leaderboard
         """
         self.model_params_dict = {
             model_param_class.model_name: model_param_class
@@ -422,6 +432,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         search_space = {"model": hp.choice("model", models_search_space)}
 
         trials_time_total = 0
+        trials_result_list = []
 
         # Tune hyperparameters
         if use_ray:
@@ -443,7 +454,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
                 freq_gluon=self.freq_gluon,
                 distr_output=self.distr_output,
                 prediction_length=self.prediction_length,
-                target_dim=len(self.target_columns),
+                target_columns=self.target_columns,
                 use_ray=use_ray,
                 mx_ctx=mx_ctx,
             )
@@ -456,9 +467,29 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
                 **ray_tune_kwargs,
             )
 
+            # Build leaderboard
             for result in analysis.results.values():
-                if result is not None:
-                    trials_time_total += result.get("time_total_s", 0)
+                if result is None or loss not in result:
+                    continue
+
+                trial_training_time = result.get("time_total_s", 0)
+                trials_time_total += trial_training_time
+
+                config = deepcopy(result["config"]["model"])
+                model_name = config["model_name"]
+                del config["model_name"]
+
+                trials_result_list.append(
+                    {
+                        "target": None,
+                        "model_name": model_name,
+                        "model_parameters": str(config),
+                        "training_time": trial_training_time,
+                        **pd.DataFrame.from_dict(result["df_agg_metrics"])
+                        .mean()
+                        .to_dict(),
+                    }
+                )
 
             start = time.time()
 
@@ -475,18 +506,56 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
                 freq_gluon=self.freq_gluon,
                 distr_output=self.distr_output,
                 prediction_length=self.prediction_length,
-                target_dim=len(self.target_columns),
+                target_columns=self.target_columns,
                 use_ray=use_ray,
                 mx_ctx=mx_ctx,
             )
 
+            trials_results = Trials()
             best = fmin(
                 fn=objective,
                 space=search_space,
                 algo=tpe.suggest,
                 max_evals=trials,
+                trials=trials_results,
             )
+
+            # Build leaderboard
+            for trial in trials_results.trials:
+                vals = {
+                    key: value[0]
+                    for key, value in trial["misc"]["vals"].items()
+                    if len(value) > 0
+                }
+
+                model_parameters = space_eval(space=search_space, hp_assignment=vals)[
+                    "model"
+                ]
+                model_name = model_parameters["model_name"]
+                del model_parameters["model_name"]
+
+                trials_result_list.append(
+                    {
+                        "target": None,
+                        "model_name": model_name,
+                        "model_parameters": str(model_parameters),
+                        "training_time": (
+                            trial["refresh_time"] - trial["book_time"]
+                        ).total_seconds(),
+                        **pd.DataFrame.from_dict(trial["result"]["df_agg_metrics"])
+                        .mean()
+                        .to_dict(),
+                    }
+                )
+
             self.best_params = space_eval(space=search_space, hp_assignment=best)
+
+        df_leaderboard = pd.DataFrame(trials_result_list)
+        df_leaderboard["target"] = (
+            str(self.target_columns)
+            if len(self.target_columns) > 1
+            else self.target_columns[0]
+        )
 
         if fit_full:
             final_train_data = train_data
@@ -505,7 +574,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
             mx_ctx=mx_ctx,
         )
 
-        return time.time() - start + trials_time_total
+        return time.time() - start + trials_time_total, df_leaderboard
 
     def refit(
         self,
@@ -606,12 +675,13 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
 
         # Evaluate
         evaluator = AAITimeSeriesEvaluator(
-            n_targets=len(self.target_columns),
+            target_columns=self.target_columns,
+            group_list=list(group_df_dict.keys()),
             quantiles=quantiles,
             num_workers=num_workers,
             custom_eval_fn={"custom_RMSE": [rmse, "mean", "median"]},
         )
-        agg_metrics, df_item_metrics = evaluator(
+        df_item_metrics_dict, df_agg_metrics = evaluator(
             ts_list, forecast_list, num_series=len(valid_data)
         )
 
@@ -623,49 +693,6 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
                 df_group.index[-self.prediction_length :],
                 quantiles=quantiles,
             )
-
-        # Post-process metrics
-        # item_metrics
-        target_list = []
-        for target in self.target_columns:
-            target_list += [target] * len(group_df_dict)
-        df_item_metrics["target"] = target_list
-        df_item_metrics["group"] = list(group_df_dict.keys()) * len(self.target_columns)
-        df_item_metrics = df_item_metrics.reset_index(drop=True)
-        df_item_metrics = df_item_metrics.rename(columns={"custom_RMSE": "RMSE"})
-
-        # agg_metrics
-        if len(self.target_columns) <= 1:
-            df_agg_metrics = pd.DataFrame(
-                [{"target": self.target_columns[0], **agg_metrics}]
-            )
-        else:
-            metric_list = list(agg_metrics.keys())[
-                (len(agg_metrics) // (len(self.target_columns) + 1))
-                * len(self.target_columns) :
-            ]
-            df_agg_metrics = pd.DataFrame(columns=["target"] + metric_list)
-
-            for target_index, target_column in enumerate(self.target_columns):
-                target_agg_metrics = {
-                    metric: agg_metrics[f"{target_index}_{metric}"]
-                    for metric in metric_list
-                }
-                df_agg_metrics = pd.concat(
-                    [
-                        df_agg_metrics,
-                        pd.DataFrame([{"target": target_column, **target_agg_metrics}]),
-                    ],
-                    ignore_index=True,
-                )
-
-        df_agg_metrics = df_agg_metrics.drop(columns="RMSE").rename(
-            columns={"custom_RMSE": "RMSE"}
-        )
-
-        df_item_metrics_dict = {}
-        for group, df_group in df_item_metrics.groupby("group"):
-            df_item_metrics_dict[group] = df_group
 
         return df_predictions_dict, df_item_metrics_dict, df_agg_metrics
 
