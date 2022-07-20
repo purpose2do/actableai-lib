@@ -47,8 +47,6 @@ from actableai.data_validation.checkers import (
     ROCAUCChecker,
     RegressionEvalMetricChecker,
     SameTypeChecker,
-    SplitDateTimeColumnExist,
-    SplitDateTimeCrossValidation,
     StratifiedKFoldChecker,
     UniqueDateTimeChecker,
 )
@@ -132,13 +130,23 @@ class RegressionDataValidator:
             ColumnsInList(level=CheckLevels.CRITICAL).check(
                 features, debiased_features
             ),
-            SplitDateTimeCrossValidation(level=CheckLevels.CRITICAL).check(
-                split_by_datetime, kfolds
-            ),
-            SplitDateTimeColumnExist(level=CheckLevels.CRITICAL).check(
-                split_by_datetime, datetime_column
-            ),
         ]
+        if split_by_datetime and kfolds > 1:
+            validation_results.append(
+                CheckResult(
+                    name="SplitDateTimeCrossValidation",
+                    level=CheckLevels.CRITICAL,
+                    message="Split datetime and cross validation are not compatible. Please disable split datetime or set kfolds to 1.",
+                )
+            )
+        if split_by_datetime and datetime_column is None:
+            validation_results.append(
+                CheckResult(
+                    name="SplitDateTimeColumnExist",
+                    level=CheckLevels.CRITICAL,
+                    message="Split datetime is enabled but date_time_column is None. Please set date_time_column.",
+                )
+            )
         if drop_unique:
             validation_results.append(
                 OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features)
@@ -333,13 +341,23 @@ class ClassificationDataValidator:
             ColumnsInList(level=CheckLevels.CRITICAL).check(
                 features, debiased_features
             ),
-            SplitDateTimeCrossValidation(level=CheckLevels.CRITICAL).check(
-                split_by_datetime, kfolds
-            ),
-            SplitDateTimeColumnExist(level=CheckLevels.CRITICAL).check(
-                split_by_datetime, datetime_column
-            ),
         ]
+        if split_by_datetime and kfolds > 1:
+            validation_results.append(
+                CheckResult(
+                    name="SplitDateTimeCrossValidation",
+                    level=CheckLevels.CRITICAL,
+                    message="Split datetime and cross validation are not compatible. Please disable split datetime or set kfolds to 1.",
+                )
+            )
+        if split_by_datetime and datetime_column is None:
+            validation_results.append(
+                CheckResult(
+                    name="SplitDateTimeColumnExist",
+                    level=CheckLevels.CRITICAL,
+                    message="Split datetime is enabled but date_time_column is None. Please set date_time_column.",
+                )
+            )
         if drop_unique:
             validation_results.append(
                 OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features)
