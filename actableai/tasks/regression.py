@@ -375,14 +375,15 @@ class AAIRegressionTask(AAITask):
         if train_task_params is None:
             train_task_params = {}
         if split_by_datetime and kfolds > 1:
-            raise ValueError(
-                "split_by_datetime is not supported for cross validation."
-                + "Set kfolds to 1 or split_by_datetime to None."
-            )
+            return {
+                "status": "FAILURE",
+                "messenger": "Cannot split data by datetime and use cross-validation",
+            }
         if split_by_datetime and datetime_column is None:
-            raise ValueError(
-                "datetime_column is required when split_by_datetime is True."
-            )
+            return {
+                "status": "FAILURE",
+                "messenger": "Cannot use split_by_datetime without datetime_column",
+            }
 
         run_debiasing = len(biased_groups) > 0 and len(debiased_features) > 0
 
