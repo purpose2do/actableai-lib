@@ -102,6 +102,8 @@ class AAIModelInference:
         """
         from actableai.exceptions.models import InvalidPositiveLabelError
 
+        task_model = self._get_model(task_id)
+
         df_proba = self.predict_proba(task_id, df)
 
         class_labels = list(df_proba.columns)
@@ -112,10 +114,10 @@ class AAIModelInference:
 
         # Multiclass
         if len(class_labels) > 2:
-            df = df_proba.idxmax(axis="columns").to_frame()
+            df_pred = df_proba.idxmax(axis="columns").to_frame(name=task_model.label)
             if return_probabilities:
-                return df, df_proba
-            return df
+                return df_pred, df_proba
+            return df_pred
 
         # Binary
         if positive_label is None:
@@ -130,7 +132,7 @@ class AAIModelInference:
         df_true_label = (
             df_true_label.astype(str)
             .map({"True": positive_label, "False": negative_label})
-            .to_frame()
+            .to_frame(name=task_model.label)
         )
 
         if return_probabilities:
@@ -160,7 +162,7 @@ class AAIModelInference:
 
         df_proba = task_model.predict_proba(df, as_multiclass=True)
         if isinstance(df_proba, pd.Series):
-            df_proba = df_proba.to_frame()
+            df_proba = df_proba.to_frame(name=task_model.label)
         return df_proba
 
     def get_metadata(self, task_id):
