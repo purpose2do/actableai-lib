@@ -431,16 +431,6 @@ class AAIClassificationTask(AAITask):
             logging.warning(
                 "`drop_useless_features` is set to False: `run_debiasing` is True"
             )
-        if split_by_datetime and kfolds > 1:
-            return {
-                "status": "FAILURE",
-                "messenger": "Cannot split data by datetime and use cross-validation",
-            }
-        if split_by_datetime and datetime_column is None:
-            return {
-                "status": "FAILURE",
-                "messenger": "Cannot use split_by_datetime without datetime_column",
-            }
 
         # Validate parameters
         data_validation_results = ClassificationDataValidator().validate(

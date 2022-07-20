@@ -47,6 +47,8 @@ from actableai.data_validation.checkers import (
     ROCAUCChecker,
     RegressionEvalMetricChecker,
     SameTypeChecker,
+    SplitDateTimeColumnExist,
+    SplitDateTimeCrossValidation,
     StratifiedKFoldChecker,
     UniqueDateTimeChecker,
 )
@@ -70,6 +72,7 @@ class RegressionDataValidator:
         drop_unique=True,
         split_by_datetime=False,
         datetime_column=None,
+        kfolds=1,
     ):
         use_quantiles = (
             prediction_quantile_low is not None and prediction_quantile_high is not None
@@ -128,6 +131,12 @@ class RegressionDataValidator:
             ),
             ColumnsInList(level=CheckLevels.CRITICAL).check(
                 features, debiased_features
+            ),
+            SplitDateTimeCrossValidation(level=CheckLevels.CRITICAL).check(
+                split_by_datetime, kfolds
+            ),
+            SplitDateTimeColumnExist(level=CheckLevels.CRITICAL).check(
+                split_by_datetime, datetime_column
             ),
         ]
         if drop_unique:
@@ -269,7 +278,7 @@ class ClassificationDataValidator:
         df,
         presets,
         validation_ratio=None,
-        kfolds=None,
+        kfolds: int = 1,
         drop_duplicates=True,
         explain_samples=False,
         eval_metric: str = "accuracy",
@@ -323,6 +332,12 @@ class ClassificationDataValidator:
             ),
             ColumnsInList(level=CheckLevels.CRITICAL).check(
                 features, debiased_features
+            ),
+            SplitDateTimeCrossValidation(level=CheckLevels.CRITICAL).check(
+                split_by_datetime, kfolds
+            ),
+            SplitDateTimeColumnExist(level=CheckLevels.CRITICAL).check(
+                split_by_datetime, datetime_column
             ),
         ]
         if drop_unique:

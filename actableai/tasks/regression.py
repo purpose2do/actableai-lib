@@ -374,16 +374,6 @@ class AAIRegressionTask(AAITask):
             model_directory = mkdtemp(prefix="autogluon_model")
         if train_task_params is None:
             train_task_params = {}
-        if split_by_datetime and kfolds > 1:
-            return {
-                "status": "FAILURE",
-                "messenger": "Cannot split data by datetime and use cross-validation",
-            }
-        if split_by_datetime and datetime_column is None:
-            return {
-                "status": "FAILURE",
-                "messenger": "Cannot use split_by_datetime without datetime_column",
-            }
 
         run_debiasing = len(biased_groups) > 0 and len(debiased_features) > 0
 
@@ -410,6 +400,7 @@ class AAIRegressionTask(AAITask):
             explain_samples,
             drop_duplicates,
             drop_unique=drop_unique,
+            kfolds=kfolds,
         )
         failed_checks = [
             check for check in data_validation_results if check is not None
