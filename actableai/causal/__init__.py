@@ -87,4 +87,6 @@ def prepare_sanitize_data(
         if c in effect_modifiers + common_causes and is_object_dtype(pd_table[c]):
             pd_table[c] = np.where(pd_table[c].isna(), "nan", pd_table[c])
 
+    pd_table = pd_table[treatments + outcomes + effect_modifiers + common_causes]
+
     return pd_table
