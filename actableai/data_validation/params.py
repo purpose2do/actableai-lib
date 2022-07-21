@@ -342,22 +342,23 @@ class ClassificationDataValidator:
                 features, debiased_features
             ),
         ]
-        if split_by_datetime and kfolds > 1:
-            validation_results.append(
-                CheckResult(
-                    name="SplitDateTimeCrossValidation",
-                    level=CheckLevels.CRITICAL,
-                    message="Split datetime and cross validation are not compatible. Please disable split datetime or set kfolds to 1.",
+        if split_by_datetime:
+            if kfolds > 1:
+                validation_results.append(
+                    CheckResult(
+                        name="SplitDateTimeCrossValidation",
+                        level=CheckLevels.CRITICAL,
+                        message="Split datetime and cross validation are not compatible. Please disable split datetime or set kfolds to 1.",
+                    )
                 )
-            )
-        if split_by_datetime and datetime_column is None:
-            validation_results.append(
-                CheckResult(
-                    name="SplitDateTimeColumnExist",
-                    level=CheckLevels.CRITICAL,
-                    message="Split datetime is enabled but date_time_column is None. Please set date_time_column.",
+            if datetime_column is None:
+                validation_results.append(
+                    CheckResult(
+                        name="SplitDateTimeColumnExist",
+                        level=CheckLevels.CRITICAL,
+                        message="Split datetime is enabled but date_time_column is None. Please set date_time_column.",
+                    )
                 )
-            )
         if drop_unique:
             validation_results.append(
                 OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features)
