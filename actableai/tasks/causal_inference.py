@@ -217,9 +217,10 @@ def infer_causal(
     # convert boolean to int
     for c in pd_table.columns:
         if get_type_special(pd_table[c]) == "boolean":
-            pd_table[c] = SimpleImputer(strategy="most_frequent").fit_transform(
-                pd_table[[c]]
-            )[:, 0]
+            if pd_table[c].isna().any():
+                pd_table[c] = SimpleImputer(strategy="most_frequent").fit_transform(
+                    pd_table[[c]]
+                )[:, 0]
             pd_table[c] = pd_table[c].astype(int)
 
     # construct the causal graph dot string
