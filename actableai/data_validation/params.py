@@ -68,6 +68,9 @@ class RegressionDataValidator:
         explain_samples=False,
         drop_duplicates=True,
         drop_unique=True,
+        split_by_datetime=False,
+        datetime_column=None,
+        kfolds=1,
     ):
         use_quantiles = (
             prediction_quantile_low is not None and prediction_quantile_high is not None
@@ -76,14 +79,18 @@ class RegressionDataValidator:
         validation_results = [
             RegressionEvalMetricChecker(
                 level=CheckLevels.CRITICAL if not use_quantiles else CheckLevels.WARNING
-            ).check(
-                eval_metric,
-                use_quantiles=use_quantiles,
-            ),
+            ).check(eval_metric, use_quantiles=use_quantiles),
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
                 df, features + [target]
             ),
         ]
+
+        if split_by_datetime and datetime_column is not None:
+            validation_results.append(
+                ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
+                    df, [datetime_column]
+                )
+            )
 
         if (
             len(
@@ -124,6 +131,22 @@ class RegressionDataValidator:
                 features, debiased_features
             ),
         ]
+        if split_by_datetime and kfolds > 1:
+            validation_results.append(
+                CheckResult(
+                    name="SplitDateTimeCrossValidation",
+                    level=CheckLevels.CRITICAL,
+                    message="Split datetime and cross validation are not compatible. Please disable split datetime or set kfolds to 1.",
+                )
+            )
+        if split_by_datetime and datetime_column is None:
+            validation_results.append(
+                CheckResult(
+                    name="SplitDateTimeColumnExist",
+                    level=CheckLevels.CRITICAL,
+                    message="Split datetime is enabled but date_time_column is None. Please set date_time_column.",
+                )
+            )
         if drop_unique:
             validation_results.append(
                 OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features)
@@ -263,17 +286,25 @@ class ClassificationDataValidator:
         df,
         presets,
         validation_ratio=None,
-        kfolds=None,
+        kfolds: int = 1,
         drop_duplicates=True,
         explain_samples=False,
         eval_metric: str = "accuracy",
         drop_unique=True,
-    ):
-        validation_results = [
+        split_by_datetime=False,
+        datetime_column: Optional[str] = None,
+    ) -> List[Optional[CheckResult]]:
+        validation_results: List = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
                 df, [target, *features, *debiasing_features, *debiased_features]
             )
         ]
+        if split_by_datetime and datetime_column is not None:
+            validation_results.append(
+                ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
+                    df, [datetime_column]
+                )
+            )
 
         if (
             len(
@@ -311,6 +342,23 @@ class ClassificationDataValidator:
                 features, debiased_features
             ),
         ]
+        if split_by_datetime:
+            if kfolds > 1:
+                validation_results.append(
+                    CheckResult(
+                        name="SplitDateTimeCrossValidation",
+                        level=CheckLevels.CRITICAL,
+                        message="Split datetime and cross validation are not compatible. Please disable split datetime or set kfolds to 1.",
+                    )
+                )
+            if datetime_column is None:
+                validation_results.append(
+                    CheckResult(
+                        name="SplitDateTimeColumnExist",
+                        level=CheckLevels.CRITICAL,
+                        message="Split datetime is enabled but date_time_column is None. Please set date_time_column.",
+                    )
+                )
         if drop_unique:
             validation_results.append(
                 OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features)
@@ -333,7 +381,7 @@ class ClassificationDataValidator:
                 validation_results.append(
                     IsSufficientValidationSampleChecker(
                         level=CheckLevels.CRITICAL
-                    ).check(df[target], validation_ratio),
+                    ).check(df[target], validation_ratio)
                 )
 
             critical_validation_count = 0
@@ -407,7 +455,7 @@ class ClassificationDataValidator:
         validation_results += [
             ROCAUCChecker(level=CheckLevels.CRITICAL).check(
                 df, eval_metric=eval_metric, target=target
-            ),
+            )
         ]
 
         return validation_results
@@ -671,9 +719,7 @@ class CausalDataValidator:
         if positive_outcome_value is not None:
             validation_results.append(
                 PositiveOutcomeValueThreshold(level=CheckLevels.CRITICAL).check(
-                    df,
-                    outcomes,
-                    positive_outcome_value,
+                    df, outcomes, positive_outcome_value
                 )
             )
 
@@ -706,7 +752,7 @@ class DataImputationDataValidator:
         return [
             IsSufficientDataChecker(level=CheckLevels.WARNING).check(
                 df, n_sample=MINIMUM_NUMBER_OF_SAMPLE
-            ),
+            )
         ]
 
 
@@ -776,5 +822,5 @@ class AssociationRulesDataValidator:
         return [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
                 df, group_by + [items]
-            ),
+            )
         ]

@@ -192,12 +192,7 @@ class _AAIClassificationTrainTask(AAITask):
             # TODO: to be removed (legacy)
             "problem_type": predictor.problem_type,
             "accuracy": perf["accuracy"],
-            "metrics": pd.DataFrame(
-                {
-                    "metric": perf.keys(),
-                    "value": perf.values(),
-                }
-            ),
+            "metrics": pd.DataFrame({"metric": perf.keys(), "value": perf.values()}),
         }
         evaluate["labels"] = predictor.class_labels
         evaluate["confusion_matrix"] = confusion_matrix(
@@ -335,6 +330,8 @@ class AAIClassificationTask(AAITask):
         time_limit: Optional[int] = None,
         drop_unique: bool = True,
         drop_useless_features: bool = True,
+        datetime_column: Optional[str] = None,
+        split_by_datetime: bool = False,
     ) -> Dict:
         """Run this classification task and return results.
 
@@ -483,9 +480,15 @@ class AAIClassificationTask(AAITask):
         )
         df_val = None
         if not use_cross_validation:
-            df_train, df_val = train_test_split(
-                df_train, test_size=validation_ratio, stratify=df_train[target]
-            )
+            if split_by_datetime and datetime_column is not None:
+                sorted_df = df_train.sort_values(by=datetime_column, ascending=True)
+                split_datetime_index = int((1 - validation_ratio) * len(sorted_df))
+                df_train = sorted_df.iloc[:split_datetime_index].sample(frac=1)
+                df_val = sorted_df.iloc[split_datetime_index:]
+            else:
+                df_train, df_val = train_test_split(
+                    df_train, test_size=validation_ratio, stratify=df_train[target]
+                )
 
         df_test = df[pd.isnull(df[target])]
 

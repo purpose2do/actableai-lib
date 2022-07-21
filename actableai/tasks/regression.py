@@ -80,9 +80,7 @@ class _AAIRegressionTrainTask(AAITask):
         import pandas as pd
         from autogluon.tabular import TabularPredictor
         from autogluon.features.generators import AutoMLPipelineFeatureGenerator
-        from actableai.utils import (
-            debiasing_feature_generator_args,
-        )
+        from actableai.utils import debiasing_feature_generator_args
         from actableai.debiasing.debiasing_model import DebiasingModel
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
 
@@ -207,19 +205,10 @@ class _AAIRegressionTrainTask(AAITask):
             )
         else:
             # Legacy (TODO: to be removed)
-            evaluate = {
-                "PINBALL_LOSS": metrics["pinball_loss"],
-            }
+            evaluate = {"PINBALL_LOSS": metrics["pinball_loss"]}
 
             evaluate["metrics"] = pd.DataFrame(
-                {
-                    "metric": [
-                        "Pinball Loss",
-                    ],
-                    "value": [
-                        metrics["pinball_loss"],
-                    ],
-                }
+                {"metric": ["Pinball Loss"], "value": [metrics["pinball_loss"]]}
             )
 
         predictions = None
@@ -283,6 +272,8 @@ class AAIRegressionTask(AAITask):
         time_limit: Optional[int] = None,
         drop_unique: bool = True,
         drop_useless_features: bool = True,
+        datetime_column: Optional[str] = None,
+        split_by_datetime: bool = False,
     ):
         """Run this regression task and return results.
 
@@ -409,6 +400,7 @@ class AAIRegressionTask(AAITask):
             explain_samples,
             drop_duplicates,
             drop_unique=drop_unique,
+            kfolds=kfolds,
         )
         failed_checks = [
             check for check in data_validation_results if check is not None
@@ -440,7 +432,15 @@ class AAIRegressionTask(AAITask):
             df_train = df_train.drop_duplicates(subset=features + [target])
         df_val = None
         if kfolds <= 1:
-            df_train, df_val = train_test_split(df_train, test_size=validation_ratio)
+            if split_by_datetime and datetime_column is not None:
+                sorted_df = df_train.sort_values(by=datetime_column, ascending=True)
+                split_datetime_index = int((1 - validation_ratio) * len(sorted_df))
+                df_train = sorted_df.iloc[:split_datetime_index].sample(frac=1)
+                df_val = sorted_df.iloc[split_datetime_index:]
+            else:
+                df_train, df_val = train_test_split(
+                    df_train, test_size=validation_ratio
+                )
 
         df_test = df[pd.isnull(df[target])].drop(columns=[target])
 
@@ -611,10 +611,7 @@ class AAIRegressionTask(AAITask):
                                 "x_label": plot_target,
                                 "x": x_axis.tolist(),
                                 "lines": [
-                                    {
-                                        "y": np.exp(y).tolist(),
-                                        "name": biased_class,
-                                    }
+                                    {"y": np.exp(y).tolist(), "name": biased_class}
                                     for biased_class, y in y_prob.items()
                                 ],
                                 "corr": corr,

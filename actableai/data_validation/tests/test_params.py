@@ -231,6 +231,71 @@ class TestRegressionDataValidator:
         assert "OnlyOneValueChecker" in validations_dict
         assert validations_dict["OnlyOneValueChecker"] == CheckLevels.CRITICAL
 
+    def test_validate_datetime_split_none(self):
+        df = pd.DataFrame(
+            {
+                "x": rands_array(10, 5),
+                "y": rands_array(10, 5),
+                "z": rands_array(10, 5),
+                "t": rands_array(10, 5),
+            }
+        )
+
+        validation_results = RegressionDataValidator().validate(
+            target="t",
+            features=["x", "y", "z"],
+            df=df,
+            debiasing_features=[],
+            debiased_features=[],
+            eval_metric="r2",
+            prediction_quantile_low=None,
+            prediction_quantile_high=None,
+            presets="medium_quality_faster_train",
+            explain_samples=False,
+            drop_duplicates=True,
+            datetime_column=None,
+            split_by_datetime=True,
+        )
+
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "SplitDateTimeColumnExist" in validations_dict
+        assert validations_dict["SplitDateTimeColumnExist"] == CheckLevels.CRITICAL
+
+    def test_validate_datetime_split_cross_validation(self):
+        df = pd.DataFrame(
+            {
+                "x": rands_array(10, 5),
+                "y": rands_array(10, 5),
+                "z": rands_array(10, 5),
+                "t": rands_array(10, 5),
+            }
+        )
+
+        validation_results = RegressionDataValidator().validate(
+            target="t",
+            features=["x", "y", "z"],
+            df=df,
+            debiasing_features=[],
+            debiased_features=[],
+            eval_metric="r2",
+            prediction_quantile_low=None,
+            prediction_quantile_high=None,
+            presets="medium_quality_faster_train",
+            explain_samples=False,
+            drop_duplicates=True,
+            datetime_column="z",
+            split_by_datetime=True,
+            kfolds=5,
+        )
+
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "SplitDateTimeCrossValidation" in validations_dict
+        assert validations_dict["SplitDateTimeCrossValidation"] == CheckLevels.CRITICAL
+
 
 class TestClassificationDataValidator:
     def test_validate(self):
@@ -304,6 +369,69 @@ class TestClassificationDataValidator:
         }
         assert "OnlyOneValueChecker" in validations_dict
         assert validations_dict["OnlyOneValueChecker"] == CheckLevels.CRITICAL
+
+    def test_validate_datetime_split_none(self):
+        df = pd.DataFrame(
+            {
+                "x": rands_array(10, 5),
+                "y": rands_array(10, 5),
+                "z": rands_array(10, 5),
+                "t": rands_array(10, 5),
+            }
+        )
+
+        validation_results = ClassificationDataValidator().validate(
+            target="t",
+            features=["x", "y", "z"],
+            df=df,
+            debiasing_features=[],
+            debiased_features=[],
+            eval_metric="r2",
+            presets="medium_quality_faster_train",
+            explain_samples=False,
+            drop_duplicates=True,
+            datetime_column=None,
+            split_by_datetime=True,
+        )
+
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "SplitDateTimeColumnExist" in validations_dict
+        assert validations_dict["SplitDateTimeColumnExist"] == CheckLevels.CRITICAL
+
+    def test_validate_datetime_split_cross_validation(self):
+        df = pd.DataFrame(
+            {
+                "x": rands_array(10, 5),
+                "y": rands_array(10, 5),
+                "z": rands_array(10, 5),
+                "t": rands_array(10, 5),
+            }
+        )
+
+        validation_results = RegressionDataValidator().validate(
+            target="t",
+            features=["x", "y", "z"],
+            df=df,
+            debiasing_features=[],
+            debiased_features=[],
+            eval_metric="r2",
+            prediction_quantile_low=None,
+            prediction_quantile_high=None,
+            presets="medium_quality_faster_train",
+            explain_samples=False,
+            drop_duplicates=True,
+            datetime_column="z",
+            split_by_datetime=True,
+            kfolds=5,
+        )
+
+        validations_dict = {
+            val.name: val.level for val in validation_results if val is not None
+        }
+        assert "SplitDateTimeCrossValidation" in validations_dict
+        assert validations_dict["SplitDateTimeCrossValidation"] == CheckLevels.CRITICAL
 
 
 class TestCorrelationDataValidator:
