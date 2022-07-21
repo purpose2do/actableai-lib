@@ -320,7 +320,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
             slice_function = None
             if sampling_method == "random":
                 slice_function = lambda df: slice(
-                    np.random.randint(2 * self.prediction_length + 1, df.shape[0] + 1)
+                    np.random.randint(3 * self.prediction_length + 1, df.shape[0] + 1)
                 )
             elif sampling_method == "last":
                 slice_function = lambda df: slice(df.shape[0] - i)
