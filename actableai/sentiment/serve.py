@@ -17,8 +17,8 @@ class AAISentimentExtractor:
         ray_options,
         pyabsa_checkpoint,
         device,
-        flair_pos_model_path:Optional[str]=None,
-        flair_pos_supported_language_codes:Optional[List[str]]=None,
+        flair_pos_model_path: Optional[str] = None,
+        flair_pos_supported_language_codes: Optional[List[str]] = None,
     ):
         """
         TODO write documentation
@@ -50,11 +50,12 @@ class AAISentimentExtractor:
         return serve.get_deployment(cls.__name__)
 
     def __init__(
-            self,
-            checkpoint,
-            device,
-            flair_pos_model_path:Optional[str]=None,
-            flair_pos_supported_language_codes:Optional[List[str]]=None) -> None:
+        self,
+        checkpoint,
+        device,
+        flair_pos_model_path: Optional[str] = None,
+        flair_pos_supported_language_codes: Optional[List[str]] = None,
+    ) -> None:
         """
         TODO write documentation
         """
@@ -63,7 +64,8 @@ class AAISentimentExtractor:
         from pyabsa import APCCheckpointManager
 
         tagger = MultilingualPOSTagger(
-            flair_pos_model_path, flair_pos_supported_language_codes)
+            flair_pos_model_path, flair_pos_supported_language_codes
+        )
         self.rake = multi_rake.Rake(min_freq=1, tagger=tagger)
         self.sent_classifier = APCCheckpointManager.get_sentiment_classifier(
             checkpoint=checkpoint,
