@@ -1,5 +1,6 @@
 import traceback
 import logging
+from typing import Optional, List
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,8 @@ class AAISentimentExtractor:
         ray_options,
         pyabsa_checkpoint,
         device,
+        flair_pos_model_path:Optional[str]=None,
+        flair_pos_supported_language_codes:Optional[List[str]]=None,
     ):
         """
         TODO write documentation
@@ -46,14 +49,22 @@ class AAISentimentExtractor:
 
         return serve.get_deployment(cls.__name__)
 
-    def __init__(self, checkpoint, device) -> None:
+    def __init__(
+            self,
+            checkpoint,
+            device,
+            flair_pos_model_path:Optional[str]=None,
+            flair_pos_supported_language_codes:Optional[List[str]]=None) -> None:
         """
         TODO write documentation
         """
         import multi_rake
+        from multi_rake.pos_tagger import MultilingualPOSTagger
         from pyabsa import APCCheckpointManager
 
-        self.rake = multi_rake.Rake(min_freq=1)
+        tagger = MultilingualPOSTagger(
+            flair_pos_model_path, flair_pos_supported_language_codes)
+        self.rake = multi_rake.Rake(min_freq=1, tagger=tagger)
         self.sent_classifier = APCCheckpointManager.get_sentiment_classifier(
             checkpoint=checkpoint,
             auto_device=device,
