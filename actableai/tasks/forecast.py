@@ -175,7 +175,7 @@ class AAIForecastTask(AAITask):
         model_params = [
             params.ProphetParams(),
             params.RForecastParams(
-                method_name=("thetaf", "stlar", "arima", "ets"),
+                method_name=("arima", "ets"),
             ),
             # params.TreePredictorParams(
             #    use_feat_dynamic_cat=len(cat_dynamic_feature_columns) > 0,
