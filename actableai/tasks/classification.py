@@ -139,6 +139,10 @@ class _AAIClassificationTrainTask(AAITask):
             eval_metric=eval_metric,
         )
 
+        feature_prune_kwargs = {}
+        if time_limit is not None:
+            feature_prune_kwargs["feature_prune_time_limit"] = time_limit * 0.5
+
         predictor = predictor.fit(
             train_data=df_train,
             hyperparameters=hyperparameters,
@@ -147,7 +151,7 @@ class _AAIClassificationTrainTask(AAITask):
             feature_generator=AutoMLPipelineFeatureGenerator(**feature_generator_args),
             time_limit=time_limit,
             ag_args_ensemble={"fold_fitting_strategy": "sequential_local"},
-            feature_prune_kwargs={},
+            feature_prune_kwargs=feature_prune_kwargs,
         )
 
         explainer = None
