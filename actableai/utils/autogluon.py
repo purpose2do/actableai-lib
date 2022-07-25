@@ -10,16 +10,6 @@ def transform_features(predictor, model_name, data):
     return df_transformed_data, transformed_data
 
 
-def _get_features_to_drop(autogluon_model):
-    """
-    TODO write documentation
-    """
-    if autogluon_model._is_features_in_same_as_ex:
-        return {}
-
-    return set(autogluon_model.features).difference(set(autogluon_model._features))
-
-
 def _get_xgboost_feature_links(xgboost_model):
     """
     TODO write documentation
@@ -50,14 +40,16 @@ def get_feature_links(predictor, model_name):
 
     # First preprocessing level links
     first_feature_links = feature_generator.get_feature_links()
+    first_features = feature_generator.feature_metadata.get_features()
 
     # Second preprocessing level links
     second_feature_links = None
     features_to_drop = []
     if model_name == "XGBoost":
         second_feature_links = _get_xgboost_feature_links(autogluon_model)
-    else:
-        features_to_drop = _get_features_to_drop(autogluon_model)
+
+    final_features = get_final_features(predictor, model_name)
+    features_to_drop = set(first_features).difference(set(final_features))
 
     # Merge layers
     feature_links = {}
@@ -91,7 +83,6 @@ def get_final_features(predictor, model_name):
     TODO write documentation
     """
     autogluon_model = predictor._trainer.load_model(model_name)
-    feature_generator = predictor._learner.feature_generator
 
     final_features = None
     if model_name == "XGBoost":
