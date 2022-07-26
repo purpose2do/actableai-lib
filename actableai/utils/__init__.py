@@ -203,7 +203,6 @@ def memory_efficient_hyperparameters():
 
     # Text models
     hyperparameters["FASTTEXT"] = {}
-    # hyperparameters["AG_TEXT_NN"] = {}
     hyperparameters["AG_AUTOMM"] = {"presets": "multilingual"}
 
     return hyperparameters
