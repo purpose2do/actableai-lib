@@ -1,7 +1,6 @@
 import pandas as pd
 from pathlib import Path
 from typing import Optional, Union
-from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import LabelEncoder
 from actableai.utils import get_type_special
 
@@ -217,10 +216,6 @@ def infer_causal(
     # convert boolean to int
     for c in pd_table.columns:
         if get_type_special(pd_table[c]) == "boolean":
-            if pd_table[c].isna().any():
-                pd_table[c] = SimpleImputer(strategy="most_frequent").fit_transform(
-                    pd_table[[c]]
-                )[:, 0]
             pd_table[c] = pd_table[c].astype(int)
 
     # construct the causal graph dot string
