@@ -30,7 +30,11 @@ class AAISentimentExtractor:
             name=cls.__name__,
             num_replicas=num_replicas,
             ray_actor_options=ray_options,
-            init_args=(pyabsa_checkpoint, device),
+            init_args=(
+                pyabsa_checkpoint,
+                device,
+                flair_pos_model_path,
+                flair_pos_supported_language_codes),
         ).deploy()
 
     @classmethod
