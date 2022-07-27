@@ -322,14 +322,14 @@ def handle_features_dataset(
         Filtered ListDataset.
     """
     from gluonts.transform import TransformedDataset
-    from gluonts.dataset.common import ListDataset
+    from gluonts.itertools import Map
 
     new_dataset = deepcopy(dataset)
 
     if isinstance(dataset, TransformedDataset):
-        list_data = new_dataset.base_dataset.list_data
-    elif isinstance(dataset, ListDataset):
-        list_data = new_dataset.list_data
+        iterable = new_dataset.base_dataset.iterable
+    elif isinstance(dataset, Map):
+        iterable = new_dataset.iterable
     else:
         raise Exception("Invalid dataset type")
 
@@ -343,15 +343,15 @@ def handle_features_dataset(
     if not keep_feat_dynamic_cat:
         fields_to_exclude.append("feat_dynamic_cat")
 
-    list_data = [
+    iterable = [
         {key: val for key, val in data.items() if key not in fields_to_exclude}
-        for data in list_data
+        for data in iterable
     ]
 
     if isinstance(dataset, TransformedDataset):
-        new_dataset.base_dataset.list_data = list_data
-    elif isinstance(dataset, ListDataset):
-        new_dataset.list_data = list_data
+        new_dataset.base_dataset.iterable = iterable
+    elif isinstance(dataset, Map):
+        new_dataset.iterable = iterable
 
     return new_dataset
 

@@ -349,7 +349,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
             list_data = []
 
             for tune_data_sample in tune_data_list:
-                list_data += tune_data_sample.list_data
+                list_data += tune_data_sample.iterable
 
             tune_data = ListDataset(
                 list_data,
@@ -413,7 +413,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         )
 
         # Choose distribution output
-        first_group_targets = train_data.list_data[0]["target"]
+        first_group_targets = train_data.iterable[0]["target"]
         if (first_group_targets >= 0).all() and first_group_targets in visions.Integer:
             self.distr_output = PoissonOutput()
         else:

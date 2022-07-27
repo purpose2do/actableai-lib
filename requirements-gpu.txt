@@ -145,9 +145,7 @@ cymem==2.0.6
     #   spacy
     #   thinc
 cython==0.29.30
-    # via
-    #   prophet
-    #   pystan
+    # via prophet
 dask==2021.11.2
     # via
     #   autogluon-core
@@ -463,7 +461,6 @@ numpy==1.21.6
     #   patsy
     #   prophet
     #   pyarrow
-    #   pystan
     #   pytorch-lightning
     #   pytorch-metric-learning
     #   pywavelets
@@ -656,8 +653,6 @@ pyrsistent==0.18.1
     #   multi-rake
 pysocks==1.7.1
     # via requests
-pystan==2.19.1.1
-    # via -r requirements.in
 pytest==7.1.1
     # via
     #   -r requirements.in

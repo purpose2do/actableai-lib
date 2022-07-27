@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from copy import copy
-from gluonts.dataset.common import ListDataset
+from gluonts.itertools import Map
 from gluonts.transform import TransformedDataset
 
 from actableai.timeseries.utils import (
@@ -168,11 +168,11 @@ def test_dataframe_to_list_dataset_simple(np_rng, n_groups, n_targets, freq):
     )
 
     assert list_dataset is not None
-    assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(group_df_dict)
+    assert isinstance(list_dataset, Map)
+    assert len(list_dataset.iterable) == len(group_df_dict)
 
     for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
-        data = list_dataset.list_data[group_index]
+        data = list_dataset.iterable[group_index]
 
         assert data["start"] == df_group.index[0]
 
@@ -212,11 +212,11 @@ def test_dataframe_to_list_dataset_real_static_features(
     )
 
     assert list_dataset is not None
-    assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(group_df_dict)
+    assert isinstance(list_dataset, Map)
+    assert len(list_dataset.iterable) == len(group_df_dict)
 
     for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
-        data = list_dataset.list_data[group_index]
+        data = list_dataset.iterable[group_index]
 
         assert data["start"] == df_group.index[0]
 
@@ -257,11 +257,11 @@ def test_dataframe_to_list_dataset_cat_static_features(
     )
 
     assert list_dataset is not None
-    assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(group_df_dict)
+    assert isinstance(list_dataset, Map)
+    assert len(list_dataset.iterable) == len(group_df_dict)
 
     for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
-        data = list_dataset.list_data[group_index]
+        data = list_dataset.iterable[group_index]
 
         assert data["start"] == df_group.index[0]
 
@@ -306,11 +306,11 @@ def test_dataframe_to_list_dataset_real_dynamic_features(
     )
 
     assert list_dataset is not None
-    assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(group_df_dict)
+    assert isinstance(list_dataset, Map)
+    assert len(list_dataset.iterable) == len(group_df_dict)
 
     for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
-        data = list_dataset.list_data[group_index]
+        data = list_dataset.iterable[group_index]
 
         assert data["start"] == df_group.index[0]
 
@@ -357,11 +357,11 @@ def test_dataframe_to_list_dataset_cat_dynamic_features(
     )
 
     assert list_dataset is not None
-    assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(group_df_dict)
+    assert isinstance(list_dataset, Map)
+    assert len(list_dataset.iterable) == len(group_df_dict)
 
     for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
-        data = list_dataset.list_data[group_index]
+        data = list_dataset.iterable[group_index]
 
         assert data["start"] == df_group.index[0]
 
@@ -400,11 +400,11 @@ def test_dataframe_to_list_dataset_group_label_dict(np_rng, n_groups, n_targets,
     )
 
     assert list_dataset is not None
-    assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(group_df_dict)
+    assert isinstance(list_dataset, Map)
+    assert len(list_dataset.iterable) == len(group_df_dict)
 
     for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
-        data = list_dataset.list_data[group_index]
+        data = list_dataset.iterable[group_index]
 
         assert data["start"] == df_group.index[0]
 
@@ -455,11 +455,11 @@ def test_dataframe_to_list_dataset_no_training(np_rng, n_groups, n_targets, freq
     )
 
     assert list_dataset is not None
-    assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(group_df_dict)
+    assert isinstance(list_dataset, Map)
+    assert len(list_dataset.iterable) == len(group_df_dict)
 
     for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
-        data = list_dataset.list_data[group_index]
+        data = list_dataset.iterable[group_index]
 
         assert data["start"] == df_group.index[0]
 
@@ -517,11 +517,11 @@ def test_dataframe_to_list_dataset_static_slice(np_rng, n_groups, n_targets, fre
     )
 
     assert list_dataset is not None
-    assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(group_df_dict)
+    assert isinstance(list_dataset, Map)
+    assert len(list_dataset.iterable) == len(group_df_dict)
 
     for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
-        data = list_dataset.list_data[group_index]
+        data = list_dataset.iterable[group_index]
 
         assert data["start"] == df_group.index[0]
 
@@ -578,12 +578,12 @@ def test_dataframe_to_list_dataset_dynamic_slice(np_rng, n_groups, n_targets, fr
     )
 
     assert list_dataset is not None
-    assert isinstance(list_dataset, ListDataset)
-    assert len(list_dataset.list_data) == len(group_df_dict)
+    assert isinstance(list_dataset, Map)
+    assert len(list_dataset.iterable) == len(group_df_dict)
 
     for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
         slice_ = slice_df(df_group)
-        data = list_dataset.list_data[group_index]
+        data = list_dataset.iterable[group_index]
 
         assert data["start"] == df_group.index[0]
 
@@ -667,17 +667,17 @@ def test_handle_features_dataset_remove_static_real(
     )
 
     if dataset_type == "transformed_dataset":
-        original_list_data = original_dataset.base_dataset.list_data
-        clean_list_data = clean_dataset.base_dataset.list_data
+        original_iterable = original_dataset.base_dataset.iterable
+        clean_iterable = clean_dataset.base_dataset.iterable
     else:
-        original_list_data = original_dataset.list_data
-        clean_list_data = clean_dataset.list_data
+        original_iterable = original_dataset.iterable
+        clean_iterable = clean_dataset.iterable
 
-    assert len(clean_list_data) == len(group_df_dict)
+    assert len(clean_iterable) == len(group_df_dict)
 
     for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
-        original_data = original_list_data[group_index]
-        data = clean_list_data[group_index]
+        original_data = original_iterable[group_index]
+        data = clean_iterable[group_index]
 
         assert data["start"] == df_group.index[0]
 
@@ -762,17 +762,17 @@ def test_handle_features_dataset_remove_static_cat(
     )
 
     if dataset_type == "transformed_dataset":
-        original_list_data = original_dataset.base_dataset.list_data
-        clean_list_data = clean_dataset.base_dataset.list_data
+        original_iterable = original_dataset.base_dataset.iterable
+        clean_iterable = clean_dataset.base_dataset.iterable
     else:
-        original_list_data = original_dataset.list_data
-        clean_list_data = clean_dataset.list_data
+        original_iterable = original_dataset.iterable
+        clean_iterable = clean_dataset.iterable
 
-    assert len(clean_list_data) == len(group_df_dict)
+    assert len(clean_iterable) == len(group_df_dict)
 
     for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
-        original_data = original_list_data[group_index]
-        data = clean_list_data[group_index]
+        original_data = original_iterable[group_index]
+        data = clean_iterable[group_index]
 
         assert data["start"] == df_group.index[0]
 
@@ -857,17 +857,17 @@ def test_handle_features_dataset_remove_dynamic_real(
     )
 
     if dataset_type == "transformed_dataset":
-        original_list_data = original_dataset.base_dataset.list_data
-        clean_list_data = clean_dataset.base_dataset.list_data
+        original_iterable = original_dataset.base_dataset.iterable
+        clean_iterable = clean_dataset.base_dataset.iterable
     else:
-        original_list_data = original_dataset.list_data
-        clean_list_data = clean_dataset.list_data
+        original_iterable = original_dataset.iterable
+        clean_iterable = clean_dataset.iterable
 
-    assert len(clean_list_data) == len(group_df_dict)
+    assert len(clean_iterable) == len(group_df_dict)
 
     for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
-        original_data = original_list_data[group_index]
-        data = clean_list_data[group_index]
+        original_data = original_iterable[group_index]
+        data = clean_iterable[group_index]
 
         assert data["start"] == df_group.index[0]
 
@@ -953,17 +953,17 @@ def test_handle_features_dataset_remove_dynamic_cat(
     )
 
     if dataset_type == "transformed_dataset":
-        original_list_data = original_dataset.base_dataset.list_data
-        clean_list_data = clean_dataset.base_dataset.list_data
+        original_iterable = original_dataset.base_dataset.iterable
+        clean_iterable = clean_dataset.base_dataset.iterable
     else:
-        original_list_data = original_dataset.list_data
-        clean_list_data = clean_dataset.list_data
+        original_iterable = original_dataset.iterable
+        clean_iterable = clean_dataset.iterable
 
-    assert len(clean_list_data) == len(group_df_dict)
+    assert len(clean_iterable) == len(group_df_dict)
 
     for group_index, (group_name, df_group) in enumerate(group_df_dict.items()):
-        original_data = original_list_data[group_index]
-        data = clean_list_data[group_index]
+        original_data = original_iterable[group_index]
+        data = clean_iterable[group_index]
 
         assert data["start"] == df_group.index[0]
 
