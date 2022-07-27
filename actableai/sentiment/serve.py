@@ -34,7 +34,7 @@ class AAISentimentExtractor:
                 pyabsa_checkpoint,
                 device,
                 flair_pos_model_path,
-                flair_pos_supported_language_codes
+                flair_pos_supported_language_codes,
             ),
         ).deploy()
 
