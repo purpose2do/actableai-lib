@@ -194,6 +194,7 @@ def memory_efficient_hyperparameters():
     from autogluon.tabular.configs.hyperparameter_configs import (
         hyperparameter_config_dict,
     )
+    from autogluon.text.text_prediction.presets import list_text_presets
 
     # Returns autogluon tabular predictor's hyperparameters without the heavy-memory models
 
@@ -203,7 +204,11 @@ def memory_efficient_hyperparameters():
 
     # Text models
     hyperparameters["FASTTEXT"] = {}
-    hyperparameters["AG_AUTOMM"] = {"presets": "multilingual"}
+
+    simple_presets = list_text_presets(verbose=True)
+    # Change the batch size if we encounter memory issues
+    hyperparameters["AG_AUTOMM"] = simple_presets["multilingual"]  # type: ignore
+    # hyperparameters["AG_AUTOMM"]["env.per_gpu_batch_size"] = 4
 
     return hyperparameters
 
