@@ -1,8 +1,8 @@
-import os
-from setuptools import Extension, setup, find_packages
+from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.develop import develop
 from setuptools.command.egg_info import egg_info
+
 
 def post_install():
     import nltk
