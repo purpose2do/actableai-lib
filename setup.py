@@ -1,28 +1,8 @@
 import os
-import numpy as np
 from setuptools import Extension, setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.develop import develop
 from setuptools.command.egg_info import egg_info
-
-libraries = []
-if os.name == "posix":
-    libraries.append("m")
-
-extensions = []
-for name in ["_tree", "_splitter", "_criterion", "_utils"]:
-    extensions.append(
-        Extension(
-            "actableai.third_parties.skgarden.mondrian.tree.{}".format(name),
-            sources=[
-                "actableai/third_parties/skgarden/mondrian/tree/{}.pyx".format(name)
-            ],
-            include_dirs=[np.get_include()],
-            libraries=libraries,
-            extra_compile_args=["-O3"],
-        )
-    )
-
 
 def post_install():
     import nltk
@@ -105,7 +85,6 @@ setup(
         "nltk",
     ],
     include_package_data=True,
-    ext_modules=extensions,
     cmdclass={
         "install": CustomInstallCommand,
         "develop": CustomDevelopCommand,
