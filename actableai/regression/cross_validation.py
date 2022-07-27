@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 from actableai.classification.utils import leaderboard_cross_val
 from actableai.tasks.regression import _AAIRegressionTrainTask
@@ -25,7 +25,7 @@ def run_cross_validation(
     biased_groups: List[str],
     debiased_features: List[str],
     residuals_hyperparameters: Dict[str, Dict],
-    num_gpus: int,
+    num_gpus: Union[int, str],
     eval_metric: str,
     time_limit: Optional[int],
     drop_unique: bool,
