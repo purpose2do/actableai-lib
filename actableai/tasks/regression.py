@@ -1,6 +1,6 @@
 import logging
 import pandas as pd
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
@@ -31,7 +31,7 @@ class _AAIRegressionTrainTask(AAITask):
         biased_groups: List[str],
         debiased_features: List[str],
         residuals_hyperparameters: Dict,
-        num_gpus: int,
+        num_gpus: Union[str, int],
         eval_metric: Dict,
         time_limit: Optional[int],
         drop_unique: bool,
@@ -274,7 +274,7 @@ class AAIRegressionTask(AAITask):
         drop_duplicates: bool = True,
         return_residuals: bool = False,
         kde_steps: int = 10,
-        num_gpus: int = 0,
+        num_gpus: Union[int, str] = 0,
         time_limit: Optional[int] = None,
         drop_unique: bool = True,
         drop_useless_features: bool = True,
