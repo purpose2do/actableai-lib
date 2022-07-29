@@ -380,6 +380,8 @@ class AAIClassificationTask(AAITask):
                 ‘recall_micro’, ‘recall_weighted’, ‘log_loss’, ‘pac_score’.
                 Defaults to "accuracy".
             time_limit: Time limit of training (in seconds)
+            ag_automm_enabled: Whether to use autogluon multimodal model on text
+                columns.
 
         Raises:
             Exception: If the target has less than 2 unique values.

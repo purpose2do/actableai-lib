@@ -333,6 +333,8 @@ class AAIRegressionTask(AAITask):
                 prediction. Defaults to 0.
             time_limit: time limit (in seconds) of training. Defaults to None, which means
                 there is no time limit.
+            ag_automm_enabled: Whether to use autogluon multimodal model on text
+                columns.
 
         Examples:
             >>> import pandas as pd
