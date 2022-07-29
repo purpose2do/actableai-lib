@@ -399,6 +399,8 @@ class AAIClassificationTask(AAITask):
         import pandas as pd
         from scipy.stats import spearmanr
         from sklearn.model_selection import train_test_split
+        from autogluon.common.features.infer_types import check_if_nlp_feature
+
         from actableai.utils import (
             memory_efficient_hyperparameters,
             handle_boolean_features,
@@ -478,7 +480,10 @@ class AAIClassificationTask(AAITask):
             if explain_samples:
                 hyperparameters = explanation_hyperparameters()
             else:
-                hyperparameters = memory_efficient_hyperparameters(ag_automm_enabled)
+                any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
+                hyperparameters = memory_efficient_hyperparameters(
+                    ag_automm_enabled and any_text_cols
+                )
 
         # Split data
         df_train = df[pd.notnull(df[target])]

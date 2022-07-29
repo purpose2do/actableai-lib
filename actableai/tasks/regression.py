@@ -355,6 +355,8 @@ class AAIRegressionTask(AAITask):
         from scipy.stats import spearmanr
         from sklearn.model_selection import train_test_split
         from sklearn.neighbors import KernelDensity
+        from autogluon.common.features.infer_types import check_if_nlp_feature
+
         from actableai.utils import (
             memory_efficient_hyperparameters,
             explanation_hyperparameters,
@@ -433,7 +435,10 @@ class AAIRegressionTask(AAITask):
             if explain_samples:
                 hyperparameters = explanation_hyperparameters()
             else:
-                hyperparameters = memory_efficient_hyperparameters(ag_automm_enabled)
+                any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
+                hyperparameters = memory_efficient_hyperparameters(
+                    ag_automm_enabled and any_text_cols
+                )
 
         # Split data
         df_train = df[pd.notnull(df[target])]
