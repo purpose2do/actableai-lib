@@ -280,6 +280,7 @@ class AAIRegressionTask(AAITask):
         drop_useless_features: bool = True,
         datetime_column: Optional[str] = None,
         split_by_datetime: bool = False,
+        ag_automm_enabled: bool = False,
     ):
         """Run this regression task and return results.
 
@@ -430,7 +431,7 @@ class AAIRegressionTask(AAITask):
             if explain_samples:
                 hyperparameters = explanation_hyperparameters()
             else:
-                hyperparameters = memory_efficient_hyperparameters()
+                hyperparameters = memory_efficient_hyperparameters(ag_automm_enabled)
 
         # Split data
         df_train = df[pd.notnull(df[target])]

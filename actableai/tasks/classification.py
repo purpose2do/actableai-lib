@@ -338,6 +338,7 @@ class AAIClassificationTask(AAITask):
         drop_useless_features: bool = True,
         datetime_column: Optional[str] = None,
         split_by_datetime: bool = False,
+        ag_automm_enabled=False,
     ) -> Dict:
         """Run this classification task and return results.
 
@@ -475,7 +476,7 @@ class AAIClassificationTask(AAITask):
             if explain_samples:
                 hyperparameters = explanation_hyperparameters()
             else:
-                hyperparameters = memory_efficient_hyperparameters()
+                hyperparameters = memory_efficient_hyperparameters(ag_automm_enabled)
 
         # Split data
         df_train = df[pd.notnull(df[target])]
