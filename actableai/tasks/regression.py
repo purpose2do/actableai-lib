@@ -280,6 +280,7 @@ class AAIRegressionTask(AAITask):
         drop_useless_features: bool = True,
         datetime_column: Optional[str] = None,
         split_by_datetime: bool = False,
+        ag_automm_enabled: bool = False,
     ):
         """Run this regression task and return results.
 
@@ -332,6 +333,8 @@ class AAIRegressionTask(AAITask):
                 prediction. Defaults to 0.
             time_limit: time limit (in seconds) of training. Defaults to None, which means
                 there is no time limit.
+            ag_automm_enabled: Whether to use autogluon multimodal model on text
+                columns.
 
         Examples:
             >>> import pandas as pd
@@ -430,7 +433,7 @@ class AAIRegressionTask(AAITask):
             if explain_samples:
                 hyperparameters = explanation_hyperparameters()
             else:
-                hyperparameters = memory_efficient_hyperparameters()
+                hyperparameters = memory_efficient_hyperparameters(ag_automm_enabled)
 
         # Split data
         df_train = df[pd.notnull(df[target])]
