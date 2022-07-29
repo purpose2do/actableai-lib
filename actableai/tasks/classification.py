@@ -172,7 +172,7 @@ class _AAIClassificationTrainTask(AAITask):
 
         # Evaluate results
         important_features = []
-        feature_importance = predictor.feature_importance(df_train)
+        feature_importance = predictor.feature_importance(df_val)
         for i in range(len(feature_importance)):
             if feature_importance.index[i] in biased_groups:
                 continue

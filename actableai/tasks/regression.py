@@ -167,7 +167,7 @@ class _AAIRegressionTrainTask(AAITask):
 
         important_features = []
         if quantile_levels is None:
-            feature_importance = predictor.feature_importance(df_train)
+            feature_importance = predictor.feature_importance(df_val)
             for i in range(len(feature_importance)):
                 if feature_importance.index[i] in biased_groups:
                     continue
