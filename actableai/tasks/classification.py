@@ -84,6 +84,7 @@ class _AAIClassificationTrainTask(AAITask):
                 - Leaderboard of the best trained models
         """
         import pandas as pd
+        import numpy as np
         from autogluon.tabular import TabularPredictor
         from autogluon.features.generators import AutoMLPipelineFeatureGenerator
         from sklearn.metrics import (
@@ -187,10 +188,13 @@ class _AAIClassificationTrainTask(AAITask):
         label_val = df_val[target]
         label_pred = predictor.predict(df_val)
         pred_prob_val = predictor.predict_proba(df_val, as_multiclass=True)
+        auxiliary_metrics = True
+        if len(np.unique(label_val)) == 1:
+            auxiliary_metrics = False
         perf = predictor.evaluate_predictions(
             y_true=label_val,
             y_pred=pred_prob_val,
-            auxiliary_metrics=True,
+            auxiliary_metrics=auxiliary_metrics,
             detailed_report=False,
         )
 
