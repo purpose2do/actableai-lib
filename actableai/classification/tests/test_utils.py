@@ -116,10 +116,10 @@ def test_split_validation_by_datetime():
             "value": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         }
     )
-    df_train = df_train.sample(frac=1).reset_index()
+    df_train = df_train.sample(frac=1)
     val_ratio = 0.2
     df_train, df_val = split_validation_by_datetime(df_train, "datetime", val_ratio)
-    assert df_train.shape[0] == int(val_ratio * df_train.shape[0])
-    assert df_val.shape[0] == int(val_ratio * df_train.shape[0])
-    assert df_train.sort_values("datetime").reset_index(drop=True).equals(df_train)
-    assert df_val.sort_values("datetime").reset_index(drop=True).equals(df_val)
+    assert df_train.shape[0] == 8
+    assert df_val.shape[0] == 2
+    assert not df_train.sort_values("datetime").equals(df_train)
+    assert df_val.sort_values("datetime").equals(df_val)
