@@ -1,6 +1,7 @@
 import logging
 import pandas as pd
 from typing import Dict, List, Optional, Union
+from actableai.classification.utils import split_validation_by_datetime
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
@@ -447,10 +448,9 @@ class AAIRegressionTask(AAITask):
         df_val = None
         if kfolds <= 1:
             if split_by_datetime and datetime_column is not None:
-                sorted_df = df_train.sort_values(by=datetime_column, ascending=True)
-                split_datetime_index = int((1 - validation_ratio) * len(sorted_df))
-                df_train = sorted_df.iloc[:split_datetime_index].sample(frac=1)
-                df_val = sorted_df.iloc[split_datetime_index:]
+                df_train, df_val = split_validation_by_datetime(
+                    df_train, datetime_column, validation_ratio
+                )
             else:
                 df_train, df_val = train_test_split(
                     df_train, test_size=validation_ratio
