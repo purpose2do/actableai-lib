@@ -1,7 +1,8 @@
 import numpy as np
+import pandas as pd
 import pytest
 
-from actableai.data_validation.base import *
+from actableai.data_validation.base import CheckLevels
 from actableai.tasks.forecast import AAIForecastTask
 from actableai.timeseries.models import params
 from actableai.utils.testing import generate_forecast_df
@@ -17,7 +18,7 @@ class TestTimeSeries:
     @pytest.mark.parametrize("n_targets", [1, 5])
     @pytest.mark.parametrize("use_features", [True, False])
     @pytest.mark.parametrize("sorted_data", [True, False])
-    @pytest.mark.parametrize("freq", ["T"])
+    @pytest.mark.parametrize("freq", ["T", "MS"])
     def test_simple(
         self,
         np_rng,
@@ -32,6 +33,7 @@ class TestTimeSeries:
         (
             df,
             date_column,
+            date_column_str,
             target_columns,
             group_by,
             feature_columns,
@@ -56,7 +58,7 @@ class TestTimeSeries:
         results = forecast_task.run(
             df,
             prediction_length=prediction_length,
-            date_column=date_column,
+            date_column=date_column_str,
             predicted_columns=target_columns,
             group_by=group_by,
             feature_columns=feature_columns,
@@ -87,7 +89,7 @@ class TestTimeSeries:
         df_predict = data["predict"]
         assert len(df_predict) == prediction_length * n_groups * n_targets
         assert "target" in df_predict.columns
-        assert date_column in df_predict.columns
+        assert date_column_str in df_predict.columns
         assert "0.05" in df_predict.columns
         assert "0.5" in df_predict.columns
         assert "0.95" in df_predict.columns
@@ -115,7 +117,8 @@ class TestTimeSeries:
                         df_group_predict["target"] == target
                     ]
                     assert (
-                        df_group_target_predict[date_column].values == date_list.values
+                        df_group_target_predict[date_column_str].values
+                        == date_list.values
                     ).all()
         else:
             if use_features:
@@ -128,13 +131,15 @@ class TestTimeSeries:
 
             for target in target_columns:
                 df_target_predict = df_predict[df_predict["target"] == target]
-                assert (df_target_predict[date_column].values == date_list.values).all()
+                assert (
+                    df_target_predict[date_column_str].values == date_list.values
+                ).all()
 
         # Test validation output
         df_val_predict = validation_data["predict"]
         assert len(df_val_predict) == prediction_length * n_groups * n_targets
         assert "target" in df_val_predict.columns
-        assert date_column in df_val_predict.columns
+        assert date_column_str in df_val_predict.columns
         assert "0.05" in df_val_predict.columns
         assert "0.5" in df_val_predict.columns
         assert "0.95" in df_val_predict.columns
@@ -161,7 +166,8 @@ class TestTimeSeries:
                         df_group_predict["target"] == target
                     ]
                     assert (
-                        df_group_target_predict[date_column].values == date_list.values
+                        df_group_target_predict[date_column_str].values
+                        == date_list.values
                     ).all()
         else:
             if use_features:
@@ -173,7 +179,9 @@ class TestTimeSeries:
 
             for target in target_columns:
                 df_target_predict = df_val_predict[df_val_predict["target"] == target]
-                assert (df_target_predict[date_column].values == date_list.values).all()
+                assert (
+                    df_target_predict[date_column_str].values == date_list.values
+                ).all()
 
         df_agg_metrics = validation_data["agg_metrics"]
         assert len(df_agg_metrics) == n_targets
@@ -346,7 +354,7 @@ class TestTimeSeries:
     @pytest.mark.parametrize("freq", ["T"])
     def test_hyperopt(self, np_rng, forecast_task, n_targets, freq):
         prediction_length = np_rng.integers(1, 3)
-        df, date_column, target_columns, _, _, _ = generate_forecast_df(
+        df, _, date_column_str, target_columns, _, _, _ = generate_forecast_df(
             np_rng,
             prediction_length,
             n_targets=n_targets,
@@ -357,7 +365,7 @@ class TestTimeSeries:
         results = forecast_task.run(
             df,
             prediction_length=prediction_length,
-            date_column=date_column,
+            date_column=date_column_str,
             predicted_columns=target_columns,
             trials=10,
             use_ray=False,
@@ -375,7 +383,7 @@ class TestTimeSeries:
     @pytest.mark.parametrize("freq", ["T"])
     def test_ray(self, np_rng, init_ray, freq):
         prediction_length = np_rng.integers(1, 3)
-        df, date_column, target_columns, _, _, _ = generate_forecast_df(
+        df, _, date_column_str, target_columns, _, _, _ = generate_forecast_df(
             np_rng,
             prediction_length,
             freq=freq,
@@ -386,7 +394,7 @@ class TestTimeSeries:
         results = forecast_task.run(
             df,
             prediction_length=prediction_length,
-            date_column=date_column,
+            date_column=date_column_str,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,
@@ -412,7 +420,7 @@ class TestTimeSeries:
     @pytest.mark.parametrize("freq", ["T"])
     def test_mix_target_column(self, np_rng, forecast_task, freq):
         prediction_length = np_rng.integers(1, 3)
-        df, date_column, target_columns, _, _, _ = generate_forecast_df(
+        df, _, date_column_str, target_columns, _, _, _ = generate_forecast_df(
             np_rng,
             prediction_length,
             freq=freq,
@@ -427,7 +435,7 @@ class TestTimeSeries:
         results = forecast_task.run(
             df,
             prediction_length=prediction_length,
-            date_column=date_column,
+            date_column=date_column_str,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,
@@ -450,19 +458,19 @@ class TestTimeSeries:
     @pytest.mark.parametrize("freq", ["T"])
     def test_invalid_date_column(self, np_rng, forecast_task, freq):
         prediction_length = np_rng.integers(1, 3)
-        df, date_column, target_columns, _, _, _ = generate_forecast_df(
+        df, _, date_column_str, target_columns, _, _, _ = generate_forecast_df(
             np_rng,
             prediction_length,
             freq=freq,
             date_range_kwargs={"min_periods": 30, "max_periods": 60},
         )
 
-        df[date_column] = np_rng.choice(["a", "b", "c"], size=len(df))
+        df[date_column_str] = np_rng.choice(["a", "b", "c"], size=len(df))
 
         results = forecast_task.run(
             df,
             prediction_length=prediction_length,
-            date_column=date_column,
+            date_column=date_column_str,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,
@@ -485,7 +493,7 @@ class TestTimeSeries:
     @pytest.mark.parametrize("freq", ["T"])
     def test_insufficient_data(self, np_rng, forecast_task, freq):
         prediction_length = np_rng.integers(1, 3)
-        df, date_column, target_columns, _, _, _ = generate_forecast_df(
+        df, _, date_column_str, target_columns, _, _, _ = generate_forecast_df(
             np_rng,
             prediction_length,
             freq=freq,
@@ -495,7 +503,7 @@ class TestTimeSeries:
         results = forecast_task.run(
             df,
             prediction_length=prediction_length,
-            date_column=date_column,
+            date_column=date_column_str,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,
@@ -518,7 +526,7 @@ class TestTimeSeries:
     @pytest.mark.parametrize("freq", ["T"])
     def test_invalid_prediction_length(self, np_rng, forecast_task, freq):
         prediction_length = 10
-        df, date_column, target_columns, _, _, _ = generate_forecast_df(
+        df, _, date_column_str, target_columns, _, _, _ = generate_forecast_df(
             np_rng,
             prediction_length,
             freq=freq,
@@ -528,7 +536,7 @@ class TestTimeSeries:
         results = forecast_task.run(
             df,
             prediction_length=prediction_length,
-            date_column=date_column,
+            date_column=date_column_str,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,
@@ -553,7 +561,7 @@ class TestTimeSeries:
     @pytest.mark.parametrize("freq", ["T"])
     def test_cat_features(self, np_rng, forecast_task, freq):
         prediction_length = np_rng.integers(1, 3)
-        df, date_column, target_columns, _, _, _ = generate_forecast_df(
+        df, _, date_column_str, target_columns, _, _, _ = generate_forecast_df(
             np_rng,
             prediction_length,
             freq=freq,
@@ -567,7 +575,7 @@ class TestTimeSeries:
         results = forecast_task.run(
             df,
             prediction_length=prediction_length,
-            date_column=date_column,
+            date_column=date_column_str,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,
@@ -590,7 +598,7 @@ class TestTimeSeries:
     @pytest.mark.parametrize("freq", ["T"])
     def test_invalid_column(self, np_rng, forecast_task, freq):
         prediction_length = np_rng.integers(1, 3)
-        df, date_column, target_columns, _, _, _ = generate_forecast_df(
+        df, _, date_column_str, target_columns, _, _, _ = generate_forecast_df(
             np_rng,
             prediction_length,
             freq=freq,
@@ -600,7 +608,7 @@ class TestTimeSeries:
         results = forecast_task.run(
             df,
             prediction_length=prediction_length,
-            date_column=date_column,
+            date_column=date_column_str,
             predicted_columns=["test"],
             model_params=[params.ConstantValueParams()],
             trials=1,
@@ -623,7 +631,7 @@ class TestTimeSeries:
     @pytest.mark.parametrize("freq", ["T"])
     def test_empty_column(self, np_rng, forecast_task, freq):
         prediction_length = np_rng.integers(1, 3)
-        df, date_column, target_columns, _, _, _ = generate_forecast_df(
+        df, _, date_column_str, target_columns, _, _, _ = generate_forecast_df(
             np_rng,
             prediction_length,
             freq=freq,
@@ -635,7 +643,7 @@ class TestTimeSeries:
         results = forecast_task.run(
             df,
             prediction_length=prediction_length,
-            date_column=date_column,
+            date_column=date_column_str,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,
@@ -657,10 +665,10 @@ class TestTimeSeries:
             validations_dict["DoNotContainEmptyColumnsChecker"] == CheckLevels.CRITICAL
         )
 
-    @pytest.mark.parametrize("freq", ["T"])
+    @pytest.mark.parametrize("freq", ["T", "MS"])
     def test_invalid_frequency(self, np_rng, forecast_task, freq):
         prediction_length = np_rng.integers(1, 3)
-        df, date_column, target_columns, _, _, _ = generate_forecast_df(
+        df, _, date_column_str, target_columns, _, _, _ = generate_forecast_df(
             np_rng,
             prediction_length,
             freq=freq,
@@ -672,7 +680,7 @@ class TestTimeSeries:
         results = forecast_task.run(
             df,
             prediction_length=prediction_length,
-            date_column=date_column,
+            date_column=date_column_str,
             predicted_columns=target_columns,
             model_params=[params.ConstantValueParams()],
             trials=1,

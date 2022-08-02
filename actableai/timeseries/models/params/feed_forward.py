@@ -86,7 +86,6 @@ class FeedForwardParams(BaseParams):
         self,
         *,
         ctx: Context,
-        freq: str,
         prediction_length: int,
         distr_output: DistributionOutput,
         params: Dict[str, Any],
@@ -96,7 +95,6 @@ class FeedForwardParams(BaseParams):
 
         Args:
             ctx: mxnet context.
-            freq: Frequency of the time series used.
             prediction_length: Length of the prediction that will be forecasted.
             distr_output: Distribution output to use.
             params: Selected parameters from the hyperparameter space.
@@ -123,7 +121,6 @@ class FeedForwardParams(BaseParams):
             hidden_layer_size.append(hidden_layer_3_size)
 
         return SimpleFeedForwardEstimator(
-            freq=freq,
             prediction_length=prediction_length,
             num_hidden_dimensions=hidden_layer_size,
             context_length=params.get("context_length", prediction_length),

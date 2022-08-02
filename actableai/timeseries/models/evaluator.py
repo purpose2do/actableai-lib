@@ -25,6 +25,7 @@ class AAITimeSeriesEvaluator:
             kwargs: The named arguments to pass to the GluonTS Evaluator.
         """
         self.target_columns = target_columns
+
         self.group_list = group_list
 
         if len(self.target_columns) <= 1:
@@ -42,7 +43,7 @@ class AAITimeSeriesEvaluator:
 
     def __call__(
         self, *args, **kwargs
-    ) -> Tuple[Dict[Tuple[Any, ...], pd.DataFrame], pd.DataFrame,]:
+    ) -> Tuple[Dict[Tuple[Any, ...], pd.DataFrame], pd.DataFrame]:
         """Run the evaluator.
 
         Args:

@@ -1,75 +1,28 @@
 import mxnet as mx
 import pandas as pd
 from abc import ABC, abstractmethod
-from typing import List, Dict, Tuple, Any, Optional, Union
+from typing import List, Dict, Tuple, Any, Optional
+
+from gluonts.dataset.pandas import PandasDataset
 
 from actableai.timeseries.models.params.base import BaseParams
-from actableai.timeseries.utils import find_gluonts_freq
 
 
 class AAITimeSeriesBaseModel(ABC):
     """Time Series Model interface."""
 
-    def __init__(
-        self,
-        target_columns: List[str],
-        prediction_length: int,
-        freq: str,
-        group_label_dict: Optional[Dict[Tuple[Any, ...], int]] = None,
-        real_static_feature_dict: Optional[Dict[Tuple[Any, ...], List[float]]] = None,
-        cat_static_feature_dict: Optional[Dict[Tuple[Any, ...], List[Any]]] = None,
-        real_dynamic_feature_columns: Optional[List[str]] = None,
-        cat_dynamic_feature_columns: Optional[List[str]] = None,
-    ):
+    def __init__(self, prediction_length: int):
         """AAITimeSeriesBaseModel Constructor.
 
         Args:
-            target_columns: List of columns to forecast.
             prediction_length: Length of the prediction to forecast.
-            freq: Frequency of the time series.
-            group_label_dict: Dictionary containing the unique label for each group.
-            real_static_feature_dict: Dictionary containing a list of real static
-                features for each group.
-            cat_static_feature_dict: Dictionary containing a list of categorical static
-                features for each group.
-            real_dynamic_feature_columns: List of columns containing real dynamic
-                features.
-            cat_dynamic_feature_columns: List of columns containing categorical dynamic
-                features.
         """
-        self.target_columns = target_columns
         self.prediction_length = prediction_length
-        self.freq = freq
-
-        self.group_label_dict = group_label_dict
-        self.real_static_feature_dict = real_static_feature_dict
-        self.cat_static_feature_dict = cat_static_feature_dict
-        self.real_dynamic_feature_columns = real_dynamic_feature_columns
-        self.cat_dynamic_feature_columns = cat_dynamic_feature_columns
-
-        if self.group_label_dict is None:
-            self.group_label_dict = {}
-        if self.real_static_feature_dict is None:
-            self.real_static_feature_dict = {}
-        if self.cat_static_feature_dict is None:
-            self.cat_static_feature_dict = {}
-        if self.real_dynamic_feature_columns is None:
-            self.real_dynamic_feature_columns = []
-        if self.cat_dynamic_feature_columns is None:
-            self.cat_dynamic_feature_columns = []
-
-        self.freq_gluon = find_gluonts_freq(self.freq)
-
-        self.has_dynamic_features = (
-            len(self.real_dynamic_feature_columns)
-            + len(self.cat_dynamic_feature_columns)
-            > 0
-        )
 
     @abstractmethod
     def fit(
         self,
-        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        dataset: PandasDataset,
         model_params: List[BaseParams],
         *,
         mx_ctx: Optional[mx.Context] = mx.cpu(),
@@ -87,7 +40,7 @@ class AAITimeSeriesBaseModel(ABC):
         """Tune and fit the model.
 
         Args:
-            group_df_dict: Dictionary containing the time series for each group.
+            dataset: Dataset containing the time series.
             model_params: List of models parameters to run the tuning search on.
             mx_ctx: mxnet context, CPU by default.
             loss: Loss to minimize when tuning.
@@ -112,13 +65,13 @@ class AAITimeSeriesBaseModel(ABC):
     @abstractmethod
     def refit(
         self,
-        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        dataset: PandasDataset,
         mx_ctx: Optional[mx.Context] = mx.cpu(),
     ):
         """Fit previously tuned model.
 
         Args:
-            group_df_dict: Dictionary containing the time series for each group.
+            dataset: Dataset containing the time series.
             mx_ctx: mxnet context, CPU by default.
 
         Raises:
@@ -129,7 +82,7 @@ class AAITimeSeriesBaseModel(ABC):
     @abstractmethod
     def score(
         self,
-        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        dataset: PandasDataset,
         num_samples: int = 100,
         quantiles: List[float] = [0.05, 0.5, 0.95],
         num_workers: Optional[int] = None,
@@ -141,7 +94,7 @@ class AAITimeSeriesBaseModel(ABC):
         """Evaluate model.
 
         Args:
-            group_df_dict: Dictionary containing the time series for each group.
+            dataset: Dataset containing the time series.
             num_samples: Number of dataset samples to use for evaluation
             quantiles: List of quantiles to use for evaluation.
             num_workers: Maximum number of workers to use, if None no parallelization
@@ -160,13 +113,13 @@ class AAITimeSeriesBaseModel(ABC):
     @abstractmethod
     def predict(
         self,
-        group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
+        dataset: PandasDataset,
         quantiles: List[float] = [0.05, 0.5, 0.95],
     ) -> Dict[Tuple[Any, ...], pd.DataFrame]:
         """Make a prediction using the model.
 
         Args:
-            group_df_dict: Dictionary containing the time series for each group.
+            dataset: Dataset containing the time series.
             quantiles: Quantiles to predict.
 
         Raises:
