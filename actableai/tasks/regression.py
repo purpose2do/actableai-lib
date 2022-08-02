@@ -282,6 +282,7 @@ class AAIRegressionTask(AAITask):
         datetime_column: Optional[str] = None,
         split_by_datetime: bool = False,
         ag_automm_enabled: bool = False,
+        refit_full: bool = False,
     ):
         """Run this regression task and return results.
 
@@ -681,6 +682,37 @@ class AAIRegressionTask(AAITask):
             "debiasing_charts": debiasing_charts,
             "leaderboard": leaderboard,
         }
+
+        if refit_full:
+            predictor, _, _, _, _, _, _, _, _, _ = _AAIRegressionTrainTask(
+                **train_task_params
+            ).run(
+                explain_samples=False,
+                presets=presets,
+                hyperparameters=hyperparameters,
+                model_directory=model_directory,
+                target=target,
+                features=features,
+                run_model=False,
+                df_train=df,
+                df_val=pd.DataFrame(),
+                df_test=pd.DataFrame(),
+                prediction_quantile_low=prediction_quantile_low,
+                prediction_quantile_high=prediction_quantile_high,
+                drop_duplicates=drop_duplicates,
+                run_debiasing=run_debiasing,
+                biased_groups=biased_groups,
+                debiased_features=debiased_features,
+                residuals_hyperparameters=residuals_hyperparameters,
+                num_gpus=num_gpus,
+                eval_metric=eval_metric,
+                time_limit=time_limit,
+                drop_unique=drop_unique,
+                drop_useless_features=drop_useless_features,
+            )
+            predictor.refit_full(
+                model="best", set_best_to_refit_full=True
+            )  # type: ignore
 
         runtime = time.time() - start
         return {

@@ -1,5 +1,6 @@
 import pandas as pd
-from typing import Dict, List, Optional, Tuple
+import numpy as np
+from typing import Dict, List, Optional, Tuple, Union
 import logging
 
 from actableai.tasks import TaskType
@@ -38,7 +39,9 @@ class _AAIClassificationTrainTask(AAITask):
         time_limit: Optional[int],
         drop_unique: bool,
         drop_useless_features: bool,
-    ) -> Tuple[object, List, Dict, object, pd.DataFrame]:
+    ) -> Tuple[
+        object, object, List, dict, np.ndarray, Union[np.ndarray, List], pd.DataFrame
+    ]:
         """Runs a sub Classification Task for cross-validation.
 
         Args:
@@ -339,6 +342,7 @@ class AAIClassificationTask(AAITask):
         datetime_column: Optional[str] = None,
         split_by_datetime: bool = False,
         ag_automm_enabled=False,
+        refit_full=False,
     ) -> Dict:
         """Run this classification task and return results.
 
@@ -715,6 +719,38 @@ class AAIClassificationTask(AAITask):
         )
 
         runtime = time.time() - start
+
+        if refit_full:
+            df_only_training = df.loc[df[target].notnull()]
+            predictor, _, _, _, _, _, _ = _AAIClassificationTrainTask(
+                **train_task_params
+            ).run(
+                explain_samples=False,
+                presets=presets,
+                hyperparameters=hyperparameters,
+                model_directory=model_directory,
+                target=target,
+                features=features,
+                run_model=False,
+                df_train=df_only_training,
+                df_val=pd.DataFrame(),
+                df_test=pd.DataFrame(),
+                drop_duplicates=drop_duplicates,
+                run_debiasing=run_debiasing,
+                biased_groups=biased_groups,
+                debiased_features=debiased_features,
+                residuals_hyperparameters=residuals_hyperparameters,
+                num_gpus=num_gpus,
+                eval_metric=eval_metric,
+                time_limit=time_limit,
+                drop_unique=drop_unique,
+                drop_useless_features=drop_useless_features,
+                problem_type=problem_type,
+                positive_label=positive_label,
+            )
+            predictor.refit_full(
+                model="best", set_best_to_refit_full=True
+            )  # type: ignore
 
         return {
             "messenger": "",
