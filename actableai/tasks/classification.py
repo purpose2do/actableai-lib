@@ -414,6 +414,7 @@ class AAIClassificationTask(AAITask):
         )
         from actableai.classification.cross_validation import run_cross_validation
         from actableai.utils.sanitize import sanitize_timezone
+        from actableai.classification.utils import split_validation_by_datetime
 
         pd.set_option("chained_assignment", "warn")
         start = time.time()
@@ -457,6 +458,8 @@ class AAIClassificationTask(AAITask):
             explain_samples=explain_samples,
             eval_metric=eval_metric,
             drop_unique=drop_unique,
+            datetime_column=datetime_column,
+            split_by_datetime=split_by_datetime,
         )
         failed_checks = [
             check for check in data_validation_results if check is not None
@@ -495,6 +498,11 @@ class AAIClassificationTask(AAITask):
         df_val = None
         if not use_cross_validation:
             if split_by_datetime and datetime_column is not None:
+                df_train, df_val = split_validation_by_datetime(
+                    df_train=df_train,
+                    datetime_column=datetime_column,
+                    validation_ratio=validation_ratio,
+                )
                 sorted_df = df_train.sort_values(by=datetime_column, ascending=True)
                 split_datetime_index = int((1 - validation_ratio) * len(sorted_df))
                 df_train = sorted_df.iloc[:split_datetime_index].sample(frac=1)

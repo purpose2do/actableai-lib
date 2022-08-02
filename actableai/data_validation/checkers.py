@@ -1,7 +1,9 @@
 from collections import Counter
+import numpy as np
 from sklearn.preprocessing import PolynomialFeatures
 from typing import List, Optional, Union
 import pandas as pd
+from actableai.classification.utils import split_validation_by_datetime
 
 from actableai.data_imputation.error_detector.rule_parser import RulesBuilder
 from actableai.data_validation.base import (
@@ -1096,4 +1098,26 @@ class OnlyOneValueChecker(IChecker):
                 message=f"{', '.join(features)} are columns with only one value."
                 + " These columns have no predictive power and are removed."
                 + " Nothing can be inferred from these columns.",
+            )
+
+
+class SplitByDatetimeValidationChecker(IChecker):
+    def __init__(self, level, name="SplitByDatetimeValidationChecker"):
+        self.name = name
+        self.level = level
+
+    def check(
+        self,
+        df: pd.DataFrame,
+        datetime_column: str,
+        validation_ratio: float,
+    ) -> Optional[CheckResult]:
+        _, df_val = split_validation_by_datetime(df, datetime_column, validation_ratio)
+        if len(np.unique(df_val)) == 1:
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message="The validation dataset contains only one value."
+                + " Please try to increase the validation ratio or"
+                + " use the random data validation split strategy.",
             )
