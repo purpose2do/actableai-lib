@@ -1,6 +1,9 @@
 import pandas as pd
 
-from actableai.classification.utils import leaderboard_cross_val
+from actableai.classification.utils import (
+    leaderboard_cross_val,
+    split_validation_by_datetime,
+)
 
 
 def test_leaderboard_cross_val():
@@ -93,3 +96,30 @@ def test_leaderboard_cross_val_reversed():
     assert "can_infer_std" in list(leaderboard.columns)
     assert "fit_order_std" in list(leaderboard.columns)
     assert "fit_time_marginal_std" in list(leaderboard.columns)
+
+
+def test_split_validation_by_datetime():
+    df_train = pd.DataFrame(
+        {
+            "datetime": [
+                "2020-01-01",
+                "2020-01-02",
+                "2020-01-03",
+                "2020-01-04",
+                "2020-01-05",
+                "2020-01-06",
+                "2020-01-07",
+                "2020-01-08",
+                "2020-01-09",
+                "2020-01-10",
+            ],
+            "value": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        }
+    )
+    df_train = df_train.sample(frac=1).reset_index()
+    val_ratio = 0.2
+    df_train, df_val = split_validation_by_datetime(df_train, "datetime", val_ratio)
+    assert df_train.shape[0] == int(val_ratio * df_train.shape[0])
+    assert df_val.shape[0] == int(val_ratio * df_train.shape[0])
+    assert df_train.sort_values("datetime").reset_index(drop=True).equals(df_train)
+    assert df_val.sort_values("datetime").reset_index(drop=True).equals(df_val)
