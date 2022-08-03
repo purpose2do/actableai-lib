@@ -42,7 +42,7 @@ class _AAIClassificationTrainTask(AAITask):
     ) -> Tuple[
         Any,
         Any,
-        List,
+        Optional[List],
         Optional[dict],
         Optional[np.ndarray],
         Union[np.ndarray, List],
@@ -183,18 +183,20 @@ class _AAIClassificationTrainTask(AAITask):
         pd.set_option("chained_assignment", "warn")
 
         # Evaluate results
-        important_features = []
-        feature_importance = predictor.feature_importance(df_val)
-        for i in range(len(feature_importance)):
-            if feature_importance.index[i] in biased_groups:
-                continue
-            important_features.append(
-                {
-                    "feature": feature_importance.index[i],
-                    "importance": feature_importance["importance"][i],
-                    "p_value": feature_importance["p_value"][i],
-                }
-            )
+        important_features = None
+        if df_val is not None:
+            important_features = []
+            feature_importance = predictor.feature_importance(df_val)
+            for i in range(len(feature_importance)):
+                if feature_importance.index[i] in biased_groups:
+                    continue
+                important_features.append(
+                    {
+                        "feature": feature_importance.index[i],
+                        "importance": feature_importance["importance"][i],
+                        "p_value": feature_importance["p_value"][i],
+                    }
+                )
         evaluate = None
         pred_prob_val = None
         if df_val is not None:
