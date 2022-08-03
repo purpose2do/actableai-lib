@@ -1,10 +1,11 @@
 import logging
+import numpy as np
 import pandas as pd
-from typing import Dict, List, Optional, Union
-from actableai.classification.utils import split_validation_by_datetime
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
+from actableai.classification.utils import split_validation_by_datetime
 
 
 class _AAIRegressionTrainTask(AAITask):
@@ -23,8 +24,8 @@ class _AAIRegressionTrainTask(AAITask):
         features: List[str],
         run_model: bool,
         df_train: pd.DataFrame,
-        df_val: pd.DataFrame,
-        df_test: pd.DataFrame,
+        df_val: Optional[pd.DataFrame],
+        df_test: Optional[pd.DataFrame],
         prediction_quantile_low: int,
         prediction_quantile_high: int,
         drop_duplicates: bool,
@@ -37,7 +38,7 @@ class _AAIRegressionTrainTask(AAITask):
         time_limit: Optional[int],
         drop_unique: bool,
         drop_useless_features: bool,
-    ):
+    ) -> Tuple[Any, List, Dict, Any, Any, Any, Any, Any, np.ndarray, pd.DataFrame]:
         """Sub class for running a regression without cross validation
 
         Args:
@@ -84,6 +85,11 @@ class _AAIRegressionTrainTask(AAITask):
         from actableai.utils import debiasing_feature_generator_args
         from actableai.debiasing.debiasing_model import DebiasingModel
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
+
+        if df_val is None:
+            df_val = pd.DataFrame(columns=df_train.columns)
+        if df_test is None:
+            df_test = pd.DataFrame(columns=df_train.columns)
 
         ag_args_fit = {"drop_unique": drop_unique}
         feature_generator_args = {}
@@ -684,6 +690,7 @@ class AAIRegressionTask(AAITask):
         }
 
         if refit_full:
+            df_only_full_training = df.loc[df[target].notnull()]
             predictor, _, _, _, _, _, _, _, _, _ = _AAIRegressionTrainTask(
                 **train_task_params
             ).run(
@@ -694,9 +701,9 @@ class AAIRegressionTask(AAITask):
                 target=target,
                 features=features,
                 run_model=False,
-                df_train=df,
-                df_val=pd.DataFrame(columns=features + [target] + biased_groups),
-                df_test=pd.DataFrame(columns=features + [target] + biased_groups),
+                df_train=df_only_full_training,
+                df_val=None,
+                df_test=None,
                 prediction_quantile_low=prediction_quantile_low,
                 prediction_quantile_high=prediction_quantile_high,
                 drop_duplicates=drop_duplicates,
@@ -710,9 +717,7 @@ class AAIRegressionTask(AAITask):
                 drop_unique=drop_unique,
                 drop_useless_features=drop_useless_features,
             )
-            predictor.refit_full(
-                model="best", set_best_to_refit_full=True
-            )  # type: ignore
+            predictor.refit_full(model="best", set_best_to_refit_full=True)
 
         runtime = time.time() - start
         return {

@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 import logging
 
 from actableai.tasks import TaskType
@@ -39,9 +39,7 @@ class _AAIClassificationTrainTask(AAITask):
         time_limit: Optional[int],
         drop_unique: bool,
         drop_useless_features: bool,
-    ) -> Tuple[
-        object, object, List, dict, np.ndarray, Union[np.ndarray, List], pd.DataFrame
-    ]:
+    ) -> Tuple[Any, Any, List, dict, np.ndarray, Union[np.ndarray, List], pd.DataFrame]:
         """Runs a sub Classification Task for cross-validation.
 
         Args:
@@ -748,9 +746,7 @@ class AAIClassificationTask(AAITask):
                 problem_type=problem_type,
                 positive_label=positive_label,
             )
-            predictor.refit_full(
-                model="best", set_best_to_refit_full=True
-            )  # type: ignore
+            predictor.refit_full(model="best", set_best_to_refit_full=True)
 
         return {
             "messenger": "",
