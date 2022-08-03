@@ -458,6 +458,9 @@ class AAIClassificationTask(AAITask):
             model_directory = mkdtemp(prefix="autogluon_model")
         if train_task_params is None:
             train_task_params = {}
+        if refit_full and time_limit is not None:
+            # Half the time limit for train and half the time for refit
+            time_limit = time_limit // 2
 
         use_cross_validation = kfolds > 1
         run_debiasing = len(biased_groups) > 0 and len(debiased_features) > 0
