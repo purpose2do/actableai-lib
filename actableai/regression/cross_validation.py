@@ -162,10 +162,10 @@ def run_cross_validation(
             if feature["feature"] not in cross_val_important_p_value_features:
                 cross_val_important_p_value_features[feature["feature"]] = []
             cross_val_important_features[feature["feature"]].append(
-                feature["importance"]
+                feature["importance"],
             )
             cross_val_important_p_value_features[feature["feature"]].append(
-                feature["p_value"]
+                feature["p_value"],
             )
 
         for metric in evaluate:
@@ -253,14 +253,20 @@ def run_cross_validation(
     else:
         # Legacy (TODO: to be removed)
         evaluate = {
-            "PINBALL_LOSS": np.mean(cross_val_evaluates["PINBALL_LOSS"]) / sqrt_k
+            "PINBALL_LOSS": np.mean(cross_val_evaluates["PINBALL_LOSS"]) / sqrt_k,
         }
 
         evaluate["metrics"] = pd.DataFrame(
             {
-                "metric": ["Pinball Loss"],
-                "value": [np.mean(cross_val_evaluates["PINBALL_LOSS"])],
-                "stderr": [np.std(cross_val_evaluates["PINBALL_LOSS"]) / sqrt_k],
+                "metric": [
+                    "Pinball Loss",
+                ],
+                "value": [
+                    np.mean(cross_val_evaluates["PINBALL_LOSS"]),
+                ],
+                "stderr": [
+                    np.std(cross_val_evaluates["PINBALL_LOSS"]) / sqrt_k,
+                ],
             }
         )
 
