@@ -38,7 +38,18 @@ class _AAIRegressionTrainTask(AAITask):
         time_limit: Optional[int],
         drop_unique: bool,
         drop_useless_features: bool,
-    ) -> Tuple[Any, List, Dict, Any, Any, Any, Any, Any, np.ndarray, pd.DataFrame]:
+    ) -> Tuple[
+        Any,
+        List,
+        Optional[Dict],
+        Any,
+        Any,
+        Any,
+        Any,
+        Any,
+        Optional[np.ndarray],
+        pd.DataFrame,
+    ]:
         """Sub class for running a regression without cross validation
 
         Args:
@@ -86,11 +97,6 @@ class _AAIRegressionTrainTask(AAITask):
         from actableai.debiasing.debiasing_model import DebiasingModel
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
 
-        if df_val is None:
-            df_val = pd.DataFrame(columns=df_train.columns)
-        if df_test is None:
-            df_test = pd.DataFrame(columns=df_train.columns)
-
         ag_args_fit = {"drop_unique": drop_unique}
         feature_generator_args = {}
 
@@ -121,8 +127,10 @@ class _AAIRegressionTrainTask(AAITask):
         ag_args_fit["num_gpus"] = num_gpus
 
         df_train = df_train[features + biased_groups + [target]]
-        df_val = df_val[features + biased_groups + [target]]
-        df_test = df_test[features + biased_groups]
+        if df_val is not None:
+            df_val = df_val[features + biased_groups + [target]]
+        if df_test is not None:
+            df_test = df_test[features + biased_groups]
 
         quantile_levels = None
         if prediction_quantile_low is not None and prediction_quantile_high is not None:
@@ -173,7 +181,8 @@ class _AAIRegressionTrainTask(AAITask):
         pd.set_option("chained_assignment", "warn")
 
         important_features = []
-        if quantile_levels is None:
+        metrics = None
+        if quantile_levels is None and df_val is not None:
             feature_importance = predictor.feature_importance(df_val)
             for i in range(len(feature_importance)):
                 if feature_importance.index[i] in biased_groups:
@@ -185,50 +194,54 @@ class _AAIRegressionTrainTask(AAITask):
                         "p_value": feature_importance["p_value"][i],
                     }
                 )
-        y_pred = predictor.predict(df_val)
-        metrics = predictor.evaluate_predictions(
-            y_true=df_val[target], y_pred=y_pred, auxiliary_metrics=True
-        )
+        y_pred = None
+        if df_val is not None:
+            y_pred = predictor.predict(df_val)
+            metrics = predictor.evaluate_predictions(
+                y_true=df_val[target], y_pred=y_pred, auxiliary_metrics=True
+            )
 
-        if quantile_levels is None:
-            # Legacy (TODO: to be removed)
-            evaluate = {
-                "RMSE": abs(metrics["root_mean_squared_error"]),
-                "R2": metrics["r2"],
-                "MAE": abs(metrics["mean_absolute_error"]),
-                "MSE": abs(metrics["mean_squared_error"]),
-                "MEDIAN_ABSOLUTE_ERROR": abs(metrics["median_absolute_error"]),
-            }
-
-            evaluate["metrics"] = pd.DataFrame(
-                {
-                    "metric": [
-                        "Root Mean Squared Error",
-                        "R2",
-                        "Mean Absolute Error",
-                        "Median Absolute Error",
-                    ],
-                    "value": [
-                        abs(metrics["root_mean_squared_error"]),
-                        metrics["r2"],
-                        abs(metrics["mean_absolute_error"]),
-                        abs(metrics["median_absolute_error"]),
-                    ],
+        evaluate = None
+        if metrics is not None:
+            if quantile_levels is None:
+                # Legacy (TODO: to be removed)
+                evaluate = {
+                    "RMSE": abs(metrics["root_mean_squared_error"]),
+                    "R2": metrics["r2"],
+                    "MAE": abs(metrics["mean_absolute_error"]),
+                    "MSE": abs(metrics["mean_squared_error"]),
+                    "MEDIAN_ABSOLUTE_ERROR": abs(metrics["median_absolute_error"]),
                 }
-            )
-        else:
-            # Legacy (TODO: to be removed)
-            evaluate = {"PINBALL_LOSS": metrics["pinball_loss"]}
 
-            evaluate["metrics"] = pd.DataFrame(
-                {"metric": ["Pinball Loss"], "value": [metrics["pinball_loss"]]}
-            )
+                evaluate["metrics"] = pd.DataFrame(
+                    {
+                        "metric": [
+                            "Root Mean Squared Error",
+                            "R2",
+                            "Mean Absolute Error",
+                            "Median Absolute Error",
+                        ],
+                        "value": [
+                            abs(metrics["root_mean_squared_error"]),
+                            metrics["r2"],
+                            abs(metrics["mean_absolute_error"]),
+                            abs(metrics["median_absolute_error"]),
+                        ],
+                    }
+                )
+            else:
+                # Legacy (TODO: to be removed)
+                evaluate = {"PINBALL_LOSS": metrics["pinball_loss"]}
+
+                evaluate["metrics"] = pd.DataFrame(
+                    {"metric": ["Pinball Loss"], "value": [metrics["pinball_loss"]]}
+                )
 
         predictions = None
         predictions_low = None
         predictions_high = None
         predict_shap_values = None
-        if run_model:
+        if run_model and df_test is not None:
             if explain_samples:
                 predict_shap_values = explainer.shap_values(df_test)
 
@@ -393,6 +406,9 @@ class AAIRegressionTask(AAITask):
             model_directory = mkdtemp(prefix="autogluon_model")
         if train_task_params is None:
             train_task_params = {}
+        if refit_full and time_limit is not None:
+            # Half the time limit for train and half the time for refit
+            time_limit = time_limit // 2
 
         run_debiasing = len(biased_groups) > 0 and len(debiased_features) > 0
 
