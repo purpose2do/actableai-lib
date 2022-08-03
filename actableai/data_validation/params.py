@@ -47,6 +47,7 @@ from actableai.data_validation.checkers import (
     ROCAUCChecker,
     RegressionEvalMetricChecker,
     SameTypeChecker,
+    SplitByDatetimeValidationChecker,
     StratifiedKFoldChecker,
     UniqueDateTimeChecker,
 )
@@ -359,6 +360,14 @@ class ClassificationDataValidator:
                         message="Split datetime is enabled but date_time_column is None. Please set date_time_column.",
                     )
                 )
+            if validation_ratio is not None and datetime_column is not None:
+                validation_results.append(
+                    SplitByDatetimeValidationChecker(level=CheckLevels.CRITICAL).check(
+                        df=df,
+                        datetime_column=datetime_column,
+                        validation_ratio=validation_ratio,
+                    )
+                ),
         if drop_unique:
             validation_results.append(
                 OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features)
