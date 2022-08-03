@@ -3,7 +3,10 @@ import pandas as pd
 import pytest
 from actableai.data_validation.base import CheckLevels
 
-from actableai.tasks.regression import AAIRegressionTask
+from actableai.tasks.regression import (
+    AAIRegressionTask,
+    _AAIRegressionTrainTask,
+)
 from actableai.utils.dataset_generator import DatasetGenerator
 from actableai.utils.testing import unittest_hyperparameters
 
@@ -1226,3 +1229,63 @@ class TestDebiasing:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+
+
+class Test_AAIRegressionTrainTask:
+    def test_aairegression_task_no_val_no_test(self, tmp_path):
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 3,
+                "y": ["a", "a", "a", "a", "b", None, "b", "b", "b", "b"] * 3,
+                "z": [1, 2, 3, None, 5, 6, 7, 8, 9, 10] * 3,
+                "t": [1, 2, 1, 2, 1, None, None, 2, 1, 2] * 3,
+            }
+        )
+        target = "t"
+        features = ["x", "y"]
+
+        (
+            predictor,
+            important_features,
+            evaluate,
+            y_pred,
+            explainer,
+            predictions,
+            predictions_low,
+            predictions_high,
+            predict_shap_values,
+            leaderboard,
+        ) = _AAIRegressionTrainTask(use_ray=False).run(
+            explain_samples=False,
+            presets="medium_quality",
+            hyperparameters=unittest_hyperparameters(),
+            model_directory=tmp_path,
+            target=target,
+            features=features,
+            run_model=False,
+            df_train=df,
+            df_val=None,
+            df_test=None,
+            drop_duplicates=False,
+            run_debiasing=False,
+            biased_groups=[],
+            debiased_features=[],
+            residuals_hyperparameters=None,
+            num_gpus=0,
+            eval_metric="r2",
+            time_limit=None,
+            drop_unique=False,
+            drop_useless_features=False,
+            prediction_quantile_low=None,
+            prediction_quantile_high=None,
+        )
+
+        assert predictor is not None
+        assert len(important_features) == 0
+        assert evaluate is None
+        assert y_pred is None
+        assert explainer is None
+        assert predictions is None
+        assert predictions_low is None
+        assert predictions_high is None
+        assert predict_shap_values is None
