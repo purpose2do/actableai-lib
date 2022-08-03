@@ -27,8 +27,8 @@ class _AAIClassificationTrainTask(AAITask):
         features: List[str],
         run_model: bool,
         df_train: pd.DataFrame,
-        df_val: pd.DataFrame,
-        df_test: pd.DataFrame,
+        df_val: Optional[pd.DataFrame],
+        df_test: Optional[pd.DataFrame],
         drop_duplicates: bool,
         run_debiasing: bool,
         biased_groups: List[str],
@@ -39,7 +39,15 @@ class _AAIClassificationTrainTask(AAITask):
         time_limit: Optional[int],
         drop_unique: bool,
         drop_useless_features: bool,
-    ) -> Tuple[Any, Any, List, dict, np.ndarray, Union[np.ndarray, List], pd.DataFrame]:
+    ) -> Tuple[
+        Any,
+        Any,
+        List,
+        Optional[dict],
+        Optional[np.ndarray],
+        Union[np.ndarray, List],
+        pd.DataFrame,
+    ]:
         """Runs a sub Classification Task for cross-validation.
 
         Args:
@@ -130,7 +138,10 @@ class _AAIClassificationTrainTask(AAITask):
         ag_args_fit["num_gpus"] = num_gpus
 
         df_train = df_train[features + biased_groups + [target]]
-        df_val = df_val[features + biased_groups + [target]]
+        if df_val is not None:
+            df_val = df_val[features + biased_groups + [target]]
+        if df_test is not None:
+            df_test = df_test[features + biased_groups + [target]]
 
         # Start training
         predictor = TabularPredictor(
@@ -184,115 +195,124 @@ class _AAIClassificationTrainTask(AAITask):
                     "p_value": feature_importance["p_value"][i],
                 }
             )
+        evaluate = None
+        pred_prob_val = None
+        if df_val is not None:
+            label_val = df_val[target]
+            label_pred = predictor.predict(df_val)
+            pred_prob_val = predictor.predict_proba(df_val, as_multiclass=True)
+            perf = predictor.evaluate_predictions(
+                y_true=label_val,
+                y_pred=pred_prob_val,
+                auxiliary_metrics=True,
+                detailed_report=False,
+            )
 
-        label_val = df_val[target]
-        label_pred = predictor.predict(df_val)
-        pred_prob_val = predictor.predict_proba(df_val, as_multiclass=True)
-        perf = predictor.evaluate_predictions(
-            y_true=label_val,
-            y_pred=pred_prob_val,
-            auxiliary_metrics=True,
-            detailed_report=False,
-        )
-
-        evaluate = {
-            # TODO: to be removed (legacy)
-            "problem_type": predictor.problem_type,
-            "accuracy": perf["accuracy"],
-            "metrics": pd.DataFrame({"metric": perf.keys(), "value": perf.values()}),
-        }
-        evaluate["labels"] = predictor.class_labels
-        evaluate["confusion_matrix"] = confusion_matrix(
-            label_val, label_pred, labels=evaluate["labels"], normalize="true"
-        ).tolist()
-
-        if evaluate["problem_type"] == "binary":
-            if evaluate["labels"][0] in [
-                1,
-                1.0,
-                "1",
-                "1.0",
-                "true",
-                "yes",
-                positive_label,
-            ]:
-                pos_label = evaluate["labels"][0]
-                neg_label = evaluate["labels"][1]
-            else:
-                pos_label = evaluate["labels"][1]
-                neg_label = evaluate["labels"][0]
-
+            evaluate = {
+                # TODO: to be removed (legacy)
+                "problem_type": predictor.problem_type,
+                "accuracy": perf["accuracy"],
+                "metrics": pd.DataFrame(
+                    {"metric": perf.keys(), "value": perf.values()}
+                ),
+            }
+            evaluate["labels"] = predictor.class_labels
             evaluate["confusion_matrix"] = confusion_matrix(
-                label_val, label_pred, labels=[pos_label, neg_label], normalize="true"
-            )
+                label_val, label_pred, labels=evaluate["labels"], normalize="true"
+            ).tolist()
 
-            fpr, tpr, thresholds = roc_curve(
-                label_val,
-                pred_prob_val[pos_label],
-                pos_label=pos_label,
-                drop_intermediate=False,
-            )
-            evaluate["auc_curve"] = {
-                "False Positive Rate": fpr[1:].tolist()[::-1],
-                "True Positive Rate": tpr[1:].tolist()[::-1],
-                "thresholds": thresholds[1:].tolist()[::-1],
-                "positive_label": str(pos_label),
-                "negative_label": str(neg_label),
-                "threshold": 0.5,
-            }
-            evaluate["precision_score"] = precision_score(
-                label_val, label_pred, pos_label=pos_label
-            )
-            evaluate["recall_score"] = recall_score(
-                label_val, label_pred, pos_label=pos_label
-            )
-            precision, recall, thresholds = custom_precision_recall_curve(
-                label_val, pred_prob_val[pos_label], pos_label=pos_label
-            )
-            evaluate["precision_recall_curve"] = {
-                "Precision": precision.tolist(),
-                "Recall": recall.tolist(),
-                "thresholds": thresholds.tolist(),
-                "positive_label": str(pos_label),
-                "negative_label": str(neg_label),
-            }
-            evaluate["f1_score"] = f1_score(label_val, label_pred, pos_label=pos_label)
-            evaluate["positive_count"] = len(label_val[label_val == pos_label])
-            evaluate["negative_count"] = len(label_val) - evaluate["positive_count"]
-        else:
-            evaluate["auc_curve"] = []
-            evaluate["precision_recall_curve"] = []
-            for pos_label in evaluate["labels"]:
+            if evaluate["problem_type"] == "binary":
+                if evaluate["labels"][0] in [
+                    1,
+                    1.0,
+                    "1",
+                    "1.0",
+                    "true",
+                    "yes",
+                    positive_label,
+                ]:
+                    pos_label = evaluate["labels"][0]
+                    neg_label = evaluate["labels"][1]
+                else:
+                    pos_label = evaluate["labels"][1]
+                    neg_label = evaluate["labels"][0]
+
+                evaluate["confusion_matrix"] = confusion_matrix(
+                    label_val,
+                    label_pred,
+                    labels=[pos_label, neg_label],
+                    normalize="true",
+                )
+
                 fpr, tpr, thresholds = roc_curve(
                     label_val,
                     pred_prob_val[pos_label],
                     pos_label=pos_label,
                     drop_intermediate=False,
                 )
-                evaluate["auc_curve"].append(
-                    {
-                        "False Positive Rate": fpr[1:].tolist()[::-1],
-                        "True Positive Rate": tpr[1:].tolist()[::-1],
-                        "thresholds": thresholds[1:].tolist()[::-1],
-                        "positive_label": str(pos_label),
-                        "threshold": 0.5,
-                    }
+                evaluate["auc_curve"] = {
+                    "False Positive Rate": fpr[1:].tolist()[::-1],
+                    "True Positive Rate": tpr[1:].tolist()[::-1],
+                    "thresholds": thresholds[1:].tolist()[::-1],
+                    "positive_label": str(pos_label),
+                    "negative_label": str(neg_label),
+                    "threshold": 0.5,
+                }
+                evaluate["precision_score"] = precision_score(
+                    label_val, label_pred, pos_label=pos_label
+                )
+                evaluate["recall_score"] = recall_score(
+                    label_val, label_pred, pos_label=pos_label
                 )
                 precision, recall, thresholds = custom_precision_recall_curve(
                     label_val, pred_prob_val[pos_label], pos_label=pos_label
                 )
-                evaluate["precision_recall_curve"].append(
-                    {
-                        "Precision": precision.tolist(),
-                        "Recall": recall.tolist(),
-                        "thresholds": thresholds.tolist(),
-                        "positive_label": str(pos_label),
-                    }
+                evaluate["precision_recall_curve"] = {
+                    "Precision": precision.tolist(),
+                    "Recall": recall.tolist(),
+                    "thresholds": thresholds.tolist(),
+                    "positive_label": str(pos_label),
+                    "negative_label": str(neg_label),
+                }
+                evaluate["f1_score"] = f1_score(
+                    label_val, label_pred, pos_label=pos_label
                 )
+                evaluate["positive_count"] = len(label_val[label_val == pos_label])
+                evaluate["negative_count"] = len(label_val) - evaluate["positive_count"]
+            else:
+                evaluate["auc_curve"] = []
+                evaluate["precision_recall_curve"] = []
+                for pos_label in evaluate["labels"]:
+                    fpr, tpr, thresholds = roc_curve(
+                        label_val,
+                        pred_prob_val[pos_label],
+                        pos_label=pos_label,
+                        drop_intermediate=False,
+                    )
+                    evaluate["auc_curve"].append(
+                        {
+                            "False Positive Rate": fpr[1:].tolist()[::-1],
+                            "True Positive Rate": tpr[1:].tolist()[::-1],
+                            "thresholds": thresholds[1:].tolist()[::-1],
+                            "positive_label": str(pos_label),
+                            "threshold": 0.5,
+                        }
+                    )
+                    precision, recall, thresholds = custom_precision_recall_curve(
+                        label_val, pred_prob_val[pos_label], pos_label=pos_label
+                    )
+                    evaluate["precision_recall_curve"].append(
+                        {
+                            "Precision": precision.tolist(),
+                            "Recall": recall.tolist(),
+                            "thresholds": thresholds.tolist(),
+                            "positive_label": str(pos_label),
+                        }
+                    )
 
         predict_shap_values = []
 
-        if run_model and explain_samples:
+        if run_model and explainer is not None and df_test is not None:
             predict_shap_values = explainer.shap_values(df_test)
 
         return (
@@ -731,8 +751,8 @@ class AAIClassificationTask(AAITask):
                 features=features,
                 run_model=False,
                 df_train=df_only_training,
-                df_val=pd.DataFrame(),
-                df_test=pd.DataFrame(),
+                df_val=None,
+                df_test=None,
                 drop_duplicates=drop_duplicates,
                 run_debiasing=run_debiasing,
                 biased_groups=biased_groups,
