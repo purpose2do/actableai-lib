@@ -33,7 +33,7 @@ class _AAIClassificationTrainTask(AAITask):
         run_debiasing: bool,
         biased_groups: List[str],
         debiased_features: List[str],
-        residuals_hyperparameters: Dict,
+        residuals_hyperparameters: Optional[Dict],
         num_gpus: int,
         eval_metric: str,
         time_limit: Optional[int],
