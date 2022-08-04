@@ -735,6 +735,7 @@ class TestRemoteRegression:
             assert "importance" in feat
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
 
 class TestRemoteRegressionCrossValidation:
@@ -963,6 +964,44 @@ class TestRemoteRegressionCrossValidation:
                 else:
                     assert "y" in chart
                     assert type(chart["y"]) is list
+
+    def test_cross_val_refit_full(self, regression_task, tmp_path):
+        df = pd.DataFrame(
+            {
+                "x": [2, 2, 2, 2, 2, None, 3, 3, 4, 4] * 2,
+                "y": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2,
+                "z": [2, 2, 2, 2, 2, 3, 3, 3, 4, 4] * 2,
+            }
+        )
+
+        r = run_regression_task(
+            regression_task,
+            tmp_path,
+            df,
+            "x",
+            kfolds=4,
+            cross_validation_max_concurrency=4,
+            refit_full=True,
+        )
+
+        evaluate = r["data"]["evaluate"]
+        assert r["status"] == "SUCCESS"
+        assert len(r["data"]["prediction_table"]) > 0
+        assert "RMSE" in evaluate
+        assert "RMSE_std_err" in evaluate
+        assert "R2" in evaluate
+        assert "R2_std_err" in evaluate
+        assert "MAE" in evaluate
+        assert "MAE_std_err" in evaluate
+        assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["y", "z"]
+            assert "importance" in feat
+            assert "importance_std_err" in feat
+            assert "p_value" in feat
+            assert "p_value_std_err" in feat
+        assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
 
 class TestDebiasing:

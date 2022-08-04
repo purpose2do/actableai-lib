@@ -774,6 +774,7 @@ class TestRemoteClassification:
             assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
+        assert r["model"] is not None
 
 
 class TestRemoteClassificationCrossValidation:
@@ -810,20 +811,6 @@ class TestRemoteClassificationCrossValidation:
             assert "importance_std_err" in feat
             assert "p_value" in feat
             assert "p_value_std_err" in feat
-
-    # def test_cross_val_with_explain(self):
-    # import ray
-    # if not ray.is_initialized():
-    # ray.init()
-
-    # df = pd.DataFrame({
-    # "x": [2,2,2,2,2,None,3,3,4,4] * 3,
-    # "y": [1, 2, 3, 4, 5, 6, 7, 8, 9 ,10] * 3,
-    # "z": [2,2,2,2,2,3,3,3,4,4] * 3,
-    # })
-    # r = run_classification_task(classification_task, tmp_path, df, "x", [], use_cross_validation=True, kfolds=5, explain_samples=True)
-    # assert r["status"] == "SUCCESS"
-    # assert len(r["data"]["predict_explanations"]) > 0
 
     def test_cross_val_with_text(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -968,6 +955,42 @@ class TestRemoteClassificationCrossValidation:
                 else:
                     assert "x" in chart
                     assert type(chart["x"]) is list
+
+    def test_cross_val_refit_full(self, classification_task, tmp_path):
+        df = pd.DataFrame(
+            {
+                "x": [2, 2, 2, 2, 2, None, 3, 3, 4, 4] * 3,
+                "y": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 3,
+                "z": [2, 2, 2, 2, 2, 3, 3, 3, 4, 4] * 3,
+            }
+        )
+
+        r = run_classification_task(
+            classification_task,
+            tmp_path,
+            df,
+            "x",
+            kfolds=4,
+            cross_validation_max_concurrency=4,
+            refit_full=True,
+        )
+
+        assert r["status"] == "SUCCESS"
+        evaluate = r["data"]["evaluate"]
+        important_features = r["data"]["importantFeatures"]
+        assert len(r["data"]["predictData"]) > 0
+        assert "accuracy" in evaluate
+        assert "accuracy_std_err" in evaluate
+        assert "confusion_matrix" in evaluate
+        assert "confusion_matrix_std_err" in evaluate
+        assert "importantFeatures" in r["data"]
+        for feat in important_features:
+            assert "feature" in feat
+            assert "importance" in feat
+            assert "importance_std_err" in feat
+            assert "p_value" in feat
+            assert "p_value_std_err" in feat
+        assert r["model"] is not None
 
 
 class TestDebiasing:
