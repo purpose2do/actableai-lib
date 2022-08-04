@@ -4,7 +4,6 @@ import pytest
 from actableai.data_validation.checkers import CheckLevels
 from actableai.tasks.classification import (
     AAIClassificationTask,
-    _AAIClassificationTrainTask,
 )
 from actableai.utils.dataset_generator import DatasetGenerator
 from actableai.utils.testing import unittest_hyperparameters
@@ -1239,58 +1238,3 @@ class TestDebiasing:
                 else:
                     assert "x" in chart
                     assert type(chart["x"]) is list
-
-
-class Test_AAIClassificationTrainTask:
-    def test_aaiclassification_task_no_val_no_test(self, tmp_path):
-        df = pd.DataFrame(
-            {
-                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 3,
-                "y": ["a", "a", "a", "a", "b", None, "b", "b", "b", "b"] * 3,
-                "z": [1, 2, 3, None, 5, 6, 7, 8, 9, 10] * 3,
-                "t": [1, 2, 1, 2, 1, None, None, 2, 1, 2] * 3,
-            }
-        )
-        target = "t"
-        features = ["x", "y"]
-
-        (
-            predictor,
-            explainer,
-            important_features,
-            evaluate,
-            pred_prob_val,
-            predict_shap_values,
-            leaderboard,
-        ) = _AAIClassificationTrainTask(use_ray=False).run(
-            problem_type="binary",
-            explain_samples=False,
-            positive_label="a",
-            presets="medium_quality",
-            hyperparameters=unittest_hyperparameters(),
-            model_directory=tmp_path,
-            target=target,
-            features=features,
-            run_model=False,
-            df_train=df,
-            df_val=None,
-            df_test=None,
-            drop_duplicates=False,
-            run_debiasing=False,
-            biased_groups=[],
-            debiased_features=[],
-            residuals_hyperparameters=None,
-            num_gpus=0,
-            eval_metric="roc_auc",
-            time_limit=None,
-            drop_unique=False,
-            drop_useless_features=False,
-        )
-
-        assert predictor is not None
-        assert explainer is None
-        assert important_features is None
-        assert evaluate is None
-        assert pred_prob_val is None
-        assert len(predict_shap_values) == 0
-        assert leaderboard is not None
