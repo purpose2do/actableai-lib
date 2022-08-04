@@ -73,6 +73,7 @@ class TestRemoteRegression:
             assert "importance" in feat
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
     def test_datetime(self, regression_task, tmp_path):
         from datetime import datetime
@@ -98,6 +99,7 @@ class TestRemoteRegression:
             assert "importance" in feat
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
     def test_mixed_datetime(self, regression_task, tmp_path):
         from datetime import datetime
@@ -132,6 +134,7 @@ class TestRemoteRegression:
             assert "importance" in feat
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
     def test_datetime_target(self, regression_task, tmp_path):
         from datetime import datetime
@@ -175,6 +178,7 @@ class TestRemoteRegression:
             assert "importance" in feat
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
     def test_num_vs_mix(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -201,6 +205,7 @@ class TestRemoteRegression:
             assert "importance" in feat
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
     def test_complex_text(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -226,6 +231,7 @@ class TestRemoteRegression:
             assert "importance" in feat
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
     def test_feature_missing_value(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -252,6 +258,7 @@ class TestRemoteRegression:
             assert "importance" in feat
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
     def test_hyperparam_multimodal(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -283,6 +290,7 @@ class TestRemoteRegression:
             assert "importance" in feat
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
     def test_autogluon_multiclass_case(self, regression_task, tmp_path):
         """
@@ -309,6 +317,7 @@ class TestRemoteRegression:
             assert "importance" in feat
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
     def test_mixed_feature_column(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -403,6 +412,7 @@ class TestRemoteRegression:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_invalid_column(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -449,6 +459,7 @@ class TestRemoteRegression:
             assert "p_value" in feat
         assert "prediction_table" in r["data"]
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
         validations_dict = {val["name"]: val["level"] for val in r["validations"]}
 
@@ -504,6 +515,7 @@ class TestRemoteRegression:
             assert "p_value" in feat
         assert "prediction_table" in r["data"]
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
         validations_dict = {val["name"]: val["level"] for val in r["validations"]}
 
@@ -536,6 +548,7 @@ class TestRemoteRegression:
             assert feat["feature"] in ["y"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_explain_samples_quantiles(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -592,6 +605,7 @@ class TestRemoteRegression:
             assert feat["feature"] in ["y", "z"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_drop_duplicates(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -645,6 +659,7 @@ class TestRemoteRegression:
             assert "importance" in feat
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
     def test_drop_duplicates_insufficient(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -704,6 +719,7 @@ class TestRemoteRegression:
             assert "importance" in feat
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
         validation_table = r["data"]["validation_table"]
         sorted_validation_table = validation_table.sort_values(
             by="temporal_split", ascending=True
@@ -774,6 +790,7 @@ class TestRemoteRegressionCrossValidation:
             assert "p_value" in feat
             assert "p_value_std_err" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is None
 
     def test_cross_val_with_explain(self, regression_task, tmp_path):
         rng = pd.date_range("2015-02-24", periods=20, freq="T")
@@ -808,6 +825,7 @@ class TestRemoteRegressionCrossValidation:
             assert "p_value" in feat
             assert "p_value_std_err" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is None
 
     def test_with_quantile(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -846,6 +864,7 @@ class TestRemoteRegressionCrossValidation:
             assert "p_value" in feat
             assert "p_value_std_err" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
     def test_cross_val_with_quantiles(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -881,6 +900,7 @@ class TestRemoteRegressionCrossValidation:
             assert "p_value" in feat
             assert "p_value_std_err" in feat
         assert "leaderboard" in r["data"]
+        assert r["model"] is None
 
     def test_debiasing_feature(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -964,6 +984,7 @@ class TestRemoteRegressionCrossValidation:
                 else:
                     assert "y" in chart
                     assert type(chart["y"]) is list
+        assert r["model"] is None
 
     def test_cross_val_refit_full(self, regression_task, tmp_path):
         df = pd.DataFrame(
@@ -1044,6 +1065,7 @@ class TestDebiasing:
             assert "p_value" in feat
         assert "debiasing_charts" in r["data"]
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
         debiasing_charts = r["data"]["debiasing_charts"]
         assert len(debiasing_charts) == len(biased_groups)
@@ -1158,6 +1180,7 @@ class TestDebiasing:
             assert "p_value" in feat
         assert "debiasing_charts" in r["data"]
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
         debiasing_charts = r["data"]["debiasing_charts"]
         assert len(debiasing_charts) == len(biased_groups)
@@ -1237,6 +1260,7 @@ class TestDebiasing:
             assert "p_value" in feat
         assert "debiasing_charts" in r["data"]
         assert "leaderboard" in r["data"]
+        assert r["model"] is not None
 
         debiasing_charts = r["data"]["debiasing_charts"]
         assert len(debiasing_charts) == len(biased_groups)
@@ -1292,6 +1316,7 @@ class TestDebiasing:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_simple_debiasing_feature_refit_full(self, regression_task, tmp_path):
         df = pd.DataFrame(

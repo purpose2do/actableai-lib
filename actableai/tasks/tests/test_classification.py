@@ -61,6 +61,7 @@ class TestRemoteClassification:
             assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
+        assert r["model"] is not None
 
     def test_ray(self, tmp_path, init_ray):
         df = pd.DataFrame(
@@ -89,6 +90,7 @@ class TestRemoteClassification:
             assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
+        assert r["model"] is not None
 
     def test_categorical(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -114,6 +116,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_datetime(self, classification_task, tmp_path):
         from datetime import datetime
@@ -142,6 +145,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_extra_columns(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -160,6 +164,7 @@ class TestRemoteClassification:
             assert "importance" in feat
             assert "p_value" in feat
         assert len(r["data"]["importantFeatures"]) == 1
+        assert r["model"] is not None
 
     def test_numeric_and_categorical_and_datetime(self, classification_task, tmp_path):
         from datetime import datetime
@@ -195,6 +200,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x1", "x2", "x3"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_multiclass_num(self, classification_task, tmp_path):
         """
@@ -223,6 +229,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_multiclass_cat(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -248,6 +255,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_mix_target_column(self, classification_task, tmp_path):
         from datetime import datetime
@@ -381,6 +389,7 @@ class TestRemoteClassification:
         assert len(r["validations"]) > 0
         assert r["validations"][0]["name"] == "DoNotContainEmptyColumnsChecker"
         assert r["validations"][0]["level"] == CheckLevels.WARNING
+        assert r["model"] is not None
 
     def test_insufficient_valid_data(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -426,6 +435,7 @@ class TestRemoteClassification:
             assert "p_value" in feat
         assert len(r["validations"]) >= 1
         assert r["validations"][0]["name"] == "IsSufficientClassSampleChecker"
+        assert r["model"] is not None
 
     def test_insufficient_class(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -467,6 +477,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_suggest_analytic(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -495,6 +506,7 @@ class TestRemoteClassification:
         assert len(r["validations"]) >= 1
         assert r["validations"][0]["name"] == "CorrectAnalyticChecker"
         assert r["validations"][0]["level"] == CheckLevels.WARNING
+        assert r["model"] is not None
 
     def test_explain_bool_sample_with_nan(
         self, classification_task, tmp_path, init_ray
@@ -524,6 +536,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x", "z"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_boolean_str_target_column(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -561,6 +574,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_boolean_target_column(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -587,6 +601,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_drop_duplicates(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -642,6 +657,7 @@ class TestRemoteClassification:
             assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
+        assert r["model"] is not None
 
     def test_drop_duplicates_insufficient(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -699,6 +715,7 @@ class TestRemoteClassification:
             assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
+        assert r["model"] is not None
 
     def test_run_temporal_split_column(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -735,6 +752,7 @@ class TestRemoteClassification:
             assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
+        assert r["model"] is not None
         validation_table = r["data"]["validation_table"]
         sorted_validation_table = validation_table.sort_values(
             by="temporal_split", ascending=True
@@ -811,6 +829,7 @@ class TestRemoteClassificationCrossValidation:
             assert "importance_std_err" in feat
             assert "p_value" in feat
             assert "p_value_std_err" in feat
+        assert r["model"] is None
 
     def test_cross_val_with_text(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -846,6 +865,7 @@ class TestRemoteClassificationCrossValidation:
             assert "importance_std_err" in feat
             assert "p_value" in feat
             assert "p_value_std_err" in feat
+        assert r["model"] is None
 
     def test_cross_val_with_text_fail(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -913,6 +933,7 @@ class TestRemoteClassificationCrossValidation:
             assert "importance_std_err" in feat
             assert "p_value" in feat
             assert "p_value_std_err" in feat
+        assert r["model"] is not None
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
         assert "debiasing_charts" in r["data"]
@@ -1030,6 +1051,7 @@ class TestDebiasing:
             assert "feature" in feat
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is None
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
         assert "debiasing_charts" in r["data"]
@@ -1140,6 +1162,7 @@ class TestDebiasing:
             assert "feature" in feat
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is None
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
         assert "debiasing_charts" in r["data"]
@@ -1215,6 +1238,7 @@ class TestDebiasing:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        assert r["model"] is None
         for feat in r["data"]["importantFeatures"]:
             assert "feature" in feat
             assert "importance" in feat
