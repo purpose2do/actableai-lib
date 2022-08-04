@@ -793,6 +793,6 @@ class AAIClassificationTask(AAITask):
                 "debiasing_charts": debiasing_charts,
                 "leaderboard": leaderboard,
             },
-            "model": predictor if kfolds <= 1 else None,
+            "model": predictor if kfolds <= 1 or refit_full else None,
             # FIXME this predictor is not really usable as is for now
         }
