@@ -1261,3 +1261,84 @@ class TestDebiasing:
                 else:
                     assert "x" in chart
                     assert type(chart["x"]) is list
+
+    def test_simple_debiasing_feature_refit_full(self, classification_task, tmp_path):
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 3,
+                "y": [1, 2, 1, 2, 1, None, 1, 2, 1, 2] * 3,
+                "z": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 3,
+                "t": [1, 2, 1, 2, 1, None, None, 2, 1, 2] * 3,
+            }
+        )
+        target = "t"
+        features = ["x", "y"]
+        biased_groups = ["z"]
+        debiased_features = ["y"]
+
+        r = run_classification_task(
+            classification_task,
+            tmp_path,
+            df,
+            target,
+            features,
+            biased_groups=biased_groups,
+            debiased_features=debiased_features,
+            refit_full=True,
+        )
+
+        assert r["status"] == "SUCCESS"
+        assert "fields" in r["data"]
+        assert "exdata" in r["data"]
+        assert "predictData" in r["data"]
+        assert "predict_shaps" in r["data"]
+        assert "evaluate" in r["data"]
+        assert "validation_shaps" in r["data"]
+        assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert "feature" in feat
+            assert "importance" in feat
+            assert "p_value" in feat
+        assert len(r["data"]["validation_shaps"]) == 0
+        assert len(r["data"]["predict_shaps"]) == 0
+        assert "debiasing_charts" in r["data"]
+
+        debiasing_charts = r["data"]["debiasing_charts"]
+        assert len(debiasing_charts) == len(biased_groups)
+
+        for debiasing_chart in debiasing_charts:
+            assert "type" in debiasing_chart
+            assert debiasing_chart["type"] in ["scatter", "bar"]
+
+            assert "group" in debiasing_chart
+            assert debiasing_chart["group"] in biased_groups
+
+            assert "target" in debiasing_chart
+            assert debiasing_chart["target"] == target
+
+            charts = debiasing_chart["charts"]
+            assert len(charts) == 2
+
+            for chart in charts:
+                assert "x_label" in chart
+                assert type(chart["x_label"]) is str
+
+                assert "y" in chart
+                assert type(chart["y"]) is list
+
+                assert "corr" in chart
+                assert "pvalue" in chart
+
+                if debiasing_chart["type"] == "bar":
+                    assert "bars" in chart
+                    assert type(chart["bars"]) is list
+
+                    for bar in chart["bars"]:
+                        assert "x" in bar
+                        assert type(bar["x"]) is list
+
+                        assert "name" in bar
+                else:
+                    assert "x" in chart
+                    assert type(chart["x"]) is list
+        assert r["model"] is not None
