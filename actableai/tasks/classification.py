@@ -184,6 +184,8 @@ class _AAIClassificationTrainTask(AAITask):
 
         # Evaluate results
         important_features = None
+        evaluate = None
+        pred_prob_val = None
         if df_val is not None:
             important_features = []
             feature_importance = predictor.feature_importance(df_val)
@@ -197,9 +199,6 @@ class _AAIClassificationTrainTask(AAITask):
                         "p_value": feature_importance["p_value"][i],
                     }
                 )
-        evaluate = None
-        pred_prob_val = None
-        if df_val is not None:
             label_val = df_val[target]
             label_pred = predictor.predict(df_val)
             pred_prob_val = predictor.predict_proba(df_val, as_multiclass=True)
