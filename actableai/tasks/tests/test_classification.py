@@ -933,7 +933,7 @@ class TestRemoteClassificationCrossValidation:
             assert "importance_std_err" in feat
             assert "p_value" in feat
             assert "p_value_std_err" in feat
-        assert r["model"] is not None
+        assert r["model"] is None
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
         assert "debiasing_charts" in r["data"]
@@ -1051,7 +1051,7 @@ class TestDebiasing:
             assert "feature" in feat
             assert "importance" in feat
             assert "p_value" in feat
-        assert r["model"] is None
+        assert r["model"] is not None
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
         assert "debiasing_charts" in r["data"]
@@ -1162,7 +1162,7 @@ class TestDebiasing:
             assert "feature" in feat
             assert "importance" in feat
             assert "p_value" in feat
-        assert r["model"] is None
+        assert r["model"] is not None
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
         assert "debiasing_charts" in r["data"]
@@ -1238,7 +1238,7 @@ class TestDebiasing:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
-        assert r["model"] is None
+        assert r["model"] is not None
         for feat in r["data"]["importantFeatures"]:
             assert "feature" in feat
             assert "importance" in feat
