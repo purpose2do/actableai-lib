@@ -1,7 +1,7 @@
 from collections import Counter
 import numpy as np
 from sklearn.preprocessing import PolynomialFeatures
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 import pandas as pd
 from actableai.classification.utils import split_validation_by_datetime
 
@@ -1120,4 +1120,29 @@ class SplitByDatetimeValidationChecker(IChecker):
                 message="The validation dataset contains only one value."
                 + " Please try to increase the validation ratio or"
                 + " use the random data validation split strategy.",
+            )
+
+
+class PositiveOutcomeForBinaryChecker(IChecker):
+    def __init__(self, level, name: str = "PositiveOutcomeForBinaryChecker"):
+        self.name = name
+        self.level = level
+
+    def check(
+        self, df: pd.DataFrame, positive_outcome_value: Optional[Any]
+    ) -> Optional[CheckResult]:
+        """Check that if the target is binary, the positive outcome value is not None.
+
+        Args:
+            df: Dataframe to check.
+            features: Features to check.
+
+        Returns:
+            Optional[CheckResult]: Check result.
+        """
+        if positive_outcome_value is None and df[positive_outcome_value].nunique() == 2:
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message="If the outcome is binary, the positive outcome value must be specified.",
             )

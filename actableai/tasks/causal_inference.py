@@ -201,10 +201,7 @@ def infer_causal(
     ):
         is_single_binary_outcome = True
         pd_table[outcomes[0]] = pd_table[outcomes[0]].astype(str)
-        if positive_outcome_value is not None:
-            positive_outcome_value = str(positive_outcome_value)
-        else:
-            positive_outcome_value = str(pd_table[outcomes[0]].iloc[0])
+        positive_outcome_value = str(positive_outcome_value)
 
     # construct the dictionary of control values for categorical treatments
     for c in treatments:

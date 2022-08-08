@@ -43,6 +43,7 @@ from actableai.data_validation.checkers import (
     IsValidTypeNumberOfClusterChecker,
     MaxTrainSamplesChecker,
     OnlyOneValueChecker,
+    PositiveOutcomeForBinaryChecker,
     PositiveOutcomeValueThreshold,
     ROCAUCChecker,
     RegressionEvalMetricChecker,
@@ -686,6 +687,10 @@ class CausalDataValidator:
             DoNotContainMixedChecker(level=CheckLevels.WARNING).check(df, columns),
             IsSufficientDataChecker(level=CheckLevels.CRITICAL).check(
                 df, n_sample=MINIMUM_NUMBER_OF_SAMPLE
+            ),
+            PositiveOutcomeForBinaryChecker(level=CheckLevels.CRITICAL).check(
+                df,
+                positive_outcome_value=positive_outcome_value,
             ),
         ]
         if drop_unique:
