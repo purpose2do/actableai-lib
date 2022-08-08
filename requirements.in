@@ -3,7 +3,7 @@ pandasql==0.7.3
 ray[tune,default,serve]==1.13.0
 autogluon.tabular[all]==0.5.0
 autogluon.text==0.5.0
-gluonts[Prophet,R]==0.10.2
+gluonts[Prophet,R]==0.10.3
 econml==0.13.0
 ipython==7.32.0
 hyperopt==0.2.7

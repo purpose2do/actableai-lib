@@ -230,7 +230,7 @@ gitdb==4.0.9
     # via gitpython
 gitpython==3.1.27
     # via pyabsa
-gluonts[Prophet,R,prophet,r]==0.10.2
+gluonts[Prophet,R,prophet,r]==0.10.3
     # via -r requirements.in
 google-api-core==2.8.2
     # via opencensus
