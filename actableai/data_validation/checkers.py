@@ -1129,7 +1129,10 @@ class PositiveOutcomeForBinaryChecker(IChecker):
         self.level = level
 
     def check(
-        self, df: pd.DataFrame, positive_outcome_value: Optional[Any]
+        self,
+        df: pd.DataFrame,
+        outcomes: List[str],
+        positive_outcome_value: Optional[Any],
     ) -> Optional[CheckResult]:
         """Check that if the target is binary, the positive outcome value is not None.
 
@@ -1140,9 +1143,11 @@ class PositiveOutcomeForBinaryChecker(IChecker):
         Returns:
             Optional[CheckResult]: Check result.
         """
-        if positive_outcome_value is None and df[positive_outcome_value].nunique() == 2:
-            return CheckResult(
-                name=self.name,
-                level=self.level,
-                message="If the outcome is binary, the positive outcome value must be specified.",
-            )
+        if len(outcomes) == 1:
+            outcome = outcomes[0]
+            if positive_outcome_value is None and df[outcome].nunique() == 2:
+                return CheckResult(
+                    name=self.name,
+                    level=self.level,
+                    message="If the outcome is binary, the positive outcome value must be specified.",
+                )

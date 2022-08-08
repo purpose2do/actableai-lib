@@ -690,6 +690,7 @@ class CausalDataValidator:
             ),
             PositiveOutcomeForBinaryChecker(level=CheckLevels.CRITICAL).check(
                 df,
+                outcomes=outcomes,
                 positive_outcome_value=positive_outcome_value,
             ),
         ]
