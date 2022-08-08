@@ -2,7 +2,9 @@ import pandas as pd
 import pytest
 
 from actableai.data_validation.checkers import CheckLevels
-from actableai.tasks.classification import AAIClassificationTask
+from actableai.tasks.classification import (
+    AAIClassificationTask,
+)
 from actableai.utils.dataset_generator import DatasetGenerator
 from actableai.utils.testing import unittest_hyperparameters
 
@@ -59,6 +61,7 @@ class TestRemoteClassification:
             assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
+        assert r["model"] is not None
 
     def test_ray(self, tmp_path, init_ray):
         df = pd.DataFrame(
@@ -87,6 +90,7 @@ class TestRemoteClassification:
             assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
+        assert r["model"] is not None
 
     def test_categorical(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -112,6 +116,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_datetime(self, classification_task, tmp_path):
         from datetime import datetime
@@ -140,6 +145,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_extra_columns(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -158,6 +164,7 @@ class TestRemoteClassification:
             assert "importance" in feat
             assert "p_value" in feat
         assert len(r["data"]["importantFeatures"]) == 1
+        assert r["model"] is not None
 
     def test_numeric_and_categorical_and_datetime(self, classification_task, tmp_path):
         from datetime import datetime
@@ -193,6 +200,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x1", "x2", "x3"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_multiclass_num(self, classification_task, tmp_path):
         """
@@ -221,6 +229,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_multiclass_cat(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -246,6 +255,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_mix_target_column(self, classification_task, tmp_path):
         from datetime import datetime
@@ -379,6 +389,7 @@ class TestRemoteClassification:
         assert len(r["validations"]) > 0
         assert r["validations"][0]["name"] == "DoNotContainEmptyColumnsChecker"
         assert r["validations"][0]["level"] == CheckLevels.WARNING
+        assert r["model"] is not None
 
     def test_insufficient_valid_data(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -424,6 +435,7 @@ class TestRemoteClassification:
             assert "p_value" in feat
         assert len(r["validations"]) >= 1
         assert r["validations"][0]["name"] == "IsSufficientClassSampleChecker"
+        assert r["model"] is not None
 
     def test_insufficient_class(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -465,6 +477,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_suggest_analytic(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -493,6 +506,7 @@ class TestRemoteClassification:
         assert len(r["validations"]) >= 1
         assert r["validations"][0]["name"] == "CorrectAnalyticChecker"
         assert r["validations"][0]["level"] == CheckLevels.WARNING
+        assert r["model"] is not None
 
     def test_explain_bool_sample_with_nan(
         self, classification_task, tmp_path, init_ray
@@ -522,6 +536,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x", "z"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_boolean_str_target_column(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -559,6 +574,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_boolean_target_column(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -585,6 +601,7 @@ class TestRemoteClassification:
             assert feat["feature"] in ["x"]
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
 
     def test_drop_duplicates(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -640,6 +657,7 @@ class TestRemoteClassification:
             assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
+        assert r["model"] is not None
 
     def test_drop_duplicates_insufficient(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -697,6 +715,7 @@ class TestRemoteClassification:
             assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
+        assert r["model"] is not None
 
     def test_run_temporal_split_column(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -733,12 +752,47 @@ class TestRemoteClassification:
             assert "p_value" in feat
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
+        assert r["model"] is not None
         validation_table = r["data"]["validation_table"]
         sorted_validation_table = validation_table.sort_values(
             by="temporal_split", ascending=True
         )
         # check that the validation table is sorted by temporal split
         assert (validation_table == sorted_validation_table).all(axis=None)
+
+    def test_numeric_refit_full(self, classification_task, tmp_path):
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2,
+                "y": [1, 2, 1, 2, 1, None, 1, 2, 1, 2] * 2,
+            }
+        )
+
+        r = run_classification_task(
+            classification_task,
+            tmp_path,
+            df,
+            "y",
+            ["x"],
+            validation_ratio=0.2,
+            refit_full=True,
+        )
+
+        assert r["status"] == "SUCCESS"
+        assert "fields" in r["data"]
+        assert "exdata" in r["data"]
+        assert "predictData" in r["data"]
+        assert "predict_shaps" in r["data"]
+        assert "evaluate" in r["data"]
+        assert "validation_shaps" in r["data"]
+        assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert feat["feature"] in ["x"]
+            assert "importance" in feat
+            assert "p_value" in feat
+        assert len(r["data"]["validation_shaps"]) == 0
+        assert len(r["data"]["predict_shaps"]) == 0
+        assert r["model"] is not None
 
 
 class TestRemoteClassificationCrossValidation:
@@ -775,20 +829,7 @@ class TestRemoteClassificationCrossValidation:
             assert "importance_std_err" in feat
             assert "p_value" in feat
             assert "p_value_std_err" in feat
-
-    # def test_cross_val_with_explain(self):
-    # import ray
-    # if not ray.is_initialized():
-    # ray.init()
-
-    # df = pd.DataFrame({
-    # "x": [2,2,2,2,2,None,3,3,4,4] * 3,
-    # "y": [1, 2, 3, 4, 5, 6, 7, 8, 9 ,10] * 3,
-    # "z": [2,2,2,2,2,3,3,3,4,4] * 3,
-    # })
-    # r = run_classification_task(classification_task, tmp_path, df, "x", [], use_cross_validation=True, kfolds=5, explain_samples=True)
-    # assert r["status"] == "SUCCESS"
-    # assert len(r["data"]["predict_explanations"]) > 0
+        assert r["model"] is None
 
     def test_cross_val_with_text(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -824,6 +865,7 @@ class TestRemoteClassificationCrossValidation:
             assert "importance_std_err" in feat
             assert "p_value" in feat
             assert "p_value_std_err" in feat
+        assert r["model"] is None
 
     def test_cross_val_with_text_fail(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -891,6 +933,7 @@ class TestRemoteClassificationCrossValidation:
             assert "importance_std_err" in feat
             assert "p_value" in feat
             assert "p_value_std_err" in feat
+        assert r["model"] is None
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
         assert "debiasing_charts" in r["data"]
@@ -934,6 +977,42 @@ class TestRemoteClassificationCrossValidation:
                     assert "x" in chart
                     assert type(chart["x"]) is list
 
+    def test_cross_val_refit_full(self, classification_task, tmp_path):
+        df = pd.DataFrame(
+            {
+                "x": [2, 2, 2, 2, 2, None, 3, 3, 4, 4] * 3,
+                "y": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 3,
+                "z": [2, 2, 2, 2, 2, 3, 3, 3, 4, 4] * 3,
+            }
+        )
+
+        r = run_classification_task(
+            classification_task,
+            tmp_path,
+            df,
+            "x",
+            kfolds=4,
+            cross_validation_max_concurrency=4,
+            refit_full=True,
+        )
+
+        assert r["status"] == "SUCCESS"
+        evaluate = r["data"]["evaluate"]
+        important_features = r["data"]["importantFeatures"]
+        assert len(r["data"]["predictData"]) > 0
+        assert "accuracy" in evaluate
+        assert "accuracy_std_err" in evaluate
+        assert "confusion_matrix" in evaluate
+        assert "confusion_matrix_std_err" in evaluate
+        assert "importantFeatures" in r["data"]
+        for feat in important_features:
+            assert "feature" in feat
+            assert "importance" in feat
+            assert "importance_std_err" in feat
+            assert "p_value" in feat
+            assert "p_value_std_err" in feat
+        assert r["model"] is not None
+
 
 class TestDebiasing:
     def test_simple_debiasing_feature(self, classification_task, tmp_path):
@@ -972,6 +1051,7 @@ class TestDebiasing:
             assert "feature" in feat
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
         assert "debiasing_charts" in r["data"]
@@ -1082,6 +1162,7 @@ class TestDebiasing:
             assert "feature" in feat
             assert "importance" in feat
             assert "p_value" in feat
+        assert r["model"] is not None
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
         assert "debiasing_charts" in r["data"]
@@ -1157,6 +1238,7 @@ class TestDebiasing:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
+        assert r["model"] is not None
         for feat in r["data"]["importantFeatures"]:
             assert "feature" in feat
             assert "importance" in feat
@@ -1203,3 +1285,84 @@ class TestDebiasing:
                 else:
                     assert "x" in chart
                     assert type(chart["x"]) is list
+
+    def test_simple_debiasing_feature_refit_full(self, classification_task, tmp_path):
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 3,
+                "y": [1, 2, 1, 2, 1, None, 1, 2, 1, 2] * 3,
+                "z": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 3,
+                "t": [1, 2, 1, 2, 1, None, None, 2, 1, 2] * 3,
+            }
+        )
+        target = "t"
+        features = ["x", "y"]
+        biased_groups = ["z"]
+        debiased_features = ["y"]
+
+        r = run_classification_task(
+            classification_task,
+            tmp_path,
+            df,
+            target,
+            features,
+            biased_groups=biased_groups,
+            debiased_features=debiased_features,
+            refit_full=True,
+        )
+
+        assert r["status"] == "SUCCESS"
+        assert "fields" in r["data"]
+        assert "exdata" in r["data"]
+        assert "predictData" in r["data"]
+        assert "predict_shaps" in r["data"]
+        assert "evaluate" in r["data"]
+        assert "validation_shaps" in r["data"]
+        assert "importantFeatures" in r["data"]
+        for feat in r["data"]["importantFeatures"]:
+            assert "feature" in feat
+            assert "importance" in feat
+            assert "p_value" in feat
+        assert len(r["data"]["validation_shaps"]) == 0
+        assert len(r["data"]["predict_shaps"]) == 0
+        assert "debiasing_charts" in r["data"]
+
+        debiasing_charts = r["data"]["debiasing_charts"]
+        assert len(debiasing_charts) == len(biased_groups)
+
+        for debiasing_chart in debiasing_charts:
+            assert "type" in debiasing_chart
+            assert debiasing_chart["type"] in ["scatter", "bar"]
+
+            assert "group" in debiasing_chart
+            assert debiasing_chart["group"] in biased_groups
+
+            assert "target" in debiasing_chart
+            assert debiasing_chart["target"] == target
+
+            charts = debiasing_chart["charts"]
+            assert len(charts) == 2
+
+            for chart in charts:
+                assert "x_label" in chart
+                assert type(chart["x_label"]) is str
+
+                assert "y" in chart
+                assert type(chart["y"]) is list
+
+                assert "corr" in chart
+                assert "pvalue" in chart
+
+                if debiasing_chart["type"] == "bar":
+                    assert "bars" in chart
+                    assert type(chart["bars"]) is list
+
+                    for bar in chart["bars"]:
+                        assert "x" in bar
+                        assert type(bar["x"]) is list
+
+                        assert "name" in bar
+                else:
+                    assert "x" in chart
+                    assert type(chart["x"]) is list
+        assert r["model"] is not None

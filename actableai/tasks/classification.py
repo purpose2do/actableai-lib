@@ -1,5 +1,6 @@
 import pandas as pd
-from typing import Dict, List, Optional, Tuple
+import numpy as np
+from typing import Any, Dict, List, Optional, Tuple, Union
 import logging
 
 from actableai.tasks import TaskType
@@ -26,19 +27,27 @@ class _AAIClassificationTrainTask(AAITask):
         features: List[str],
         run_model: bool,
         df_train: pd.DataFrame,
-        df_val: pd.DataFrame,
-        df_test: pd.DataFrame,
+        df_val: Optional[pd.DataFrame],
+        df_test: Optional[pd.DataFrame],
         drop_duplicates: bool,
         run_debiasing: bool,
         biased_groups: List[str],
         debiased_features: List[str],
-        residuals_hyperparameters: Dict,
+        residuals_hyperparameters: Optional[Dict],
         num_gpus: int,
         eval_metric: str,
         time_limit: Optional[int],
         drop_unique: bool,
         drop_useless_features: bool,
-    ) -> Tuple[object, List, Dict, object, pd.DataFrame]:
+    ) -> Tuple[
+        Any,
+        Any,
+        Optional[List],
+        Optional[dict],
+        Optional[np.ndarray],
+        Union[np.ndarray, List],
+        pd.DataFrame,
+    ]:
         """Runs a sub Classification Task for cross-validation.
 
         Args:
@@ -129,7 +138,10 @@ class _AAIClassificationTrainTask(AAITask):
         ag_args_fit["num_gpus"] = num_gpus
 
         df_train = df_train[features + biased_groups + [target]]
-        df_val = df_val[features + biased_groups + [target]]
+        if df_val is not None:
+            df_val = df_val[features + biased_groups + [target]]
+        if df_test is not None:
+            df_test = df_test[features + biased_groups + [target]]
 
         # Start training
         predictor = TabularPredictor(
@@ -171,127 +183,137 @@ class _AAIClassificationTrainTask(AAITask):
         pd.set_option("chained_assignment", "warn")
 
         # Evaluate results
-        important_features = []
-        feature_importance = predictor.feature_importance(df_val)
-        for i in range(len(feature_importance)):
-            if feature_importance.index[i] in biased_groups:
-                continue
-            important_features.append(
-                {
-                    "feature": feature_importance.index[i],
-                    "importance": feature_importance["importance"][i],
-                    "p_value": feature_importance["p_value"][i],
-                }
+        important_features = None
+        evaluate = None
+        pred_prob_val = None
+        if df_val is not None:
+            important_features = []
+            feature_importance = predictor.feature_importance(df_val)
+            for i in range(len(feature_importance)):
+                if feature_importance.index[i] in biased_groups:
+                    continue
+                important_features.append(
+                    {
+                        "feature": feature_importance.index[i],
+                        "importance": feature_importance["importance"][i],
+                        "p_value": feature_importance["p_value"][i],
+                    }
+                )
+            label_val = df_val[target]
+            label_pred = predictor.predict(df_val)
+            pred_prob_val = predictor.predict_proba(df_val, as_multiclass=True)
+            perf = predictor.evaluate_predictions(
+                y_true=label_val,
+                y_pred=pred_prob_val,
+                auxiliary_metrics=True,
+                detailed_report=False,
             )
 
-        label_val = df_val[target]
-        label_pred = predictor.predict(df_val)
-        pred_prob_val = predictor.predict_proba(df_val, as_multiclass=True)
-        perf = predictor.evaluate_predictions(
-            y_true=label_val,
-            y_pred=pred_prob_val,
-            auxiliary_metrics=True,
-            detailed_report=False,
-        )
-
-        evaluate = {
-            # TODO: to be removed (legacy)
-            "problem_type": predictor.problem_type,
-            "accuracy": perf["accuracy"],
-            "metrics": pd.DataFrame({"metric": perf.keys(), "value": perf.values()}),
-        }
-        evaluate["labels"] = predictor.class_labels
-        evaluate["confusion_matrix"] = confusion_matrix(
-            label_val, label_pred, labels=evaluate["labels"], normalize="true"
-        ).tolist()
-
-        if evaluate["problem_type"] == "binary":
-            if evaluate["labels"][0] in [
-                1,
-                1.0,
-                "1",
-                "1.0",
-                "true",
-                "yes",
-                positive_label,
-            ]:
-                pos_label = evaluate["labels"][0]
-                neg_label = evaluate["labels"][1]
-            else:
-                pos_label = evaluate["labels"][1]
-                neg_label = evaluate["labels"][0]
-
+            evaluate = {
+                # TODO: to be removed (legacy)
+                "problem_type": predictor.problem_type,
+                "accuracy": perf["accuracy"],
+                "metrics": pd.DataFrame(
+                    {"metric": perf.keys(), "value": perf.values()}
+                ),
+            }
+            evaluate["labels"] = predictor.class_labels
             evaluate["confusion_matrix"] = confusion_matrix(
-                label_val, label_pred, labels=[pos_label, neg_label], normalize="true"
-            )
+                label_val, label_pred, labels=evaluate["labels"], normalize="true"
+            ).tolist()
 
-            fpr, tpr, thresholds = roc_curve(
-                label_val,
-                pred_prob_val[pos_label],
-                pos_label=pos_label,
-                drop_intermediate=False,
-            )
-            evaluate["auc_curve"] = {
-                "False Positive Rate": fpr[1:].tolist()[::-1],
-                "True Positive Rate": tpr[1:].tolist()[::-1],
-                "thresholds": thresholds[1:].tolist()[::-1],
-                "positive_label": str(pos_label),
-                "negative_label": str(neg_label),
-                "threshold": 0.5,
-            }
-            evaluate["precision_score"] = precision_score(
-                label_val, label_pred, pos_label=pos_label
-            )
-            evaluate["recall_score"] = recall_score(
-                label_val, label_pred, pos_label=pos_label
-            )
-            precision, recall, thresholds = custom_precision_recall_curve(
-                label_val, pred_prob_val[pos_label], pos_label=pos_label
-            )
-            evaluate["precision_recall_curve"] = {
-                "Precision": precision.tolist(),
-                "Recall": recall.tolist(),
-                "thresholds": thresholds.tolist(),
-                "positive_label": str(pos_label),
-                "negative_label": str(neg_label),
-            }
-            evaluate["f1_score"] = f1_score(label_val, label_pred, pos_label=pos_label)
-            evaluate["positive_count"] = len(label_val[label_val == pos_label])
-            evaluate["negative_count"] = len(label_val) - evaluate["positive_count"]
-        else:
-            evaluate["auc_curve"] = []
-            evaluate["precision_recall_curve"] = []
-            for pos_label in evaluate["labels"]:
+            if evaluate["problem_type"] == "binary":
+                if evaluate["labels"][0] in [
+                    1,
+                    1.0,
+                    "1",
+                    "1.0",
+                    "true",
+                    "yes",
+                    positive_label,
+                ]:
+                    pos_label = evaluate["labels"][0]
+                    neg_label = evaluate["labels"][1]
+                else:
+                    pos_label = evaluate["labels"][1]
+                    neg_label = evaluate["labels"][0]
+
+                evaluate["confusion_matrix"] = confusion_matrix(
+                    label_val,
+                    label_pred,
+                    labels=[pos_label, neg_label],
+                    normalize="true",
+                )
+
                 fpr, tpr, thresholds = roc_curve(
                     label_val,
                     pred_prob_val[pos_label],
                     pos_label=pos_label,
                     drop_intermediate=False,
                 )
-                evaluate["auc_curve"].append(
-                    {
-                        "False Positive Rate": fpr[1:].tolist()[::-1],
-                        "True Positive Rate": tpr[1:].tolist()[::-1],
-                        "thresholds": thresholds[1:].tolist()[::-1],
-                        "positive_label": str(pos_label),
-                        "threshold": 0.5,
-                    }
+                evaluate["auc_curve"] = {
+                    "False Positive Rate": fpr[1:].tolist()[::-1],
+                    "True Positive Rate": tpr[1:].tolist()[::-1],
+                    "thresholds": thresholds[1:].tolist()[::-1],
+                    "positive_label": str(pos_label),
+                    "negative_label": str(neg_label),
+                    "threshold": 0.5,
+                }
+                evaluate["precision_score"] = precision_score(
+                    label_val, label_pred, pos_label=pos_label
+                )
+                evaluate["recall_score"] = recall_score(
+                    label_val, label_pred, pos_label=pos_label
                 )
                 precision, recall, thresholds = custom_precision_recall_curve(
                     label_val, pred_prob_val[pos_label], pos_label=pos_label
                 )
-                evaluate["precision_recall_curve"].append(
-                    {
-                        "Precision": precision.tolist(),
-                        "Recall": recall.tolist(),
-                        "thresholds": thresholds.tolist(),
-                        "positive_label": str(pos_label),
-                    }
+                evaluate["precision_recall_curve"] = {
+                    "Precision": precision.tolist(),
+                    "Recall": recall.tolist(),
+                    "thresholds": thresholds.tolist(),
+                    "positive_label": str(pos_label),
+                    "negative_label": str(neg_label),
+                }
+                evaluate["f1_score"] = f1_score(
+                    label_val, label_pred, pos_label=pos_label
                 )
+                evaluate["positive_count"] = len(label_val[label_val == pos_label])
+                evaluate["negative_count"] = len(label_val) - evaluate["positive_count"]
+            else:
+                evaluate["auc_curve"] = []
+                evaluate["precision_recall_curve"] = []
+                for pos_label in evaluate["labels"]:
+                    fpr, tpr, thresholds = roc_curve(
+                        label_val,
+                        pred_prob_val[pos_label],
+                        pos_label=pos_label,
+                        drop_intermediate=False,
+                    )
+                    evaluate["auc_curve"].append(
+                        {
+                            "False Positive Rate": fpr[1:].tolist()[::-1],
+                            "True Positive Rate": tpr[1:].tolist()[::-1],
+                            "thresholds": thresholds[1:].tolist()[::-1],
+                            "positive_label": str(pos_label),
+                            "threshold": 0.5,
+                        }
+                    )
+                    precision, recall, thresholds = custom_precision_recall_curve(
+                        label_val, pred_prob_val[pos_label], pos_label=pos_label
+                    )
+                    evaluate["precision_recall_curve"].append(
+                        {
+                            "Precision": precision.tolist(),
+                            "Recall": recall.tolist(),
+                            "thresholds": thresholds.tolist(),
+                            "positive_label": str(pos_label),
+                        }
+                    )
 
         predict_shap_values = []
 
-        if run_model and explain_samples:
+        if run_model and explainer is not None and df_test is not None:
             predict_shap_values = explainer.shap_values(df_test)
 
         return (
@@ -339,6 +361,7 @@ class AAIClassificationTask(AAITask):
         datetime_column: Optional[str] = None,
         split_by_datetime: bool = False,
         ag_automm_enabled=False,
+        refit_full=False,
     ) -> Dict:
         """Run this classification task and return results.
 
@@ -434,6 +457,9 @@ class AAIClassificationTask(AAITask):
             model_directory = mkdtemp(prefix="autogluon_model")
         if train_task_params is None:
             train_task_params = {}
+        if refit_full and time_limit is not None:
+            # Half the time limit for train and half the time for refit
+            time_limit = time_limit // 2
 
         use_cross_validation = kfolds > 1
         run_debiasing = len(biased_groups) > 0 and len(debiased_features) > 0
@@ -716,6 +742,36 @@ class AAIClassificationTask(AAITask):
 
         runtime = time.time() - start
 
+        if refit_full:
+            df_only_training = df.loc[df[target].notnull()]
+            predictor, _, _, _, _, _, _ = _AAIClassificationTrainTask(
+                **train_task_params
+            ).run(
+                explain_samples=False,
+                presets=presets,
+                hyperparameters=hyperparameters,
+                model_directory=model_directory,
+                target=target,
+                features=features,
+                run_model=False,
+                df_train=df_only_training,
+                df_val=None,
+                df_test=None,
+                drop_duplicates=drop_duplicates,
+                run_debiasing=run_debiasing,
+                biased_groups=biased_groups,
+                debiased_features=debiased_features,
+                residuals_hyperparameters=residuals_hyperparameters,
+                num_gpus=num_gpus,
+                eval_metric=eval_metric,
+                time_limit=time_limit,
+                drop_unique=drop_unique,
+                drop_useless_features=drop_useless_features,
+                problem_type=problem_type,
+                positive_label=positive_label,
+            )
+            predictor.refit_full(model="best", set_best_to_refit_full=True)
+
         return {
             "messenger": "",
             "status": "SUCCESS",
@@ -737,6 +793,6 @@ class AAIClassificationTask(AAITask):
                 "debiasing_charts": debiasing_charts,
                 "leaderboard": leaderboard,
             },
-            "model": predictor if kfolds <= 1 else None,
+            "model": predictor if kfolds <= 1 or refit_full else None,
             # FIXME this predictor is not really usable as is for now
         }
