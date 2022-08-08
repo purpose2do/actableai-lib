@@ -16,6 +16,7 @@ from actableai.data_validation.checkers import (
     MaxTrainSamplesChecker,
     NoFrequentItemSet,
     OnlyOneValueChecker,
+    PositiveOutcomeForBinaryChecker,
     PositiveOutcomeValueThreshold,
     ROCAUCChecker,
     SameTypeChecker,
@@ -359,3 +360,15 @@ class TestOnlyOneValueChecker:
         df = pd.DataFrame({"x": [1, 1, 1], "y": [1, 1, 1], "z": [1, 2, 3]})
         result = checker.check(df, ["x", "y", "z"])
         assert result is None
+
+
+class TestPositiveOutcomeForBinaryChecker:
+    def test_check(self):
+        checker = PositiveOutcomeForBinaryChecker(
+            level=CheckLevels.CRITICAL, name="PositiveOutcomeForBinaryChecker"
+        )
+        df = pd.DataFrame({"x": [1, 2, 1], "y": [1, 1, 1], "z": [1, 2, 3]})
+        result = checker.check(df=df, outcomes=["x"], positive_outcome_value=None)
+        assert result is not None
+        assert result.name == "PositiveOutcomeForBinaryChecker"
+        assert result.level == CheckLevels.CRITICAL
