@@ -2,10 +2,10 @@ import datetime
 import itertools
 import numpy as np
 import pandas as pd
-import psutil
 import random
 import ray
-from copy import deepcopy
+
+from actableai.timeseries.dataset import AAITimeSeriesDataset
 
 
 def unittest_hyperparameters():
@@ -68,13 +68,16 @@ def generate_date_range(
     return pd.date_range(start_date, periods=periods, freq=freq)
 
 
-def generate_forecast_group_df_dict(
+def generate_forecast_dataset(
     np_rng,
+    prediction_length,
     n_groups=1,
     n_targets=1,
     freq=None,
-    n_real_features=0,
-    n_cat_features=0,
+    n_real_dynamic_features=0,
+    n_cat_dynamic_features=0,
+    n_real_static_features=0,
+    n_cat_static_features=0,
     date_range_kwargs=None,
 ):
     """
@@ -83,10 +86,12 @@ def generate_forecast_group_df_dict(
     if date_range_kwargs is None:
         date_range_kwargs = {}
 
-    group_df_dict = {}
+    df_dict = {}
     target_list = [f"target_{i}" for i in range(n_targets)]
-    real_feature_list = [f"real_feat_{i}" for i in range(n_real_features)]
-    cat_feature_list = [f"cat_feat_{i}" for i in range(n_cat_features)]
+    feat_dynamic_real = [f"real_feat_{i}" for i in range(n_real_dynamic_features)]
+    feat_dynamic_cat = [f"cat_feat_{i}" for i in range(n_cat_dynamic_features)]
+    feat_static_real = [f"real_static_feat_{i}" for i in range(n_real_static_features)]
+    feat_static_cat = [f"cat_static_feat_{i}" for i in range(n_cat_static_features)]
 
     for i in range(n_groups):
         date_range = generate_date_range(np_rng, freq=freq, **date_range_kwargs)
@@ -94,18 +99,30 @@ def generate_forecast_group_df_dict(
         data = {}
         for target in target_list:
             data[target] = np_rng.standard_normal(len(date_range))
-        for feat in real_feature_list:
+        for feat in feat_dynamic_real:
             data[feat] = np_rng.standard_normal(len(date_range))
-        for feat in cat_feature_list:
+        for feat in feat_dynamic_cat:
             data[feat] = np_rng.integers(1, 10, len(date_range))
+        for feat in feat_static_real:
+            data[feat] = np_rng.standard_normal()
+        for feat in feat_static_cat:
+            data[feat] = np_rng.integers(1, 10)
 
         df = pd.DataFrame(data)
         df.index = date_range
-        df = df.sort_index()
 
-        group_df_dict[f"group_{i}"] = df
+        df_dict[f"group_{i}"] = df
 
-    return group_df_dict, target_list, real_feature_list, cat_feature_list
+    return AAITimeSeriesDataset(
+        dataframes=df_dict,
+        target_columns=target_list,
+        freq=freq,
+        prediction_length=prediction_length,
+        feat_dynamic_real=feat_dynamic_real,
+        feat_dynamic_cat=feat_dynamic_cat,
+        feat_static_real=feat_static_real,
+        feat_static_cat=feat_static_cat,
+    )
 
 
 def generate_forecast_df(
@@ -135,54 +152,50 @@ def generate_forecast_df(
             group_values_list.append([f"group_val_{i}" for i in range(n_group_cat)])
 
     group_by = [f"group_{i}" for i in range(n_group_by)]
-    real_static_feature_list = [
-        f"real_static_feat_{i}" for i in range(n_real_static_features)
-    ]
-    cat_static_feature_list = [
-        f"cat_static_feat_{i}" for i in range(n_cat_static_features)
-    ]
 
-    (
-        group_df_dict,
-        target_list,
-        real_dynamic_feature_list,
-        cat_dynamic_feature_list,
-    ) = generate_forecast_group_df_dict(
+    dataset = generate_forecast_dataset(
         np_rng,
+        prediction_length=prediction_length,
         n_groups=n_groups,
         n_targets=n_targets,
         freq=freq,
-        n_real_features=n_real_dynamic_features,
-        n_cat_features=n_cat_dynamic_features,
+        n_real_dynamic_features=n_real_dynamic_features,
+        n_cat_dynamic_features=n_cat_dynamic_features,
+        n_real_static_features=n_real_static_features,
+        n_cat_static_features=n_cat_static_features,
         date_range_kwargs=date_range_kwargs,
     )
 
     feature_list = (
-        real_static_feature_list
-        + cat_static_feature_list
-        + real_dynamic_feature_list
-        + cat_dynamic_feature_list
+        dataset.feat_dynamic_real
+        + dataset.feat_dynamic_cat
+        + dataset.feat_static_real
+        + dataset.feat_static_cat
     )
 
     df = pd.DataFrame()
 
     for (group, df_group), group_values in zip(
-        group_df_dict.items(), itertools.product(*group_values_list)
+        dataset.dataframes.items(), itertools.product(*group_values_list)
     ):
         df_group["_date"] = df_group.index
+        df_group["_date_str"] = df_group["_date"].astype(str)
 
         if has_groups:
             for group_by_name, group_by_value in zip(group_by, group_values):
                 df_group[group_by_name] = group_by_value
 
-        for real_static_feat in real_static_feature_list:
-            df_group[real_static_feat] = np_rng.standard_normal()
-        for cat_static_feat in cat_static_feature_list:
-            df_group[cat_static_feat] = np_rng.integers(1, 10)
-
         if len(feature_list) > 0:
-            df_group.loc[-prediction_length:, target_list] = np.nan
+            df_group.loc[-prediction_length:, dataset.target_columns] = np.nan
 
         df = pd.concat([df, df_group], ignore_index=True)
 
-    return df, "_date", target_list, group_by, feature_list, n_groups
+    return (
+        df,
+        "_date",
+        "_date_str",
+        dataset.target_columns,
+        group_by,
+        feature_list,
+        n_groups,
+    )

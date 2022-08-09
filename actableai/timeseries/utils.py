@@ -1,25 +1,6 @@
-import pandas as pd
 import re
-from copy import deepcopy
-from typing import Optional, Tuple, Union, Dict, Callable, Iterable, List, Any, Iterator
-
-
-def find_gluonts_freq(freq: str) -> str:
-    """Convert pandas frequency to GluonTS frequency.
-
-    Args:
-        freq: pandas frequency
-
-    Returns:
-        GluonTS frequency
-    """
-    # For W:
-    if re.findall("\d*W", freq):
-        return re.findall("\d*W", freq)[0]
-    elif re.findall("\d*M", freq):
-        return re.findall("\d*M", freq)[0]
-
-    return freq
+import pandas as pd
+from typing import Optional, Tuple, List, Iterator
 
 
 def interpolate(df: pd.DataFrame, freq: str) -> pd.DataFrame:
@@ -35,13 +16,27 @@ def interpolate(df: pd.DataFrame, freq: str) -> pd.DataFrame:
     return df.resample(freq).interpolate(method="linear")
 
 
+def find_gluonts_freq(freq: str) -> str:
+    """Convert pandas frequency to GluonTS frequency.
+    Args:
+        freq: pandas frequency
+    Returns:
+        GluonTS frequency
+    """
+    # For W:
+    if re.findall("\d*W", freq):
+        return re.findall("\d*W", freq)[0]
+    elif re.findall("\d*M", freq):
+        return re.findall("\d*M", freq)[0]
+
+    return freq
+
+
 def find_freq(pd_date: pd.Series, period: int = 10) -> Optional[str]:
     """Find the frequency from a list of datetime.
-
     Args:
         pd_date: List of datetime as a pandas Series, needs to be sorted.
         period: Window to look for when computing the frequency.
-
     Returns:
         The frequency or None if not found.
     """
@@ -203,159 +198,6 @@ def handle_datetime_column(
     return parsed_dt, column_dtype
 
 
-def dataframe_to_list_dataset(
-    group_df_dict: Dict[Tuple[Any, ...], pd.DataFrame],
-    target_columns: List[str],
-    freq: str,
-    *,
-    real_static_feature_dict: Optional[Dict[Tuple[Any], List[float]]] = None,
-    cat_static_feature_dict: Optional[Dict[Tuple[Any], List[Any]]] = None,
-    real_dynamic_feature_columns: Optional[List[str]] = None,
-    cat_dynamic_feature_columns: Optional[List[str]] = None,
-    group_label_dict: Optional[Dict[Tuple[Any], int]] = None,
-    prediction_length: Optional[int] = None,
-    slice_df: Optional[Union[slice, Callable]] = None,
-    training: bool = True,
-) -> Iterable[Dict[str, Any]]:
-    """Transform pandas DataFrame to GluonTS ListDataset.
-
-    Args:
-        group_df_dict: Dictionary containing the time series for each group.
-        target_columns: List of columns to forecast.
-        freq: Frequency of the time series.
-        real_static_feature_dict: Dictionary containing a list of real features for
-            each group.
-        cat_static_feature_dict: Dictionary containing a list of categorical
-            features for each group.
-        real_dynamic_feature_columns: List of columns containing real features.
-        cat_dynamic_feature_columns: List of columns containing categorical
-            features.
-        group_label_dict: Dictionary containing the unique label for each group.
-        prediction_length: Length of the prediction to forecast. Cannot be None if
-            `training` is False.
-        slice_df: Slice or function to call that will return a slice. The slice will be
-            applied to each group separately.
-        training: If True the future dynamic features are trimmed out of the result.
-
-    Returns:
-        The ListDataset containing all the groups, features, and targets.
-    """
-    from gluonts.dataset.common import ListDataset
-
-    if real_static_feature_dict is None:
-        real_static_feature_dict = {}
-    if cat_static_feature_dict is None:
-        cat_static_feature_dict = {}
-    if real_dynamic_feature_columns is None:
-        real_dynamic_feature_columns = []
-    if cat_dynamic_feature_columns is None:
-        cat_dynamic_feature_columns = []
-    if group_label_dict is None:
-        group_label_dict = {}
-
-    if prediction_length is None and not training:
-        raise Exception("prediction length cannot be None if training is False")
-
-    one_dim_target = len(target_columns) == 1
-    if one_dim_target:
-        target_columns = target_columns[0]
-
-    slice_df = slice_df or slice(None)
-
-    list_data = []
-    for group in group_df_dict.keys():
-        df = group_df_dict[group]
-
-        slice_ = slice_df
-        if callable(slice_df):
-            slice_ = slice_df(df)
-
-        df = df.iloc[slice_]
-
-        entry = {"start": df.index[0]}
-
-        real_static_features = real_static_feature_dict.get(group, [])
-        cat_static_features = cat_static_feature_dict.get(group, [])
-
-        if len(group_label_dict) > 0:
-            cat_static_features = [group_label_dict[group], *cat_static_features]
-
-        if len(real_static_features) > 0:
-            entry["feat_static_real"] = real_static_features
-        if len(cat_static_features) > 0:
-            entry["feat_static_cat"] = cat_static_features
-        if len(real_dynamic_feature_columns) > 0:
-            entry["feat_dynamic_real"] = df[real_dynamic_feature_columns].to_numpy().T
-        if len(cat_dynamic_feature_columns) > 0:
-            entry["feat_dynamic_cat"] = df[cat_dynamic_feature_columns].to_numpy().T
-
-        target = df[target_columns]
-        if (
-            len(real_dynamic_feature_columns) + len(cat_dynamic_feature_columns) > 0
-            and not training
-        ):
-            target = target.iloc[:-prediction_length]
-        entry["target"] = target.to_numpy().T
-
-        list_data.append(entry)
-
-    return ListDataset(list_data, freq, one_dim_target=one_dim_target)
-
-
-def handle_features_dataset(
-    dataset: Iterable[Dict[str, Any]],
-    keep_feat_static_real: bool,
-    keep_feat_static_cat: bool,
-    keep_feat_dynamic_real: bool,
-    keep_feat_dynamic_cat: bool,
-) -> Iterable[Dict[str, Any]]:
-    """Filter out features from GluonTS ListDataset.
-
-    Args:
-        dataset: The ListDataset to filter.
-        keep_feat_static_real: Whether to keep the real static features or not.
-        keep_feat_static_cat: Whether to keep the categorical static features or not.
-        keep_feat_dynamic_real: Whether to keep to the real dynamic features or not.
-        keep_feat_dynamic_cat: Whether to keep the categorical dynamic features or not.
-
-    Returns:
-        Filtered ListDataset.
-    """
-    from gluonts.transform import TransformedDataset
-    from gluonts.dataset.common import ListDataset
-
-    new_dataset = deepcopy(dataset)
-
-    if isinstance(dataset, TransformedDataset):
-        list_data = new_dataset.base_dataset.list_data
-    elif isinstance(dataset, ListDataset):
-        list_data = new_dataset.list_data
-    else:
-        raise Exception("Invalid dataset type")
-
-    fields_to_exclude = []
-    if not keep_feat_static_real:
-        fields_to_exclude.append("feat_static_real")
-    if not keep_feat_static_cat:
-        fields_to_exclude.append("feat_static_cat")
-    if not keep_feat_dynamic_real:
-        fields_to_exclude.append("feat_dynamic_real")
-    if not keep_feat_dynamic_cat:
-        fields_to_exclude.append("feat_dynamic_cat")
-
-    list_data = [
-        {key: val for key, val in data.items() if key not in fields_to_exclude}
-        for data in list_data
-    ]
-
-    if isinstance(dataset, TransformedDataset):
-        new_dataset.base_dataset.list_data = list_data
-    elif isinstance(dataset, ListDataset):
-        new_dataset.list_data = list_data
-
-    return new_dataset
-
-
 def forecast_to_dataframe(
     forecast: Iterator[object],
     target_columns: List[str],
@@ -373,6 +215,9 @@ def forecast_to_dataframe(
     Returns:
         Forecasted values as pandas DataFrame.
     """
+    if not isinstance(target_columns, list):
+        target_columns = [target_columns]
+
     prediction_length = forecast.prediction_length
 
     quantiles_values_dict = {

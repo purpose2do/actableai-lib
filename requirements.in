@@ -3,7 +3,7 @@ pandasql==0.7.3
 ray[tune,default,serve]==1.13.0
 autogluon.tabular[all]==0.5.0
 autogluon.text==0.5.0
-gluonts[Prophet,R]==0.9.1
+gluonts[Prophet,R]==0.10.3
 econml==0.13.0
 ipython==7.32.0
 hyperopt==0.2.7
@@ -15,7 +15,6 @@ nltk==3.7
 flake8==3.9.2
 pytest==7.1.1
 pytest-xdist==2.5.0
-pystan==2.19.1.1
 pyabsa==1.14.7
 flair==0.11.3
 mlxtend==0.20.0

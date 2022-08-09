@@ -1,8 +1,7 @@
 from gluonts.model.estimator import Estimator
 from gluonts.model.predictor import Predictor
-from typing import Union, Optional, Iterable, Any, Dict
 
-from actableai.timeseries.utils import handle_features_dataset
+from actableai.timeseries.dataset import AAITimeSeriesDataset
 
 
 class AAITimeSeriesEstimator:
@@ -38,33 +37,33 @@ class AAITimeSeriesEstimator:
 
     def train(
         self,
-        training_data: Iterable[Dict[str, Any]],
-        validation_data: Iterable[Dict[str, Any]] = None,
+        training_dataset: AAITimeSeriesDataset,
+        validation_dataset: AAITimeSeriesDataset = None,
     ) -> Predictor:
         """Train estimator.
 
         Args:
-            training_data: Training data.
-            validation_data: Validation data, used for tuning.
+            training_dataset: Training data.
+            validation_dataset: Validation data, used for tuning.
 
         Returns:
             GluonTS trained predictor.
         """
-        training_data = handle_features_dataset(
-            training_data,
+        training_dataset = training_dataset.clean_features(
             self.keep_feat_static_real,
             self.keep_feat_static_cat,
             self.keep_feat_dynamic_real,
             self.keep_feat_dynamic_cat,
         )
+        training_dataset.training = True
 
-        if validation_data is not None:
-            validation_data = handle_features_dataset(
-                validation_data,
+        if validation_dataset is not None:
+            validation_dataset = validation_dataset.clean_features(
                 self.keep_feat_static_real,
                 self.keep_feat_static_cat,
                 self.keep_feat_dynamic_real,
                 self.keep_feat_dynamic_cat,
             )
+            validation_dataset.training = True
 
-        return self.estimator.train(training_data, validation_data)
+        return self.estimator.train(training_dataset, validation_dataset)

@@ -52,6 +52,7 @@ from actableai.data_validation.checkers import (
     StratifiedKFoldChecker,
     UniqueDateTimeChecker,
 )
+from actableai.timeseries.utils import find_freq
 from actableai.utils import get_type_special_no_ag
 
 
@@ -531,10 +532,9 @@ class TimeSeriesDataValidator:
 class TimeSeriesPredictionDataValidator:
     def validate(
         self,
-        group_df_train_dict,
-        group_df_valid_dict,
-        group_df_predict_dict,
-        freq_dict,
+        train_dataset,
+        valid_dataset,
+        predict_dataset,
         feature_columns,
         predicted_columns,
         prediction_length,
@@ -545,15 +545,16 @@ class TimeSeriesPredictionDataValidator:
 
         freq = None
         invalid_groups_freq = []
-        for group, df_train in group_df_train_dict.items():
-            df_valid = group_df_valid_dict.get(group)
+        for group, df_train in train_dataset.dataframes.items():
+            df_valid = valid_dataset.dataframes.get(group)
 
+            current_freq = find_freq(df_valid.index)
             if freq is None:
-                freq = freq_dict[group]
-            elif freq_dict[group] != freq:
+                freq = current_freq
+            elif current_freq != freq:
                 invalid_groups_freq.append(group)
 
-            df_predict = group_df_predict_dict.get(group)
+            df_predict = predict_dataset.dataframes.get(group)
 
             if df_predict is not None:
                 df_predict_cut = df_predict.loc[~df_predict.index.isin(df_valid.index)]

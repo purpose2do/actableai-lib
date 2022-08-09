@@ -45,12 +45,11 @@ class ProphetParams(BaseParams):
         }
 
     def build_predictor(
-        self, *, freq: str, prediction_length: int, params: Dict[str, Any], **kwargs
+        self, *, prediction_length: int, params: Dict[str, Any], **kwargs
     ) -> ProphetPredictor:
         """Build a predictor from the underlying model using selected parameters.
 
         Args:
-            freq: Frequency of the time series used.
             prediction_length: Length of the prediction that will be forecasted.
             params: Selected parameters from the hyperparameter space.
             kwargs: Ignored arguments.
@@ -59,7 +58,6 @@ class ProphetParams(BaseParams):
             Built predictor.
         """
         return ProphetPredictor(
-            freq,
             prediction_length=prediction_length,
             prophet_params={
                 "growth": params.get("growth", self.growth),

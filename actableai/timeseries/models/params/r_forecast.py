@@ -66,8 +66,8 @@ class RForecastParams(BaseParams):
             Built predictor.
         """
         return RForecastPredictor(
-            freq,
-            prediction_length,
-            params.get("method_name", self.method_name),
+            freq=freq,
+            prediction_length=prediction_length,
+            method_name=params.get("method_name", self.method_name),
             period=params.get("period", self.period),
         )

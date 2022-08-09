@@ -9,7 +9,6 @@ class TreePredictorParams(BaseParams):
 
     def __init__(
         self,
-        use_feat_dynamic_real: bool,
         use_feat_dynamic_cat: bool,
         model_params: Optional[Dict] = None,
         method: Union[Tuple[str, ...], str] = ("QRX", "QuantileRegression"),
@@ -21,8 +20,6 @@ class TreePredictorParams(BaseParams):
         """TreePredictorParams Constructor.
 
         Args:
-            use_feat_dynamic_real: Whether to use the `feat_dynamic_real` field from
-                the data.
             use_feat_dynamic_cat: Whether to use the `feat_dynamic_cat` field from
                 the data.
             model_params: Parameters which will be passed to the model.
@@ -33,7 +30,7 @@ class TreePredictorParams(BaseParams):
                 tuple it represents the minimum and maximum (excluded) value.
             max_workers: Maximum number of workers to use, if None no parallelization
                 will be done.
-            max_n_datapts: Maximium number of data points to use.
+            max_n_datapts: Maximum number of data points to use.
         """
         super().__init__(
             model_name="TreePredictor",
@@ -41,11 +38,11 @@ class TreePredictorParams(BaseParams):
             has_estimator=True,
             handle_feat_static_real=False,
             handle_feat_static_cat=False,
-            handle_feat_dynamic_real=use_feat_dynamic_real,
+            handle_feat_dynamic_real=False,
             handle_feat_dynamic_cat=use_feat_dynamic_cat,
         )
 
-        self.use_feat_dynamic_real = use_feat_dynamic_real
+        self.use_feat_dynamic_real = False
         self.use_feat_dynamic_cat = use_feat_dynamic_cat
         # TreePredictor does not handle static features properly (even if it is
         # advertised otherwise)

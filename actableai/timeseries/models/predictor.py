@@ -2,9 +2,9 @@ import pandas as pd
 from gluonts.evaluation.backtest import make_evaluation_predictions
 from gluonts.model.forecast import Forecast
 from gluonts.model.predictor import Predictor
-from typing import Union, Iterator, Tuple, Dict, Any, Iterable
+from typing import Iterator, Tuple
 
-from actableai.timeseries.utils import handle_features_dataset
+from actableai.timeseries.dataset import AAITimeSeriesDataset
 
 
 class AAITimeSeriesPredictor:
@@ -39,43 +39,43 @@ class AAITimeSeriesPredictor:
         self.keep_feat_dynamic_cat = keep_feat_dynamic_cat
 
     def make_evaluation_predictions(
-        self, data: Iterable[Dict[str, Any]], num_samples: int
+        self, dataset: AAITimeSeriesDataset, num_samples: int
     ) -> Tuple[Iterator[Forecast], Iterator[pd.Series]]:
         """Wrapper around the GluonTS `make_evaluation_predictions` function.
 
         Args:
-            data: Data used for evaluation.
+            dataset: Data used for evaluation.
             num_samples: Number of samples to draw on the model when evaluating.
 
         Returns:
             - Iterator containing the evaluation forecasts.
             - Iterator containing the original sampled time series.
         """
-        data = handle_features_dataset(
-            data,
+        dataset = dataset.clean_features(
             self.keep_feat_static_real,
             self.keep_feat_static_cat,
             self.keep_feat_dynamic_real,
             self.keep_feat_dynamic_cat,
         )
+        dataset.training = True
 
-        return make_evaluation_predictions(data, self.predictor, num_samples)
+        return make_evaluation_predictions(dataset, self.predictor, num_samples)
 
-    def predict(self, data: Iterable[Dict[str, Any]], **kwargs) -> Iterator[Forecast]:
+    def predict(self, dataset: AAITimeSeriesDataset, **kwargs) -> Iterator[Forecast]:
         """Run prediction.
 
         Args:
-            data: Data used for prediction.
+            dataset: Data used for prediction.
 
         Returns:
             Predictions results
         """
-        data = handle_features_dataset(
-            data,
+        dataset = dataset.clean_features(
             self.keep_feat_static_real,
             self.keep_feat_static_cat,
             self.keep_feat_dynamic_real,
             self.keep_feat_dynamic_cat,
         )
+        dataset.training = False
 
-        return self.predictor.predict(data, **kwargs)
+        return self.predictor.predict(dataset, **kwargs)

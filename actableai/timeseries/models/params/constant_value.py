@@ -36,12 +36,11 @@ class ConstantValueParams(BaseParams):
         return {"value": self._uniform("value", self.value)}
 
     def build_predictor(
-        self, *, freq: str, prediction_length: int, params: Dict[str, Any], **kwargs
+        self, *, prediction_length: int, params: Dict[str, Any], **kwargs
     ) -> ConstantValuePredictor:
         """Build a predictor from the underlying model using selected parameters.
 
         Args:
-            freq: Frequency of the time series used.
             prediction_length: Length of the prediction that will be forecasted.
             params: Selected parameters from the hyperparameter space.
             kwargs: Ignored arguments.
@@ -53,5 +52,4 @@ class ConstantValueParams(BaseParams):
         return ConstantValuePredictor(
             value=params.get("value", self.value),
             prediction_length=prediction_length,
-            freq=freq,
         )

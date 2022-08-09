@@ -123,8 +123,8 @@ cloudpickle==2.1.0
     #   distributed
     #   hyperopt
     #   shap
-cmdstanpy==0.9.5
-    # via fbprophet
+cmdstanpy==1.0.4
+    # via prophet
 colorama==0.4.5
     # via sacrebleu
 colorful==0.5.4
@@ -135,8 +135,8 @@ contextvars==2.4
     # via autogluon-contrib-nlp
 convertdate==2.4.0
     # via
-    #   fbprophet
     #   holidays
+    #   prophet
 cycler==0.11.0
     # via matplotlib
 cymem==2.0.6
@@ -145,9 +145,7 @@ cymem==2.0.6
     #   spacy
     #   thinc
 cython==0.29.30
-    # via
-    #   fbprophet
-    #   pystan
+    # via prophet
 dask==2021.11.2
     # via
     #   autogluon-core
@@ -184,8 +182,6 @@ fastprogress==1.0.2
     # via
     #   fastai
     #   fastdownload
-fbprophet==0.7.1
-    # via gluonts
 filelock==3.7.1
     # via
     #   gdown
@@ -234,7 +230,7 @@ gitdb==4.0.9
     # via gitpython
 gitpython==3.1.27
     # via pyabsa
-gluonts[Prophet,R,prophet,r]==0.9.1
+gluonts[Prophet,R,prophet,r]==0.10.3
     # via -r requirements.in
 google-api-core==2.8.2
     # via opencensus
@@ -274,8 +270,8 @@ hiredis==2.0.0
     # via aioredis
 holidays==0.14.2
     # via
-    #   fbprophet
     #   gluonts
+    #   prophet
 huggingface-hub==0.8.1
     # via
     #   flair
@@ -359,7 +355,7 @@ llvmlite==0.38.1
 locket==1.0.0
     # via partd
 lunarcalendar==0.0.9
-    # via fbprophet
+    # via prophet
 lxml==4.9.1
     # via flair
 markdown==3.3.7
@@ -371,11 +367,11 @@ matplotlib==3.5.2
     #   autogluon-core
     #   catboost
     #   fastai
-    #   fbprophet
     #   flair
     #   gluonts
     #   metric-visualizer
     #   mlxtend
+    #   prophet
     #   tikzplotlib
 matplotlib-inline==0.1.3
     # via ipython
@@ -445,7 +441,6 @@ numpy==1.21.6
     #   cmdstanpy
     #   dowhy
     #   econml
-    #   fbprophet
     #   gensim
     #   gluonts
     #   h5py
@@ -464,8 +459,8 @@ numpy==1.21.6
     #   pandas
     #   pandasql
     #   patsy
+    #   prophet
     #   pyarrow
-    #   pystan
     #   pytorch-lightning
     #   pytorch-metric-learning
     #   pywavelets
@@ -533,11 +528,11 @@ pandas==1.3.5
     #   dowhy
     #   econml
     #   fastai
-    #   fbprophet
     #   gluonts
     #   mlxtend
     #   nlpaug
     #   pandasql
+    #   prophet
     #   ray
     #   river
     #   shap
@@ -584,6 +579,8 @@ prometheus-client==0.13.1
     # via ray
 prompt-toolkit==3.0.30
     # via ipython
+prophet==1.1
+    # via gluonts
 protobuf==3.18.1
     # via
     #   autogluon-contrib-nlp
@@ -656,10 +653,6 @@ pyrsistent==0.18.1
     #   multi-rake
 pysocks==1.7.1
     # via requests
-pystan==2.19.1.1
-    # via
-    #   -r requirements.in
-    #   fbprophet
 pytest==7.1.1
     # via
     #   -r requirements.in
@@ -672,12 +665,12 @@ pytest-xdist==2.5.0
 python-dateutil==2.8.2
     # via
     #   botocore
-    #   fbprophet
     #   flair
     #   holidays
     #   lunarcalendar
     #   matplotlib
     #   pandas
+    #   prophet
 python-rapidjson==1.4
     # via -r requirements.in
 pytorch-lightning==1.6.4
@@ -802,7 +795,7 @@ sentencepiece==0.1.95
 seqeval==1.2.2
     # via pyabsa
 setuptools-git==1.2
-    # via fbprophet
+    # via prophet
 shap==0.39.0
     # via
     #   -r requirements.in
@@ -960,13 +953,14 @@ tqdm==4.64.0
     #   autogluon-core
     #   autogluon-multimodal
     #   bpemb
-    #   fbprophet
+    #   cmdstanpy
     #   flair
     #   gdown
     #   gluonts
     #   huggingface-hub
     #   hyperopt
     #   nltk
+    #   prophet
     #   pyabsa
     #   pytorch-lightning
     #   pytorch-metric-learning
@@ -1015,7 +1009,9 @@ typing-extensions==4.1.1
 typish==1.9.3
     # via nptyping
 ujson==4.0.2
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   cmdstanpy
 update-checker==0.18.0
     # via pyabsa
 urllib3==1.26.9
@@ -1046,6 +1042,7 @@ wheel==0.37.1
     # via
     #   astunparse
     #   lightgbm
+    #   prophet
     #   tensorboard
 wikipedia-api==0.5.4
     # via flair
