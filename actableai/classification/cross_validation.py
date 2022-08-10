@@ -100,6 +100,7 @@ def run_cross_validation(
     time_limit: Optional[int],
     drop_unique: bool,
     drop_useless_features: bool,
+    feature_pruning: bool,
 ) -> Tuple[
     AverageEnsembleClassifier,
     list,
@@ -191,6 +192,7 @@ def run_cross_validation(
                 "time_limit": time_limit,
                 "drop_unique": drop_unique,
                 "drop_useless_features": drop_useless_features,
+                "feature_pruning": feature_pruning,
             },
         )
         for kfold_index, (train_index, val_index) in enumerate(kfolds_index_list)

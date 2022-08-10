@@ -532,6 +532,7 @@ class AAIRegressionTask(AAITask):
                 time_limit=time_limit,
                 drop_unique=drop_unique,
                 drop_useless_features=drop_useless_features,
+                feature_pruning=feature_pruning,
             )
         else:
             (
