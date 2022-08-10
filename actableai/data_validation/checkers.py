@@ -1,5 +1,4 @@
 from collections import Counter
-import numpy as np
 from sklearn.preprocessing import PolynomialFeatures
 from typing import Any, List, Optional, Union
 import pandas as pd
@@ -1109,11 +1108,12 @@ class SplitByDatetimeValidationChecker(IChecker):
     def check(
         self,
         df: pd.DataFrame,
+        target: str,
         datetime_column: str,
         validation_ratio: float,
     ) -> Optional[CheckResult]:
         _, df_val = split_validation_by_datetime(df, datetime_column, validation_ratio)
-        if len(np.unique(df_val)) == 1:
+        if df_val[target].nunique() <= 1:
             return CheckResult(
                 name=self.name,
                 level=self.level,

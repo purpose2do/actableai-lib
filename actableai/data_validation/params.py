@@ -366,6 +366,7 @@ class ClassificationDataValidator:
                 validation_results.append(
                     SplitByDatetimeValidationChecker(level=CheckLevels.CRITICAL).check(
                         df=df,
+                        target=target,
                         datetime_column=datetime_column,
                         validation_ratio=validation_ratio,
                     )
