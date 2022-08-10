@@ -38,6 +38,7 @@ class _AAIRegressionTrainTask(AAITask):
         time_limit: Optional[int],
         drop_unique: bool,
         drop_useless_features: bool,
+        feature_pruning: bool,
     ) -> Tuple[
         Any,
         List,
@@ -149,9 +150,11 @@ class _AAIRegressionTrainTask(AAITask):
             quantile_levels=quantile_levels,
         )
 
-        feature_prune_kwargs = {}
-        if time_limit is not None:
-            feature_prune_kwargs["feature_prune_time_limit"] = time_limit * 0.5
+        feature_prune_kwargs = None
+        if feature_pruning:
+            feature_prune_kwargs = {}
+            if time_limit is not None:
+                feature_prune_kwargs["feature_prune_time_limit"] = time_limit * 0.5
 
         predictor = predictor.fit(
             train_data=df_train,
@@ -302,6 +305,7 @@ class AAIRegressionTask(AAITask):
         split_by_datetime: bool = False,
         ag_automm_enabled: bool = False,
         refit_full: bool = False,
+        feature_pruning: bool = True,
     ):
         """Run this regression task and return results.
 
@@ -564,6 +568,7 @@ class AAIRegressionTask(AAITask):
                 time_limit=time_limit,
                 drop_unique=drop_unique,
                 drop_useless_features=drop_useless_features,
+                feature_pruning=feature_pruning,
             )
 
         # Validation
