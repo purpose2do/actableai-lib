@@ -233,7 +233,7 @@ def fast_categorical_hyperparameters():
 
 
 def debiasing_hyperparameters():
-    return {"LR": {}}
+    return {"LR": {"proc.skew_threshold": np.inf}}
 
 
 def explanation_hyperparameters():
