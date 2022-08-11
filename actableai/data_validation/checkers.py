@@ -852,6 +852,32 @@ class RegressionEvalMetricChecker(IChecker):
             )
 
 
+class TimeSeriesTuningMetricChecker(IChecker):
+    def __init__(self, level, name="TimeSeriesTuningMetricChecker"):
+        self.name = name
+        self.level = level
+
+    def check(self, tuning_metric: str) -> Optional[CheckResult]:
+        possible_metrics = [
+            "abs_error",
+            "abs_target_sum",
+            "abs_target_mean",
+            "seasonal_error",
+            "MASE",
+            "MAPE",
+            "sMAPE",
+            "RMSE",
+            "ND",
+            "mean_absolute_QuantileLoss",
+            "mean_wQuantileLoss",
+            "MAE_Coverage"
+        ]
+
+        if tuning_metric not in possible_metrics:
+            return CheckResult(
+                name=self.name, level=self.level, message="Invalid tuning_metric"
+            )
+
 class MaxTrainSamplesChecker(IChecker):
     def __init__(self, level, name="MaxTrainSamplesChecker"):
         self.name = name

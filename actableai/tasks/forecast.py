@@ -293,6 +293,7 @@ class AAIForecastTask(AAITask):
         verbose: int = 3,
         seed: int = 123,
         sampling_method: str = "random",
+        tuning_metric: str = "mean_wQuantileLoss",
     ) -> Dict[str, Any]:
         """Run time series forecasting task and return results.
 
@@ -322,6 +323,7 @@ class AAIForecastTask(AAITask):
             seed: Random seed to use.
             sampling_method: Method used when extracting the samples for the tuning
                 ["random", "last"].
+            tuning_metric: Metric to to minimize when tuning.
 
         Returns:
             Dict: Dictionary containing the results.
@@ -372,7 +374,7 @@ class AAIForecastTask(AAITask):
 
         # First parameters validation
         data_validation_results = TimeSeriesDataValidator().validate(
-            df, date_column, predicted_columns, feature_columns, group_by
+            df, date_column, predicted_columns, feature_columns, group_by, tuning_metric
         )
         failed_checks = [x for x in data_validation_results if x is not None]
 
@@ -457,7 +459,7 @@ class AAIForecastTask(AAITask):
             model_params=model_params,
             mx_ctx=mx_ctx,
             dataset=train_dataset,
-            loss="mean_wQuantileLoss",
+            loss=tuning_metric,
             trials=trials,
             max_concurrent=max_concurrent,
             use_ray=use_ray,
