@@ -323,7 +323,7 @@ class AAIForecastTask(AAITask):
             seed: Random seed to use.
             sampling_method: Method used when extracting the samples for the tuning
                 ["random", "last"].
-            FIXME
+            tuning_metric: Metric to to minimize when tuning.
 
         Returns:
             Dict: Dictionary containing the results.
