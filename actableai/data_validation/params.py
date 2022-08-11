@@ -50,7 +50,7 @@ from actableai.data_validation.checkers import (
     SameTypeChecker,
     SplitByDatetimeValidationChecker,
     StratifiedKFoldChecker,
-    UniqueDateTimeChecker,
+    UniqueDateTimeChecker, TimeSeriesTuningMetricChecker,
 )
 from actableai.timeseries.utils import find_freq
 from actableai.utils import get_type_special_no_ag
@@ -477,7 +477,7 @@ class TimeSeriesDataValidator:
     def __init__(self):
         pass
 
-    def validate(self, df, date_column, predicted_columns, feature_columns, group_by):
+    def validate(self, df, date_column, predicted_columns, feature_columns, group_by, tuning_metric):
         validation_results = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
                 df, [date_column] + predicted_columns + feature_columns + group_by
@@ -485,6 +485,7 @@ class TimeSeriesDataValidator:
             DoNotContainEmptyColumnsChecker(level=CheckLevels.CRITICAL).check(
                 df, [date_column] + predicted_columns + feature_columns + group_by
             ),
+            TimeSeriesTuningMetricChecker(level=CheckLevels.CRITICAL).check(tuning_metric)
         ]
 
         group_df_dict = {}
