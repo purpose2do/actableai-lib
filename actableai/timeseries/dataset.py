@@ -375,7 +375,7 @@ class AAITimeSeriesDataset:
         for fname in [FieldName.TARGET, FieldName.PAST_FEAT_DYNAMIC_REAL]:
             if fname in entry:
                 entry[fname] = entry[fname][..., : -self.prediction_length]
-        return entrys
+        return entry
 
     @property
     def group_list(self):

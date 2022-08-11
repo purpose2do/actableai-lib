@@ -149,10 +149,12 @@ class Detrend(ArrayTransformation):
         """
         TODO write documentation
         """
-        df = dataset.dataframes[group]
+        df = dataset.dataframes[group][dataset.target_columns]
+        if dataset.has_dynamic_features:
+            df = df.iloc[: -dataset.prediction_length]
 
         X = np.arange(df.shape[0]).reshape(-1, 1)
-        y = df[dataset.target_columns].to_numpy()
+        y = df.to_numpy()
 
         model = MultiOutputRegressor(LinearRegression(), n_jobs=1)
         model.fit(X, y)
