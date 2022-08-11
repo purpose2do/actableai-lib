@@ -4,6 +4,7 @@ from gluonts.mx.trainer import Trainer
 from mxnet.context import Context
 from typing import Union, Tuple, Optional, Dict, Any
 
+from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.params.base import BaseParams
 
 
@@ -90,7 +91,7 @@ class FeedForwardParams(BaseParams):
         distr_output: DistributionOutput,
         params: Dict[str, Any],
         **kwargs,
-    ) -> SimpleFeedForwardEstimator:
+    ) -> AAITimeSeriesEstimator:
         """Build an estimator from the underlying model using selected parameters.
 
         Args:
@@ -120,18 +121,20 @@ class FeedForwardParams(BaseParams):
         if hidden_layer_3_size is not None:
             hidden_layer_size.append(hidden_layer_3_size)
 
-        return SimpleFeedForwardEstimator(
-            prediction_length=prediction_length,
-            num_hidden_dimensions=hidden_layer_size,
-            context_length=params.get("context_length", prediction_length),
-            mean_scaling=self.mean_scaling,
-            distr_output=distr_output,
-            batch_normalization=False,
-            trainer=Trainer(
-                ctx=ctx,
-                epochs=params.get("epochs", self.epochs),
-                learning_rate=params.get("learning_rate", self.learning_rate),
-                weight_decay=params.get("l2", self.l2),
-                hybridize=False,
-            ),
+        return self._create_estimator(
+            SimpleFeedForwardEstimator(
+                prediction_length=prediction_length,
+                num_hidden_dimensions=hidden_layer_size,
+                context_length=params.get("context_length", prediction_length),
+                mean_scaling=self.mean_scaling,
+                distr_output=distr_output,
+                batch_normalization=False,
+                trainer=Trainer(
+                    ctx=ctx,
+                    epochs=params.get("epochs", self.epochs),
+                    learning_rate=params.get("learning_rate", self.learning_rate),
+                    weight_decay=params.get("l2", self.l2),
+                    hybridize=False,
+                ),
+            )
         )

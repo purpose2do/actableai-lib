@@ -118,7 +118,7 @@ class TestAAITimeSeriesSingleModel:
             n_real_static_features=np_rng.integers(2, 10) if use_features else 0,
             n_cat_static_features=np_rng.integers(2, 10) if use_features else 0,
         )
-        group_list = list(dataset.dataframes.keys())
+        group_list = dataset.group_list
 
         slice_last_valid_index = lambda df: slice(
             -prediction_length if use_features else df.shape[0]

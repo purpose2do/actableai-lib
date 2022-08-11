@@ -3,6 +3,7 @@ from gluonts.mx.trainer import Trainer
 from mxnet.context import Context
 from typing import Union, Tuple, Dict, Any
 
+from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.params.base import BaseParams
 
 
@@ -91,7 +92,7 @@ class GPVarParams(BaseParams):
         target_dim: int,
         params: Dict[str, Any],
         **kwargs,
-    ) -> GPVAREstimator:
+    ) -> AAITimeSeriesEstimator:
         """Build an estimator from the underlying model using selected parameters.
 
         Args:
@@ -105,27 +106,29 @@ class GPVarParams(BaseParams):
         Returns:
             Built estimator.
         """
-        return GPVAREstimator(
-            freq=freq,
-            prediction_length=prediction_length,
-            cell_type=params.get("cell_type", self.cell_type),
-            dropout_rate=params.get("dropout_rate", self.dropout_rate),
-            num_layers=params.get("num_layers", self.num_layers),
-            num_cells=params.get("num_cells", self.num_cells),
-            context_length=params.get("context_length", prediction_length),
-            num_parallel_samples=100,
-            rank=params.get("rank", self.rank),
-            scaling=False,
-            pick_incomplete=True,
-            shuffle_target_dim=True,
-            conditioning_length=100,
-            use_marginal_transformation=False,
-            target_dim=target_dim,
-            trainer=Trainer(
-                ctx=ctx,
-                epochs=params.get("epochs", self.epochs),
-                learning_rate=params.get("learning_rate", self.learning_rate),
-                weight_decay=params.get("l2", self.l2),
-                hybridize=False,
-            ),
+        return self._create_estimator(
+            GPVAREstimator(
+                freq=freq,
+                prediction_length=prediction_length,
+                cell_type=params.get("cell_type", self.cell_type),
+                dropout_rate=params.get("dropout_rate", self.dropout_rate),
+                num_layers=params.get("num_layers", self.num_layers),
+                num_cells=params.get("num_cells", self.num_cells),
+                context_length=params.get("context_length", prediction_length),
+                num_parallel_samples=100,
+                rank=params.get("rank", self.rank),
+                scaling=False,
+                pick_incomplete=True,
+                shuffle_target_dim=True,
+                conditioning_length=100,
+                use_marginal_transformation=False,
+                target_dim=target_dim,
+                trainer=Trainer(
+                    ctx=ctx,
+                    epochs=params.get("epochs", self.epochs),
+                    learning_rate=params.get("learning_rate", self.learning_rate),
+                    weight_decay=params.get("l2", self.l2),
+                    hybridize=False,
+                ),
+            )
         )

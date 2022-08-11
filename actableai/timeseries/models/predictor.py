@@ -1,10 +1,12 @@
 import pandas as pd
 from gluonts.evaluation.backtest import make_evaluation_predictions
-from gluonts.model.forecast import Forecast
 from gluonts.model.predictor import Predictor
-from typing import Iterator, Tuple
+from typing import Tuple, Iterable, Optional, Union
 
 from actableai.timeseries.dataset import AAITimeSeriesDataset
+from actableai.timeseries.forecast import AAITimeSeriesForecast
+from actableai.timeseries.transform.base import Transformation
+from actableai.timeseries.transform.identity import Identity
 
 
 class AAITimeSeriesPredictor:
@@ -13,14 +15,12 @@ class AAITimeSeriesPredictor:
     def __init__(
         self,
         predictor: Predictor,
-        keep_feat_static_real: bool = True,
-        keep_feat_static_cat: bool = True,
-        keep_feat_dynamic_real: bool = True,
-        keep_feat_dynamic_cat: bool = True,
+        transformation: Optional[Transformation] = None,
     ):
         """AAITimeSeriesPredictor Constructor.
 
         Args:
+            FIXME
             predictor: Underlying GluonTS predictor.
             keep_feat_static_real: If False the real static features will be filtered
                 out.
@@ -32,15 +32,16 @@ class AAITimeSeriesPredictor:
                 filtered out.
         """
         self.predictor = predictor
+        self.transformation = transformation
 
-        self.keep_feat_static_real = keep_feat_static_real
-        self.keep_feat_static_cat = keep_feat_static_cat
-        self.keep_feat_dynamic_real = keep_feat_dynamic_real
-        self.keep_feat_dynamic_cat = keep_feat_dynamic_cat
+        if self.transformation is None:
+            self.transformation = Identity()
 
     def make_evaluation_predictions(
         self, dataset: AAITimeSeriesDataset, num_samples: int
-    ) -> Tuple[Iterator[Forecast], Iterator[pd.Series]]:
+    ) -> Tuple[
+        Iterable[AAITimeSeriesForecast], Iterable[Union[pd.DataFrame, pd.Series]]
+    ]:
         """Wrapper around the GluonTS `make_evaluation_predictions` function.
 
         Args:
@@ -51,17 +52,30 @@ class AAITimeSeriesPredictor:
             - Iterator containing the evaluation forecasts.
             - Iterator containing the original sampled time series.
         """
-        dataset = dataset.clean_features(
-            self.keep_feat_static_real,
-            self.keep_feat_static_cat,
-            self.keep_feat_dynamic_real,
-            self.keep_feat_dynamic_cat,
-        )
         dataset.training = True
 
-        return make_evaluation_predictions(dataset, self.predictor, num_samples)
+        self.transformation.setup(dataset)
+        dataset = self.transformation.transform(dataset)
 
-    def predict(self, dataset: AAITimeSeriesDataset, **kwargs) -> Iterator[Forecast]:
+        forecast_it, ts_it = make_evaluation_predictions(
+            dataset, self.predictor, num_samples
+        )
+
+        forecast_it = self.transformation.revert_forecasts(forecast_it)
+        ts_it = self.transformation.revert_time_series(ts_it)
+
+        forecast_list = []
+        for forecast in forecast_it:
+            if isinstance(forecast, AAITimeSeriesForecast):
+                forecast_list.append(forecast)
+            else:
+                forecast_list.append(AAITimeSeriesForecast(forecast=forecast))
+
+        return forecast_list, ts_it
+
+    def predict(
+        self, dataset: AAITimeSeriesDataset, **kwargs
+    ) -> Iterable[AAITimeSeriesForecast]:
         """Run prediction.
 
         Args:
@@ -70,12 +84,16 @@ class AAITimeSeriesPredictor:
         Returns:
             Predictions results
         """
-        dataset = dataset.clean_features(
-            self.keep_feat_static_real,
-            self.keep_feat_static_cat,
-            self.keep_feat_dynamic_real,
-            self.keep_feat_dynamic_cat,
-        )
         dataset.training = False
 
-        return self.predictor.predict(dataset, **kwargs)
+        self.transformation.setup(dataset)
+        dataset = self.transformation.transform(dataset)
+
+        forecast_it = self.predictor.predict(dataset, **kwargs)
+        forecast_it = self.transformation.revert_forecasts(forecast_it)
+
+        for forecast in forecast_it:
+            if isinstance(forecast, AAITimeSeriesForecast):
+                yield forecast
+            else:
+                yield AAITimeSeriesForecast(forecast=forecast)

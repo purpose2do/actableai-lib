@@ -1,7 +1,9 @@
 from gluonts.model.rotbaum import TreeEstimator
 from typing import Optional, Dict, Tuple, Any, Union, List
 
+from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.params.base import BaseParams
+from actableai.timeseries.transform.detrend import Detrend
 
 
 class TreePredictorParams(BaseParams):
@@ -54,6 +56,8 @@ class TreePredictorParams(BaseParams):
         self.max_workers = max_workers
         self.max_n_datapts = max_n_datapts
 
+        self._transformation += Detrend()
+
     def tune_config(self) -> Dict[str, Any]:
         """Select parameters in the pre-defined hyperparameter space.
 
@@ -67,7 +71,7 @@ class TreePredictorParams(BaseParams):
 
     def build_estimator(
         self, *, freq: str, prediction_length: int, params: Dict[str, Any], **kwargs
-    ) -> TreeEstimator:
+    ) -> AAITimeSeriesEstimator:
         """Build an estimator from the underlying model using selected parameters.
 
         Args:
@@ -79,16 +83,18 @@ class TreePredictorParams(BaseParams):
         Returns:
             Built estimator.
         """
-        return TreeEstimator(
-            freq=freq,
-            prediction_length=prediction_length,
-            context_length=params.get("context_length", self.context_length),
-            use_feat_dynamic_cat=self.use_feat_dynamic_cat,
-            use_feat_dynamic_real=self.use_feat_dynamic_real,
-            use_feat_static_real=self.use_feat_static_real,
-            model_params=self.model_params,
-            method=params.get("method", self.method),
-            quantiles=self.quantiles,
-            max_workers=self.max_workers,
-            max_n_datapts=self.max_n_datapts,
+        return self._create_estimator(
+            TreeEstimator(
+                freq=freq,
+                prediction_length=prediction_length,
+                context_length=params.get("context_length", self.context_length),
+                use_feat_dynamic_cat=self.use_feat_dynamic_cat,
+                use_feat_dynamic_real=self.use_feat_dynamic_real,
+                use_feat_static_real=self.use_feat_static_real,
+                model_params=self.model_params,
+                method=params.get("method", self.method),
+                quantiles=self.quantiles,
+                max_workers=self.max_workers,
+                max_n_datapts=self.max_n_datapts,
+            )
         )
