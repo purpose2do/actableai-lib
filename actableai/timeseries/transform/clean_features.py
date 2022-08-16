@@ -7,9 +7,7 @@ from actableai.timeseries.transform.base import MapTransformation
 
 
 class CleanFeatures(MapTransformation):
-    """
-    TODO write documentation
-    """
+    """Transformation that clean features from dataset."""
 
     def __init__(
         self,
@@ -18,8 +16,8 @@ class CleanFeatures(MapTransformation):
         keep_feat_dynamic_real: bool = True,
         keep_feat_dynamic_cat: bool = True,
     ):
-        """
-        FIXME
+        """CleanFeatures transformation constructor.
+
         Args:
             keep_feat_static_real: If False the real static features will be filtered
                 out.
@@ -38,8 +36,14 @@ class CleanFeatures(MapTransformation):
         self.keep_feat_dynamic_cat = keep_feat_dynamic_cat
 
     def map_transform(self, data: DataEntry, group: Tuple[Any, ...]) -> DataEntry:
-        """
-        TODO write documentation
+        """Transform a data entry.
+
+        Args:
+            data: Data entry to revert.
+            group: Data entry's group.
+
+        Returns:
+            The transformed data entry.
         """
         if not self.keep_feat_static_real:
             data.pop(FieldName.FEAT_STATIC_REAL, None)

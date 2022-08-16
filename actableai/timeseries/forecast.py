@@ -9,17 +9,20 @@ from gluonts.model import Forecast
 
 
 class AAITimeSeriesForecast(Forecast):
-    """
-    TODO write documentation
-    """
+    """Custom wrapper around GluonTS Forecast."""
 
     def __init__(
         self,
         forecast: Forecast,
         transformation_func: Optional[Callable[[np.ndarray], np.ndarray]] = None,
     ):
-        """
-        TODO write documentation
+        """AAITimeSeriesForecast Constructor.
+
+        Args:
+            forecast: Underlying GluonTS forecast.
+            transformation_func: Function that will be applied before returning a
+                forecast. The function takes a numpy array and returns the transformed
+                numpy array.
         """
 
         self.forecast = forecast
@@ -42,25 +45,21 @@ class AAITimeSeriesForecast(Forecast):
             )
 
     @property
-    def mean(self):
-        """
-        TODO write documentation
+    def mean(self) -> np.ndarray:
+        """Mean of the forecast.
+
+        Returns:
+            Forecast's mean.
         """
         return self.transformation_func(self.forecast.mean)
 
     def quantile(self, q: Union[float, str]) -> np.ndarray:
-        """
-        FIXME
-        Computes a quantile from the predicted distribution.
+        """Computes a quantile from the predicted distribution.
 
-        Parameters
-        ----------
-        q
-            Quantile to compute.
+        Args:
+            q: Quantile to compute.
 
-        Returns
-        -------
-        numpy.ndarray
+        Returns:
             Value of the quantile across the prediction range.
         """
 
@@ -79,9 +78,7 @@ class AAITimeSeriesForecast(Forecast):
     ) -> pd.DataFrame:
         """Convert GluonTS forecast to pandas DataFrame.
 
-        FIXME
         Args:
-            forecast: GluonTS forecast.
             target_columns: List of columns to forecast.
             date_list: List of datetime forecasted.
             quantiles: List of quantiles to forecast.
@@ -119,19 +116,39 @@ class AAITimeSeriesForecast(Forecast):
         )
 
     def dim(self) -> int:
-        """
-        TODO write documentation
+        """Returns the dimensionality of the forecast object.
+
+        Returns:
+            Forecast's dimension.
         """
         return self.forecast.dim()
 
-    def copy_dim(self, dim: int):
-        """
-        TODO write documentation
-        """
-        return self.forecast.copy_dim(dim)
+    def copy_dim(self, dim: int) -> "AAITimeSeriesForecast":
+        """Returns a new Forecast object with only the selected sub-dimension.
 
-    def copy_aggregate(self, agg_fun: Callable):
+        Args:
+            dim: The returned forecast object will only represent this dimension.
+
+        Returns:
+            Selected sub-forecast.
         """
-        TODO write documentation
+        return AAITimeSeriesForecast(
+            forecast=self.forecast.copy_dim(dim),
+            transformation_func=self.transformation_func,
+        )
+
+    def copy_aggregate(self, agg_fun: Callable) -> "AAITimeSeriesForecast":
+        """Returns a new Forecast object with a time series aggregated over the
+            dimension axis.
+
+        Args:
+            agg_fun: Aggregation function that defines the aggregation operation
+                (typically mean or sum).
+
+        Returns:
+            Selected sub-forecast.
         """
-        return self.forecast.copy_aggregate(agg_fun)
+        return AAITimeSeriesForecast(
+            forecast=self.forecast.copy_aggregate(agg_fun),
+            transformation_func=self.transformation_func,
+        )

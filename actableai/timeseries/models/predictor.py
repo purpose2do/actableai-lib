@@ -20,16 +20,8 @@ class AAITimeSeriesPredictor:
         """AAITimeSeriesPredictor Constructor.
 
         Args:
-            FIXME
             predictor: Underlying GluonTS predictor.
-            keep_feat_static_real: If False the real static features will be filtered
-                out.
-            keep_feat_static_cat: If False the categorical static features will be
-                filtered out.
-            keep_feat_dynamic_real: If False the real dynamic features will be filtered
-                out.
-            keep_feat_dynamic_cat: If False the categorical dynamic features will be
-                filtered out.
+            transformation: Transformation to apply to the predictor.
         """
         self.predictor = predictor
         self.transformation = transformation

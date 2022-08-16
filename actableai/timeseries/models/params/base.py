@@ -159,16 +159,26 @@ class BaseParams:
         return None
 
     def _create_estimator(self, estimator: Estimator) -> AAITimeSeriesEstimator:
-        """
-        TODO write documentation
+        """Create the estimator associated with the model.
+
+        Args:
+            estimator: Underlying GluonTS estimator.
+
+        Returns:
+            The wrapped estimator.
         """
         return AAITimeSeriesEstimator(
             estimator=estimator, transformation=self._transformation
         )
 
     def _create_predictor(self, predictor: Predictor) -> AAITimeSeriesPredictor:
-        """
-        TODO write documentation
+        """Create the predictor associated with the model.
+
+        Args:
+            predictor: Underlying GluonTS predictor.
+
+        Returns:
+            The wrapped predictor.
         """
         return AAITimeSeriesPredictor(
             predictor=predictor, transformation=self._transformation

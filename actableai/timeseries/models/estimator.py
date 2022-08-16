@@ -20,15 +20,7 @@ class AAITimeSeriesEstimator:
 
         Args:
             estimator: Underlying GluonTS estimator.
-            FIXME
-            keep_feat_static_real: If False the real static features will be filtered
-                out.
-            keep_feat_static_cat: If False the categorical static features will be
-                filtered out.
-            keep_feat_dynamic_real: If False the real dynamic features will be filtered
-                out.
-            keep_feat_dynamic_cat: If False the categorical dynamic features will be
-                filtered out.
+            transformation: Transformation to apply to the estimator.
         """
         self.estimator = estimator
         self.transformation = transformation

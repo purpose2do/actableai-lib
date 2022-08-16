@@ -15,28 +15,26 @@ from actableai.timeseries.forecast import AAITimeSeriesForecast
 
 
 class Transformation(metaclass=abc.ABCMeta):
-    """
-    FIXME
-    Base class for all Transformations.
-    A Transformation processes works on a stream (iterator) of dictionaries.
-    """
+    """Base class for all Transformations."""
 
     def __init__(self):
-        """
-        TODO write documentation
-        """
+        """Transformation constructor."""
         self.dataset = None
 
     def setup(self, dataset: AAITimeSeriesDataset):
-        """
-        TODO write documentation
+        """Set up the transformation with a dataset.
+
+        Args:
+            dataset: Dataset to set up the transformation with.
         """
         self.dataset = dataset
 
     @property
-    def group_list(self):
-        """
-        TODO write documentation
+    def group_list(self) -> List[Tuple[Any, ...]]:
+        """Returns the list of group associated with the transformation.
+
+        Returns:
+            The list of group.
         """
         if self.dataset is None:
             raise ValueError("transformation is not set up")
@@ -44,47 +42,71 @@ class Transformation(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def transform(self, data_it: Iterable[DataEntry]) -> Iterable[DataEntry]:
-        """
-        TODO write documentation
+        """Transform data entries.
+
+        Args:
+            data_it: Iterable object of data entries.
+
+        Returns:
+            Iterable object of transformed data entries.
         """
         raise NotImplementedError()
 
     def revert_forecasts(self, forecast_it: Iterable[Forecast]) -> Iterable[Forecast]:
-        """
-        TODO write documentation
+        """Revert a transformation on forecasts.
+
+        Args:
+            forecast_it: Iterable object of forecasts.
+
+        Returns:
+            Iterable object of transformed forecasts.
         """
         return forecast_it
 
     def revert_time_series(
         self, data_it: Iterable[Union[pd.DataFrame, pd.Series]]
     ) -> Iterable[Union[pd.DataFrame, pd.Series]]:
-        """
-        TODO write documentation
+        """Revert a transformation on time series.
+
+        Args:
+            data_it: Iterable object of time series.
+
+        Returns:
+            Iterable object of transformed time series.
         """
         return data_it
 
     def chain(self, other: "Transformation") -> "Chain":
-        """
-        TODO write documentation
+        """Chain transformation with the current transformation.
+
+        Args:
+            other: Other transformation to apply.
+
+        Returns:
+            The chain of transformation containing the current one and the other.
         """
         return Chain([self, other])
 
     def __add__(self, other: "Transformation") -> "Chain":
-        """
-        TODO write documentation
+        """Chain transformation with the current transformation.
+
+        Args:
+            other: Other transformation to apply.
+
+        Returns:
+            The chain of transformation containing the current one and the other.
         """
         return self.chain(other)
 
 
 class Chain(Transformation):
-    """
-    FIXME
-    Chain multiple transformations together.
-    """
+    """Chain multiple transformations together."""
 
-    def __init__(self, transformations: List[Transformation]) -> None:
-        """
-        TODO write documentation
+    def __init__(self, transformations: List[Transformation]):
+        """Chain transformation constructor.
+
+        Args:
+            transformations: List of transformation to chain.
         """
         super().__init__()
 
@@ -98,14 +120,24 @@ class Chain(Transformation):
                 self.transformations.append(transformation)
 
     def setup(self, dataset: AAITimeSeriesDataset):
+        """Set up the transformation with a dataset.
+
+        Args:
+            dataset: Dataset to set up the transformation with.
+        """
         super().setup(dataset)
 
         for transformation in self.transformations:
             transformation.setup(dataset)
 
     def transform(self, data_it: Iterable[DataEntry]) -> Iterable[DataEntry]:
-        """
-        TODO write documentation
+        """Transform data entries.
+
+        Args:
+            data_it: Iterable object of data entries.
+
+        Returns:
+            Iterable object of transformed data entries.
         """
         tmp_data = data_it
         for transformation in self.transformations:
@@ -114,8 +146,13 @@ class Chain(Transformation):
         return tmp_data
 
     def revert_forecasts(self, forecast_it: Iterable[Forecast]) -> Iterable[Forecast]:
-        """
-        TODO write documentation
+        """Revert a transformation on forecasts.
+
+        Args:
+            forecast_it: Iterable object of forecasts.
+
+        Returns:
+            Iterable object of transformed forecasts.
         """
         tmp_forecast = forecast_it
         for transformation in reversed(self.transformations):
@@ -126,8 +163,13 @@ class Chain(Transformation):
     def revert_time_series(
         self, data_it: Iterable[Union[pd.DataFrame, pd.Series]]
     ) -> Iterable[Union[pd.DataFrame, pd.Series]]:
-        """
-        TODO write documentation
+        """Revert a transformation on time series.
+
+        Args:
+            data_it: Iterable object of time series.
+
+        Returns:
+            Iterable object of transformed time series.
         """
         tmp_data = data_it
         for transformation in reversed(self.transformations):
@@ -138,14 +180,18 @@ class Chain(Transformation):
 
 class MapTransformation(Transformation):
     """
-    FIXME
-    Base class for Transformations that returns exactly one result per input in
-    the stream.
+    Base class for Transformations that returns exactly one result per input in the
+        stream.
     """
 
     def transform(self, data_it: Iterable[DataEntry]) -> Iterable[DataEntry]:
-        """
-        TODO write documentation
+        """Transform data entries.
+
+        Args:
+            data_it: Iterable object of data entries.
+
+        Returns:
+            Iterable object of transformed data entries.
         """
         return [
             self.map_transform(data, group)
@@ -154,14 +200,25 @@ class MapTransformation(Transformation):
 
     @abc.abstractmethod
     def map_transform(self, data: DataEntry, group: Tuple[Any, ...]) -> DataEntry:
-        """
-        TODO write documentation
+        """Transform a data entry.
+
+        Args:
+            data: Data entry to revert.
+            group: Data entry's group.
+
+        Returns:
+            The transformed data entry.
         """
         raise NotImplementedError()
 
     def revert_forecasts(self, forecast_it: Iterable[Forecast]) -> Iterable[Forecast]:
-        """
-        TODO write documentation
+        """Revert a transformation on forecasts.
+
+        Args:
+            forecast_it: Iterable object of forecasts.
+
+        Returns:
+            Iterable object of transformed forecasts.
         """
         for forecast, group in zip(forecast_it, self.group_list):
             yield self.map_revert_forecast(forecast, group)
@@ -169,16 +226,27 @@ class MapTransformation(Transformation):
     def map_revert_forecast(
         self, forecast: Forecast, group: Tuple[Any, ...]
     ) -> Forecast:
-        """
-        TODO write documentation
+        """Revert a transformation on a forecast.
+
+        Args:
+            forecast: Forecast to revert.
+            group: Forecast's group.
+
+        Returns:
+            The transformed forecast.
         """
         return forecast
 
     def revert_time_series(
         self, data_it: Iterable[Union[pd.DataFrame, pd.Series]]
     ) -> Iterable[Union[pd.DataFrame, pd.Series]]:
-        """
-        TODO write documentation
+        """Revert a transformation on time series.
+
+        Args:
+            data_it: Iterable object of time series.
+
+        Returns:
+            Iterable object of transformed time series.
         """
         return [
             self.map_revert_time_series(data, group)
@@ -187,21 +255,31 @@ class MapTransformation(Transformation):
 
     def map_revert_time_series(
         self, data: Union[pd.DataFrame, pd.Series], group: Tuple[Any, ...]
-    ):
-        """
-        TODO write documentation
+    ) -> Union[pd.DataFrame, pd.Series]:
+        """Revert a transformation on a time series.
+
+        Args:
+            data: Time series to revert.
+            group: Time series group.
+
+        Returns:
+            The transformed time series.
         """
         return data
 
 
 class ArrayTransformation(MapTransformation):
-    """
-    TODO write documentation
-    """
+    """Base class for Transformations than are applied on numpy array."""
 
     def map_transform(self, data: DataEntry, group: Tuple[Any, ...]) -> DataEntry:
-        """
-        TODO write documentation
+        """Transform a data entry.
+
+        Args:
+            data: Data entry to revert.
+            group: Data entry's group.
+
+        Returns:
+            The transformed data entry.
         """
         data = deepcopy(data)
         data[FieldName.TARGET] = self.transform_array(
@@ -215,16 +293,29 @@ class ArrayTransformation(MapTransformation):
     def transform_array(
         self, array: np.ndarray, start_date: pd.Period, group: Tuple[Any, ...]
     ) -> np.ndarray:
-        """
-        TODO write documentation
+        """Transform an array.
+
+        Args:
+            array: Array to transform.
+            start_date: Starting date of the array (in the time series context).
+            group: Array's group.
+
+        Returns:
+            The transformed array.
         """
         raise NotImplementedError()
 
     def map_revert_forecast(
         self, forecast: Forecast, group: Tuple[Any, ...]
     ) -> Forecast:
-        """
-        TODO write documentation
+        """Revert a transformation on a forecast.
+
+        Args:
+            forecast: Forecast to revert.
+            group: Forecast's group.
+
+        Returns:
+            The transformed forecast.
         """
         return AAITimeSeriesForecast(
             forecast=forecast,
@@ -233,9 +324,15 @@ class ArrayTransformation(MapTransformation):
 
     def map_revert_time_series(
         self, data: Union[pd.DataFrame, pd.Series], group: Tuple[Any, ...]
-    ):
-        """
-        TODO write documentation
+    ) -> Union[pd.DataFrame, pd.Series]:
+        """Revert a transformation on a time series.
+
+        Args:
+            data: Time series to revert.
+            group: Time series group.
+
+        Returns:
+            The transformed time series.
         """
         data = deepcopy(data)
         if isinstance(data, pd.DataFrame) and len(data.columns) == 1:
@@ -253,7 +350,14 @@ class ArrayTransformation(MapTransformation):
     def revert_array(
         self, array: np.ndarray, start_date: pd.Period, group: Tuple[Any, ...]
     ) -> np.ndarray:
-        """
-        TODO write documentation
+        """Revert a transformation on an array.
+
+        Args:
+            array: Array to revert.
+            start_date: Starting date of the array (in the time series context).
+            group: Array's group.
+
+        Returns:
+            The transformed array.
         """
         return array

@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import pandas as pd
 
-from typing import cast, List, Iterator, Tuple, Union, Dict, Optional, Callable
+from typing import cast, List, Iterator, Tuple, Union, Dict, Optional, Callable, Any
 
 from gluonts.dataset import DataEntry
 from gluonts.dataset.common import ProcessDataEntry
@@ -378,8 +378,10 @@ class AAITimeSeriesDataset:
         return entry
 
     @property
-    def group_list(self):
-        """
-        TODO write documentation
+    def group_list(self) -> List[Tuple[Any, ...]]:
+        """Returns the list of group in the dataset.
+
+        Returns:
+            List of group.
         """
         return list(self.dataframes.keys())

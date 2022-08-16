@@ -13,19 +13,24 @@ from actableai.timeseries.transform.base import ArrayTransformation
 
 
 class DetrendDiff(ArrayTransformation):
-    """
-    TODO write documentation
-    """
+    """Detrend transformation using differentiation."""
 
     def __init__(self, n_differencing: int = 1):
+        """DetrendDiff constructor.
+
+        Args:
+            n_differencing: Number of chained differentiation to run.
+        """
         super().__init__()
         self.n_differencing = n_differencing
 
         self._intermediate_df_dict = None
 
     def setup(self, dataset: AAITimeSeriesDataset):
-        """
-        TODO write documentation
+        """Set up the transformation with a dataset.
+
+        Args:
+            dataset: Dataset to set up the transformation with.
         """
         super().setup(dataset)
 
@@ -35,8 +40,14 @@ class DetrendDiff(ArrayTransformation):
         }
 
     def map_transform(self, data: DataEntry, group: Tuple[Any, ...]) -> DataEntry:
-        """
-        TODO write documentation
+        """Transform a data entry.
+
+        Args:
+            data: Data entry to revert.
+            group: Data entry's group.
+
+        Returns:
+            The transformed data entry.
         """
         transformed_data = super().map_transform(data, group)
 
@@ -54,8 +65,15 @@ class DetrendDiff(ArrayTransformation):
     def transform_array(
         self, array: np.ndarray, start_date: pd.Period, group: Tuple[Any, ...]
     ) -> np.ndarray:
-        """
-        TODO write documentation
+        """Transform an array.
+
+        Args:
+            array: Array to transform.
+            start_date: Starting date of the array (in the time series context).
+            group: Array's group.
+
+        Returns:
+            The transformed array.
         """
         date_range = pd.period_range(
             start=start_date, freq=start_date.freq, periods=array.shape[-1]
@@ -91,8 +109,15 @@ class DetrendDiff(ArrayTransformation):
     def revert_array(
         self, array: np.ndarray, start_date: pd.Period, group: Tuple[Any, ...]
     ) -> np.ndarray:
-        """
-        TODO write documentation
+        """Revert a transformation on an array.
+
+        Args:
+            array: Array to revert.
+            start_date: Starting date of the array (in the time series context).
+            group: Array's group.
+
+        Returns:
+            The transformed array.
         """
         prev_date = deepcopy(start_date)
 
@@ -129,14 +154,10 @@ class DetrendDiff(ArrayTransformation):
 
 
 class Detrend(ArrayTransformation):
-    """
-    TODO write documentation
-    """
+    """Detrend transformation using model fitting."""
 
     def __init__(self):
-        """
-        TODO write documentation
-        """
+        """Detrend constructor."""
         super().__init__()
 
         self._trend_models = None
@@ -146,8 +167,14 @@ class Detrend(ArrayTransformation):
     def _train_trend_model(
         dataset: AAITimeSeriesDataset, group: Tuple[Any, ...]
     ) -> MultiOutputRegressor:
-        """
-        TODO write documentation
+        """Train model representing the trend.
+
+        Args:
+            dataset: Dataset to use for training.
+            group: Group to use when selecting the time series from the dataset.
+
+        Returns:
+            The trained model.
         """
         df = dataset.dataframes[group][dataset.target_columns]
         if dataset.has_dynamic_features:
@@ -164,8 +191,15 @@ class Detrend(ArrayTransformation):
     def _predict_trend(
         self, group: Tuple[Any, ...], start_date: pd.Period, prediction_length: int
     ) -> np.ndarray:
-        """
-        TODO write documentation
+        """Predict trend using trained model.
+
+        Args:
+            group: Group to predict the trend for.
+            start_date: Starting date of the prediction.
+            prediction_length: Number of periods to predict.
+
+        Returns:
+            The predicted trend.
         """
         periods = (
             start_date - pd.Period(self._trend_start_date[group], freq=start_date.freq)
@@ -175,8 +209,10 @@ class Detrend(ArrayTransformation):
         return self._trend_models[group].predict(X)
 
     def setup(self, dataset: AAITimeSeriesDataset):
-        """
-        TODO write documentation
+        """Set up the transformation with a dataset.
+
+        Args:
+            dataset: Dataset to set up the transformation with.
         """
         super().setup(dataset)
 
@@ -192,8 +228,15 @@ class Detrend(ArrayTransformation):
     def transform_array(
         self, array: np.ndarray, start_date: pd.Period, group: Tuple[Any, ...]
     ) -> np.ndarray:
-        """
-        TODO write documentation
+        """Transform an array.
+
+        Args:
+            array: Array to transform.
+            start_date: Starting date of the array (in the time series context).
+            group: Array's group.
+
+        Returns:
+            The transformed array.
         """
         univariate = len(array.shape) == 1
 
@@ -208,8 +251,15 @@ class Detrend(ArrayTransformation):
     def revert_array(
         self, array: np.ndarray, start_date: pd.Period, group: Tuple[Any, ...]
     ) -> np.ndarray:
-        """
-        TODO write documentation
+        """Revert a transformation on an array.
+
+        Args:
+            array: Array to revert.
+            start_date: Starting date of the array (in the time series context).
+            group: Array's group.
+
+        Returns:
+            The transformed array.
         """
         univariate = len(array.shape) == 1
 
