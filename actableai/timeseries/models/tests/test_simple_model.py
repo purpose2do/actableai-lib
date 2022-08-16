@@ -250,7 +250,7 @@ class TestAAITimeSeriesSingleModel:
             assert len(df_predictions) == prediction_length * n_targets
             assert (df_predictions.groupby("date").first().index == future_dates).all()
 
-    @pytest.mark.parametrize("freq", ["T", "MS"])
+    @pytest.mark.parametrize("freq", ["T", "MS", "YS"])
     @pytest.mark.parametrize("use_ray", [True, False])
     def test_hyperopt(self, np_rng, mx_ctx, use_ray, freq):
         prediction_length = np_rng.integers(1, 3)

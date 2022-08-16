@@ -16,20 +16,24 @@ def interpolate(df: pd.DataFrame, freq: str) -> pd.DataFrame:
     return df.resample(freq).interpolate(method="linear")
 
 
-def find_gluonts_freq(freq: str) -> str:
+def find_gluonts_freq(pd_date: pd.Series, freq: str) -> str:
     """Convert pandas frequency to GluonTS frequency.
-    Args:
-        freq: pandas frequency
-    Returns:
-        GluonTS frequency
-    """
-    # For W:
-    if re.findall("\d*W", freq):
-        return re.findall("\d*W", freq)[0]
-    elif re.findall("\d*M", freq):
-        return re.findall("\d*M", freq)[0]
 
-    return freq
+    Args:
+        pd_date: List of datetime as a pandas Series.
+        freq: pandas frequency.
+
+    Returns:
+        GluonTS frequency.
+    """
+    if pd_date.dt.freq is None:
+        if re.findall("\d*W", freq):
+            return re.findall("\d*W", freq)[0]
+        elif re.findall("\d*M", freq):
+            return re.findall("\d*M", freq)[0]
+        return freq
+
+    return pd_date.dt.to_period().iloc[0].freqstr
 
 
 def find_freq(pd_date: pd.Series, period: int = 10) -> Optional[str]:
