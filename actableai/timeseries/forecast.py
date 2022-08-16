@@ -36,11 +36,12 @@ class AAITimeSeriesForecast(Forecast):
         self._index = self.forecast._index
 
         self.transformation_func = transformation_func
+        self._transformation_func = None
 
         if self.transformation_func is None:
-            self.transformation_func = lambda array: array
+            self._transformation_func = lambda array: array
         else:
-            self.transformation_func = partial(
+            self._transformation_func = partial(
                 self.transformation_func, start_date=self.start_date
             )
 
@@ -51,7 +52,7 @@ class AAITimeSeriesForecast(Forecast):
         Returns:
             Forecast's mean.
         """
-        return self.transformation_func(self.forecast.mean)
+        return self._transformation_func(self.forecast.mean)
 
     def quantile(self, q: Union[float, str]) -> np.ndarray:
         """Computes a quantile from the predicted distribution.
@@ -64,9 +65,7 @@ class AAITimeSeriesForecast(Forecast):
         """
 
         result = self.forecast.quantile(q)
-
-        if self.transformation_func is not None:
-            result = self.transformation_func(result)
+        result = self._transformation_func(result)
 
         return result
 
