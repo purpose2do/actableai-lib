@@ -273,10 +273,10 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
         dataset_clean = self._pre_process_data(dataset, keep_future=False)
 
         df_predictions_dict = {
-            group: pd.DataFrame() for group in dataset_clean.dataframes.keys()
+            group: pd.DataFrame() for group in dataset_clean.group_list
         }
         df_item_metrics_dict = {
-            group: pd.DataFrame() for group in dataset_clean.dataframes.keys()
+            group: pd.DataFrame() for group in dataset_clean.group_list
         }
         df_agg_metrics = pd.DataFrame()
 
@@ -294,7 +294,7 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
                 num_workers=num_workers,
             )
 
-            for group in target_dataset.dataframes.keys():
+            for group in target_dataset.group_list:
                 df_predictions_dict[group] = pd.concat(
                     [df_predictions_dict[group], df_target_predictions_dict[group]],
                     ignore_index=True,
@@ -329,7 +329,7 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
         dataset_clean = self._pre_process_data(dataset, keep_future=True)
 
         df_predictions_dict = {
-            group: pd.DataFrame() for group in dataset_clean.dataframes.keys()
+            group: pd.DataFrame() for group in dataset_clean.group_list
         }
 
         for _, target_predictor, target_dataset in self._iterate_predictors(
@@ -339,7 +339,7 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
                 dataset=target_dataset, quantiles=quantiles
             )
 
-            for group in target_dataset.dataframes.keys():
+            for group in target_dataset.group_list:
                 df_predictions_dict[group] = pd.concat(
                     [df_predictions_dict[group], df_target_predictions_dict[group]],
                     ignore_index=True,

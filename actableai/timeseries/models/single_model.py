@@ -18,11 +18,9 @@ from typing import Dict, List, Optional, Tuple, Any
 from actableai.exceptions.timeseries import UntrainedModelException
 from actableai.timeseries.dataset import AAITimeSeriesDataset
 from actableai.timeseries.models.base import AAITimeSeriesBaseModel
-from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.params.base import BaseParams
 from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
 from actableai.timeseries.models.evaluator import AAITimeSeriesEvaluator
-from actableai.timeseries.utils import forecast_to_dataframe
 
 
 class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
@@ -67,13 +65,8 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         """
         model_params_class = model_params_dict[params["model"]["model_name"]]
 
-        keep_feat_static_real = model_params_class.handle_feat_static_real
-        keep_feat_static_cat = model_params_class.handle_feat_static_cat
-        keep_feat_dynamic_real = model_params_class.handle_feat_dynamic_real
-        keep_feat_dynamic_cat = model_params_class.handle_feat_dynamic_cat
-
         if model_params_class.has_estimator:
-            gluonts_estimator = model_params_class.build_estimator(
+            estimator = model_params_class.build_estimator(
                 ctx=mx_ctx,
                 freq=dataset.gluonts_freq,
                 prediction_length=prediction_length,
@@ -82,15 +75,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
                 params=params["model"],
             )
 
-            estimator = AAITimeSeriesEstimator(
-                gluonts_estimator,
-                keep_feat_static_real,
-                keep_feat_static_cat,
-                keep_feat_dynamic_real,
-                keep_feat_dynamic_cat,
-            )
-
-            predictor = estimator.train(training_dataset=dataset)
+            predictor = estimator.train(dataset=dataset)
         else:
             predictor = model_params_class.build_predictor(
                 freq=dataset.gluonts_freq,
@@ -98,13 +83,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
                 params=params["model"],
             )
 
-        return AAITimeSeriesPredictor(
-            predictor,
-            keep_feat_static_real,
-            keep_feat_static_cat,
-            keep_feat_dynamic_real,
-            keep_feat_dynamic_cat,
-        )
+        return predictor
 
     @classmethod
     def _trainable(
@@ -329,9 +308,9 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         )
 
         # Choose distribution output
-        first_group_targets = train_dataset.dataframes[
-            list(train_dataset.dataframes.keys())[0]
-        ][train_dataset.target_columns]
+        first_group_targets = train_dataset.dataframes[train_dataset.group_list[0]][
+            train_dataset.target_columns
+        ]
         if (first_group_targets >= 0).all(
             axis=None
         ) and first_group_targets in visions.Integer:
@@ -562,7 +541,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         # Evaluate
         evaluator = AAITimeSeriesEvaluator(
             target_columns=dataset.target_columns,
-            group_list=list(dataset.dataframes.keys()),
+            group_list=dataset.group_list,
             quantiles=quantiles,
             num_workers=num_workers,
             custom_eval_fn={"custom_RMSE": [rmse, "mean", "median"]},
@@ -575,8 +554,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         for (group, df_group), forecast in zip(
             dataset.dataframes.items(), forecast_list
         ):
-            df_predictions_dict[group] = forecast_to_dataframe(
-                forecast,
+            df_predictions_dict[group] = forecast.to_dataframe(
                 dataset.target_columns,
                 df_group.index[-self.prediction_length :],
                 quantiles=quantiles,
@@ -621,9 +599,8 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
 
         forecast_list = self.predictor.predict(dataset)
 
-        for group, forecast in zip(dataset.dataframes.keys(), forecast_list):
-            df_predictions_dict[group] = forecast_to_dataframe(
-                forecast,
+        for group, forecast in zip(dataset.group_list, forecast_list):
+            df_predictions_dict[group] = forecast.to_dataframe(
                 dataset.target_columns,
                 future_dates_dict[group],
                 quantiles=quantiles,

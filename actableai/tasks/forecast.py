@@ -115,12 +115,11 @@ class AAIForecastTask(AAITask):
             params.RForecastParams(
                 method_name=("arima", "ets"),
             ),
-            # params.TreePredictorParams(
-            #    use_feat_dynamic_cat=len(feat_dynamic_cat) > 0,
-            #    or len(predicted_columns) > 1,
-            #    method=("QRX", "QuantileRegression"),
-            #    context_length=(1, 2 * prediction_length),
-            # ),
+            params.TreePredictorParams(
+                use_feat_dynamic_cat=len(feat_dynamic_cat) > 0,
+                method=("QRX", "QuantileRegression"),
+                context_length=(1, 2 * prediction_length),
+            ),
             params.DeepVARParams(
                 epochs=(5, 20),
                 num_layers=(1, 3),

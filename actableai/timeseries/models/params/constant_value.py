@@ -2,6 +2,7 @@ from gluonts.model.trivial.constant import ConstantValuePredictor
 from typing import Tuple, Union, Dict, Any
 
 from actableai.timeseries.models.params.base import BaseParams
+from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
 
 
 class ConstantValueParams(BaseParams):
@@ -37,7 +38,7 @@ class ConstantValueParams(BaseParams):
 
     def build_predictor(
         self, *, prediction_length: int, params: Dict[str, Any], **kwargs
-    ) -> ConstantValuePredictor:
+    ) -> AAITimeSeriesPredictor:
         """Build a predictor from the underlying model using selected parameters.
 
         Args:
@@ -49,7 +50,9 @@ class ConstantValueParams(BaseParams):
             Built predictor.
         """
 
-        return ConstantValuePredictor(
-            value=params.get("value", self.value),
-            prediction_length=prediction_length,
+        return self._create_predictor(
+            ConstantValuePredictor(
+                value=params.get("value", self.value),
+                prediction_length=prediction_length,
+            )
         )

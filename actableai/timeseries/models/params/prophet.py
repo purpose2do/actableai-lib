@@ -2,6 +2,7 @@ from gluonts.model.prophet import ProphetPredictor
 from typing import Union, Tuple, Dict, Any
 
 from actableai.timeseries.models.params.base import BaseParams
+from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
 
 
 class ProphetParams(BaseParams):
@@ -46,7 +47,7 @@ class ProphetParams(BaseParams):
 
     def build_predictor(
         self, *, prediction_length: int, params: Dict[str, Any], **kwargs
-    ) -> ProphetPredictor:
+    ) -> AAITimeSeriesPredictor:
         """Build a predictor from the underlying model using selected parameters.
 
         Args:
@@ -57,12 +58,14 @@ class ProphetParams(BaseParams):
         Returns:
             Built predictor.
         """
-        return ProphetPredictor(
-            prediction_length=prediction_length,
-            prophet_params={
-                "growth": params.get("growth", self.growth),
-                "seasonality_mode": params.get(
-                    "seasonality_mode", self.seasonality_mode
-                ),
-            },
+        return self._create_predictor(
+            ProphetPredictor(
+                prediction_length=prediction_length,
+                prophet_params={
+                    "growth": params.get("growth", self.growth),
+                    "seasonality_mode": params.get(
+                        "seasonality_mode", self.seasonality_mode
+                    ),
+                },
+            )
         )

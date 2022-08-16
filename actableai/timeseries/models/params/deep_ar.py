@@ -4,6 +4,7 @@ from gluonts.mx.trainer import Trainer
 from mxnet.context import Context
 from typing import Tuple, Union, Dict, Any
 
+from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.params.base import BaseParams
 
 
@@ -100,7 +101,7 @@ class DeepARParams(BaseParams):
         distr_output: DistributionOutput,
         params: Dict[str, Any],
         **kwargs,
-    ) -> DeepAREstimator:
+    ) -> AAITimeSeriesEstimator:
         """Build an estimator from the underlying model using selected parameters.
 
         Args:
@@ -114,26 +115,28 @@ class DeepARParams(BaseParams):
         Returns:
             Built estimator.
         """
-        return DeepAREstimator(
-            freq=freq,
-            prediction_length=prediction_length,
-            cell_type=self.cell_type,
-            use_feat_dynamic_real=self.use_feat_dynamic_real,
-            use_feat_static_cat=self.use_feat_static_cat,
-            use_feat_static_real=self.use_feat_static_real,
-            cardinality=self.cardinality,
-            scaling=self.scaling,
-            dropout_rate=params.get("dropout_rate", self.dropout_rate),
-            num_layers=params.get("num_layers", self.num_layers),
-            num_cells=params.get("num_cells", self.num_cells),
-            context_length=params.get("context_length", prediction_length),
-            distr_output=distr_output,
-            impute_missing_values=self.impute_missing_value,
-            trainer=Trainer(
-                ctx=ctx,
-                epochs=params.get("epochs", self.epochs),
-                learning_rate=params.get("learning_rate", self.learning_rate),
-                hybridize=False,
-                weight_decay=params.get("l2", self.l2),
-            ),
+        return self._create_estimator(
+            DeepAREstimator(
+                freq=freq,
+                prediction_length=prediction_length,
+                cell_type=self.cell_type,
+                use_feat_dynamic_real=self.use_feat_dynamic_real,
+                use_feat_static_cat=self.use_feat_static_cat,
+                use_feat_static_real=self.use_feat_static_real,
+                cardinality=self.cardinality,
+                scaling=self.scaling,
+                dropout_rate=params.get("dropout_rate", self.dropout_rate),
+                num_layers=params.get("num_layers", self.num_layers),
+                num_cells=params.get("num_cells", self.num_cells),
+                context_length=params.get("context_length", prediction_length),
+                distr_output=distr_output,
+                impute_missing_values=self.impute_missing_value,
+                trainer=Trainer(
+                    ctx=ctx,
+                    epochs=params.get("epochs", self.epochs),
+                    learning_rate=params.get("learning_rate", self.learning_rate),
+                    hybridize=False,
+                    weight_decay=params.get("l2", self.l2),
+                ),
+            )
         )

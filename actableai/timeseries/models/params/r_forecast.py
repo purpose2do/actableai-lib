@@ -2,6 +2,7 @@ from gluonts.model.r_forecast import RForecastPredictor
 from typing import Optional, Union, Tuple, Dict, Any
 
 from actableai.timeseries.models.params.base import BaseParams
+from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
 
 
 class RForecastParams(BaseParams):
@@ -53,7 +54,7 @@ class RForecastParams(BaseParams):
 
     def build_predictor(
         self, *, freq: str, prediction_length: int, params: Dict[str, Any], **kwargs
-    ) -> RForecastPredictor:
+    ) -> AAITimeSeriesPredictor:
         """Build a predictor from the underlying model using selected parameters.
 
         Args:
@@ -65,9 +66,11 @@ class RForecastParams(BaseParams):
         Returns:
             Built predictor.
         """
-        return RForecastPredictor(
-            freq=freq,
-            prediction_length=prediction_length,
-            method_name=params.get("method_name", self.method_name),
-            period=params.get("period", self.period),
+        return self._create_predictor(
+            RForecastPredictor(
+                freq=freq,
+                prediction_length=prediction_length,
+                method_name=params.get("method_name", self.method_name),
+                period=params.get("period", self.period),
+            )
         )

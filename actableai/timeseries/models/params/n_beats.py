@@ -1,9 +1,10 @@
-from typing import Dict, Any, Optional, Union, Tuple
+from typing import Dict, Any, Union, Tuple
 
 from gluonts.model.n_beats import NBEATSEnsembleEstimator
-from gluonts.mx import DistributionOutput, Trainer
+from gluonts.mx import Trainer
 from mxnet import Context
 
+from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.params.base import BaseParams
 
 
@@ -60,7 +61,9 @@ class NBEATSParams(BaseParams):
             "epochs": self._randint("epochs", self.epochs),
             "learning_rate": self._uniform("learning_rate", self.learning_rate),
             "l2": self._uniform("l2", self.l2),
-            "meta_bagging_size": self._randint("meta_bagging_size", self.meta_bagging_size),
+            "meta_bagging_size": self._randint(
+                "meta_bagging_size", self.meta_bagging_size
+            ),
         }
 
     def build_estimator(
@@ -71,7 +74,7 @@ class NBEATSParams(BaseParams):
         prediction_length: int,
         params: Dict[str, Any],
         **kwargs
-    ) -> NBEATSEnsembleEstimator:
+    ) -> AAITimeSeriesEstimator:
         """Build an estimator from the underlying model using selected parameters.
 
         Args:
@@ -84,17 +87,21 @@ class NBEATSParams(BaseParams):
         Returns:
             Built estimator.
         """
-        return NBEATSEnsembleEstimator(
-            freq=freq,
-            prediction_length=prediction_length,
-            meta_context_length=[params.get("context_length", self.context_length)],
-            meta_loss_function=["MAPE"],
-            meta_bagging_size=params.get("meta_bagging_size", self.meta_bagging_size),
-            trainer=Trainer(
-                ctx=ctx,
-                epochs=params.get("epochs", self.epochs),
-                learning_rate=params.get("learning_rate", self.learning_rate),
-                weight_decay=params.get("l2", self.l2),
-                hybridize=False,
+        return self._create_estimator(
+            NBEATSEnsembleEstimator(
+                freq=freq,
+                prediction_length=prediction_length,
+                meta_context_length=[params.get("context_length", self.context_length)],
+                meta_loss_function=["MAPE"],
+                meta_bagging_size=params.get(
+                    "meta_bagging_size", self.meta_bagging_size
+                ),
+                trainer=Trainer(
+                    ctx=ctx,
+                    epochs=params.get("epochs", self.epochs),
+                    learning_rate=params.get("learning_rate", self.learning_rate),
+                    weight_decay=params.get("l2", self.l2),
+                    hybridize=False,
+                ),
             )
         )

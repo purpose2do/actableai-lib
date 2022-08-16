@@ -5,6 +5,10 @@ from hyperopt import hp
 from mxnet.context import Context
 from typing import Callable, Any, Dict, Union, Tuple, Optional
 
+from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
+from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
+from actableai.timeseries.transform.clean_features import CleanFeatures
+
 
 class BaseParams:
     """Base class for Time Series Model Parameters."""
@@ -39,10 +43,13 @@ class BaseParams:
         self.model_name = model_name
         self.is_multivariate_model = is_multivariate_model
         self.has_estimator = has_estimator
-        self.handle_feat_static_real = handle_feat_static_real
-        self.handle_feat_static_cat = handle_feat_static_cat
-        self.handle_feat_dynamic_real = handle_feat_dynamic_real
-        self.handle_feat_dynamic_cat = handle_feat_dynamic_cat
+
+        self._transformation = CleanFeatures(
+            keep_feat_static_real=handle_feat_static_real,
+            keep_feat_static_cat=handle_feat_static_cat,
+            keep_feat_dynamic_real=handle_feat_dynamic_real,
+            keep_feat_dynamic_cat=handle_feat_dynamic_cat,
+        )
 
     def _hp_param(self, func: Callable, param_name: str, *args, **kwargs) -> Any:
         """Util function used to call hyperopt parameter function.
@@ -119,7 +126,7 @@ class BaseParams:
         target_dim: int,
         distr_output: DistributionOutput,
         params: Dict[str, Any],
-    ) -> Optional[Estimator]:
+    ) -> Optional[AAITimeSeriesEstimator]:
         """Build an estimator from the underlying model using selected parameters.
 
         Args:
@@ -138,7 +145,7 @@ class BaseParams:
 
     def build_predictor(
         self, *, freq: str, prediction_length: int, params: Dict[str, Any]
-    ) -> Optional[Predictor]:
+    ) -> Optional[AAITimeSeriesPredictor]:
         """Build a predictor from the underlying model using selected parameters.
 
         Args:
@@ -150,3 +157,29 @@ class BaseParams:
             Built predictor.
         """
         return None
+
+    def _create_estimator(self, estimator: Estimator) -> AAITimeSeriesEstimator:
+        """Create the estimator associated with the model.
+
+        Args:
+            estimator: Underlying GluonTS estimator.
+
+        Returns:
+            The wrapped estimator.
+        """
+        return AAITimeSeriesEstimator(
+            estimator=estimator, transformation=self._transformation
+        )
+
+    def _create_predictor(self, predictor: Predictor) -> AAITimeSeriesPredictor:
+        """Create the predictor associated with the model.
+
+        Args:
+            predictor: Underlying GluonTS predictor.
+
+        Returns:
+            The wrapped predictor.
+        """
+        return AAITimeSeriesPredictor(
+            predictor=predictor, transformation=self._transformation
+        )

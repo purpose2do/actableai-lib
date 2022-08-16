@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import pandas as pd
 
-from typing import cast, List, Iterator, Tuple, Union, Dict, Optional, Callable
+from typing import cast, List, Iterator, Tuple, Union, Dict, Optional, Callable, Any
 
 from gluonts.dataset import DataEntry
 from gluonts.dataset.common import ProcessDataEntry
@@ -195,7 +195,7 @@ class AAITimeSeriesDataset:
             len(self.feat_dynamic_real) + len(self.feat_dynamic_cat)
         ) > 0
 
-        for group in self.dataframes.keys():
+        for group in self.group_list:
             if date_column is not None:
                 self.dataframes[group].index = self.dataframes[group][date_column]
                 self.dataframes[group].name = date_column
@@ -243,7 +243,7 @@ class AAITimeSeriesDataset:
         Returns:
             Iterator of Data Entries.
         """
-        for group in self.dataframes.keys():
+        for group in self.group_list:
             dataentry = self.process(self._dataentry(self.dataframes[group]))
             if self.has_dynamic_features and not self.training:
                 dataentry = self._prepare_prediction_data(dataentry)
@@ -376,3 +376,12 @@ class AAITimeSeriesDataset:
             if fname in entry:
                 entry[fname] = entry[fname][..., : -self.prediction_length]
         return entry
+
+    @property
+    def group_list(self) -> List[Tuple[Any, ...]]:
+        """Returns the list of group in the dataset.
+
+        Returns:
+            List of group.
+        """
+        return list(self.dataframes.keys())
