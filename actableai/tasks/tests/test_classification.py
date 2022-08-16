@@ -482,8 +482,32 @@ class TestRemoteClassification:
     def test_suggest_analytic(self, classification_task, tmp_path):
         df = pd.DataFrame(
             {
-                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] * 10,
-                "y": [1, 2, 3, 2, 1, None, 1, 2, 1, 3, 1] * 10,
+                "x": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    17,
+                    18,
+                    19,
+                    20,
+                    21,
+                ]
+                * 10,
+                "y": [1, 2, 3, 2, 1, None, 1, 2, 1, 3, 1] * 20,
             }
         )
 
