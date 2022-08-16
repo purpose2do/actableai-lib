@@ -18,7 +18,7 @@ class TestTimeSeries:
     @pytest.mark.parametrize("n_targets", [1, 5])
     @pytest.mark.parametrize("use_features", [True, False])
     @pytest.mark.parametrize("sorted_data", [True, False])
-    @pytest.mark.parametrize("freq", ["T", "MS"])
+    @pytest.mark.parametrize("freq", ["T", "MS", "YS"])
     def test_simple(
         self,
         np_rng,
@@ -665,7 +665,7 @@ class TestTimeSeries:
             validations_dict["DoNotContainEmptyColumnsChecker"] == CheckLevels.CRITICAL
         )
 
-    @pytest.mark.parametrize("freq", ["T", "MS"])
+    @pytest.mark.parametrize("freq", ["T", "MS", "YS"])
     def test_invalid_frequency(self, np_rng, forecast_task, freq):
         prediction_length = np_rng.integers(1, 3)
         df, _, date_column_str, target_columns, _, _, _ = generate_forecast_df(

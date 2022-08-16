@@ -129,6 +129,7 @@ class AAITimeSeriesDataset:
         """
         self.dataframes = {}
         self.freq = freq
+        self.gluonts_freq = None
         self.prediction_length = prediction_length
         self.training = training
 
@@ -206,6 +207,9 @@ class AAITimeSeriesDataset:
             # Try to guess the freq
             if self.freq is None:
                 self.freq = find_freq(pd_date)
+
+            if self.gluonts_freq is None:
+                self.gluonts_freq = find_gluonts_freq(pd_date, self.freq)
 
             self.dataframes[group].index = pd_date
             self.dataframes[group].sort_index(inplace=True)
@@ -372,13 +376,3 @@ class AAITimeSeriesDataset:
             if fname in entry:
                 entry[fname] = entry[fname][..., : -self.prediction_length]
         return entry
-
-    @property
-    def gluonts_freq(self):
-        """Returns GluonTS frequency
-
-        Returns:
-            GluonTS frequency
-        """
-
-        return find_gluonts_freq(self.freq)
