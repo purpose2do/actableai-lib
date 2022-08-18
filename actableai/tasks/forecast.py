@@ -141,8 +141,8 @@ class AAIForecastTask(AAITask):
                     epochs=(1, 20),
                     num_layers=(1, 3),
                     num_cells=(1, 10),
-                    use_feat_dynamic_real=len(feat_dynamic_real) > 0
-                    or len(predicted_columns) > 1,
+                    use_feat_dynamic_real=len(feat_dynamic_real) > 0,
+                    use_feat_static_real=len(feat_static_real) > 0,
                 ),
             )
             if n_groups >= 10:

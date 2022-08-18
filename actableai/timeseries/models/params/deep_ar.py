@@ -22,6 +22,7 @@ class DeepARParams(BaseParams):
         l2: Union[Tuple[float, float], float] = (1e-8, 0.01),
         scaling: bool = True,
         use_feat_dynamic_real: bool = False,
+        use_feat_static_real: bool = False,
         impute_missing_values: bool = True,
     ):
         """DeepARParams Constructor.
@@ -45,6 +46,8 @@ class DeepARParams(BaseParams):
             scaling: Whether to automatically scale the target values.
             use_feat_dynamic_real: Whether to use the `feat_dynamic_real` field from
                 the data.
+            use_feat_static_real: Whether to use the `feat_static_real` field from the
+                data.
             impute_missing_values: Whether to impute the missing values during training
                 by using the current model parameters. Recommended if the dataset
                 contains many missing values. However, this is a lot slower than the
@@ -54,7 +57,7 @@ class DeepARParams(BaseParams):
             model_name="DeepAR",
             is_multivariate_model=False,
             has_estimator=True,
-            handle_feat_static_real=False,
+            handle_feat_static_real=use_feat_static_real,
             handle_feat_static_cat=False,
             handle_feat_dynamic_real=use_feat_dynamic_real,
             handle_feat_dynamic_cat=False,
@@ -67,9 +70,10 @@ class DeepARParams(BaseParams):
         self.dropout_rate = dropout_rate
         self.learning_rate = learning_rate
         self.use_feat_dynamic_real = use_feat_dynamic_real
-        # DeepAR does not handle static features properly (even if it is advertised otherwise)
+        self.use_feat_static_real = use_feat_static_real
+        # DeepAR does not handle cat static features properly
+        # (even if it is advertised otherwise)
         self.use_feat_static_cat = False
-        self.use_feat_static_real = False
         self.cardinality = None
         self.cell_type = "lstm"
         self.scaling = scaling

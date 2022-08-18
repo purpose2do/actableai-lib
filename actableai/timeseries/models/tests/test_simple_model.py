@@ -140,6 +140,7 @@ class TestAAITimeSeriesSingleModel:
                 epochs=2,
                 context_length=None,
                 use_feat_dynamic_real=use_features,
+                use_feat_static_real=use_features,
             )
         elif model_type == "feed_forward":
             model_param = params.FeedForwardParams(
