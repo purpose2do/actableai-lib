@@ -86,17 +86,30 @@ class AutoGluonShapTreeExplainer:
 
             pred = self.autogluon_model.predict_proba(df_transformed_data)
 
+            positive_class_index = None
+            # This needs to be done when the predict_proba returns the predictions only
+            # for the positive class.
             if len(pred.shape) == 1:
                 pred = np.concatenate(
                     [(1 - pred).reshape(-1, 1), pred.reshape(-1, 1)], axis=1
                 )
+                positive_class_index = 1
 
             row_index, column_index = np.meshgrid(
                 np.arange(shap_values.shape[1]), np.arange(shap_values.shape[2])
             )
-            shap_values = shap_values[
-                pred.argmax(axis=1), row_index, column_index
-            ].transpose(1, 0)
+
+            mask = None
+            if self.autogluon_predictor.problem_type == "binary":
+                if positive_class_index is None:
+                    positive_class_index = self.autogluon_predictor.class_labels.index(
+                        self.autogluon_predictor.positive_class
+                    )
+                mask = [positive_class_index] * shap_values.shape[1]
+            else:
+                mask = pred.argmax(axis=1)
+
+            shap_values = shap_values[mask, row_index, column_index].transpose(1, 0)
 
         df_shap_values = pd.DataFrame(shap_values, columns=final_features)
 
