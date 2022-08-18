@@ -92,6 +92,8 @@ class AAIForecastTask(AAITask):
         predicted_columns: List[str],
         feat_dynamic_real: List[str],
         feat_dynamic_cat: List[str],
+        feat_static_real: List[str],
+        feat_static_cat: List[str],
     ) -> List[object]:
         """Get/generate default model parameters.
 
@@ -104,6 +106,8 @@ class AAIForecastTask(AAITask):
                 features.
             feat_dynamic_cat: List of columns containing categorical dynamic
                 features.
+            feat_static_real: List of columns containing real static features.
+            feat_static_cat: List of columns containing categorical static features.
 
         Returns:
             List containing the default parameters.
@@ -117,6 +121,7 @@ class AAIForecastTask(AAITask):
             ),
             params.TreePredictorParams(
                 use_feat_dynamic_cat=len(feat_dynamic_cat) > 0,
+                use_feat_static_real=len(feat_static_real) > 0,
                 method=("QRX", "QuantileRegression"),
                 context_length=(1, 2 * prediction_length),
             ),
@@ -445,6 +450,8 @@ class AAIForecastTask(AAITask):
                 predicted_columns,
                 dataset.feat_dynamic_real,
                 dataset.feat_dynamic_cat,
+                dataset.feat_static_real,
+                dataset.feat_static_cat,
             )
 
         model = AAITimeSeriesForecaster(

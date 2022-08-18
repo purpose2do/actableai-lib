@@ -148,12 +148,14 @@ class TestAAITimeSeriesSingleModel:
         elif model_type == "tree_predictor_qrx":
             model_param = params.TreePredictorParams(
                 use_feat_dynamic_cat=use_features,
+                use_feat_static_real=use_features,
                 context_length=None,
                 method="QRX",
             )
         elif model_type == "tree_predictor_quantile_regression":
             model_param = params.TreePredictorParams(
                 use_feat_dynamic_cat=use_features,
+                use_feat_static_real=use_features,
                 context_length=None,
                 method="QuantileRegression",
             )
