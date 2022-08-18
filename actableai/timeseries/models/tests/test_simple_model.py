@@ -140,6 +140,7 @@ class TestAAITimeSeriesSingleModel:
                 epochs=2,
                 context_length=None,
                 use_feat_dynamic_real=use_features,
+                use_feat_static_real=use_features,
             )
         elif model_type == "feed_forward":
             model_param = params.FeedForwardParams(
@@ -148,12 +149,14 @@ class TestAAITimeSeriesSingleModel:
         elif model_type == "tree_predictor_qrx":
             model_param = params.TreePredictorParams(
                 use_feat_dynamic_cat=use_features,
+                use_feat_static_real=use_features,
                 context_length=None,
                 method="QRX",
             )
         elif model_type == "tree_predictor_quantile_regression":
             model_param = params.TreePredictorParams(
                 use_feat_dynamic_cat=use_features,
+                use_feat_static_real=use_features,
                 context_length=None,
                 method="QuantileRegression",
             )

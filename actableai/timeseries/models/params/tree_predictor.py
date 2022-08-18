@@ -12,6 +12,7 @@ class TreePredictorParams(BaseParams):
     def __init__(
         self,
         use_feat_dynamic_cat: bool,
+        use_feat_static_real: bool,
         model_params: Optional[Dict] = None,
         method: Union[Tuple[str, ...], str] = ("QRX", "QuantileRegression"),
         quantiles: List[float] = [0.05, 0.25, 0.5, 0.75, 0.95],
@@ -23,6 +24,8 @@ class TreePredictorParams(BaseParams):
 
         Args:
             use_feat_dynamic_cat: Whether to use the `feat_dynamic_cat` field from
+                the data.
+            use_feat_static_real: Whether to use the `feat_static_real` field from
                 the data.
             model_params: Parameters which will be passed to the model.
             method: Method to use ["QRX", "QuantileRegression", "QRF"], if tuple it
@@ -38,7 +41,7 @@ class TreePredictorParams(BaseParams):
             model_name="TreePredictor",
             is_multivariate_model=False,
             has_estimator=True,
-            handle_feat_static_real=False,
+            handle_feat_static_real=use_feat_static_real,
             handle_feat_static_cat=False,
             handle_feat_dynamic_real=False,
             handle_feat_dynamic_cat=use_feat_dynamic_cat,
@@ -46,9 +49,7 @@ class TreePredictorParams(BaseParams):
 
         self.use_feat_dynamic_real = False
         self.use_feat_dynamic_cat = use_feat_dynamic_cat
-        # TreePredictor does not handle static features properly (even if it is
-        # advertised otherwise)
-        self.use_feat_static_real = False
+        self.use_feat_static_real = use_feat_static_real
         self.model_params = model_params
         self.method = method
         self.context_length = context_length
