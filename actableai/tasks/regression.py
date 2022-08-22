@@ -102,6 +102,7 @@ class _AAIRegressionTrainTask(AAITask):
             mean_squared_error,
             median_absolute_error,
         )
+        from gluonts.evaluation.metrics import quantile_loss
         from actableai.utils import debiasing_feature_generator_args
         from actableai.debiasing.debiasing_model import DebiasingModel
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
@@ -229,6 +230,11 @@ class _AAIRegressionTrainTask(AAITask):
                     df_val[target], y_pred, quantile_levels
                 )
 
+                for quantile_level in quantile_levels:
+                    metrics[f"quantile_loss-{quantile_level}"] = quantile_loss(
+                        y_true, y_pred[quantile_level], q=quantile_level
+                    )
+
         evaluate = None
         if metrics is not None:
             # Legacy (TODO: to be removed)
@@ -260,6 +266,17 @@ class _AAIRegressionTrainTask(AAITask):
 
                 metric_list.append("Pinball Loss")
                 metric_value_list.append(abs(metrics["pinball_loss"]))
+
+                for quantile_level in quantile_levels:
+                    # Legacy (TODO: to be removed)
+                    evaluate[f"QUANTILE_LOSS-{quantile_level}"] = abs(
+                        metrics[f"quantile_loss-{quantile_level}"]
+                    )
+
+                    metric_list.append(f"Quantile Loss {quantile_level}")
+                    metric_value_list.append(
+                        abs(metrics[f"quantile_loss-{quantile_level}"])
+                    )
 
             evaluate["metrics"] = pd.DataFrame(
                 {
