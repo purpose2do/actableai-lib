@@ -1,6 +1,6 @@
-from gluonts.model.trivial.constant import ConstantValuePredictor
 from typing import Tuple, Union, Dict, Any
 
+from actableai.timeseries.models.custom.constant import ConstantValuePredictor
 from actableai.timeseries.models.params.base import BaseParams
 from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
 
@@ -8,17 +8,20 @@ from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
 class ConstantValueParams(BaseParams):
     """Parameters class for the Constant Value Model."""
 
-    def __init__(self, value: Union[Tuple[int, int], int] = (0, 100)):
+    def __init__(
+        self, value: Union[Tuple[int, int], int] = (0, 100), target_dim: int = 1
+    ):
         """ConstantValueParams Constructor.
 
         Args:
             value: Value to return, if tuple it represents minimum and maximum
                 (excluded) value.
+            target_dim: Dimension of the target.
         """
 
         super().__init__(
             model_name="ConstantValue",
-            is_multivariate_model=False,
+            is_multivariate_model=target_dim > 1,
             has_estimator=False,
             handle_feat_static_real=False,
             handle_feat_static_cat=False,
@@ -27,6 +30,7 @@ class ConstantValueParams(BaseParams):
         )
 
         self.value = value
+        self.target_dim = target_dim
 
     def tune_config(self) -> Dict[str, Any]:
         """Select parameters in the pre-defined hyperparameter space.
@@ -54,5 +58,6 @@ class ConstantValueParams(BaseParams):
             ConstantValuePredictor(
                 value=params.get("value", self.value),
                 prediction_length=prediction_length,
+                target_dim=self.target_dim,
             )
         )

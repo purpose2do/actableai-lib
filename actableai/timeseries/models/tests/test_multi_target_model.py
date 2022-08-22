@@ -118,7 +118,10 @@ class TestAAITimeSeriesMultiTargetModel:
         valid_dataset = test_dataset.slice_data(slice_df=slice_last_valid_index)
         train_dataset = valid_dataset.slice_data(slice_df=slice(-prediction_length))
 
-        model_params = [params.ConstantValueParams()]
+        model_params = [
+            params.ConstantValueParams(),
+            params.ConstantValueParams(target_dim=n_targets),
+        ]
 
         validations, predictions = self._fit_predict_model(
             mx_ctx=mx_ctx,
@@ -204,15 +207,16 @@ class TestAAITimeSeriesMultiTargetModel:
             assert len(df_predictions) == prediction_length * n_targets
             assert (df_predictions.groupby("date").first().index == future_dates).all()
 
+    @pytest.mark.parametrize("n_targets", [1, 2])
     @pytest.mark.parametrize("freq", ["T", "MS", "YS"])
     @pytest.mark.parametrize("use_ray", [True, False])
-    def test_hyperopt(self, np_rng, mx_ctx, use_ray, freq):
+    def test_hyperopt(self, np_rng, mx_ctx, use_ray, freq, n_targets):
         prediction_length = np_rng.integers(1, 3)
         dataset = generate_forecast_dataset(
             np_rng,
             prediction_length=prediction_length,
             n_groups=1,
-            n_targets=1,
+            n_targets=n_targets,
             freq=freq,
         )
 
@@ -222,7 +226,10 @@ class TestAAITimeSeriesMultiTargetModel:
         valid_dataset = test_dataset.slice_data(slice_df=slice_last_valid_index)
         train_dataset = valid_dataset.slice_data(slice_df=slice(-prediction_length))
 
-        model_params = [params.ConstantValueParams()]
+        model_params = [
+            params.ConstantValueParams(),
+            params.ConstantValueParams(target_dim=n_targets),
+        ]
 
         validations, predictions = self._fit_predict_model(
             mx_ctx=mx_ctx,
