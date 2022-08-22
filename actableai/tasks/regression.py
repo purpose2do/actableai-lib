@@ -94,6 +94,15 @@ class _AAIRegressionTrainTask(AAITask):
         import pandas as pd
         from autogluon.tabular import TabularPredictor
         from autogluon.features.generators import AutoMLPipelineFeatureGenerator
+        from autogluon.core.metrics import (
+            pinball_loss,
+            root_mean_squared_error,
+            r2,
+            mean_absolute_error,
+            mean_squared_error,
+            median_absolute_error,
+        )
+        from gluonts.evaluation.metrics import quantile_loss
         from actableai.utils import debiasing_feature_generator_args
         from actableai.debiasing.debiasing_model import DebiasingModel
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
@@ -199,46 +208,82 @@ class _AAIRegressionTrainTask(AAITask):
                 )
         y_pred = None
         if df_val is not None:
+            y_true = df_val[target]
             y_pred = predictor.predict(df_val)
-            metrics = predictor.evaluate_predictions(
-                y_true=df_val[target], y_pred=y_pred, auxiliary_metrics=True
-            )
+
+            y_pred_metrics = y_pred
+            if quantile_levels is not None:
+                y_pred_metrics = y_pred_metrics[0.5]
+
+            metrics = {
+                "root_mean_squared_error": root_mean_squared_error(
+                    y_true, y_pred_metrics
+                ),
+                "r2": r2(y_true, y_pred_metrics),
+                "mean_absolute_error": mean_absolute_error(y_true, y_pred_metrics),
+                "mean_squared_error": mean_squared_error(y_true, y_pred_metrics),
+                "median_absolute_error": median_absolute_error(y_true, y_pred_metrics),
+            }
+
+            if quantile_levels is not None:
+                metrics["pinball_loss"] = pinball_loss(
+                    df_val[target], y_pred, quantile_levels
+                )
+
+                for quantile_level in quantile_levels:
+                    metrics[f"quantile_loss-{quantile_level}"] = quantile_loss(
+                        y_true, y_pred[quantile_level], q=quantile_level
+                    )
 
         evaluate = None
         if metrics is not None:
-            if quantile_levels is None:
+            # Legacy (TODO: to be removed)
+            evaluate = {
+                "RMSE": abs(metrics["root_mean_squared_error"]),
+                "R2": metrics["r2"],
+                "MAE": abs(metrics["mean_absolute_error"]),
+                "MSE": abs(metrics["mean_squared_error"]),
+                "MEDIAN_ABSOLUTE_ERROR": abs(metrics["median_absolute_error"]),
+            }
+
+            metric_list = [
+                "Root Mean Squared Error",
+                "R2",
+                "Mean Absolute Error",
+                "Median Absolute Error",
+            ]
+
+            metric_value_list = [
+                abs(metrics["root_mean_squared_error"]),
+                metrics["r2"],
+                abs(metrics["mean_absolute_error"]),
+                abs(metrics["median_absolute_error"]),
+            ]
+
+            if quantile_levels is not None:
                 # Legacy (TODO: to be removed)
-                evaluate = {
-                    "RMSE": abs(metrics["root_mean_squared_error"]),
-                    "R2": metrics["r2"],
-                    "MAE": abs(metrics["mean_absolute_error"]),
-                    "MSE": abs(metrics["mean_squared_error"]),
-                    "MEDIAN_ABSOLUTE_ERROR": abs(metrics["median_absolute_error"]),
+                evaluate["PINBALL_LOSS"] = abs(metrics["pinball_loss"])
+
+                metric_list.append("Pinball Loss")
+                metric_value_list.append(abs(metrics["pinball_loss"]))
+
+                for quantile_level in quantile_levels:
+                    # Legacy (TODO: to be removed)
+                    evaluate[f"QUANTILE_LOSS-{quantile_level}"] = abs(
+                        metrics[f"quantile_loss-{quantile_level}"]
+                    )
+
+                    metric_list.append(f"Quantile Loss {quantile_level}")
+                    metric_value_list.append(
+                        abs(metrics[f"quantile_loss-{quantile_level}"])
+                    )
+
+            evaluate["metrics"] = pd.DataFrame(
+                {
+                    "metric": metric_list,
+                    "value": metric_value_list,
                 }
-
-                evaluate["metrics"] = pd.DataFrame(
-                    {
-                        "metric": [
-                            "Root Mean Squared Error",
-                            "R2",
-                            "Mean Absolute Error",
-                            "Median Absolute Error",
-                        ],
-                        "value": [
-                            abs(metrics["root_mean_squared_error"]),
-                            metrics["r2"],
-                            abs(metrics["mean_absolute_error"]),
-                            abs(metrics["median_absolute_error"]),
-                        ],
-                    }
-                )
-            else:
-                # Legacy (TODO: to be removed)
-                evaluate = {"PINBALL_LOSS": metrics["pinball_loss"]}
-
-                evaluate["metrics"] = pd.DataFrame(
-                    {"metric": ["Pinball Loss"], "value": [metrics["pinball_loss"]]}
-                )
+            )
 
         predictions = None
         predictions_low = None
