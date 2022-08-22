@@ -112,6 +112,9 @@ class _AAIClassificationTrainTask(AAITask):
         ag_args_fit = {"drop_unique": drop_unique}
         feature_generator_args = {}
 
+        if "AG_AUTOMM" in hyperparameters:
+            feature_generator_args["enable_raw_text_features"] = True
+
         if not drop_useless_features:
             feature_generator_args["pre_drop_useless"] = False
             feature_generator_args["post_generators"] = []
