@@ -783,12 +783,16 @@ class AAIRegressionTask(AAITask):
         }
 
         causal_model = None
+        current_intervention_column = None
         if intervention_run_params is not None:
             intervention_task_result = AAIInterventionTask().run(
                 **intervention_run_params
             )
             if intervention_task_result["STATUS"] == "SUCESS":
                 causal_model = intervention_task_result["causal_model"]
+                current_intervention_column = intervention_run_params[
+                    "current_intervention_column"
+                ]
 
         if refit_full:
             df_only_full_training = df.loc[df[target].notnull()]
@@ -821,6 +825,15 @@ class AAIRegressionTask(AAITask):
             )
             predictor.refit_full(model="best", set_best_to_refit_full=True)
 
+        model = None
+        if kfolds <= 1 or refit_full:
+            model = AAIPredictor(
+                MODEL_DEPLOYMENT_VERSION,
+                predictor,
+                causal_model,
+                current_intervention_column,
+            )
+
         runtime = time.time() - start
         return {
             "status": "SUCCESS",
@@ -831,8 +844,6 @@ class AAIRegressionTask(AAITask):
             ],
             "runtime": runtime,
             "data": data,
-            "model": AAIPredictor(MODEL_DEPLOYMENT_VERSION, predictor, causal_model)
-            if kfolds <= 1 or refit_full
-            else None,
+            "model": model,
             # FIXME this predictor is not really usable as is for now
         }
