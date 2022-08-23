@@ -3,8 +3,11 @@ import numpy as np
 from typing import Any, Dict, List, Optional, Tuple, Union
 import logging
 
+from actableai.models.config import MODEL_DEPLOYMENT_VERSION
+from actableai.models.aai_predictor import AAIPredictor
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
+from actableai.tasks.intervention import AAIInterventionTask
 
 
 class _AAIClassificationTrainTask(AAITask):
@@ -386,6 +389,7 @@ class AAIClassificationTask(AAITask):
         ag_automm_enabled=False,
         refit_full=False,
         feature_pruning=True,
+        intervention_run_params: Optional[Dict] = None,
     ) -> Dict:
         """Run this classification task and return results.
 
@@ -797,6 +801,14 @@ class AAIClassificationTask(AAITask):
             str
         )
 
+        causal_model = None
+        if intervention_run_params is not None:
+            intervention_task_result = AAIInterventionTask().run(
+                **intervention_run_params
+            )
+            if intervention_task_result["STATUS"] == "SUCESS":
+                causal_model = intervention_task_result["causal_model"]
+
         runtime = time.time() - start
 
         if refit_full:
@@ -851,6 +863,8 @@ class AAIClassificationTask(AAITask):
                 "debiasing_charts": debiasing_charts,
                 "leaderboard": leaderboard,
             },
-            "model": predictor if kfolds <= 1 or refit_full else None,
+            "model": AAIPredictor(MODEL_DEPLOYMENT_VERSION, predictor, causal_model)
+            if kfolds <= 1 or refit_full
+            else None,
             # FIXME this predictor is not really usable as is for now
         }

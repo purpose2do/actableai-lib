@@ -2,10 +2,13 @@ import logging
 import numpy as np
 import pandas as pd
 from typing import Any, Dict, List, Optional, Tuple, Union
+from actableai.models.config import MODEL_DEPLOYMENT_VERSION
+from actableai.models.aai_predictor import AAIPredictor
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 from actableai.classification.utils import split_validation_by_datetime
+from actableai.tasks.intervention import AAIInterventionTask
 
 
 class _AAIRegressionTrainTask(AAITask):
@@ -353,6 +356,7 @@ class AAIRegressionTask(AAITask):
         ag_automm_enabled: bool = False,
         refit_full: bool = False,
         feature_pruning: bool = True,
+        intervention_run_params: Optional[Dict] = None,
     ):
         """Run this regression task and return results.
 
@@ -778,6 +782,14 @@ class AAIRegressionTask(AAITask):
             "leaderboard": leaderboard,
         }
 
+        causal_model = None
+        if intervention_run_params is not None:
+            intervention_task_result = AAIInterventionTask().run(
+                **intervention_run_params
+            )
+            if intervention_task_result["STATUS"] == "SUCESS":
+                causal_model = intervention_task_result["causal_model"]
+
         if refit_full:
             df_only_full_training = df.loc[df[target].notnull()]
             predictor, _, _, _, _, _, _, _, _, _ = _AAIRegressionTrainTask(
@@ -819,6 +831,8 @@ class AAIRegressionTask(AAITask):
             ],
             "runtime": runtime,
             "data": data,
-            "model": predictor if kfolds <= 1 or refit_full else None,
+            "model": AAIPredictor(MODEL_DEPLOYMENT_VERSION, predictor, causal_model)
+            if kfolds <= 1 or refit_full
+            else None,
             # FIXME this predictor is not really usable as is for now
         }

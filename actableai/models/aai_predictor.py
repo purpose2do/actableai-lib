@@ -5,7 +5,10 @@ from econml.dml import DML
 
 class AAIPredictor:
     def __init__(
-        self, version: int, predictor: TabularPredictor, causal_model: Optional[DML] = None
+        self,
+        version: int,
+        predictor: TabularPredictor,
+        causal_model: Optional[DML] = None,
     ):
         self.version = version
         self.predictor = predictor
