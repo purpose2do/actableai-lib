@@ -33,9 +33,9 @@ class ClusteringDataTransformer(TransformerMixin, BaseEstimator):
                 len(unique_column_value) == len(column_value)  # Every values are unique
                 or len(unique_column_value) == 1  # Only one value
             ):
+
+                # Transformer that is dropping the current column
                 t = FunctionTransformer(lambda x: x)
-                self.feature_links[-1].append(final_feature_count)
-                final_feature_count += 1
             else:
                 if is_numeric_dtype(X.iloc[:, i]):
                     t = StandardScaler()
