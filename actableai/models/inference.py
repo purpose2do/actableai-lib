@@ -97,6 +97,40 @@ class AAIModelInference:
         probability_threshold=0.5,
         positive_label=None,
     ):
+        from actableai.models.aai_predictor import AAIPredictor
+
+        task_model = self._get_model(task_id)
+        if isinstance(task_model, AAIPredictor):
+            live_prediction = self._predict(
+                task_id,
+                task_model.predictor,
+                df,
+                return_probabilities,
+                probability_threshold,
+                positive_label,
+            )
+
+            if task_model.causal_model is None:
+                return live_prediction
+
+        return self._predict(
+            task_id,
+            task_model,
+            df,
+            return_probabilities,
+            probability_threshold,
+            positive_label,
+        )
+
+    def _predict(
+        self,
+        task_id,
+        task_model,
+        df,
+        return_probabilities=False,
+        probability_threshold=0.5,
+        positive_label=None,
+    ):
         """
         TODO write documentation
         """
@@ -140,13 +174,20 @@ class AAIModelInference:
         return df_true_label
 
     def predict_proba(self, task_id, df):
+        from actableai.models.aai_predictor import AAIPredictor
+
+        task_model = self._get_model(task_id)
+
+        if isinstance(task_model, AAIPredictor):
+            return self._predict_proba(task_model.predictor, df)
+        return self._predict_proba(task_model, df)
+
+    def _predict_proba(self, task_model, df):
         """
         TODO write documentation
         """
         import pandas as pd
         from actableai.exceptions.models import MissingFeaturesError
-
-        task_model = self._get_model(task_id)
 
         # FIXME this considers that the model we have is an AutoGluon which will not
         #  be the case in the future
@@ -166,10 +207,20 @@ class AAIModelInference:
         return df_proba
 
     def get_metadata(self, task_id):
+        from actableai.models.aai_predictor import AAIPredictor
+
+        task_model = self._get_model(task_id)
+        if isinstance(task_model, AAIPredictor):
+            metadata = self._get_metadata(task_model.predictor)
+            if task_model.causal_model is not None:
+                metadata["intervened_column"] = task_model.intervened_column
+            return metadata
+        return self._get_metadata(task_model)
+
+    def _get_metadata(self, task_model):
         """
         TODO write documentation
         """
-        task_model = self._get_model(task_id)
 
         # FIXME this considers that the model we have is an AutoGluon which will not
         #  be the case in the future
