@@ -3,12 +3,10 @@ import numpy as np
 import pandas as pd
 from typing import Any, Dict, List, Optional, Tuple, Union
 from actableai.models.config import MODEL_DEPLOYMENT_VERSION
-from actableai.models.aai_predictor import AAIPredictor
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 from actableai.classification.utils import split_validation_by_datetime
-from actableai.tasks.intervention import AAIInterventionTask
 
 
 class _AAIRegressionTrainTask(AAITask):
@@ -462,6 +460,8 @@ class AAIRegressionTask(AAITask):
             CheckLevels,
             UNIQUE_CATEGORY_THRESHOLD,
         )
+        from actableai import AAIInterventionTask
+        from actableai.models.aai_predictor import AAIPredictor
         from actableai.regression.cross_validation import run_cross_validation
         from actableai.utils.sanitize import sanitize_timezone
 
@@ -784,6 +784,7 @@ class AAIRegressionTask(AAITask):
 
         causal_model = None
         current_intervention_column = None
+        common_causes = None
         if intervention_run_params is not None:
             intervention_task_result = AAIInterventionTask().run(
                 **intervention_run_params
@@ -793,6 +794,7 @@ class AAIRegressionTask(AAITask):
                 current_intervention_column = intervention_run_params[
                     "current_intervention_column"
                 ]
+                common_causes = intervention_run_params["common_causes"]
 
         if refit_full:
             df_only_full_training = df.loc[df[target].notnull()]
@@ -832,6 +834,7 @@ class AAIRegressionTask(AAITask):
                 predictor,
                 causal_model,
                 current_intervention_column,
+                common_causes,
             )
 
         runtime = time.time() - start
