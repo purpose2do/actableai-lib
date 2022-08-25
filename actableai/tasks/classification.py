@@ -809,7 +809,7 @@ class AAIClassificationTask(AAITask):
             intervention_task_result = AAIInterventionTask().run(
                 **intervention_run_params
             )
-            if intervention_task_result["STATUS"] == "SUCESS":
+            if intervention_task_result["status"] == "SUCESS":
                 causal_model = intervention_task_result["causal_model"]
                 current_intervention_column = intervention_run_params[
                     "current_intervention_column"

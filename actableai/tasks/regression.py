@@ -789,7 +789,7 @@ class AAIRegressionTask(AAITask):
             intervention_task_result = AAIInterventionTask().run(
                 **intervention_run_params
             )
-            if intervention_task_result["STATUS"] == "SUCESS":
+            if intervention_task_result["status"] == "SUCESS":
                 causal_model = intervention_task_result["causal_model"]
                 current_intervention_column = intervention_run_params[
                     "current_intervention_column"
@@ -828,13 +828,13 @@ class AAIRegressionTask(AAITask):
             predictor.refit_full(model="best", set_best_to_refit_full=True)
 
         model = None
-        if (kfolds <= 1 or refit_full) and predictor is not None:
+        if (kfolds <= 1 or refit_full) and predictor:
             model = AAITabularModel(
-                MODEL_DEPLOYMENT_VERSION,
-                predictor,
-                causal_model,
-                current_intervention_column,
-                common_causes,
+                version=MODEL_DEPLOYMENT_VERSION,
+                predictor=predictor,
+                causal_model=causal_model,
+                intervened_column=current_intervention_column,
+                common_causes=common_causes,
             )
 
         runtime = time.time() - start
