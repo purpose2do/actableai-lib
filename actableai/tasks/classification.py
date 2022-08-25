@@ -480,6 +480,7 @@ class AAIClassificationTask(AAITask):
         from scipy.stats import spearmanr
         from sklearn.model_selection import train_test_split
         from autogluon.common.features.infer_types import check_if_nlp_feature
+        from autogluon.tabular import TabularPredictor
 
         from actableai.utils import (
             memory_efficient_hyperparameters,
@@ -493,7 +494,7 @@ class AAIClassificationTask(AAITask):
             UNIQUE_CATEGORY_THRESHOLD,
         )
         from actableai import AAIInterventionTask
-        from actableai.models.aai_predictor import AAIPredictor
+        from actableai.models.aai_predictor import AAITabularModel
         from actableai.classification.cross_validation import run_cross_validation
         from actableai.utils.sanitize import sanitize_timezone
         from actableai.classification.utils import split_validation_by_datetime
@@ -847,8 +848,8 @@ class AAIClassificationTask(AAITask):
             predictor.refit_full(model="best", set_best_to_refit_full=True)
 
         model = None
-        if kfolds <= 1 or refit_full:
-            model = AAIPredictor(
+        if (kfolds <= 1 or refit_full) and isinstance(predictor, TabularPredictor):
+            model = AAITabularModel(
                 MODEL_DEPLOYMENT_VERSION,
                 predictor,
                 causal_model,
