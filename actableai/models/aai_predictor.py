@@ -3,6 +3,7 @@ from autogluon.tabular import TabularPredictor
 from econml.dml import DML
 import pandas as pd
 
+
 class AAIModel:
     model_version = 1
 
@@ -28,15 +29,22 @@ class AAITabularModel(AAIModel):
     def intervention_effect(self, df: pd.DataFrame, pred: Dict) -> pd.DataFrame:
         if self.causal_model and self.intervened_column and self.common_causes:
             CME = self.causal_model.const_marginal_effect(
-                df[self.common_causes].values
+                df[self.common_causes]
             ).squeeze()
-            ntr, ctr = (
-                df["intervened_" + self.intervened_column],
+            ctr, cta = (
                 df[self.intervened_column],
+                pred["prediction"],
             )
-            nta, cta = df["expected_" + self.predictor.label], pred['prediction']
-            new_out = (ntr - ctr) * CME + cta
-            new_inter = ((nta - cta) / CME) + ctr
+            # New Outcome
+            new_out = [None for _ in range(len(df))]
+            if f"intervened_{self.intervened_column}" in df:
+                ntr = df[f"intervened_{self.intervened_column}"]
+                new_out = (ntr - ctr) * CME + cta
+            # New Intervention
+            new_inter = [None for _ in range(len(df))]
+            if f"expected_{self.predictor.label}" in df:
+                nta = df[f"expected_{self.predictor.label}"]
+                new_inter = ((nta - cta) / CME) + ctr
             return pd.DataFrame({"new_outcome": new_out, "new_intervention": new_inter})
         else:
             raise Exception()

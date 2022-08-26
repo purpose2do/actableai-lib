@@ -225,7 +225,7 @@ class AAIModelInference:
         task_model = self._get_model(task_id)
         if isinstance(task_model, AAITabularModel):
             metadata = self._get_metadata(task_model.predictor)
-            if task_model.causal_model is not None:
+            if task_model.causal_model and task_model.intervened_column:
                 metadata["intervened_column"] = task_model.intervened_column
             return metadata
         return self._get_metadata(task_model)
