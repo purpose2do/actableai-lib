@@ -116,6 +116,10 @@ class AAIModelInference:
             if (
                 task_model.causal_model is not None
                 and task_model.intervened_column is not None
+                and (
+                    f"intervened_{task_model.intervened_column}" in df
+                    or f"expected_{task_model.predictor.label}" in df
+                )
             ):
                 pred["intervention"] = task_model.intervention_effect(df, pred)
                 return pred
@@ -225,7 +229,10 @@ class AAIModelInference:
         task_model = self._get_model(task_id)
         if isinstance(task_model, AAITabularModel):
             metadata = self._get_metadata(task_model.predictor)
-            if task_model.causal_model and task_model.intervened_column:
+            if (
+                task_model.causal_model is not None
+                and task_model.intervened_column is not None
+            ):
                 metadata["intervened_column"] = task_model.intervened_column
             return metadata
         return self._get_metadata(task_model)

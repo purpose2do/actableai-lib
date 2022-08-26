@@ -2,6 +2,7 @@ from typing import Dict, List, Optional
 from autogluon.tabular import TabularPredictor
 from econml.dml import DML
 import pandas as pd
+import numpy as np
 
 
 class AAIModel:
@@ -27,24 +28,39 @@ class AAITabularModel(AAIModel):
         self.common_causes = common_causes
 
     def intervention_effect(self, df: pd.DataFrame, pred: Dict) -> pd.DataFrame:
-        if self.causal_model and self.intervened_column and self.common_causes:
+        if self.causal_model and self.intervened_column:
             CME = self.causal_model.const_marginal_effect(
-                df[self.common_causes]
+                df[self.common_causes] if self.common_causes is not None else None
             ).squeeze()
             ctr, cta = (
-                df[self.intervened_column],
-                pred["prediction"],
+                df[self.intervened_column].replace("", np.nan).astype(float),
+                pred["prediction"][self.predictor.label]
+                .replace("", np.nan)
+                .astype(float),
             )
             # New Outcome
             new_out = [None for _ in range(len(df))]
             if f"intervened_{self.intervened_column}" in df:
-                ntr = df[f"intervened_{self.intervened_column}"]
+                ntr = (
+                    df[f"intervened_{self.intervened_column}"]
+                    .replace("", np.nan)
+                    .astype(float)
+                )
                 new_out = (ntr - ctr) * CME + cta
             # New Intervention
             new_inter = [None for _ in range(len(df))]
             if f"expected_{self.predictor.label}" in df:
-                nta = df[f"expected_{self.predictor.label}"]
+                nta = (
+                    df[f"expected_{self.predictor.label}"]
+                    .replace("", np.nan)
+                    .astype(float)
+                )
                 new_inter = ((nta - cta) / CME) + ctr
-            return pd.DataFrame({"new_outcome": new_out, "new_intervention": new_inter})
+            return pd.DataFrame(
+                {
+                    f"expected_{self.predictor.label}": new_out,
+                    f"intervened_{self.intervened_column}": new_inter,
+                }
+            )
         else:
             raise Exception()
