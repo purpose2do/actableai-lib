@@ -53,7 +53,7 @@ class AAITabularModel(AAIModel):
                     .replace("", np.nan)
                     .astype(float)
                 )
-                new_out = (ctr - ntr) * CME + cta
+                new_out = (ntr - ctr) * CME + cta
             # New Intervention
             new_inter = [None for _ in range(len(df))]
             if f"expected_{self.predictor.label}" in df:
@@ -62,7 +62,7 @@ class AAITabularModel(AAIModel):
                     .replace("", np.nan)
                     .astype(float)
                 )
-                new_inter = -((nta - cta) / CME) + ctr
+                new_inter = ((nta - cta) / CME) + ctr
             return pd.DataFrame(
                 {
                     f"expected_{self.predictor.label}": new_out,
