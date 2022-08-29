@@ -20,12 +20,14 @@ class AAITabularModel(AAIModel):
         causal_model: Optional[DML],
         intervened_column: Optional[str],
         common_causes: Optional[List[str]],
+        discrete_treatment: Optional[bool]
     ) -> None:
         super().__init__(version)
         self.predictor = predictor
         self.causal_model = causal_model
         self.intervened_column = intervened_column
         self.common_causes = common_causes
+        self.discrete_treatment = discrete_treatment
 
     def intervention_effect(self, df: pd.DataFrame, pred: Dict) -> pd.DataFrame:
         if self.causal_model and self.intervened_column:

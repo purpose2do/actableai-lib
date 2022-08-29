@@ -234,6 +234,7 @@ class AAIModelInference:
                 and task_model.intervened_column is not None
             ):
                 metadata["intervened_column"] = task_model.intervened_column
+                metadata["discrete_treatment"] = task_model.discrete_treatment
             return metadata
         return self._get_metadata(task_model)
 

@@ -785,6 +785,7 @@ class AAIRegressionTask(AAITask):
         causal_model = None
         current_intervention_column = None
         common_causes = None
+        discrete_treatment = None
         validations = [
             {"name": x.name, "level": x.level, "message": x.message}
             for x in failed_checks
@@ -799,6 +800,7 @@ class AAIRegressionTask(AAITask):
                     "current_intervention_column"
                 ]
                 common_causes = intervention_run_params["common_causes"]
+                discrete_treatment = intervention_run_params["discrete_treatment"]
             else:
                 validations.append(
                     {
@@ -847,13 +849,14 @@ class AAIRegressionTask(AAITask):
                 causal_model=causal_model,
                 intervened_column=current_intervention_column,
                 common_causes=common_causes,
+                discrete_treatment=discrete_treatment,
             )
 
         runtime = time.time() - start
         return {
             "status": "SUCCESS",
             "messenger": "",
-            "validations": validations  ,
+            "validations": validations,
             "runtime": runtime,
             "data": data,
             "model": model,
