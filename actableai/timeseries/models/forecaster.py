@@ -1,6 +1,5 @@
 import mxnet as mx
 import pandas as pd
-from time import time
 from typing import List, Tuple, Any, Dict, Optional
 
 from actableai.exceptions.timeseries import UntrainedModelException
@@ -9,7 +8,6 @@ from actableai.timeseries.models.independent_multivariate_model import (
     AAITimeSeriesIndependentMultivariateModel,
 )
 from actableai.timeseries.models.params.base import BaseParams
-from actableai.timeseries.models.single_model import AAITimeSeriesSingleModel
 
 
 class AAITimeSeriesForecaster:
@@ -195,21 +193,13 @@ class AAITimeSeriesForecaster:
                 inplace=False,
             )
 
-        univariate_model_params = []
-        multivariate_model_params = []
-        for model_param in model_params:
-            if model_param.is_multivariate_model:
-                multivariate_model_params.append(model_param)
-            else:
-                univariate_model_params.append(model_param)
-
         # Train multi-target model
-        multi_target_model = AAITimeSeriesIndependentMultivariateModel(
+        self.model = AAITimeSeriesIndependentMultivariateModel(
             prediction_length=self.prediction_length,
         )
-        multi_target_fit_time, df_multi_target_leaderboard = multi_target_model.fit(
+        multi_target_fit_time, df_multi_target_leaderboard = self.model.fit(
             dataset=dataset,
-            model_params=univariate_model_params,
+            model_params=model_params,
             mx_ctx=mx_ctx,
             loss=loss,
             trials=trials,
@@ -220,65 +210,10 @@ class AAITimeSeriesForecaster:
             random_state=random_state,
             ray_tune_kwargs=ray_tune_kwargs,
             verbose=verbose,
-            fit_full=False,
+            fit_full=fit_full,
         )
 
-        # Train multivariate models
-        multivariate_model = None
-        multivariate_fit_time = 0
-        df_multivariate_leaderboard = None
-        if len(self.target_columns) > 1 and len(multivariate_model_params) > 0:
-            multivariate_model = AAITimeSeriesSingleModel(
-                prediction_length=self.prediction_length,
-            )
-
-            multivariate_fit_time, df_multivariate_leaderboard = multivariate_model.fit(
-                dataset=dataset,
-                model_params=multivariate_model_params,
-                mx_ctx=mx_ctx,
-                loss=loss,
-                trials=trials,
-                max_concurrent=max_concurrent,
-                use_ray=use_ray,
-                tune_samples=tune_samples,
-                sampling_method=sampling_method,
-                random_state=random_state,
-                ray_tune_kwargs=ray_tune_kwargs,
-                verbose=verbose,
-                fit_full=False,
-            )
-
-        start_time = time()
-
-        # Choose best model
-        if multivariate_model is not None:
-            _, _, df_multi_target_agg_metrics = multi_target_model.score(
-                dataset=dataset
-            )
-            _, _, df_multivariate_agg_metrics = multivariate_model.score(
-                dataset=dataset
-            )
-
-            multi_target_loss = df_multi_target_agg_metrics[loss].mean(axis=0)
-            multivariate_loss = df_multivariate_agg_metrics[loss].mean(axis=0)
-
-            if multi_target_loss < multivariate_loss:
-                self.model = multi_target_model
-            else:
-                self.model = multivariate_model
-        else:
-            self.model = multi_target_model
-
-        if fit_full:
-            self.model.refit(dataset=dataset)
-
-        return (
-            multi_target_fit_time + multivariate_fit_time + time() - start_time,
-            pd.concat(
-                [df_multi_target_leaderboard, df_multivariate_leaderboard],
-                ignore_index=True,
-            ),
-        )
+        return multi_target_fit_time, df_multi_target_leaderboard
 
     def refit(
         self,

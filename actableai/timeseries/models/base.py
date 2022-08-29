@@ -3,8 +3,7 @@ import pandas as pd
 from abc import ABC, abstractmethod
 from typing import List, Dict, Tuple, Any, Optional
 
-from gluonts.dataset.pandas import PandasDataset
-
+from actableai.timeseries.dataset import AAITimeSeriesDataset
 from actableai.timeseries.models.params.base import BaseParams
 
 
@@ -22,7 +21,7 @@ class AAITimeSeriesBaseModel(ABC):
     @abstractmethod
     def fit(
         self,
-        dataset: PandasDataset,
+        dataset: AAITimeSeriesDataset,
         model_params: List[BaseParams],
         *,
         mx_ctx: Optional[mx.Context] = mx.cpu(),
@@ -65,7 +64,7 @@ class AAITimeSeriesBaseModel(ABC):
     @abstractmethod
     def refit(
         self,
-        dataset: PandasDataset,
+        dataset: AAITimeSeriesDataset,
         mx_ctx: Optional[mx.Context] = mx.cpu(),
     ):
         """Fit previously tuned model.
@@ -82,7 +81,7 @@ class AAITimeSeriesBaseModel(ABC):
     @abstractmethod
     def score(
         self,
-        dataset: PandasDataset,
+        dataset: AAITimeSeriesDataset,
         num_samples: int = 100,
         quantiles: List[float] = [0.05, 0.5, 0.95],
         num_workers: Optional[int] = None,
@@ -113,7 +112,7 @@ class AAITimeSeriesBaseModel(ABC):
     @abstractmethod
     def predict(
         self,
-        dataset: PandasDataset,
+        dataset: AAITimeSeriesDataset,
         quantiles: List[float] = [0.05, 0.5, 0.95],
     ) -> Dict[Tuple[Any, ...], pd.DataFrame]:
         """Make a prediction using the model.

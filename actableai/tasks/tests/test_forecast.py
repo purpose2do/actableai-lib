@@ -62,7 +62,10 @@ class TestTimeSeries:
             predicted_columns=target_columns,
             group_by=group_by,
             feature_columns=feature_columns,
-            model_params=[params.ConstantValueParams()],
+            model_params=[
+                params.ConstantValueParams(),
+                params.ConstantValueParams(target_dim=n_targets),
+            ],
             trials=1,
             use_ray=False,
         )
