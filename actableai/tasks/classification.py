@@ -804,16 +804,30 @@ class AAIClassificationTask(AAITask):
         causal_model = None
         current_intervention_column = None
         common_causes = None
+        discrete_treatment = None
+        validations = [
+            {"name": x.name, "level": x.level, "message": x.message}
+            for x in failed_checks
+        ]
         if intervention_run_params is not None:
             intervention_task_result = AAIInterventionTask().run(
                 **intervention_run_params
             )
             if intervention_task_result["status"] == "SUCCESS":
                 causal_model = intervention_task_result["causal_model"]
+                discrete_treatment = intervention_task_result["discrete_treatment"]
                 current_intervention_column = intervention_run_params[
                     "current_intervention_column"
                 ]
                 common_causes = intervention_run_params["common_causes"]
+            else:
+                validations.append(
+                    {
+                        "name": "Intervention Failed",
+                        "level": CheckLevels.WARNING,
+                        "message": "Counterfactual ran into an issue",
+                    }
+                )
 
         if refit_full:
             df_only_training = df.loc[df[target].notnull()]
@@ -854,6 +868,7 @@ class AAIClassificationTask(AAITask):
                 causal_model=causal_model,
                 intervened_column=current_intervention_column,
                 common_causes=common_causes,
+                discrete_treatment=discrete_treatment,
             )
 
         runtime = time.time() - start
