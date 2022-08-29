@@ -785,6 +785,10 @@ class AAIRegressionTask(AAITask):
         causal_model = None
         current_intervention_column = None
         common_causes = None
+        validations = [
+            {"name": x.name, "level": x.level, "message": x.message}
+            for x in failed_checks
+        ]
         if intervention_run_params is not None:
             intervention_task_result = AAIInterventionTask().run(
                 **intervention_run_params
@@ -795,6 +799,14 @@ class AAIRegressionTask(AAITask):
                     "current_intervention_column"
                 ]
                 common_causes = intervention_run_params["common_causes"]
+            else:
+                validations.append(
+                    {
+                        "name": "Intervention Failed",
+                        "level": CheckLevels.WARNING,
+                        "message": "Counterfactual ran into an issue",
+                    }
+                )
 
         if refit_full:
             df_only_full_training = df.loc[df[target].notnull()]
@@ -841,10 +853,7 @@ class AAIRegressionTask(AAITask):
         return {
             "status": "SUCCESS",
             "messenger": "",
-            "validations": [
-                {"name": x.name, "level": x.level, "message": x.message}
-                for x in failed_checks
-            ],
+            "validations": validations  ,
             "runtime": runtime,
             "data": data,
             "model": model,
