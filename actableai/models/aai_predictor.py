@@ -20,7 +20,7 @@ class AAITabularModel(AAIModel):
         causal_model: Optional[DML],
         intervened_column: Optional[str],
         common_causes: Optional[List[str]],
-        discrete_treatment: Optional[bool]
+        discrete_treatment: Optional[bool],
     ) -> None:
         super().__init__(version)
         self.predictor = predictor
@@ -31,12 +31,43 @@ class AAITabularModel(AAIModel):
 
     def intervention_effect(self, df: pd.DataFrame, pred: Dict) -> pd.DataFrame:
         if self.causal_model and self.intervened_column:
-            ctr, cta = (
-                df[self.intervened_column].replace("", np.nan).astype(float),
+            cta = (
                 pred["prediction"][self.predictor.label]
                 .replace("", np.nan)
-                .astype(float),
+                .astype(float)
             )
+            new_inter = [None for _ in range(len(df))]
+            new_out = [None for _ in range(len(df))]
+            if self.discrete_treatment:
+                custom_effect = []
+                for index_lab in range(len(df)):
+                    curr_discrete_effect = np.nan
+                    if isinstance(
+                        df[f"intervened_{self.intervened_column}"][index_lab], str
+                    ):
+                        curr_discrete_effect = self.causal_model.effect(
+                            df[self.common_causes][index_lab : index_lab + 1]
+                            if self.common_causes is not None
+                            and len(self.common_causes) != 0
+                            else None,
+                            T0=df[[self.intervened_column]][index_lab : index_lab + 1],  # type: ignore
+                            T1=df[[f"intervened_{self.intervened_column}"]][
+                                index_lab : index_lab + 1
+                            ],  # type: ignore
+                        )
+                        curr_discrete_effect = curr_discrete_effect.squeeze()
+                    custom_effect.append(curr_discrete_effect)
+                custom_effect = np.array(custom_effect).squeeze()
+                new_out = [None for _ in range(len(df))]
+                if f"intervened_{self.intervened_column}" in df:
+                    new_out = custom_effect + cta
+                return pd.DataFrame(
+                    {
+                        f"expected_{self.predictor.label}": new_out,
+                        f"intervened_{self.intervened_column}": new_inter,
+                    }
+                )
+            ctr = df[self.intervened_column].replace("", np.nan).astype(float)
             custom_effect = []
             for index_lab in range(len(df)):
                 curr_CME = self.causal_model.const_marginal_effect(
@@ -48,7 +79,6 @@ class AAITabularModel(AAIModel):
                 custom_effect.append(curr_CME)
             CME = np.array(custom_effect).squeeze()
             # New Outcome
-            new_out = [None for _ in range(len(df))]
             if f"intervened_{self.intervened_column}" in df:
                 ntr = (
                     df[f"intervened_{self.intervened_column}"]
@@ -57,7 +87,6 @@ class AAITabularModel(AAIModel):
                 )
                 new_out = (ntr - ctr) * CME + cta
             # New Intervention
-            new_inter = [None for _ in range(len(df))]
             if f"expected_{self.predictor.label}" in df:
                 nta = (
                     df[f"expected_{self.predictor.label}"]
@@ -72,4 +101,6 @@ class AAITabularModel(AAIModel):
                 }
             )
         else:
-            raise Exception()
+            raise Exception(
+                "Intervention is trying to be used on a AAIModel without a causal model"
+            )
