@@ -796,11 +796,11 @@ class AAIRegressionTask(AAITask):
             )
             if intervention_task_result["status"] == "SUCCESS":
                 causal_model = intervention_task_result["causal_model"]
+                discrete_treatment = intervention_task_result["discrete_treatment"]
                 current_intervention_column = intervention_run_params[
                     "current_intervention_column"
                 ]
                 common_causes = intervention_run_params["common_causes"]
-                discrete_treatment = intervention_run_params["discrete_treatment"]
             else:
                 validations.append(
                     {
