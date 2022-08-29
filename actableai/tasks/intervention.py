@@ -264,6 +264,7 @@ class AAIInterventionTask(AAITask):
                 "data": {},
                 "runtime": time.time() - start,
                 "causal_model": causal_model,
+                "discrete_treatment": current_intervention_column in cat_cols,
             }
 
         effects = causal_model.effect(
