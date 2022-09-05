@@ -66,9 +66,9 @@
 
 **actableai-lib** is a Python module for automated Machine Learning and Analytics. It offers a wide range of *tasks* that automatically infer statistics or results based on your Data.
 
-This repository is a library used for our main app [app.actable.ai](https://app.actable.ai) where you can run every analytics and inferences without any knowledge about code or statistics.
+This repository is a library used for our main app [app.actable.ai](https://app.actable.ai) where you can run every analytics and inferences without coding.
 
-This project started in 2020 and is maintained by [Actable](https://www.linkedin.com/company/actable-ai/mycompany/) and any volunteers who wants to participate in this open source project.
+This project is started and maintained by [Actable](https://actable.ai). Any volunteers who wants to participate in this open source project.
 
 ### Built With
 
