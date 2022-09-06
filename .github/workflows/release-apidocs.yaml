@@ -5,12 +5,6 @@ on:
     branches:
       - master
 
-env:
-  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
-  GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
-  GKE_ZONE: ${{ secrets.GKE_ZONE }}
-  IMAGE: actableai/actableai-api-docs
-
 jobs:
   build:
     runs-on: [docker-hosted]
@@ -28,67 +22,64 @@ jobs:
           ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
           submodules: recursive
 
-      # Setup gcloud CLI
-      - uses: google-github-actions/setup-gcloud@v0
+      - name: Install Azure cli
+        run: |
+          sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg -y
+          curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+          AZ_REPO=$(lsb_release -cs)
+          echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+          sudo apt-get update -y
+          sudo apt-get install azure-cli -y
+
+      - name: Azure login
+        id: login
+        uses: azure/login@v1.4.3
         with:
-          version: '290.0.1'
-          service_account_key: ${{ secrets.GKE_SA }}
-          project_id: ${{ secrets.GKE_PROJECT }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Configure Docker to use the gcloud command-line tool as a credential
-      # helper for authentication
-      - run: |-
-          gcloud auth configure-docker europe-west2-docker.pkg.dev
+      - name: Get the version
+        id: get_version
+        run: echo "::set-output name=tag::$(echo ${GITHUB_SHA} | cut -c1-8)"
 
-      - name: Build and Push API docs image
+      - name: 'Build and Push Image to ACR'
+        uses: azure/docker-login@v1
         env:
-          IMAGE: actableai/actableai-api-docs
-        run: |-
-          docker build \
-          --tag "europe-west2-docker.pkg.dev/$PROJECT_ID/$IMAGE:$GITHUB_SHA" -f docs.Dockerfile .
-          docker push "europe-west2-docker.pkg.dev/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
-
-  deploy:
-    name: Deploy
-    runs-on: docker-hosted
-    needs: build
-    env:
-      NAMESPACE: prod
-    steps:
-      - name: cleanup #https://github.com/actions/checkout/issues/211
-        run: |
-          sudo chown -R runner:runner $GITHUB_WORKSPACE
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      # Setup gcloud CLI
-      - uses: google-github-actions/setup-gcloud@v0
+          TAG: ${{ steps.get_version.outputs.tag }}
         with:
-          version: '290.0.1'
-          service_account_key: ${{ secrets.GKE_SA }}
-          project_id: ${{ secrets.GKE_PROJECT }}
+          login-server: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
+          password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
 
-      # Configure Docker to use the gcloud command-line tool as a credential
-      # helper for authentication
-      - run: |-
-          gcloud auth configure-docker europe-west2-docker.pkg.dev
-      # Get the GKE credentials so we can deploy to the cluster
-      - run: |-
-          gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
-      - name: Setup git-secret
-        id: setup-gitsecret
-        run: |
-          git secret reveal -f
-
-      - name: Deploy API docs
+      - name: Build and Publish image
         env:
-          HELM_WORKSPACE: ${{ github.workspace }}/deploy/charts
-          HELM_RELEASE_NAME: actableai-api-docs
-          HELM_CHART_NAME: actableai-api-docs
+          TAG: ${{ steps.get_version.outputs.tag }}
         run: |
-          cd $HELM_WORKSPACE
-          helm upgrade --install $HELM_RELEASE_NAME $HELM_CHART_NAME \
-          --namespace ${{ env.NAMESPACE }} \
-          --values $HELM_CHART_NAME/${{ env.NAMESPACE }}.yaml \
-          --set image.repository="europe-west2-docker.pkg.dev/$PROJECT_ID/$IMAGE" \
-          --set image.tag="$GITHUB_SHA"
+          docker build -t ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/actableai-lib-docs:${{ env.TAG }}  -f docs.Dockerfile .
+          docker push ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/actableai-lib-docs:${{ env.TAG }}
+
+      - name: Checkout GitOps repo
+        uses: actions/checkout@master
+        with:
+          repository: Actable-AI/helmcharts
+          token: ${{ secrets.GH_TOKEN }}
+          path: ./gitops
+
+      - name: Bump version
+        env:
+          NEW_TAG: ${{ steps.get_version.outputs.tag }}
+          HELM_PATH: "actableai-lib-docs"
+          ENV: "prod"
+        run: |
+          oldTag=$(cat ./gitops/$HELM_PATH/$ENV.yaml | grep tag: | awk -F':' 'END {print $2}' | tr -d '" ')
+          sed -i "/^.*image/,+3s/$oldTag/$NEW_TAG/g" ./gitops/$HELM_PATH/$ENV.yaml
+
+      - name: Commit and push changes
+        env:
+          TAG: ${{ steps.get_version.outputs.tag }}
+        run: |
+          cd ./gitops
+          git add .
+          git config user.name github-action
+          git config user.email gh-action@actable.ai
+          git commit --allow-empty -m "ci: bump version $TAG"
+          git push
