@@ -27,32 +27,29 @@ class AAIAssociationRulesTask(AAITask):
             df: Input dataframe.
             group_by: List of columns to group by. (e.g. order_id or customer_id)
             items: Column name of items. (e.g. product_id or product_name)
-            frequent_method: Frequent method to use. Available options are ["fpgrowth",
-                "fpmax", "apriori"]. Defaults to "fpgrowth".
+            frequent_method: Frequent method to use. Available options
+                are ["fpgrowth", "fpmax", "apriori"]
             min_support: Minimum support threshold for itemsets generation.
-                Defaults to 0.5.
             association_metric: Association metric used for association rules
-                generation. Available options are ["support", "confidence", "lift",
-                "leverage", "conviction"]. Defaults to "confidence".
+                generation. Available options are
+                ["support", "confidence", "lift", "leverage", "conviction"]
             min_association_metric: Minimum value for significance of association.
-                Defaults to 0.5.
             graph_top_k: Maximum number of nodes to display on association graph.
-                Defaults to 10.
 
         Examples:
             >>> import pandas as pd
             >>> from actableai import AssociationRulesTask
             >>> df = pd.read_csv("path/to/data.csv")
             >>> result = AssociationRulesTask().run(
-            >>>     df,
-            >>>     group_by=["order_id", "customer_id"],
-            >>>     items="product_id",
-            >>> )
+            ...     df,
+            ...     group_by=["order_id", "customer_id"],
+            ...     items="product_id",
+            ... )
             >>> result["association_rules"]
 
         Returns:
             Dict: Dictionnary containing the results of the task.
-                - "status": "SUCCESS" or "FAILURE" based on the success of the task.
+                - "status": "SUCCESS" if the task successfully ran else "FAILURE"
                 - "data": Dictionnary containing the data of the task.
                     - "rules": List of association rules.
                     - "frequent_itemset": Frequent itemsets.
@@ -61,7 +58,8 @@ class AAIAssociationRulesTask(AAITask):
                     - "association_metric": Association metric used for association
                         rules generation.
                     - "association_rules_chord": Association rules chord diagram.
-                - "validations": List of validations.
+                - "validations": List of validations on the data, 
+                    non-empty if the data presents a problem for the task
                 - "runtime": Time taken to run the task.
         """
 

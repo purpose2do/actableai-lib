@@ -40,29 +40,46 @@ class AAIClusteringTask(AAITask):
             features: Features used in Input DataFrame. Defaults to None.
             num_clusters: Number of different clusters assignable to each row.
                 "auto" automatically finds the optimal number of clusters.
-                Defaults to "auto".
+            drop_low_info: Wether the algorithm drops columns with only one unique
+                value or only different categorical values accross all rows.
             explain_samples: If the result contains a human readable explanation of
-                the clustering. Defaults to False.
+                the clustering.
             auto_num_clusters_min: Minimum number of clusters when num_clusters is
-                _auto_. Defaults to 2.
+                _auto_.
             auto_num_clusters_max: Maximum number of clusters when num_clusters is
-                _auto_. Defaults to 20.
-            init: ?. Defaults to "glorot_uniform".
+                _auto_.
+            init: Initialization for weights of the DEC model.
             pretrain_optimizer: Optimizer for pretaining phase of autoencoder.
-                Defaults to "adam".
             update_interval: The interval to check the stopping criterion and update the
-                cluster centers. Default to 140.
-            pretrain_epochs: Number of epochs for pretraining DEC. Defaults to 300.
+                cluster centers.
+            pretrain_epochs: Number of epochs for pretraining DEC.
             alpha_k: The factor to control the penalty term of the number of clusters.
-                Default to 0.01.
             max_train_samples: Number of randomly selected rows to train the DEC.
 
         Examples:
             >>> df = pd.read_csv("path/to/dataframe")
-            >>> AAIClusteringTask().run(df, ["feature1", "feature2", "feature3"])
+            >>> result = AAIClusteringTask().run(
+            ...     df, 
+            ...     ["feature1", "feature2", "feature3"]
+            ... )
+            >>> result
 
         Returns:
-            Dict: Dictionnary of results
+            Dict: Dictionnary containing the result
+                - "status": "SUCCESS" if the task successfully ran else "FAILURE"
+                - "messenger": Message returned with the task
+                - "data": Dictionary containing the data for the clustering task
+                    - "cluster_id": ID of the generated cluster
+                    - "explanation": Explanation for the points for this cluster
+                    - "encoded_value": Encoded value for centroid for this cluster
+                    - "projected_value": Projected centroid for this cluster
+                    - "projected_nearest_point": Nearest point for the centroid
+                - "data_v2": Updated dictionary containing the data for the clustering task
+                    - "clusters": Same dictionary as data
+                    - "shap_values": Shapley values for clustering
+                - "runtime": Time taken to run the task
+                - "validations": List of validations on the data, 
+                    non-empty if the data presents a problem for the task
         """
         import tensorflow as tf
 

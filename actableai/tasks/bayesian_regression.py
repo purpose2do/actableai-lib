@@ -27,28 +27,29 @@ class AAIBayesianRegressionTask(AAITask):
         Args:
             df: DataFrame containing the features and target. Additional columns are
                 ignored.
-            features: List of features/columns for the Bayesian Regression
+            features: List of features/columns to use for the Bayesian Regression
             target: Target column for the Bayesian Regression
-            priors: Prior probabilty distribution of features. Defaults to None.
+            priors: Prior probabilty distribution of features.
             prediction_quantile_low: Quantile for lowest point on prediction.
-                Defaults to 5.
-            prediction_quantile_high: Quantile for lowest point on
-                prediction. Defaults to 95.
+            prediction_quantile_high: Quantile for lowest point on prediction.
             trials: Number of trials for tuning, best model is used for prediction.
-                Defaults to 1.
             polynomial_degree: Value for generating maximum polynomial features and
                 cross-intersection features, higher values means better results but
-                cost more in memory. Defaults to 1.
+                uses more memory.
             validation_split: Percentage of the data used for validation.
-                Defaults to 20.
-            pdf_steps: Number of steps for probabilty density function. Defaults to 100.
-            predict_steps: Number of predicted values. Defaults to 100.
+            pdf_steps: Number of steps for probabilty density function.
+            predict_steps: Number of predicted values.
             normalize: If the generated features should be normalized, usefull for
-                big polymonial degree. Defaults to False.
+                big polymonial degrees.
 
         Examples:
             >>> df = pd.read_csv("path/to/dataframe")
-            >>> AAIBayesianRegressionTask(df, ["feature1", "feature2", "feature3"], "target")
+            >>> result = AAIBayesianRegressionTask(
+            ...     df,
+            ...     ["feature1", "feature2", "feature3"],
+            ...     "target"
+            >>> )
+            >>> result
 
         Raises:
             ValueError: Categorical exponents are not raised to any exponents.
@@ -56,7 +57,25 @@ class AAIBayesianRegressionTask(AAITask):
                 categorical feature.
 
         Returns:
-            Dictionnary of results
+            Dict: Dictionnary containing the results of the task.
+                - "status": "SUCCESS" if the task successfully ran else "FAILURE"
+                - "messenger": Message returned with the task
+                - "data": Dictionnary containing the data of the task
+                    - "rules": List of association rules
+                    - "frequent_itemset": Frequent itemsets
+                    - "df_list": List of associated items for each group_by
+                    - "graph": Association graph in dot format
+                    - "association_metric": Association metric used for association
+                        rules generation
+                    - "association_rules_chord": Association rules chord diagram
+                    - "coeffs": Coefficients of the Regression model,
+                    - "intercept": Intercept of the Regression model,
+                    - "sigma": Sigmas of the re Regression model,
+                    - "best_config": Best usable model,
+                    - "evaluation": r2 and MSE metrics of the trained model
+                - "validations": List of validations on the data, 
+                    non-empty if the data presents a problem for the task
+                - "runtime": Time taken to run the task
         """
         import time
         import numpy as np

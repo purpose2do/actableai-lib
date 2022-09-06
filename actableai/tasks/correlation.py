@@ -51,10 +51,22 @@ class AAICorrelationTask(AAITask):
 
         Examples:
             >>> df = pd.read_csv("path/to/dataframe")
-            >>> AAICorrelationTask().run(df, ["feature1", "feature2", "feature3"], "target")
+            >>> result = AAICorrelationTask().run(
+            ...     df,
+            ...     ["feature1", "feature2", "feature3"],
+            ...     "target"
+            ... )
 
         Returns:
-            Dict: Dictionnary of results
+            Dict: Dictionnary containing the results
+                - "status": "SUCCESS" if the task successfully ran else "FAILURE"
+                - "messenger": Message returned with the task
+                - "data": Dictionary containing the data for the clustering task
+                    - "corrs": Correlation values for each feature
+                    - "charts": Dictionnary containing the charts for correlations
+                - "runtime": Time taken to run the task
+                - "validations": List of validations on the data,
+                    non-empty if the data presents a problem for the task
         """
         import logging
         import time

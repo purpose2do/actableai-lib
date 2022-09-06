@@ -35,23 +35,27 @@ class AAIInterventionTask(AAITask):
         Args:
             df: Input DataFrame
             target: Column name of target variable
-            current_intervention_column: Column name of the current intervention.
-            new_intervention_column: Column name of the new intervention.
-            common_causes: List of common causes to be used for the intervention.
-            causal_cv: Number of folds for causal cross validation.
-            causal_hyperparameters: Hyperparameters for AutoGluon.
+            current_intervention_column: Column name of the current intervention
+            new_intervention_column: Column name of the new intervention
+            common_causes: List of common causes to be used for the intervention
+            causal_cv: Number of folds for causal cross validation
+            causal_hyperparameters: Hyperparameters for AutoGluon
                 See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
+            cate_alpha: Alpha for intervention effect
             presets: Presets for AutoGluon.
                 See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
-            cate_alpha: Alpha for intervention effect.
             model_directory: Model directory
-            num_gpus: Number of GPUs used by causal models.
+            num_gpus: Number of GPUs used by causal models
+            drop_unique: Whether the classification algorithm drops columns that
+                only have a unique value accross all rows at fit time
+            drop_useless_features: Whether the classification algorithm drops columns that
+                only have a unique value accross all rows at preprocessing time
 
         Examples:
             >>> import pandas as pd
             >>> from actableai import AAIInterventionTask
             >>> df = pd.read_csv("path/to/csv")
-            >>> result = AAIRegressionTask().run(
+            >>> result = AAIInterventionTask().run(
             ...     df,
             ...     'target_column',
             ... )
@@ -61,7 +65,7 @@ class AAIInterventionTask(AAITask):
                 - status: Status of the task
                 - messenger: Message of the task
                 - validations: Validations for the tasks parameters
-                - data: Dictionnay containing the following keys:
+                - data: Dictionnary containing the following keys:
                     - df: DataFrame with the intervention
                     - causal_graph_dot: Causal graph in dot format
                     - T_res: Residuals of the treatment
