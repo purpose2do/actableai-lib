@@ -4,13 +4,6 @@ on:
   push:
     branches:
       - master
-      - fix/change-docker-repo
-
-env:
-  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
-  GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
-  GKE_ZONE: ${{ secrets.GKE_ZONE }}
-  IMAGE: actableai/actableai-api-docs
 
 jobs:
   build:
