@@ -52,13 +52,14 @@ jobs:
         uses: azure/docker-login@v1
         env:
           TAG: ${{ steps.get_version.outputs.tag }}
+          DOCKER_REPO: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}
         with:
           login-server: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}
           username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
           password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
       - run: |
-          docker build -t "${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/actableai-lib-docs:$TAG" -f docs.Dockerfile .
-          docker push "${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/actableai-lib-docs:$TAG"
+          docker build -t "$DOCKER_REPO/actableai-lib-docs:$TAG" -f docs.Dockerfile .
+          docker push "$DOCKER_REPO/actableai-lib-docs:$TAG"
 
       - name: Checkout GitOps repo
         uses: actions/checkout@master
