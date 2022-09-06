@@ -15,6 +15,8 @@ CORRELATION_MINIMUM_NUMBER_OF_SAMPLE = 3
 
 
 class CheckLevels:
+    """Class holding the check levels for data validation"""
+
     CRITICAL = "CRITICAL"
     WARNING = "WARNING"
 
@@ -46,6 +48,8 @@ class CheckResult:
 
 
 class IChecker(metaclass=abc.ABCMeta):
+    """Abstract class for Checker"""
+
     def __init__(self, name: str):
         self.name = name
 

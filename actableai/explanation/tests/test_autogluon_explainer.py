@@ -34,16 +34,14 @@ class TestAutoGluonTreeExplainer:
         )
 
         predictor = TabularPredictor(
-            label=f"target_{problem_type}",
-            path=tmp_path,
-            problem_type=problem_type
+            label=f"target_{problem_type}", path=tmp_path, problem_type=problem_type
         )
 
         try:
             predictor = predictor.fit(
                 train_data=df,
                 presets="medium_quality_faster_train",
-                hyperparameters=hyperparameters
+                hyperparameters=hyperparameters,
             )
         except ValueError:
             return

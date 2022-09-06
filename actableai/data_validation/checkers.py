@@ -870,13 +870,14 @@ class TimeSeriesTuningMetricChecker(IChecker):
             "ND",
             "mean_absolute_QuantileLoss",
             "mean_wQuantileLoss",
-            "MAE_Coverage"
+            "MAE_Coverage",
         ]
 
         if tuning_metric not in possible_metrics:
             return CheckResult(
                 name=self.name, level=self.level, message="Invalid tuning_metric"
             )
+
 
 class MaxTrainSamplesChecker(IChecker):
     def __init__(self, level, name="MaxTrainSamplesChecker"):
