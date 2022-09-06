@@ -51,5 +51,5 @@ jobs:
           username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
           password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
       - run: |
-          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/actableai-api-docs:${{ github.sha }} -f docs.Dockerfile .
-          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/actableai-api-docs:${{ github.sha }}
+          docker build -t ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/actableai-api-docs:${{ github.sha }} -f docs.Dockerfile .
+          docker push ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/actableai-api-docs:${{ github.sha }}
