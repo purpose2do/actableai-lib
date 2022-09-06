@@ -14,7 +14,7 @@
   <p align="center">
     Advanced Analyitcs and Data Science made easy
     <br />
-    <a href="https://app.actable.ai/api-docs/genindex.html" target="_blank"><strong>Explore the docs »</strong></a>
+    <a href="https://lib.actable.ai" target="_blank"><strong>Explore the docs</strong></a>
     <br />
     <br />
     <a href="https://app.actable.ai/superset/explore/?form_data=%7B%22datasource%22%3A%2228506__table%22%2C%22viz_type%22%3A%22plotly_correlation%22%2C%22slice_id%22%3A623%2C%22url_params%22%3A%7B%7D%2C%22time_range_endpoints%22%3A%5B%22inclusive%22%2C%22exclusive%22%5D%2C%22adhoc_filters%22%3A%5B%5D%2C%22correlation_target%22%3A%22two_year_recid%22%2C%22columns_name%22%3A%5B%22compas_screening_date%22%2C%22sex%22%2C%22dob%22%2C%22age%22%2C%22age_cat%22%2C%22race%22%2C%22juv_fel_count%22%2C%22juv_misd_count%22%2C%22juv_other_count%22%2C%22priors_count%22%2C%22days_b_screening_arrest%22%2C%22c_jail_in%22%2C%22c_jail_out%22%2C%22c_case_number%22%2C%22c_offense_date%22%2C%22c_arrest_date%22%2C%22c_days_from_compas%22%2C%22c_charge_degree%22%2C%22c_charge_desc%22%2C%22r_days_from_arrest%22%2C%22r_offense_date%22%2C%22r_charge_desc%22%2C%22r_jail_in%22%2C%22r_jail_out%22%2C%22violent_recid%22%2C%22is_violent_recid%22%2C%22vr_case_number%22%2C%22vr_charge_degree%22%2C%22vr_offense_date%22%2C%22vr_charge_desc%22%2C%22type_of_assessment%22%2C%22screening_date%22%2C%22in_custody%22%2C%22out_custody%22%2C%22start%22%2C%22end%22%2C%22event%22%5D%2C%22correlation_control%22%3A%5B%5D%2C%22number_factors%22%3A20%2C%22show_bar_value%22%3Afalse%2C%22taskId%22%3A%22f1e3c2e7-b093-460f-9801-d69c98dbcd54%22%2C%22sql%22%3Anull%2C%22databaseName%22%3A%22actableai%22%7D" target="_blank">View Demo</a>
@@ -64,11 +64,11 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-**actableai-lib** is a Python module for automated Machine Learning and Analytics. It offers a wide range of *tasks* that automatically infer statistics or results based on your Data.
+**actableai-lib** is a Python module for automated Machine Learning and Analytics. It offers a wide range of *tasks* that automatically infer statistics or results based on your data.
 
 This repository is a library used for our main app [app.actable.ai](https://app.actable.ai) where you can run every analytics and inferences without coding.
 
-This project is started and maintained by [Actable](https://actable.ai). Any volunteers who wants to participate in this open source project.
+This project is started and maintained by [Actable AI](https://actable.ai).
 
 ### Built With
 
@@ -76,13 +76,6 @@ This project is started and maintained by [Actable](https://actable.ai). Any vol
 * [Ray](https://docs.ray.io/)
 * [Sklearn](https://scikit-learn.org/)
 * [Pandas](https://pandas.pydata.org//)
-
-
-<!-- GETTING STARTED -->
-## Getting Started
-
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
 
 ### Environment
 
@@ -94,27 +87,25 @@ To get a local copy up and running follow these simple example steps.
 
 - You need to have [python 3.7](https://www.python.org/downloads/release/python-370) installed with [pip](https://pip.pypa.io/en/stable/)
 - You need to have [R](https://www.r-project.org/) installed
+- If you are using the gpu version, you need CUDA 11.0 installed for mxnet
 
 ### Installation
 
-- Install from PyPI : *Coming Soon*
+- Option 1 - Install from PyPI : *Coming Soon*
 
 ```sh
 pip install actableai-lib
 ```
 
-- Install from source :
+- Option 2 - Install from source :
 
 ```sh
 git clone git@github.com:Actable-AI/actableai-lib.git --recursive
 cd actableai-lib
-pip install -r requirements.txt
-pip install .
+pip install -r requirements-gpu.txt
+pip install --no-deps .
 ```
-  
-Note :
-  
-To contribute, when installing from source, run `pip install -e .` instead of `pip install .` to enable pip's developer mode.
+To contribute, when installing from source, run `pip install --no-deps -e .` instead of `pip install --no-deps .` to enable pip's developer mode.
 
 <!-- USAGE EXAMPLES -->
 ## Usage
@@ -122,10 +113,10 @@ To contribute, when installing from source, run `pip install -e .` instead of `p
 - Running a Classification :
 ```python
 import pandas as pd
-from actableai.tasks.classification import AAIClassificationTask
+from actableai import AAIClassificationTask
 
 df = pd.read_csv("path/to/dataframe.csv")
-result = AAIClassificationTask(
+result = AAIClassificationTask(use_ray=False).run(
   df,
   target='target_column'
 )
@@ -133,23 +124,25 @@ result = AAIClassificationTask(
 - Running a Correlation Analysis :
 ```python
 import pandas as pd
-from actableai.tasks.regression import AAICorrelationTask
+from actableai import AAICorrelationTask
 
 df = pd.read_csv("path/to/dataframe.csv")
-result = AAICorrelationTask(
+result = AAICorrelationTask(use_ray=False).run(
   df,
   target='target_column'
 )
 ```
-_For more examples, please refer to the [Documentation](https://app.actable.ai/api-docs/)_
+_For more examples, please refer to the [Documentation](https://lib.actable.ai)_
 
 <!-- ROADMAP -->
 ## Roadmap
 
 - [ ] Add Changelog
-- [ ] Add LICENSE
+- [X] Add LICENSE
 - [ ] Add PyPI installer
 - [ ] Check Installation against Windows
+- [ ] Survival Analysis
+- [ ] Multi Armed Bandit
 
 See the [open issues](https://github.com/Actable-AI/actableai-lib/issues) for a full list of proposed features (and known issues).
 
@@ -161,15 +154,17 @@ Contributions are what make the open source community such an amazing place to l
 If you have a suggestion that would make this better, please create a pull request. You can also simply open an issue with the tag "enhancement".
 Don't forget to give the project a star! Thanks again!
 
-1. Create an Issue with bug or feature label
-2. Install our git hooks by running locally :
+To contribute to the code base, after cloning :
+1. Install our git hooks by running locally :
 ```sh
-scripts/setup_hooks.sh
+./scripts/setup_hooks.sh
 ```
-3. Create your Feature/BugFix Branch (`git checkout -b feature/AmazingFeature`)
-4. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-5. Push to the Branch (`git push origin feature/AmazingFeature`)
-6. Open a Pull Request
+2. Create your Feature/BugFix Branch: `git checkout -b feature/AmazingFeature`
+3. Commit your Changes: `git commit -m 'Add some AmazingFeature'`
+4. Push to the Branch: `git push origin feature/AmazingFeature`
+5. Open a Pull Request
+
+Your pull request will be reviewed asap by an Actable AI maintainer.
 
 <!-- LICENSE -->
 ## License
@@ -189,9 +184,6 @@ For any question about the ML Library feel free to send us a message :
 - trung@actable.ai
 - axeng@actable.ai
 - mehdib@actable.ai
-
-
-
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
