@@ -78,7 +78,7 @@ jobs:
           ENV: "prod"
         run: |
           oldTag=$(cat ./gitops/$HELM_PATH/$ENV.yaml | grep tag: | awk -F':' 'END {print $2}' | tr -d '"')
-          sed -i "/^.*image/,+3s/$oldTag/$NEW_TAG/g" ./gitops/HELM_PATH/$ENV.yaml
+          sed -i "/^.*image/,+3s/$oldTag/$NEW_TAG/g" ./gitops/$HELM_PATH/$ENV.yaml
 
       - name: Commit and push changes
         env:
