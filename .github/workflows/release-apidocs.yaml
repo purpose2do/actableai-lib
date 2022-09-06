@@ -44,12 +44,45 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Get the version
+        id: get_version
+        run: echo "::set-output name=tag::$(echo ${GITHUB_SHA} | cut -c1-8)"
+
       - name: 'Build and Push Image to ACR'
         uses: azure/docker-login@v1
+        env:
+          TAG: ${{ steps.get_version.outputs.tag }}
         with:
           login-server: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}
           username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
           password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
       - run: |
-          docker build -t ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/actableai-api-docs:${{ github.sha }} -f docs.Dockerfile .
-          docker push ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/actableai-api-docs:${{ github.sha }}
+          docker build -t ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/actableai-lib-docs:$TAG -f docs.Dockerfile .
+          docker push ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/actableai-lib-docs:$TAG
+
+      - name: Checkout GitOps repo
+        uses: actions/checkout@master
+        with:
+          repository: Actable-AI/helmcharts
+          token: ${{ secrets.GH_TOKEN }}
+          path: ./gitops
+
+      - name: Bump version
+        env:
+          NEW_TAG: ${{ steps.get_version.outputs.tag }}
+          HELM_PATH: "actableai-lib-docs"
+          ENV: "prod"
+        run: |
+          oldTag=$(cat ./gitops/$HELM_PATH/$ENV.yaml | grep tag: | awk -F':' 'END {print $2}' | tr -d '"')
+          sed -i "/^.*image/,+3s/$oldTag/$NEW_TAG/g" ./gitops/HELM_PATH/$ENV.yaml
+
+      - name: Commit and push changes
+        env:
+          TAG: ${{ steps.get_version.outputs.tag }}
+        run: |
+          cd ./gitops
+          git add .
+          git config user.name github-action
+          git config user.email gh-action@actable.ai
+          git commit -am "ci: bump version $TAG"
+          git push
