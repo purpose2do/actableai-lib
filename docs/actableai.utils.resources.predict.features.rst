@@ -4,6 +4,14 @@ actableai.utils.resources.predict.features package
 Submodules
 ----------
 
+actableai.utils.resources.predict.features.association\_rules module
+--------------------------------------------------------------------
+
+.. automodule:: actableai.utils.resources.predict.features.association_rules
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 actableai.utils.resources.predict.features.base module
 ------------------------------------------------------
 

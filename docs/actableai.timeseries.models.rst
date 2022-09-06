@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   actableai.timeseries.models.custom
    actableai.timeseries.models.params
    actableai.timeseries.models.tests
 
@@ -25,6 +26,14 @@ actableai.timeseries.models.estimator module
 --------------------------------------------
 
 .. automodule:: actableai.timeseries.models.estimator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+actableai.timeseries.models.evaluator module
+--------------------------------------------
+
+.. automodule:: actableai.timeseries.models.evaluator
    :members:
    :undoc-members:
    :show-inheritance:

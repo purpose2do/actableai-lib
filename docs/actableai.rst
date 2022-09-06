@@ -11,10 +11,14 @@ Subpackages
    actableai.causal
    actableai.classification
    actableai.clustering
+   actableai.correlation
    actableai.data_imputation
    actableai.data_validation
    actableai.debiasing
+   actableai.exceptions
    actableai.explanation
+   actableai.models
+   actableai.parameters
    actableai.regression
    actableai.sentiment
    actableai.stats

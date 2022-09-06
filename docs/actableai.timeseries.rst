@@ -9,14 +9,23 @@ Subpackages
 
    actableai.timeseries.models
    actableai.timeseries.tests
+   actableai.timeseries.transform
 
 Submodules
 ----------
 
-actableai.timeseries.exceptions module
---------------------------------------
+actableai.timeseries.dataset module
+-----------------------------------
 
-.. automodule:: actableai.timeseries.exceptions
+.. automodule:: actableai.timeseries.dataset
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+actableai.timeseries.forecast module
+------------------------------------
+
+.. automodule:: actableai.timeseries.forecast
    :members:
    :undoc-members:
    :show-inheritance:
