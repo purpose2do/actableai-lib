@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - fix/change-docker-repo
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
@@ -28,67 +29,27 @@ jobs:
           ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
           submodules: recursive
 
-      # Setup gcloud CLI
-      - uses: google-github-actions/setup-gcloud@v0
+      - name: Install Azure cli
+        run: |
+          sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg -y
+          curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+          AZ_REPO=$(lsb_release -cs)
+          echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+          sudo apt-get update -y
+          sudo apt-get install azure-cli -y
+
+      - name: Azure login
+        id: login
+        uses: azure/login@v1.4.3
         with:
-          version: '290.0.1'
-          service_account_key: ${{ secrets.GKE_SA }}
-          project_id: ${{ secrets.GKE_PROJECT }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Configure Docker to use the gcloud command-line tool as a credential
-      # helper for authentication
-      - run: |-
-          gcloud auth configure-docker europe-west2-docker.pkg.dev
-
-      - name: Build and Push API docs image
-        env:
-          IMAGE: actableai/actableai-api-docs
-        run: |-
-          docker build \
-          --tag "europe-west2-docker.pkg.dev/$PROJECT_ID/$IMAGE:$GITHUB_SHA" -f docs.Dockerfile .
-          docker push "europe-west2-docker.pkg.dev/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
-
-  deploy:
-    name: Deploy
-    runs-on: docker-hosted
-    needs: build
-    env:
-      NAMESPACE: prod
-    steps:
-      - name: cleanup #https://github.com/actions/checkout/issues/211
-        run: |
-          sudo chown -R runner:runner $GITHUB_WORKSPACE
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      # Setup gcloud CLI
-      - uses: google-github-actions/setup-gcloud@v0
+      - name: 'Build and Push Image to ACR'
+        uses: azure/docker-login@v1
         with:
-          version: '290.0.1'
-          service_account_key: ${{ secrets.GKE_SA }}
-          project_id: ${{ secrets.GKE_PROJECT }}
-
-      # Configure Docker to use the gcloud command-line tool as a credential
-      # helper for authentication
-      - run: |-
-          gcloud auth configure-docker europe-west2-docker.pkg.dev
-      # Get the GKE credentials so we can deploy to the cluster
-      - run: |-
-          gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
-      - name: Setup git-secret
-        id: setup-gitsecret
-        run: |
-          git secret reveal -f
-
-      - name: Deploy API docs
-        env:
-          HELM_WORKSPACE: ${{ github.workspace }}/deploy/charts
-          HELM_RELEASE_NAME: actableai-api-docs
-          HELM_CHART_NAME: actableai-api-docs
-        run: |
-          cd $HELM_WORKSPACE
-          helm upgrade --install $HELM_RELEASE_NAME $HELM_CHART_NAME \
-          --namespace ${{ env.NAMESPACE }} \
-          --values $HELM_CHART_NAME/${{ env.NAMESPACE }}.yaml \
-          --set image.repository="europe-west2-docker.pkg.dev/$PROJECT_ID/$IMAGE" \
-          --set image.tag="$GITHUB_SHA"
+          login-server: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
+          password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
+      - run: |
+          docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/actableai-api-docs:${{ github.sha }}
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/actableai-api-docs:${{ github.sha }}
