@@ -142,7 +142,7 @@ _For more examples, please refer to the [Documentation](https://lib.actable.ai)_
 
 - [ ] Add Changelog
 - [X] Add LICENSE
-- [ ] Add PyPI installer
+- [X] Add PyPI installer
 - [ ] Check Installation against Windows
 - [ ] Survival Analysis
 - [ ] Multi Armed Bandit
