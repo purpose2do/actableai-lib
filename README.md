@@ -9,7 +9,7 @@
 <br />
 <div align="center">
   <a href="https://actable.ai" target="_blank">
-    <img src="images/logo.png" alt="Logo">
+    <img src="https://docs.actable.ai/_images/logo.png" alt="Logo">
 
   <p align="center">
     Advanced Analyitcs and Data Science made easy
