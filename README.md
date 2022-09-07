@@ -87,14 +87,16 @@ This project is started and maintained by [Actable AI](https://actable.ai).
 
 - You need to have [python 3.7](https://www.python.org/downloads/release/python-370) installed with [pip](https://pip.pypa.io/en/stable/)
 - You need to have [R](https://www.r-project.org/) installed
+- You need to have multi_rake installed in your python env :
+One way to do so is `pip install git+https://github.com/Actable-AI/multi_rake@master#egg=multi_rake`
 - If you are using the gpu version, you need CUDA 11.0 installed for mxnet
 
 ### Installation
 
-- Option 1 - Install from PyPI : *Coming Soon*
+- Option 1 - Install from PyPI :
 
 ```sh
-pip install actableai-lib
+pip install actableai-lib[gpu]
 ```
 
 - Option 2 - Install from source :
@@ -102,10 +104,11 @@ pip install actableai-lib
 ```sh
 git clone git@github.com:Actable-AI/actableai-lib.git --recursive
 cd actableai-lib
-pip install -r requirements-gpu.txt
-pip install --no-deps .
+pip install .[gpu]
 ```
-To contribute, when installing from source, run `pip install --no-deps -e .` instead of `pip install --no-deps .` to enable pip's developer mode.
+To contribute to the repo, when installing from source, run `pip install -e .[gpu,dev]` instead of `pip install .[gpu]` to enable pip's developer mode.
+
+You can also replace `[gpu]` with `[cpu]` to use the cpu only version.
 
 <!-- USAGE EXAMPLES -->
 ## Usage
@@ -116,7 +119,7 @@ import pandas as pd
 from actableai import AAIClassificationTask
 
 df = pd.read_csv("path/to/dataframe.csv")
-result = AAIClassificationTask(use_ray=False).run(
+result = AAIClassificationTask().run(
   df,
   target='target_column'
 )
@@ -127,7 +130,7 @@ import pandas as pd
 from actableai import AAICorrelationTask
 
 df = pd.read_csv("path/to/dataframe.csv")
-result = AAICorrelationTask(use_ray=False).run(
+result = AAICorrelationTask().run(
   df,
   target='target_column'
 )
