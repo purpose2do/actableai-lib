@@ -135,7 +135,7 @@ result = AAICorrelationTask().run(
   target='target_column'
 )
 ```
-_For more examples, please refer to the [Documentation](https://lib.actable.ai)_
+_For detailed examples and common use cases, please refer to the [Documentation](https://lib.actable.ai)_
 
 <!-- ROADMAP -->
 ## Roadmap
