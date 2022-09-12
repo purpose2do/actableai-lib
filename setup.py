@@ -2,6 +2,7 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.develop import develop
 from setuptools.command.egg_info import egg_info
+import logging
 
 
 def post_install():
@@ -12,7 +13,7 @@ def post_install():
         nltk.download("punkt")
         nltk.download("averaged_perceptron_tagger")
     except ModuleNotFoundError as e:
-        print(e)
+        logging.exception(e)
 
 
 class CustomInstallCommand(install):
