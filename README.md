@@ -81,7 +81,6 @@ This project is started and maintained by [Actable AI](https://actable.ai).
 
 - [X] [Ubuntu>18.04](https://wiki.ubuntu.com/Releases)
 - [X] MacOS
-- [ ] Windows *Coming Soon*
 
 ### Prerequisites
 
@@ -143,7 +142,6 @@ _For detailed examples and common use cases, please refer to the [Documentation]
 - [ ] Add Changelog
 - [X] Add LICENSE
 - [X] Add PyPI installer
-- [ ] Check Installation against Windows
 - [ ] Survival Analysis
 - [ ] Multi Armed Bandit
 
