@@ -51,7 +51,11 @@ class DMLFeaturizer(TransformerMixin):
         type_special = X.apply(get_type_special_no_ag)
         self.ct = ColumnTransformer(
             [
-                (OneHotEncoder.__name__, OneHotEncoder(), type_special == "category"),
+                (
+                    OneHotEncoder.__name__,
+                    OneHotEncoder(handle_unknown="ignore"),
+                    type_special == "category",
+                ),
                 (
                     DatetimeFeatureGenerator.__name__,
                     SKLearnAGFeatureWrapperBase(DatetimeFeatureGenerator()),
