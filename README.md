@@ -3,6 +3,7 @@
 
 [![Actions Status](https://github.com/Actable-AI/actableai-lib/workflows/UnitTest/badge.svg)](https://github.com/Actable-AI/actableai-lib/actions)
 [![Actions Status](https://github.com/Actable-AI/actableai-lib/workflows/Release%20API%20Docs/badge.svg)](https://github.com/Actable-AI/actableai-lib/actions)
+
 ##
 
 <!-- PROJECT LOGO -->
@@ -24,7 +25,6 @@
     <a href="https://github.com/Actable-AI/actableai-lib/issues" target="_blank">Request Feature</a>
   </p>
 </div>
-
 
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
@@ -59,8 +59,6 @@
   </ol>
 </details>
 
-
-
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
@@ -79,32 +77,33 @@ This project is started and maintained by [Actable AI](https://actable.ai).
 
 ### Environment
 
-- [X] [Ubuntu>18.04](https://wiki.ubuntu.com/Releases)
-- [X] MacOS
+* [X] [Ubuntu>18.04](https://wiki.ubuntu.com/Releases)
+* [X] MacOS
 
 ### Prerequisites
 
-- You need to have [python 3.7](https://www.python.org/downloads/release/python-370) installed with [pip](https://pip.pypa.io/en/stable/)
-- You need to have [R](https://www.r-project.org/) installed
-- You need to have multi_rake installed in your python env :
+* You need to have [python 3.7](https://www.python.org/downloads/release/python-370) installed with [pip](https://pip.pypa.io/en/stable/)
+* You need to have [R](https://www.r-project.org/) installed
+* You need to have multi_rake installed in your python env :
 One way to do so is `pip install git+https://github.com/Actable-AI/multi_rake@master#egg=multi_rake`
-- If you are using the gpu version, you need CUDA 11.0 installed for mxnet
+* If you are using the gpu version, you need CUDA 11.0 installed for mxnet
 
 ### Installation
 
-- Option 1 - Install from PyPI :
+* Option 1 - Install from PyPI :
 
 ```sh
 pip install actableai-lib[gpu]
 ```
 
-- Option 2 - Install from source :
+* Option 2 - Install from source :
 
 ```sh
 git clone git@github.com:Actable-AI/actableai-lib.git --recursive
 cd actableai-lib
 pip install .[gpu]
 ```
+
 To contribute to the repo, when installing from source, run `pip install -e .[gpu,dev]` instead of `pip install .[gpu]` to enable pip's developer mode.
 
 You can also replace `[gpu]` with `[cpu]` to use the cpu only version.
@@ -112,7 +111,8 @@ You can also replace `[gpu]` with `[cpu]` to use the cpu only version.
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-- Running a Classification :
+* Running a Classification :
+
 ```python
 import pandas as pd
 from actableai import AAIClassificationTask
@@ -123,7 +123,9 @@ result = AAIClassificationTask().run(
   target='target_column'
 )
 ```
-- Running a Correlation Analysis :
+
+* Running a Correlation Analysis :
+
 ```python
 import pandas as pd
 from actableai import AAICorrelationTask
@@ -134,16 +136,17 @@ result = AAICorrelationTask().run(
   target='target_column'
 )
 ```
+
 _For detailed examples and common use cases, please refer to the [Documentation](https://lib.actable.ai)_
 
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Add Changelog
-- [X] Add LICENSE
-- [X] Add PyPI installer
-- [ ] Survival Analysis
-- [ ] Multi Armed Bandit
+* [ ] Add Changelog
+* [X] Add LICENSE
+* [X] Add PyPI installer
+* [ ] Survival Analysis
+* [ ] Multi Armed Bandit
 
 See the [open issues](https://github.com/Actable-AI/actableai-lib/issues) for a full list of proposed features (and known issues).
 
@@ -156,10 +159,13 @@ If you have a suggestion that would make this better, please create a pull reque
 Don't forget to give the project a star! Thanks again!
 
 To contribute to the code base, after cloning :
+
 1. Install our git hooks by running locally :
+
 ```sh
 ./scripts/setup_hooks.sh
 ```
+
 2. Create your Feature/BugFix Branch: `git checkout -b feature/AmazingFeature`
 3. Commit your Changes: `git commit -m 'Add some AmazingFeature'`
 4. Push to the Branch: `git push origin feature/AmazingFeature`
@@ -182,9 +188,10 @@ Project Link: [https://github.com/Actable-AI/actableai-lib](https://github.com/A
 ## Official Maintainers
 
 For any question about the ML Library feel free to send us a message :
-- trung@actable.ai
-- axeng@actable.ai
-- mehdib@actable.ai
+
+* trung@actable.ai
+* axeng@actable.ai
+* mehdib@actable.ai
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -202,4 +209,3 @@ For any question about the ML Library feel free to send us a message :
 [license-url]: https://github.com/Actable-AI/actableai-lib/blob/master/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=256
 [linkedin-url]: https://www.linkedin.com/company/actable-ai
-[product-screenshot]: images/screenshot.png
