@@ -278,7 +278,12 @@ def run_cross_validation(
     prediction_high = None
     if run_model:
         if explain_samples:
-            predict_shap_values = np.mean(cross_val_predict_shap_values, axis=0)
+            predict_shap_values = (
+                pd.concat(cross_val_predict_shap_values)
+                .reset_index()
+                .groupby("index")
+                .mean()
+            )
 
         predictions = np.mean(cross_val_predictions, axis=0).tolist()
         if prediction_quantile_low is not None:
