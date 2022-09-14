@@ -222,7 +222,7 @@ class AAIClusteringTask(AAITask):
                     :, preprocessor.feature_links[i]
                 ].sum(axis=1)
 
-            shap_values = df_final_shap_values.to_numpy()
+            shap_values = df_final_shap_values
 
         try:
             lda = LinearDiscriminantAnalysis(n_components=2)
