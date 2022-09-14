@@ -403,7 +403,7 @@ def run_cross_validation(
 
     predict_shap_values = []
     if run_model and explain_samples:
-        predict_shap_values = predict_shap_values = (
+        predict_shap_values = (
             pd.concat(cross_val_predict_shap_values)
             .reset_index()
             .groupby("index")
