@@ -403,7 +403,12 @@ def run_cross_validation(
 
     predict_shap_values = []
     if run_model and explain_samples:
-        predict_shap_values = np.mean(cross_val_predict_shap_values, axis=0)
+        predict_shap_values = predict_shap_values = (
+            pd.concat(cross_val_predict_shap_values)
+            .reset_index()
+            .groupby("index")
+            .mean()
+        )
 
     leaderboard = leaderboard_cross_val(cross_val_leaderboard)
 
