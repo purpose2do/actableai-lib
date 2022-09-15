@@ -20,13 +20,13 @@ and modify.
 Actable-AI implements Machine Learning models usable out of the box for multiple tasks.
 You can discover each tasks usage with our interactive notebooks :
 
-   - `Classification <https://github.com/Actable-AI/actableai-lib/blob/feat/master/examples/classification.ipynb>`_
-   - `Regression <https://github.com/Actable-AI/actableai-lib/blob/feat/master/examples/regression.ipynb>`_
-   - `Association Rules <https://github.com/Actable-AI/actableai-lib/blob/feat/master/examples/association_rules.ipynb>`_
-   - `Forecast <https://github.com/Actable-AI/actableai-lib/blob/feat/master/examples/forecast.ipynb>`_
-   - `Clustering <https://github.com/Actable-AI/actableai-lib/blob/feat/master/examples/clustering.ipynb>`_
-   - `Correlation <https://github.com/Actable-AI/actableai-lib/blob/feat/master/examples/correlation.ipynb>`_
-   - `More <https://github.com/Actable-AI/actableai-lib/blob/feat/master/examples>`_
+   - `Classification <https://github.com/Actable-AI/actableai-lib/blob/master/examples/classification.ipynb>`_
+   - `Regression <https://github.com/Actable-AI/actableai-lib/blob/master/examples/regression.ipynb>`_
+   - `Association Rules <https://github.com/Actable-AI/actableai-lib/blob/master/examples/association_rules.ipynb>`_
+   - `Forecast <https://github.com/Actable-AI/actableai-lib/blob/master/examples/forecast.ipynb>`_
+   - `Clustering <https://github.com/Actable-AI/actableai-lib/blob/master/examples/clustering.ipynb>`_
+   - `Correlation <https://github.com/Actable-AI/actableai-lib/blob/master/examples/correlation.ipynb>`_
+   - `More <https://github.com/Actable-AI/actableai-lib/blob/master/examples>`_
 
 Installations
 -------------
