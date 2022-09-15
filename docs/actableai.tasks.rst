@@ -12,6 +12,14 @@ Subpackages
 Submodules
 ----------
 
+actableai.tasks.association\_rules module
+-----------------------------------------
+
+.. automodule:: actableai.tasks.association_rules
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 actableai.tasks.base module
 ---------------------------
 

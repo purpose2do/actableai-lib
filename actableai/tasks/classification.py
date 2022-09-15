@@ -83,14 +83,31 @@ class _AAIClassificationTrainTask(AAITask):
             num_gpus: Number of gpus used by AutoGluon
             eval_metric: Metric to be optimized for.
             time_limit: Time limit for training (in seconds)
+            drop_unique: Whether the classification algorithm drops columns that
+                only have a unique value accross all rows at fit time
+            drop_useless_features: Whether the classification algorithm drops columns that
+                only have a unique value accross all rows as preprocessing
+            feature_pruning: Wether the feature_pruning is enabled or not.
+                This option improves results but extend the training time.
+                If there is no time left to do feature_pruning after training
+                this step is skipped.
 
         Returns:
-            Tuple[object, object, object, object, object]: Return results for
-            classification :
+            Tuple[
+                Any,
+                Any,
+                Optional[List],
+                Optional[dict],
+                Optional[np.ndarray],
+                Union[np.ndarray, List],
+                pd.DataFrame
+            ]: Return results for classification :
                 - AutoGluon's predictor
+                - Explainer for SHAP values
                 - List of important features
                 - Dictionnary of evaluated metrics
                 - Class probabilities for predicted values
+                - Shap values on test set
                 - Leaderboard of the best trained models
         """
         import pandas as pd
@@ -364,8 +381,8 @@ class AAIClassificationTask(AAITask):
         time_limit: Optional[int] = None,
         drop_unique: bool = True,
         drop_useless_features: bool = True,
-        datetime_column: Optional[str] = None,
         split_by_datetime: bool = False,
+        datetime_column: Optional[str] = None,
         ag_automm_enabled=False,
         refit_full=False,
         feature_pruning=True,
@@ -410,8 +427,21 @@ class AAIClassificationTask(AAITask):
                 ‘recall_micro’, ‘recall_weighted’, ‘log_loss’, ‘pac_score’.
                 Defaults to "accuracy".
             time_limit: Time limit of training (in seconds)
+            drop_unique: Wether to drop columns with only unique values as preprocessing step.
+            drop_useless_features: Whether to drop columns with only unique values at fit time.
+            split_by_datetime: Whether the training/validation has to be split based on a datetime column.
+            datetime_column: If *split_by_datetime*, the column that will split training and validation,
+                else, the parameter is ignored.
             ag_automm_enabled: Whether to use autogluon multimodal model on text
-                columns.
+                columns. This features makes text classification way more accurate by using
+                text models. This feature is heavy on resources and requires GPU.
+            refit_full: Whether at the end of classification, a second task is launched to
+                refit a new model on the whole dataset. This makes accuracy much better but divides
+                the training time in half. (half for first task, other half for refitting)
+            feature_pruning: Wether the feature_pruning is enabled or not.
+                This option improves results but extend the training time.
+                If there is no time left to do feature_pruning after training
+                this step is skipped.
 
         Raises:
             Exception: If the target has less than 2 unique values.
@@ -421,7 +451,25 @@ class AAIClassificationTask(AAITask):
             >>> AAIClassificationTask(df, ["feature1", "feature2", "feature3"], "target")
 
         Returns:
-            Dict: Dictionnary of results
+            Dict: Dictionnary containing the results
+                - "status": "SUCCESS" if the task successfully ran else "FAILURE"
+                - "messenger": Message returned with the task
+                - "validations": List of validations on the data.
+                    non-empty if the data presents a problem for the task
+                - "runtime": Execution time of the task
+                - "data": Dictionnary containing the data for the task
+                    - "validation_table": Validation table
+                    - "prediction_table": Prediction table
+                    - "fields": Column names of the prediction table
+                    - "predictData": Prediction Table
+                    - "predict_shaps": Shapley values for prediction table
+                    - "validation_shaps": Shapley values for validation table
+                    - "exdata": Validation Table
+                    - "evaluate": Evaluation metrics on validation set
+                    - "importantFeatures": Feature importance on validation set
+                    - "debiasing_charts": If debiasing enabled, debiasing data to create charts
+                    - "leaderboard": Leaderboard of the best model on validation
+                - "model": AAIModel to redeploy the model
         """
         import json
         import time

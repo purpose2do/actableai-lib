@@ -12,6 +12,14 @@ actableai.sentiment.SpanABSA module
    :undoc-members:
    :show-inheritance:
 
+actableai.sentiment.serve module
+--------------------------------
+
+.. automodule:: actableai.sentiment.serve
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

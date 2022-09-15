@@ -4,6 +4,14 @@ actableai.tasks.tests package
 Submodules
 ----------
 
+actableai.tasks.tests.test\_association\_rules module
+-----------------------------------------------------
+
+.. automodule:: actableai.tasks.tests.test_association_rules
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 actableai.tasks.tests.test\_base module
 ---------------------------------------
 

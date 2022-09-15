@@ -3,7 +3,7 @@ import ray
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import wraps
-from typing import Callable, Optional, Tuple
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from actableai.tasks import TaskType
 from actableai.utils.resources.predict import ResourcePredictorType
@@ -158,7 +158,7 @@ class AAITask(ABC):
 
     def _predict_resource(
         self, resource_predicted: ResourcePredictorType, task: TaskType, features: dict
-    ) -> Tuple[Optional[float], Optional[float]]:
+    ) -> Tuple[Union[List[Any], Optional[float]], Optional[float]]:
         """
         Call the resources predictors actor to get a prediction for a specific resource and a specific task
 
@@ -206,28 +206,22 @@ class AAITask(ABC):
         """
         Method to run a specific task with ray remote (used as a decorator)
 
-        Parameters
-        ----------
-        task:
-            The task type that will be run
+        Args:
+            task: The task type that will be run
 
-        Returns
-        -------
-        The decorator
+        Returns:
+            The decorator
         """
 
         def decorator(function: Callable) -> Callable:
             """
             The decorator used to run a task with ray remote
 
-            Parameters
-            ----------
-            function:
-                The function to run
+            Args:
+                function: The function to run
 
-            Returns
-            -------
-            The wrapper running the function
+            Returns:
+                The wrapper running the function
             """
 
             class FunctionWrapperActor:
@@ -239,18 +233,16 @@ class AAITask(ABC):
                 """
                 The wrapper of a function that run within Ray cluster.
 
-                Parameters
-                ----------
-                task_object:
-                    The AAITask object (self)
-                args:
-                    The arguments to pass to the function
-                kwargs:
-                    The named arguments to pass to the function
+                Args:
+                    task_object:
+                        The AAITask object (self)
+                    args:
+                        The arguments to pass to the function
+                    kwargs:
+                        The named arguments to pass to the function
 
-                Returns
-                -------
-                The result of the function
+                Returns:
+                    The result of the function
                 """
                 import logging
                 import tensorflow as tf
@@ -321,18 +313,16 @@ class AAITask(ABC):
                 """
                 The wrapper running the function with ray remote
 
-                Parameters
-                ----------
-                task_object:
-                    The AAITask object (self)
-                args:
-                    The arguments to pass to the function
-                kwargs:
-                    The named arguments to pass to the function
+                Args:
+                    task_object:
+                        The AAITask object (self)
+                    args:
+                        The arguments to pass to the function
+                    kwargs:
+                        The named arguments to pass to the function
 
-                Returns
-                -------
-                The result of the function
+                Returns:
+                    The result of the function
                 """
                 from actableai.utils.resources.profile import profile_function
                 from actableai.utils.resources.predict.features import extract_features
@@ -534,4 +524,4 @@ class AAITask(ABC):
         """
         Abstract method called to run the task
         """
-        raise NotImplementedError
+        raise NotImplementedError()

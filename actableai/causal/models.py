@@ -74,12 +74,8 @@ class AAICausalEstimator:
         label_t: str = "t",
         label_y: str = "y",
         target_units: str = "ate",
-        validation_ratio: float = 0.2,
         trials: int = 3,
         tune_params=None,
-        max_concurrent=None,
-        scheduler=None,
-        stopper=None,
         cv: str = "auto",
         feature_importance: bool = False,
         model_directory: Optional[str] = None,
@@ -101,41 +97,34 @@ class AAICausalEstimator:
             X: (n × d_x) matrix. Defaults to None. Features for each sample
             W: (n × d_w) matrix. Defaults to None. Controls for each sample
             Z: (n × d_z) matrix. Defaults to None. Instruments for each sample
-            label_t: _description_. Defaults to "t".
-            label_y: _description_. Defaults to "y".
-            target_units: either "ate", "att" or "atc". Default to "ate"
-            validation_ratio: _description_. Defaults to 0.2.
+            label_t: Treatment for the causal inference
+            label_y: Outcome for the causal inference
+            target_units: either "ate", "att" or "atc"
             trials: number of trials for hyperparameter tuning experiment
             tune_params: dictionary of tune parameters
             max_concurrent: max concurcent
             scheduler: tune scheduler object
             stopper: tune stopper object
-            cv: Number of cross validation fold. Defaults to "auto".
+            cv: Number of cross validation fold
             feature_importance: Whether the feature importance are computed.
-                Defaults to False.
             model_directory: Directory to save AutoGluon model
                 See
                 https://auto.gluon.ai/stable/api/autogluon.task.html#autogluon.tabular.TabularPredictor.fit
-                Defaults to None.
             hyperparameters: Hyperparameters for AutoGluon model.
                 See
                 https://auto.gluon.ai/stable/api/autogluon.task.html#autogluon.tabular.TabularPredictor.fit
-                Defaults to "auto".
-            presets: Presets for Autogluon Model. Defaults to
-                "medium_quality_faster_train".
+            presets: Presets for Autogluon Model.
             random_state: Random State for LinearDML. See
                 https://econml.azurewebsites.net/_autosummary/econml.dml.LinearDML.html#econml.dml.LinearDML
-                Defaults to None.
             mc_iters: Random State for LinearDML. See
                 https://econml.azurewebsites.net/_autosummary/econml.dml.LinearDML.html#econml.dml.LinearDML
-                Defaults to "auto".
-            remove_outliers (bool, optional): Whether we remove outliers.
-                Defaults to True.
+            remove_outliers: Whether we remove outliers.
             contamination: Contamination parameter for removing outliers.
                 See
                 https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html.
-                Defaults to 0.05.
-            num_gpus: Number of GPUs to use. Defaults to 0.
+            num_gpus: Number of GPUs to use
+            drop_unique: Wether to drop columns with only unique values as preprocessing step.
+            drop_useless_features: Whether to drop columns with only unique values at fit time.
         """
         start = time.time()
 

@@ -9,6 +9,53 @@
 Actable AI ML lib
 =================
 
+What is Actable-AI lib ?
+------------------------
+
+Actable-AI lib is the Machine Learning library used for [app.actable.ai](app.actable.ai)
+
+This Machine Learning library is Open Source and licensed under Apache v2 so free to use
+and modify.
+
+Actable-AI implements Machine Learning models usable out of the box for multiple tasks.
+You can discover each tasks usage with our interactive notebooks :
+
+   - `Classification <https://github.com/Actable-AI/actableai-lib/blob/feat/master/examples/classification.ipynb>`_
+   - `Regression <https://github.com/Actable-AI/actableai-lib/blob/feat/master/examples/regression.ipynb>`_
+   - `Association Rules <https://github.com/Actable-AI/actableai-lib/blob/feat/master/examples/association_rules.ipynb>`_
+   - `Forecast <https://github.com/Actable-AI/actableai-lib/blob/feat/master/examples/forecast.ipynb>`_
+   - `Clustering <https://github.com/Actable-AI/actableai-lib/blob/feat/master/examples/clustering.ipynb>`_
+   - `Correlation <https://github.com/Actable-AI/actableai-lib/blob/feat/master/examples/correlation.ipynb>`_
+   - `More <https://github.com/Actable-AI/actableai-lib/blob/feat/master/examples>`_
+
+Installations
+-------------
+
+To install ActableAI simply run:
+
+.. code-block:: console
+
+   pip install actableai-lib[gpu]
+
+To install it from source:
+
+.. code-block:: console
+
+   git clone git@github.com:Actable-AI/actableai-lib.git --recursive
+   cd actableai-lib
+   pip install .[gpu]
+
+To contribute as a developer (see *Contributions* section):
+
+.. code-block:: console
+
+   git clone git@github.com:Actable-AI/actableai-lib.git --recursive
+   cd actableai-lib
+   ./scripts/setup_hooks.sh
+   pip install -e .[gpu,dev]
+
+Note: You can replace [gpu] with [cpu] to have the CPU version of Actable-AI.
+
 Main API
 ----------
 
@@ -20,33 +67,6 @@ All the tasks and their usage are listed in this module.
 
    actableai.tasks
 
-Installations
--------------
-
-To install ActableAI simply run:
-
-.. code-block:: console
-
-   pip install actable-ai
-
-To install it from source:
-
-.. code-block:: console
-
-   git clone git@github.com:Actable-AI/actableai-lib.git --recursive
-   cd actableai-lib
-   pip install -r requirements.txt
-   pip install .
-
-To contribute as a developer (see *Contributions* section):
-
-.. code-block:: console
-
-   git clone git@github.com:Actable-AI/actableai-lib.git --recursive
-   cd actableai-lib
-   pip install -r requirements.txt
-   pip install -e .
-   ./scripts/setup_hooks.sh
 
 Contributions
 -------------

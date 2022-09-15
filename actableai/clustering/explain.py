@@ -15,12 +15,11 @@ def _shorten_conditions(conds):
 
 
 def _paths_to_leaves(tree, shorten_conditions=True, min_precision=0.8):
-
     def _walk(tree, result, cond, classes_with_explanation, node_id=0, depth=0):
         left_node = tree.children_left[node_id]
         right_node = tree.children_right[node_id]
         is_split_node = left_node != right_node
-        precision = np.max(tree.value[node_id])/np.sum(tree.value[node_id])
+        precision = np.max(tree.value[node_id]) / np.sum(tree.value[node_id])
         cls = np.argmax(tree.value[node_id])
         if precision >= min_precision and cls not in classes_with_explanation:
             result.append(
@@ -60,8 +59,9 @@ def _paths_to_leaves(tree, shorten_conditions=True, min_precision=0.8):
     return result
 
 
-def generate_cluster_descriptions(tree, features, dummy_columns=None,
-                                  min_precision=0.8):
+def generate_cluster_descriptions(
+    tree, features, dummy_columns=None, min_precision=0.8
+):
     def _path_iter():
         paths = _paths_to_leaves(tree, min_precision=min_precision)
         for path in paths:

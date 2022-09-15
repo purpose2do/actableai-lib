@@ -42,3 +42,5 @@ ignore =
   B016
   B017
 avoid-escape = no
+per-file-ignores =
+    */__init__.py: F401

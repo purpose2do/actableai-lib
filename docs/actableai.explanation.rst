@@ -1,6 +1,14 @@
 actableai.explanation package
 =============================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   actableai.explanation.tests
+
 Submodules
 ----------
 

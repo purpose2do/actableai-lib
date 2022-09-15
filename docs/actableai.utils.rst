@@ -14,6 +14,14 @@ Subpackages
 Submodules
 ----------
 
+actableai.utils.autogluon module
+--------------------------------
+
+.. automodule:: actableai.utils.autogluon
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 actableai.utils.dataset\_generator module
 -----------------------------------------
 

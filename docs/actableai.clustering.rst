@@ -4,6 +4,14 @@ actableai.clustering package
 Submodules
 ----------
 
+actableai.clustering.config module
+----------------------------------
+
+.. automodule:: actableai.clustering.config
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 actableai.clustering.dec\_keras module
 --------------------------------------
 

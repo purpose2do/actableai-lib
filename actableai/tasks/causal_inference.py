@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from typing import Optional, Union
+from typing import List, Optional, Union
 from sklearn.preprocessing import LabelEncoder
 from actableai.utils import get_type_special
 
@@ -29,11 +29,11 @@ def convert_categorical_to_numeric(df, columns):
 
 def infer_causal(
     pd_table: pd.DataFrame,
-    treatments: list,
-    outcomes: list,
-    effect_modifiers: Optional[list] = None,
-    common_causes: Optional[list] = None,
-    instrumental_variables: Optional[list] = None,
+    treatments: List,
+    outcomes: List,
+    effect_modifiers: Optional[List] = None,
+    common_causes: Optional[List] = None,
+    instrumental_variables: Optional[List] = None,
     controls: Optional[dict] = None,
     positive_outcome_value=None,
     target_units: Optional[str] = "ate",
@@ -44,16 +44,8 @@ def infer_causal(
     model_directory: Optional[Union[str, Path]] = None,
     ag_hyperparameters: Optional[Union[str, dict]] = "auto",
     ag_presets: str = "medium_quality_faster_train",
-    model_params: Optional[list] = None,
-    rscorer: Optional[list] = None,
-    scheduler: Optional[object] = None,
-    stopper: Optional[object] = None,
-    RAY_CPU_PER_TRIAL: Optional[int] = 2,
-    RAY_GPU_PER_TRIAL: Optional[int] = 0,
-    RAY_MAX_CONCURRENT: Optional[int] = 1,
-    validation_ratio: float = 0.2,
-    trials: Optional[int] = 1,
-    verbose: Optional[int] = 0,
+    model_params: Optional[List] = None,
+    rscorer: Optional[List] = None,
     cv: Union[int, str] = "auto",
     feature_importance: bool = False,
     mc_iters="auto",
@@ -65,38 +57,64 @@ def infer_causal(
     """Causal analysis task
 
     Args:
-        pd_table (pd.DataFrame): Dataset for the causal analysis
-        treatments (list): treatment variable(s)
-        outcomes (list): outcome variables
-        effect_modifiers (list, optional): list of effect modifiers (X) for CATE estimation. Defaults to [].
-        common_causes (list, optional): list of common causes (W). Defaults to [].
-        instrumental_variables (list, optional): list of instrumental variables (Z). Defaults to [].
-        controls (dict, optional): dictionary of control treatment values. Keys are categorical treatment names
+        pd_table: Dataset for the causal analysis
+        treatments: treatment variable(s)
+        outcomes: outcome variables
+        effect_modifiers: list of effect modifiers (X) for CATE estimation. Defaults to [].
+        common_causes: list of common causes (W). Defaults to [].
+        instrumental_variables: list of instrumental variables (Z). Defaults to [].
+        controls: dictionary of control treatment values. Keys are categorical treatment names
         positive_outcome_value: If not None, target is converted into 0, 1 where 1 is when original target is equal to positive_outcome_value else 0.
-        target_units (str, optional): Targeted used for calculating the effect. Possible values are "ate", "att", "atc". Defaults to "ate"
-        alpha (float, optional): Significance level of effect confidence interval (from 0.01 to 0.99). Defaults to 0.05
-        tree_max_depthnal): Maximum depth of CATE function's tree interpreter. Default to 3.
-        log_treatment (bool, optional): flag to indicate whether log transform is to be applied to treatment
-        log_outcome (bool, optional): flag to indicate whether log transform is to be applied to outcome
-        ag_hyperparameters(dict, options): dictionary of hyperparameters for Autogluon predictors if used
-        model_params (list, optional): list of model parameters. Defaults to None.
-        RAY_CPU_PER_TRIAL (int, optional): Ray CPU per trial. Defaults to 3.
-        RAY_GPU_PER_TRIAL (int, optional): Ray GPU per trial. Defaults to 1.
-        RAY_MAX_CONCURRENT (int, optional): Ray max concurrent. Defaults to 3.
-        trials (int, optional): Number of trials for hyperparameter search. Defaults to 1.
-        verbose (int, optional): Verbose level from 0 to 3. Defaults to 0 (silent).
+        target_units: Targeted used for calculating the effect. Possible values are "ate", "att", "atc". Defaults to "ate"
+        alpha: Significance level of effect confidence interval (from 0.01 to 0.99). Defaults to 0.05
+        tree_max_depth: Maximum depth of CATE function's tree interpreter. Default to 3.
+        log_treatment: flag to indicate whether log transform is to be applied to treatment
+        log_outcome: flag to indicate whether log transform is to be applied to outcome
+        model_directory: Where the model should be stored, if None stored in the /tmp folder
+        ag_hyperparameters: Dictionary of hyperparameters for Autogluon predictors if used
+        ag_presets: Presets for Autogluon Models
+        model_params: List of model Parameters for the AAICausalEstimator
+        rscorer: tune rscorer object
+        cv: Number of cross validation for LinearDML
+        feature_importance: Whether the feature importance are computed
+        mc_iters: Random State for LinearDML. See
+                https://econml.azurewebsites.net/_autosummary/econml.dml.LinearDML.html#econml.dml.LinearDML
+        seed: Random numpy seed
+        num_gpus: Number of GPUs for the TabularPredictors. Can be set to an int or "auto"
+        drop_unique: Wether to drop columns with only unique values as preprocessing step
+        drop_useless_features: Whether to drop columns with only unique values at fit time
 
     Examples:
         >>> df = pd.read_csv("path/to/csv")
-        >>> infer_causal(
+        >>> result = infer_causal(
         ...    df,
         ...    treatments=["feature1", "feature2"],
         ...    outcomes=["feature3", "feature4"],
         ...    effect_modifiers=["feature5", "feature6"]
         ... )
+        >>> result
 
     Returns:
-        dict: dictionary of estimation results
+        Dict: dictionary of estimation results
+            - "status": "SUCCESS" if the task successfully ran else "FAILURE"
+            - "messenger": Custom message from the task
+            - "runtime": Execution time from the task
+            - "data": Dictionnary containing data from the task
+                - "":
+                - "effect":
+                - "controls": Transformed controls
+                - "causal_graph_dot": Feature graph in dot format
+                - "tree_interpreter_dot": Tree interpreter in dot format
+                - "refutation_results": # TODO
+                - "T_res": Treatment residuals
+                - "Y_res": Outcome residuals
+                - "X": Common causes values
+                - "model_t_scores": Scores for the treatment model
+                - "model_y_scores": Scores for the outcome model
+                - "model_t_feature_importances": Feature importances for treatment model
+                - "model_y_feature_importances": Feature importances for outcome model
+            - "validations": List of validations on the data, 
+                    non-empty if the data presents a problem for the task
     """
     import time
     from io import StringIO
@@ -292,10 +310,6 @@ def infer_causal(
         label_t=label_t,
         label_y=label_y,
         target_units=target_units,
-        validation_ratio=validation_ratio,
-        max_concurrent=RAY_MAX_CONCURRENT,
-        scheduler=scheduler,
-        stopper=stopper,
         cv=cv,
         feature_importance=feature_importance,
         model_directory=model_directory,

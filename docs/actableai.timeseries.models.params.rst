@@ -52,6 +52,14 @@ actableai.timeseries.models.params.gp\_var module
    :undoc-members:
    :show-inheritance:
 
+actableai.timeseries.models.params.n\_beats module
+--------------------------------------------------
+
+.. automodule:: actableai.timeseries.models.params.n_beats
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 actableai.timeseries.models.params.prophet module
 -------------------------------------------------
 

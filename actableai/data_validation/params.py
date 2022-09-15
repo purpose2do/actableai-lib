@@ -50,7 +50,8 @@ from actableai.data_validation.checkers import (
     SameTypeChecker,
     SplitByDatetimeValidationChecker,
     StratifiedKFoldChecker,
-    UniqueDateTimeChecker, TimeSeriesTuningMetricChecker,
+    UniqueDateTimeChecker,
+    TimeSeriesTuningMetricChecker,
 )
 from actableai.timeseries.utils import find_freq
 from actableai.utils import get_type_special_no_ag
@@ -477,7 +478,15 @@ class TimeSeriesDataValidator:
     def __init__(self):
         pass
 
-    def validate(self, df, date_column, predicted_columns, feature_columns, group_by, tuning_metric):
+    def validate(
+        self,
+        df,
+        date_column,
+        predicted_columns,
+        feature_columns,
+        group_by,
+        tuning_metric,
+    ):
         validation_results = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
                 df, [date_column] + predicted_columns + feature_columns + group_by
@@ -485,7 +494,9 @@ class TimeSeriesDataValidator:
             DoNotContainEmptyColumnsChecker(level=CheckLevels.CRITICAL).check(
                 df, [date_column] + predicted_columns + feature_columns + group_by
             ),
-            TimeSeriesTuningMetricChecker(level=CheckLevels.CRITICAL).check(tuning_metric)
+            TimeSeriesTuningMetricChecker(level=CheckLevels.CRITICAL).check(
+                tuning_metric
+            ),
         ]
 
         group_df_dict = {}
@@ -836,7 +847,19 @@ class AssociationRulesDataValidator:
     def __init__(self):
         pass
 
-    def validate(self, df: pd.DataFrame, group_by: List[str], items: str):
+    def validate(
+        self, df: pd.DataFrame, group_by: List[str], items: str
+    ) -> List[Optional[CheckResult]]:
+        """Method to validate data before running association rules algorithm
+
+        Args:
+            df: DataFrame to validate
+            group_by: Columns of df that groups the buyers for the association
+            items: Column in df representing the associated items
+
+        Returns:
+
+        """
         return [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
                 df, group_by + [items]

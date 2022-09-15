@@ -1,2 +1,11 @@
-from .tasks.intervention import AAIInterventionTask  # noqa
-from .tasks.association_rules import AAIAssociationRulesTask  # noqa
+from .tasks.association_rules import AAIAssociationRulesTask
+from .tasks.bayesian_regression import AAIBayesianRegressionTask
+from .tasks.causal_inference import infer_causal
+from .tasks.classification import AAIClassificationTask
+from .tasks.clustering import AAIClusteringTask
+from .tasks.correlation import AAICorrelationTask
+from .tasks.data_imputation import AAIDataImputationTask
+from .tasks.forecast import AAIForecastTask
+from .tasks.intervention import AAIInterventionTask
+from .tasks.regression import AAIRegressionTask
+from .tasks.sentiment_analysis import AAISentimentAnalysisTask
