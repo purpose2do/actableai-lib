@@ -493,7 +493,10 @@ class AAIClassificationTask(AAITask):
             UNIQUE_CATEGORY_THRESHOLD,
         )
         from actableai import AAIInterventionTask
-        from actableai.models.aai_predictor import AAITabularModel
+        from actableai.models.aai_predictor import (
+            AAITabularModel,
+            AAITabularModelInterventional,
+        )
         from actableai.classification.cross_validation import run_cross_validation
         from actableai.utils.sanitize import sanitize_timezone
         from actableai.classification.utils import split_validation_by_datetime
@@ -865,11 +868,16 @@ class AAIClassificationTask(AAITask):
             model = AAITabularModel(
                 version=MODEL_DEPLOYMENT_VERSION,
                 predictor=predictor,
-                causal_model=causal_model,
-                intervened_column=current_intervention_column,
-                common_causes=common_causes,
-                discrete_treatment=discrete_treatment,
             )
+            if causal_model and current_intervention_column:
+                model = AAITabularModelInterventional(
+                    version=MODEL_DEPLOYMENT_VERSION,
+                    predictor=predictor,
+                    causal_model=causal_model,
+                    intervened_column=current_intervention_column,
+                    common_causes=common_causes,
+                    discrete_treatment=discrete_treatment,
+                )
 
         runtime = time.time() - start
         return {

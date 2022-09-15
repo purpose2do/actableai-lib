@@ -100,7 +100,10 @@ class AAIModelInference:
         probability_threshold=0.5,
         positive_label=None,
     ):
-        from actableai.models.aai_predictor import AAITabularModel
+        from actableai.models.aai_predictor import (
+            AAITabularModel,
+            AAITabularModelInterventional,
+        )
 
         task_model = self._get_model(task_id)
         if isinstance(task_model, AAITabularModel):
@@ -113,16 +116,11 @@ class AAIModelInference:
                 positive_label,
             )
             # Intervention effect part
-            if (
-                task_model.causal_model is not None
-                and task_model.intervened_column is not None
-                and (
-                    f"intervened_{task_model.intervened_column}" in df
-                    or f"expected_{task_model.predictor.label}" in df
-                )
+            if isinstance(task_model, AAITabularModelInterventional) and (
+                f"intervened_{task_model.intervened_column}" in df
+                or f"expected_{task_model.predictor.label}" in df
             ):
                 pred["intervention"] = task_model.intervention_effect(df, pred)
-                return pred
             return pred
 
         return self._predict(
