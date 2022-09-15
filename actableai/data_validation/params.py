@@ -36,6 +36,7 @@ from actableai.data_validation.checkers import (
     IsSufficientClassSampleForCrossValidationChecker,
     IsSufficientDataChecker,
     IsSufficientNumberOfClassChecker,
+    IsSufficientSampleCrossValidationChecker,
     IsSufficientValidationSampleChecker,
     IsValidFrequencyChecker,
     IsValidNumberOfClusterChecker,
@@ -133,6 +134,9 @@ class RegressionDataValidator:
             ),
             ColumnsInList(level=CheckLevels.CRITICAL).check(
                 features, debiased_features
+            ),
+            IsSufficientSampleCrossValidationChecker(level=CheckLevels.CRITICAL).check(
+                df, kfolds
             ),
         ]
         if split_by_datetime and kfolds > 1:
