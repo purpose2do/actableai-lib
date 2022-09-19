@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. image:: ../images/logo.png
+.. image:: https://docs.actable.ai/_images/logo.png
    :width: 600
 
 Actable AI ML lib
@@ -12,13 +12,13 @@ Actable AI ML lib
 What is Actable-AI lib ?
 ------------------------
 
-Actable-AI lib is the Machine Learning library used for [app.actable.ai](app.actable.ai)
+Actable-AI lib is the Machine Learning library used for `app.actable.ai <http://app.actable.ai>`_
 
 This Machine Learning library is Open Source and licensed under Apache v2 so free to use
 and modify.
 
 Actable-AI implements Machine Learning models usable out of the box for multiple tasks.
-You can discover each tasks usage with our interactive notebooks :
+You can discover each tasks usage with our notebooks :
 
    - `Classification <https://github.com/Actable-AI/actableai-lib/blob/master/examples/classification.ipynb>`_
    - `Regression <https://github.com/Actable-AI/actableai-lib/blob/master/examples/regression.ipynb>`_
