@@ -1199,5 +1199,5 @@ class IsSufficientSampleCrossValidationChecker(IChecker):
             return CheckResult(
                 name=self.name,
                 level=self.level,
-                message=f"The number of kfolds ({kfolds}) must be lower than the number of samples ({len(df)})",
+                message=f"The number of kfolds ({kfolds}) must be lower or equal to the number of samples ({len(df)})",
             )
