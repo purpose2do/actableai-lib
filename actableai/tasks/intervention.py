@@ -29,6 +29,7 @@ class AAIInterventionTask(AAITask):
         feature_importance: Optional[bool] = True,
         drop_unique: bool = True,
         drop_useless_features: bool = True,
+        only_fit: bool = False,
     ) -> Dict:
         """Run this intervention task and return the results.
 
@@ -252,6 +253,20 @@ class AAIInterventionTask(AAITask):
             cache_values=True,
         )
 
+        if only_fit:
+            return {
+                "status": "SUCCESS",
+                "messenger": "",
+                "validations": [
+                    {"name": x.name, "level": x.level, "message": x.message}
+                    for x in failed_checks
+                ],
+                "data": {},
+                "runtime": time.time() - start,
+                "causal_model": causal_model,
+                "discrete_treatment": current_intervention_column in cat_cols,
+            }
+
         effects = causal_model.effect(
             X.values if X is not None else None,
             T0=df[[current_intervention_column]],  # type: ignore
@@ -410,4 +425,6 @@ class AAIInterventionTask(AAITask):
             ],
             "data": estimation_results,
             "runtime": time.time() - start,
+            "causal_model": causal_model,
+            "discrete_treatment": current_intervention_column in cat_cols,
         }

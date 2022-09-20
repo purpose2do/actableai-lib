@@ -3,11 +3,13 @@ from autogluon.features import DatetimeFeatureGenerator, TextNgramFeatureGenerat
 from sklearn.feature_extraction.text import CountVectorizer
 from pandas import DataFrame
 from sklearn.compose import ColumnTransformer
+from sklearn.base import TransformerMixin
 from sklearn.preprocessing import OneHotEncoder
 from nltk.corpus import stopwords
-from actableai.causal.predictors import DataFrameTransformer
+from sklearn.exceptions import NotFittedError
 
 from actableai.utils import get_type_special_no_ag
+from actableai.causal.predictors import DataFrameTransformer
 from actableai.utils.preprocessors.preprocessing import SKLearnAGFeatureWrapperBase
 
 
@@ -39,16 +41,21 @@ class CustomeDateTimeFeatureGenerator(DatetimeFeatureGenerator):
         return X_datetime
 
 
-class DMLFeaturizer:
-    def fit_transform(self, X, y=None):
-        return self.transform(X)
+class DMLFeaturizer(TransformerMixin):
+    def __init__(self, ct=None) -> None:
+        super().__init__()
+        self.ct = ct
 
-    def transform(self, X):
+    def fit(self, X, y=None):
         X = DataFrameTransformer().fit_transform(X)
         type_special = X.apply(get_type_special_no_ag)
-        ct = ColumnTransformer(
+        self.ct = ColumnTransformer(
             [
-                (OneHotEncoder.__name__, OneHotEncoder(), type_special == "category"),
+                (
+                    OneHotEncoder.__name__,
+                    OneHotEncoder(handle_unknown="ignore"),
+                    type_special == "category",
+                ),
                 (
                     DatetimeFeatureGenerator.__name__,
                     SKLearnAGFeatureWrapperBase(DatetimeFeatureGenerator()),
@@ -70,5 +77,11 @@ class DMLFeaturizer:
             verbose_feature_names_out=False,
             verbose=True,
         )
-        result = ct.fit_transform(X)
-        return result
+        self.ct.fit(X)
+        return self
+
+    def transform(self, X):
+        X = DataFrameTransformer().fit_transform(X)
+        if self.ct is None:
+            raise NotFittedError()
+        return self.ct.transform(X)

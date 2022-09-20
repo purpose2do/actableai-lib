@@ -3,6 +3,7 @@ import numpy as np
 from typing import Any, Dict, List, Optional, Tuple, Union
 import logging
 
+from actableai.models.config import MODEL_DEPLOYMENT_VERSION
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 
@@ -386,6 +387,7 @@ class AAIClassificationTask(AAITask):
         ag_automm_enabled=False,
         refit_full=False,
         feature_pruning=True,
+        intervention_run_params: Optional[Dict] = None,
     ) -> Dict:
         """Run this classification task and return results.
 
@@ -489,6 +491,11 @@ class AAIClassificationTask(AAITask):
             CheckLevels,
             CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE,
             UNIQUE_CATEGORY_THRESHOLD,
+        )
+        from actableai import AAIInterventionTask
+        from actableai.models.aai_predictor import (
+            AAITabularModel,
+            AAITabularModelInterventional,
         )
         from actableai.classification.cross_validation import run_cross_validation
         from actableai.utils.sanitize import sanitize_timezone
@@ -797,7 +804,33 @@ class AAIClassificationTask(AAITask):
             str
         )
 
-        runtime = time.time() - start
+        causal_model = None
+        current_intervention_column = None
+        common_causes = None
+        discrete_treatment = None
+        validations = [
+            {"name": x.name, "level": x.level, "message": x.message}
+            for x in failed_checks
+        ]
+        if intervention_run_params is not None:
+            intervention_task_result = AAIInterventionTask().run(
+                **intervention_run_params
+            )
+            if intervention_task_result["status"] == "SUCCESS":
+                causal_model = intervention_task_result["causal_model"]
+                discrete_treatment = intervention_task_result["discrete_treatment"]
+                current_intervention_column = intervention_run_params[
+                    "current_intervention_column"
+                ]
+                common_causes = intervention_run_params["common_causes"]
+            else:
+                validations.append(
+                    {
+                        "name": "Intervention Failed",
+                        "level": CheckLevels.WARNING,
+                        "message": "Counterfactual ran into an issue",
+                    }
+                )
 
         if refit_full:
             df_only_training = df.loc[df[target].notnull()]
@@ -830,6 +863,23 @@ class AAIClassificationTask(AAITask):
             )
             predictor.refit_full(model="best", set_best_to_refit_full=True)
 
+        model = None
+        if (kfolds <= 1 or refit_full) and predictor:
+            model = AAITabularModel(
+                version=MODEL_DEPLOYMENT_VERSION,
+                predictor=predictor,
+            )
+            if causal_model and current_intervention_column:
+                model = AAITabularModelInterventional(
+                    version=MODEL_DEPLOYMENT_VERSION,
+                    predictor=predictor,
+                    causal_model=causal_model,
+                    intervened_column=current_intervention_column,
+                    common_causes=common_causes,
+                    discrete_treatment=discrete_treatment,
+                )
+
+        runtime = time.time() - start
         return {
             "messenger": "",
             "status": "SUCCESS",
@@ -851,6 +901,6 @@ class AAIClassificationTask(AAITask):
                 "debiasing_charts": debiasing_charts,
                 "leaderboard": leaderboard,
             },
-            "model": predictor if kfolds <= 1 or refit_full else None,
+            "model": model,
             # FIXME this predictor is not really usable as is for now
         }
