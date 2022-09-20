@@ -106,6 +106,8 @@ class AAIModelInference:
         )
 
         task_model = self._get_model(task_id)
+
+        # We used to pickle TabularPredictor. This check is for legacy
         if isinstance(task_model, AAITabularModel):
             pred = self._predict(
                 task_id,
@@ -123,6 +125,7 @@ class AAIModelInference:
                 pred["intervention"] = task_model.intervention_effect(df, pred)
             return pred
 
+        # Run legacy task_model directly
         return self._predict(
             task_id,
             task_model,
@@ -147,8 +150,6 @@ class AAIModelInference:
         from actableai.exceptions.models import InvalidPositiveLabelError
 
         result = {}
-
-        task_model = self._get_model(task_id)
 
         df_proba = self.predict_proba(task_id, df)
 
@@ -184,8 +185,8 @@ class AAIModelInference:
         )
 
         if return_probabilities:
-            result["prediction"] = df_true_label
-        result["df_proba"] = df_proba
+            result["df_proba"] = df_proba
+        result["prediction"] = df_true_label
         return result
 
     def predict_proba(self, task_id, df):
@@ -222,13 +223,18 @@ class AAIModelInference:
         return df_proba
 
     def get_metadata(self, task_id):
-        from actableai.models.aai_predictor import AAITabularModel
+        from actableai.models.aai_predictor import (
+            AAITabularModel,
+            AAITabularModelInterventional,
+        )
 
         task_model = self._get_model(task_id)
         if isinstance(task_model, AAITabularModel):
             metadata = self._get_metadata(task_model.predictor)
+
             if (
-                task_model.causal_model is not None
+                isinstance(task_model, AAITabularModelInterventional)
+                and task_model.causal_model is not None
                 and task_model.intervened_column is not None
             ):
                 metadata["intervened_column"] = task_model.intervened_column
