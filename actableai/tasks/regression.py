@@ -282,10 +282,7 @@ class _AAIRegressionTrainTask(AAITask):
                     )
 
             evaluate["metrics"] = pd.DataFrame(
-                {
-                    "metric": metric_list,
-                    "value": metric_value_list,
-                }
+                {"metric": metric_list, "value": metric_value_list}
             )
 
         predictions = None
@@ -794,11 +791,11 @@ class AAIRegressionTask(AAITask):
             for x in failed_checks
         ]
         if intervention_run_params is not None:
-            intervention_task_result = AAIInterventionTask().run(
-                **intervention_run_params
-            )
+            intervention_task_result = AAIInterventionTask(
+                return_model=True, upload_model=False
+            ).run(**intervention_run_params)
             if intervention_task_result["status"] == "SUCCESS":
-                causal_model = intervention_task_result["causal_model"]
+                causal_model = intervention_task_result["model"]
                 discrete_treatment = intervention_task_result["discrete_treatment"]
                 current_intervention_column = intervention_run_params[
                     "current_intervention_column"
@@ -847,8 +844,7 @@ class AAIRegressionTask(AAITask):
         model = None
         if (kfolds <= 1 or refit_full) and predictor:
             model = AAITabularModel(
-                version=MODEL_DEPLOYMENT_VERSION,
-                predictor=predictor,
+                version=MODEL_DEPLOYMENT_VERSION, predictor=predictor
             )
             if causal_model and current_intervention_column:
                 model = AAITabularModelInterventional(
