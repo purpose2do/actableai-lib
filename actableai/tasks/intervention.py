@@ -1,11 +1,15 @@
 from io import StringIO
+import logging
 import time
 from typing import List, Dict, Optional
 import pandas as pd
 from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import r2_score
-from actableai.data_validation.base import CheckLevels
+from scipy.special import logit
 
+from actableai.data_validation.base import CheckLevels
+from actableai.intervention.config import LOGIT_MIN_VALUE, LOGIT_MAX_VALUE
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 from actableai.utils import memory_efficient_hyperparameters
@@ -19,6 +23,7 @@ class AAIInterventionTask(AAITask):
         target: str,
         current_intervention_column: str,
         new_intervention_column: str,
+        target_proba: Optional[pd.DataFrame] = None,
         common_causes: Optional[List[str]] = None,
         causal_cv: Optional[int] = None,
         causal_hyperparameters: Optional[Dict] = None,
@@ -38,6 +43,10 @@ class AAIInterventionTask(AAITask):
             target: Column name of target variable
             current_intervention_column: Column name of the current intervention
             new_intervention_column: Column name of the new intervention
+            target_proba: DataFrame containing the probabilities for the target,
+                when set the df[target] column is ignored. If target is set, df[target]
+                is categorical and target_proba is None. Then target_proba becomes the
+                one hot encoded target.
             common_causes: List of common causes to be used for the intervention
             causal_cv: Number of folds for causal cross validation
             causal_hyperparameters: Hyperparameters for AutoGluon
@@ -86,8 +95,9 @@ class AAIInterventionTask(AAITask):
         import networkx as nx
 
         from actableai.data_validation.params import InterventionDataValidator
-        from actableai.causal.predictors import SKLearnWrapper
+        from actableai.causal.predictors import SKLearnTabularWrapper
         from actableai.utils.preprocessors.autogluon_preproc import DMLFeaturizer
+        from actableai.utils.multilabel_predictor import MultilabelPredictor
         from actableai.utils import get_type_special_no_ag
 
         start = time.time()
@@ -142,6 +152,12 @@ class AAIInterventionTask(AAITask):
         num_cols = list(df.loc[:, num_cols].columns)
         cat_cols = type_special == "category"
         cat_cols = list(df.loc[:, cat_cols].columns)
+
+        if target in num_cols and target_proba is not None:
+            logging.warning(
+                "`df[target]` is a numerical column and `target_proba` is not None: `target_proba` will be ignored"
+            )
+
         df = df.replace(to_replace=[None], value=np.nan)
         if len(num_cols):
             df.loc[:, num_cols] = SimpleImputer(strategy="median").fit_transform(
@@ -163,7 +179,13 @@ class AAIInterventionTask(AAITask):
             model_t_holdout_frac = len(df[current_intervention_column].unique()) / len(
                 df
             )
-
+        model_t = None
+        model_y = None
+        ag_args_fit = {"num_gpus": num_gpus, "drop_unique": drop_unique}
+        feature_generator = AutoMLPipelineFeatureGenerator(
+            **automl_pipeline_feature_parameters
+        )
+        # if target in num_cols:
         model_t = TabularPredictor(
             path=mkdtemp(prefix=str(model_directory)),
             label="t",
@@ -174,15 +196,13 @@ class AAIInterventionTask(AAITask):
         if X is not None:
             xw_col += list(X.columns)
 
-        model_t = SKLearnWrapper(
+        model_t = SKLearnTabularWrapper(
             model_t,
             x_w_columns=xw_col,
             hyperparameters=causal_hyperparameters,
             presets=presets,
-            ag_args_fit={"num_gpus": num_gpus, "drop_unique": drop_unique},
-            feature_generator=AutoMLPipelineFeatureGenerator(
-                **automl_pipeline_feature_parameters
-            ),
+            ag_args_fit=ag_args_fit,
+            feature_generator=feature_generator,
             holdout_frac=model_t_holdout_frac,
         )
 
@@ -191,16 +211,52 @@ class AAIInterventionTask(AAITask):
             label="y",
             problem_type="regression",
         )
-        model_y = SKLearnWrapper(
+        model_y = SKLearnTabularWrapper(
             model_y,
             x_w_columns=xw_col,
             hyperparameters=causal_hyperparameters,
             presets=presets,
-            ag_args_fit={"num_gpus": num_gpus, "drop_unique": drop_unique},
-            feature_generator=AutoMLPipelineFeatureGenerator(
-                **automl_pipeline_feature_parameters
-            ),
+            ag_args_fit=ag_args_fit,
+            feature_generator=feature_generator,
         )
+        # else:
+        #     # Target is categorical. We need to OneHotEncode the target or use
+        #     # target_proba. Apply Logit, run econml, sum effect with logit output
+        #     logit_target = None
+        #     if target_proba is not None:
+        #         logit_target = logit(target_proba)
+        #     else:
+        #         ohe = OneHotEncoder(sparse=False)
+        #         logit_target = pd.DataFrame(
+        #             ohe.fit_transform(df[target]), columns=ohe.get_feature_names_out()
+        #         )
+        #     model_t = MultilabelPredictor(
+        #         labels=logit_target.columns,
+        #         path=mkdtemp(prefix=str(model_directory)),
+        #         problem_types=["regression"] * len(logit_target.columns)
+        #     )
+        #     xw_col = []
+        #     if X is not None:
+        #         xw_col += list(X.columns)
+        #     model_t = SKLearnMultilabelWrapper(
+        #         model_t,
+        #         x_w_columns=xw_col,
+        #         hyperparameters=causal_hyperparameters,
+        #         presets=presets,
+        #         ag_args_fit=ag_args_fit,
+        #         feature_generator=feature_generator,
+        #         holdout_frac=model_t_holdout_frac
+        #     )
+        #     model_y = MultilabelPredictor(
+        #         labels=logit_target.columns,
+        #         path=mkdtemp(prefix=str(model_directory)),
+        #         problem_type=["regression"] * len(logit_target.columns),
+        #     )
+        #     model_y = MultilabelPredictor(
+        #         labels=logit_target.columns,
+        #         path=mkdtemp(prefix=str(model_directory)),
+        #         problem_types=["regression"] * len(logit_target.columns)
+        #     )
 
         if (
             X is None
@@ -225,17 +281,12 @@ class AAIInterventionTask(AAITask):
                 label="y_res",
                 problem_type="regression",
             )
-            model_final = SKLearnWrapper(
+            model_final = SKLearnTabularWrapper(
                 model_final,
                 hyperparameters=causal_hyperparameters,
                 presets=presets,
-                ag_args_fit={
-                    "num_gpus": num_gpus,
-                    "drop_unique": drop_unique,
-                },
-                feature_generator=AutoMLPipelineFeatureGenerator(
-                    **automl_pipeline_feature_parameters
-                ),
+                ag_args_fit=ag_args_fit,
+                feature_generator=feature_generator,
             )
             causal_model = NonParamDML(
                 model_t=model_t,
@@ -246,8 +297,27 @@ class AAIInterventionTask(AAITask):
                 discrete_treatment=current_intervention_column in cat_cols,
             )
 
+        target_df = None
+        if target in num_cols:
+            target_df = df[[target]]
+        else:
+            if target_proba is not None:
+                ohe = OneHotEncoder(sparse=False).fit(target_proba)
+                target_df = pd.DataFrame(
+                    logit(target_proba), columns=ohe.get_feature_names_out([target])
+                )
+            else:
+                ohe = OneHotEncoder(sparse=False).fit_transform(target_proba)
+                target_df = pd.DataFrame(
+                    ohe.fit_transform(df[[target]]),
+                    columns=ohe.get_feature_names_out([target]),
+                )
+                target_df = pd.DataFrame(
+                    logit(target_df), columns=target_df.columns
+                ).clip(LOGIT_MIN_VALUE, LOGIT_MAX_VALUE)
+
         causal_model.fit(
-            df[[target]].values,
+            target_df.values,
             df[[current_intervention_column]].values,
             X=X.values if X is not None else None,
             cache_values=True,
@@ -295,7 +365,9 @@ class AAIInterventionTask(AAITask):
             outcome=target,
             common_causes=common_causes,
         )
-        nx.drawing.nx_pydot.write_dot(causal_model_do_why._graph._graph, buffer)  # type: ignore # noqa
+        nx.drawing.nx_pydot.write_dot(
+            causal_model_do_why._graph._graph, buffer
+        )  # type: ignore # noqa
         causal_graph_dot = buffer.getvalue()
 
         Y_res, T_res, X_, W_ = causal_model.residuals_

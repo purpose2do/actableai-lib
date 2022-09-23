@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 import numpy as np
 import pandas as pd
 from autogluon.tabular import TabularDataset, TabularPredictor
@@ -10,6 +10,8 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import r2_score
+
+from actableai.utils.multilabel_predictor import MultilabelPredictor
 
 
 class UnsupportedPredictorType(ValueError):
@@ -73,7 +75,7 @@ class LinearRegressionWrapper(LinearRegression):
 class SKLearnWrapper:
     def __init__(
         self,
-        ag_predictor: TabularPredictor,
+        ag_predictor,
         x_w_columns: Optional[List] = None,
         hyperparameters: Optional[Union[List, Dict]] = None,
         presets: Optional[str] = "best_quality",
@@ -95,9 +97,9 @@ class SKLearnWrapper:
                 Predictor. Defaults to None.
 
         Raises:
-            UnsupportedPredictorType: Ensure that we only use TabularPredictor
+            UnsupportedPredictorType: Ensure that we only use TabularPredictor or MultilabelPredictor
         """
-        if type(ag_predictor) is not TabularPredictor:
+        if type(ag_predictor) not in [TabularPredictor, MultilabelPredictor]:
             raise UnsupportedPredictorType()
         self.ag_predictor = ag_predictor
         if hyperparameters is None:
@@ -114,12 +116,15 @@ class SKLearnWrapper:
         if self.feature_generator is None:
             self.feature_generator = AutoMLPipelineFeatureGenerator()
 
+    def set_sample_weight(self, sample_weight=None):
+        self.ag_predictor.sample_weight = sample_weight
+
     def fit(self, X, y, sample_weight=None):
         label = self.ag_predictor.label
         train_data = self._df_transformer.fit_transform(X)
         train_data[label] = y
         train_data = TabularDataset(train_data)
-        self.ag_predictor.sample_weight = sample_weight
+        self.set_sample_weight(sample_weight=sample_weight)
 
         self.ag_predictor.fit(
             train_data=train_data,
@@ -133,11 +138,6 @@ class SKLearnWrapper:
         self.train_data = train_data
         return self
 
-    def feature_importance(self):
-        if self.train_data is None:
-            raise Exception("The predictor needs to be fitted before")
-        return self.ag_predictor.feature_importance(self.train_data)
-
     def predict(self, X):
         test_data = self._df_transformer.fit_transform(X)
         test_data = TabularDataset(test_data)
@@ -149,7 +149,18 @@ class SKLearnWrapper:
         y_pred_proba = self.ag_predictor.predict_proba(test_data)
         return y_pred_proba.values
 
-    def score(self, X, y, sample_weight=None):
+    def score(self, X, y, sample_weight=None) -> Dict[str, Any]:
+        raise NotImplementedError()
+
+    def feature_importance(self) -> pd.DataFrame:
+        raise NotImplementedError()
+
+
+class SKLearnTabularWrapper(SKLearnWrapper):
+    def set_sample_weight(self, sample_weight=None):
+        self.ag_predictor.sample_weight = sample_weight
+
+    def score(self, X, y, sample_weight=None) -> Dict[str, Any]:
         test_data = self._df_transformer.fit_transform(X)
         y_pred = self.ag_predictor.predict(test_data).values
         if self.ag_predictor.problem_type in ["binary", "multiclass"]:
@@ -168,3 +179,14 @@ class SKLearnWrapper:
             }
         else:
             raise UnsupportedProblemType()
+
+    def feature_importance(self) -> pd.DataFrame:
+        if self.train_data is None:
+            raise Exception("The predictor needs to be fitted before")
+        return self.ag_predictor.feature_importance(self.train_data)
+
+
+class SKLearnMultilabelWrapper(SKLearnWrapper):
+    def set_sample_weight(self, sample_weight=None):
+        for label in self.ag_predictor.labels:
+            self.ag_predictor.get_predictor(label=label).sample_weight = sample_weight
