@@ -821,7 +821,6 @@ class InterventionDataValidator:
             return validations
         # Columns are sane now we treat
         validations += [
-            IsNumericalChecker(level=CheckLevels.CRITICAL).check(df[target]),
             IsCategoricalOrNumericalChecker(level=CheckLevels.CRITICAL).check(
                 df, [current_intervention_column, new_intervention_column]
             ),

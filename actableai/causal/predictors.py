@@ -99,8 +99,6 @@ class SKLearnWrapper:
         Raises:
             UnsupportedPredictorType: Ensure that we only use TabularPredictor or MultilabelPredictor
         """
-        if type(ag_predictor) not in [TabularPredictor, MultilabelPredictor]:
-            raise UnsupportedPredictorType()
         self.ag_predictor = ag_predictor
         if hyperparameters is None:
             self.hyperparameters = "default"
@@ -116,13 +114,9 @@ class SKLearnWrapper:
         if self.feature_generator is None:
             self.feature_generator = AutoMLPipelineFeatureGenerator()
 
-    def set_sample_weight(self, sample_weight=None):
-        self.ag_predictor.sample_weight = sample_weight
-
     def fit(self, X, y, sample_weight=None):
-        label = self.ag_predictor.label
         train_data = self._df_transformer.fit_transform(X)
-        train_data[label] = y
+        train_data = self.add_output(train_data, y)
         train_data = TabularDataset(train_data)
         self.set_sample_weight(sample_weight=sample_weight)
 
@@ -149,6 +143,15 @@ class SKLearnWrapper:
         y_pred_proba = self.ag_predictor.predict_proba(test_data)
         return y_pred_proba.values
 
+    def set_sample_weight(self, sample_weight=None):
+        # raise NotImplementedError
+        self.ag_predictor.sample_weight = sample_weight
+
+    def add_output(self, train_data, y):
+        # raise NotImplementedError
+        train_data[self.ag_predictor.label] = y
+        return train_data
+
     def score(self, X, y, sample_weight=None) -> Dict[str, Any]:
         raise NotImplementedError()
 
@@ -157,6 +160,28 @@ class SKLearnWrapper:
 
 
 class SKLearnTabularWrapper(SKLearnWrapper):
+    def __init__(
+        self,
+        ag_predictor,
+        x_w_columns: Optional[List] = None,
+        hyperparameters: Optional[Union[List, Dict]] = None,
+        presets: Optional[str] = "best_quality",
+        ag_args_fit: Optional[Dict] = None,
+        feature_generator: Optional[AbstractFeatureGenerator] = None,
+        holdout_frac: Optional[float] = None,
+    ):
+        if not isinstance(ag_predictor, TabularPredictor):
+            raise UnsupportedPredictorType()
+        super().__init__(
+            ag_predictor,
+            x_w_columns,
+            hyperparameters,
+            presets,
+            ag_args_fit,
+            feature_generator,
+            holdout_frac,
+        )
+
     def set_sample_weight(self, sample_weight=None):
         self.ag_predictor.sample_weight = sample_weight
 
@@ -185,8 +210,67 @@ class SKLearnTabularWrapper(SKLearnWrapper):
             raise Exception("The predictor needs to be fitted before")
         return self.ag_predictor.feature_importance(self.train_data)
 
+    def add_output(self, train_data, y):
+        train_data[self.ag_predictor.label] = y
+        return train_data
+
 
 class SKLearnMultilabelWrapper(SKLearnWrapper):
+    def __init__(
+        self,
+        ag_predictor,
+        x_w_columns: Optional[List] = None,
+        hyperparameters: Optional[Union[List, Dict]] = None,
+        presets: Optional[str] = "best_quality",
+        ag_args_fit: Optional[Dict] = None,
+        feature_generator: Optional[AbstractFeatureGenerator] = None,
+        holdout_frac: Optional[float] = None,
+    ):
+        if not isinstance(ag_predictor, MultilabelPredictor):
+            raise UnsupportedPredictorType()
+        super().__init__(
+            ag_predictor,
+            x_w_columns,
+            hyperparameters,
+            presets,
+            ag_args_fit,
+            feature_generator,
+            holdout_frac,
+        )
+
     def set_sample_weight(self, sample_weight=None):
         for label in self.ag_predictor.labels:
             self.ag_predictor.get_predictor(label=label).sample_weight = sample_weight
+
+    def add_output(self, train_data, y):
+        train_data[self.ag_predictor.labels] = pd.DataFrame(
+            y, columns=self.ag_predictor.labels
+        )
+        return train_data
+
+    def score(self, X, y, sample_weight=None) -> Dict[str, Any]:
+        test_data = self._df_transformer.fit_transform(X)
+        y_pred = self.ag_predictor.predict(test_data).values
+        # FIXME: Problem type is uniformly the same
+        # in our case. But to make wrapper reusable everywhere iterate over
+        # y and have list of accuracies
+        if self.ag_predictor.get_predictor(
+            self.ag_predictor.labels[0]
+        ).problem_type in ["binary", "multiclass"]:
+            return {
+                "accuracy": accuracy_score(y, y_pred, sample_weight=sample_weight),
+                "y": y,
+                "y_pred": y_pred,
+                "sample_weight": sample_weight,
+            }
+        elif self.ag_predictor.get_predictor(
+            self.ag_predictor.labels[0]
+        ).problem_type in ["regression"]:
+            return {
+                "r2": r2_score(y, y_pred, sample_weight=sample_weight),
+                "y": y,
+                "y_pred": y_pred,
+                "sample_weight": sample_weight,
+            }
+        else:
+            raise UnsupportedProblemType()

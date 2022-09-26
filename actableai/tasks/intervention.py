@@ -7,6 +7,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import r2_score
 from scipy.special import logit
+from actableai.causal.predictors import SKLearnMultilabelWrapper
 
 from actableai.data_validation.base import CheckLevels
 from actableai.intervention.config import LOGIT_MIN_VALUE, LOGIT_MAX_VALUE
@@ -185,8 +186,7 @@ class AAIInterventionTask(AAITask):
         feature_generator = AutoMLPipelineFeatureGenerator(
             **automl_pipeline_feature_parameters
         )
-        # if target in num_cols:
-        model_t = TabularPredictor(
+        model_t_predictor = TabularPredictor(
             path=mkdtemp(prefix=str(model_directory)),
             label="t",
             problem_type=model_t_problem_type,
@@ -197,7 +197,7 @@ class AAIInterventionTask(AAITask):
             xw_col += list(X.columns)
 
         model_t = SKLearnTabularWrapper(
-            model_t,
+            model_t_predictor,
             x_w_columns=xw_col,
             hyperparameters=causal_hyperparameters,
             presets=presets,
@@ -206,57 +206,45 @@ class AAIInterventionTask(AAITask):
             holdout_frac=model_t_holdout_frac,
         )
 
-        model_y = TabularPredictor(
-            path=mkdtemp(prefix=str(model_directory)),
-            label="y",
-            problem_type="regression",
-        )
-        model_y = SKLearnTabularWrapper(
-            model_y,
-            x_w_columns=xw_col,
-            hyperparameters=causal_hyperparameters,
-            presets=presets,
-            ag_args_fit=ag_args_fit,
-            feature_generator=feature_generator,
-        )
-        # else:
-        #     # Target is categorical. We need to OneHotEncode the target or use
-        #     # target_proba. Apply Logit, run econml, sum effect with logit output
-        #     logit_target = None
-        #     if target_proba is not None:
-        #         logit_target = logit(target_proba)
-        #     else:
-        #         ohe = OneHotEncoder(sparse=False)
-        #         logit_target = pd.DataFrame(
-        #             ohe.fit_transform(df[target]), columns=ohe.get_feature_names_out()
-        #         )
-        #     model_t = MultilabelPredictor(
-        #         labels=logit_target.columns,
-        #         path=mkdtemp(prefix=str(model_directory)),
-        #         problem_types=["regression"] * len(logit_target.columns)
-        #     )
-        #     xw_col = []
-        #     if X is not None:
-        #         xw_col += list(X.columns)
-        #     model_t = SKLearnMultilabelWrapper(
-        #         model_t,
-        #         x_w_columns=xw_col,
-        #         hyperparameters=causal_hyperparameters,
-        #         presets=presets,
-        #         ag_args_fit=ag_args_fit,
-        #         feature_generator=feature_generator,
-        #         holdout_frac=model_t_holdout_frac
-        #     )
-        #     model_y = MultilabelPredictor(
-        #         labels=logit_target.columns,
-        #         path=mkdtemp(prefix=str(model_directory)),
-        #         problem_type=["regression"] * len(logit_target.columns),
-        #     )
-        #     model_y = MultilabelPredictor(
-        #         labels=logit_target.columns,
-        #         path=mkdtemp(prefix=str(model_directory)),
-        #         problem_types=["regression"] * len(logit_target.columns)
-        #     )
+        if target in num_cols:
+            model_y_predictor = TabularPredictor(
+                path=mkdtemp(prefix=str(model_directory)),
+                label="y",
+                problem_type="regression",
+            )
+            model_y = SKLearnTabularWrapper(
+                model_y_predictor,
+                x_w_columns=xw_col,
+                hyperparameters=causal_hyperparameters,
+                presets=presets,
+                ag_args_fit=ag_args_fit,
+                feature_generator=feature_generator,
+            )
+        else:
+            # Target is categorical. We need to OneHotEncode the target or use
+            # target_proba. Apply Logit, run econml, sum effect with logit output
+            logit_target = None
+            if target_proba is not None:
+                logit_target = logit(target_proba)
+            else:
+                ohe = OneHotEncoder(sparse=False)
+                logit_target = pd.DataFrame(
+                    ohe.fit_transform(df[[target]]), columns=ohe.get_feature_names_out()
+                )
+            model_y_predictor = MultilabelPredictor(
+                labels=logit_target.columns,
+                path=mkdtemp(prefix=str(model_directory)),
+                problem_types=["regression"] * len(logit_target.columns),
+            )
+            model_y = SKLearnMultilabelWrapper(
+                ag_predictor=model_y_predictor,
+                x_w_columns=xw_col,
+                hyperparameters=causal_hyperparameters,
+                presets=presets,
+                ag_args_fit=ag_args_fit,
+                feature_generator=feature_generator,
+                holdout_frac=None,
+            )
 
         if (
             X is None
@@ -307,7 +295,7 @@ class AAIInterventionTask(AAITask):
                     logit(target_proba), columns=ohe.get_feature_names_out([target])
                 )
             else:
-                ohe = OneHotEncoder(sparse=False).fit_transform(target_proba)
+                ohe = OneHotEncoder(sparse=False)
                 target_df = pd.DataFrame(
                     ohe.fit_transform(df[[target]]),
                     columns=ohe.get_feature_names_out([target]),
@@ -317,8 +305,8 @@ class AAIInterventionTask(AAITask):
                 ).clip(LOGIT_MIN_VALUE, LOGIT_MAX_VALUE)
 
         causal_model.fit(
-            target_df.values,
-            df[[current_intervention_column]].values,
+            Y=target_df.values,
+            T=df[[current_intervention_column]].values,
             X=X.values if X is not None else None,
             cache_values=True,
         )
