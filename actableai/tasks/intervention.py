@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import r2_score
-from scipy.special import logit
+from scipy.special import logit, expit
 from actableai.causal.predictors import SKLearnMultilabelWrapper
 
 from actableai.data_validation.base import CheckLevels
@@ -286,19 +286,21 @@ class AAIInterventionTask(AAITask):
             )
 
         target_df = None
+        ohe_target = None
         if target in num_cols:
             target_df = df[[target]]
         else:
+            ohe_target = OneHotEncoder(sparse=False)
             if target_proba is not None:
-                ohe = OneHotEncoder(sparse=False).fit(target_proba)
+                ohe_target.fit(target_proba)
                 target_df = pd.DataFrame(
-                    logit(target_proba), columns=ohe.get_feature_names_out([target])
+                    logit(target_proba),
+                    columns=ohe_target.get_feature_names_out([target]),
                 )
             else:
-                ohe = OneHotEncoder(sparse=False)
                 target_df = pd.DataFrame(
-                    ohe.fit_transform(df[[target]]),
-                    columns=ohe.get_feature_names_out([target]),
+                    ohe_target.fit_transform(df[[target]]),
+                    columns=ohe_target.get_feature_names_out([target]),
                 )
                 target_df = pd.DataFrame(
                     logit(target_df), columns=target_df.columns
@@ -331,19 +333,28 @@ class AAIInterventionTask(AAITask):
             T1=df[[new_intervention_column]],  # type: ignore
         )
 
-        df[target + "_intervened"] = df[target] + effects.flatten()  # type: ignore
-        df["intervention_effect"] = effects.flatten()  # type: ignore
-        if cate_alpha is not None:
-            lb, ub = causal_model.effect_interval(
-                X.values if X is not None else None,
-                T0=df[[current_intervention_column]],  # type: ignore
-                T1=df[[new_intervention_column]],  # type: ignore
-                alpha=cate_alpha,
-            )  # type: ignore
-            df[target + "_intervened_low"] = df[target] + lb.flatten()
-            df[target + "_intervened_high"] = df[target] + ub.flatten()
-            df["intervention_effect_low"] = lb.flatten()
-            df["intervention_effect_high"] = ub.flatten()
+        target_intervened = None
+        if target in num_cols or ohe_target is None:
+            target_intervened = df[target] + effects.flatten()
+        else:
+            target_intervened = ohe_target.inverse_transform(
+                expit(target_df.values + effects)
+            )
+
+        df[target + "_intervened"] = target_intervened  # type: ignore
+        if target in num_cols:
+            df["intervention_effect"] = effects.flatten()  # type: ignore
+            if cate_alpha is not None:
+                lb, ub = causal_model.effect_interval(
+                    X.values if X is not None else None,
+                    T0=df[[current_intervention_column]],  # type: ignore
+                    T1=df[[new_intervention_column]],  # type: ignore
+                    alpha=cate_alpha,
+                )  # type: ignore
+                df[target + "_intervened_low"] = df[target] + lb.flatten()
+                df[target + "_intervened_high"] = df[target] + ub.flatten()
+                df["intervention_effect_low"] = lb.flatten()
+                df["intervention_effect_high"] = ub.flatten()
 
         # Construct Causal Graph
         buffer = StringIO()
@@ -434,47 +445,50 @@ class AAIInterventionTask(AAITask):
             ] = model_y_feature_importances
 
         # Display plot in front end
-        intervention_names = None
-        intervention_diff = None
-        pair_dict = None
-        if current_intervention_column in num_cols:
-            intervention_diff = (
-                df[new_intervention_column] - df[current_intervention_column]
-            )
-        else:
-            intervention_names = (
-                df[current_intervention_column] + " -> " + df[new_intervention_column]
-            )
-            pair_dict = {}
-            for _, val in df.iterrows():
-                intervention_name = (
-                    val[current_intervention_column]
+        if target in num_cols:
+            intervention_names = None
+            intervention_diff = None
+            pair_dict = None
+            if current_intervention_column in num_cols:
+                intervention_diff = (
+                    df[new_intervention_column] - df[current_intervention_column]
+                )
+            else:
+                intervention_names = (
+                    df[current_intervention_column]
                     + " -> "
-                    + val[new_intervention_column]
+                    + df[new_intervention_column]
                 )
-                if intervention_name not in pair_dict:
-                    pair_dict[intervention_name] = {
-                        "original_target": [],
-                        "target_intervened": [],
-                        "intervention_effect": [],
-                    }
-                pair_dict[intervention_name]["original_target"].append(val[target])
-                pair_dict[intervention_name]["target_intervened"].append(
-                    val[target + "_intervened"]
-                )
-                pair_dict[intervention_name]["intervention_effect"].append(
-                    val["intervention_effect"]
-                )
-        estimation_results["intervention_plot"] = {
-            "type": "category"
-            if current_intervention_column in cat_cols
-            else "numeric",
-            "intervention_diff": intervention_diff,
-            "intervention_names": intervention_names,
-            "min_target": df[target].min(),
-            "max_target": df[target].max(),
-            "pair_dict": pair_dict,
-        }
+                pair_dict = {}
+                for _, val in df.iterrows():
+                    intervention_name = (
+                        val[current_intervention_column]
+                        + " -> "
+                        + val[new_intervention_column]
+                    )
+                    if intervention_name not in pair_dict:
+                        pair_dict[intervention_name] = {
+                            "original_target": [],
+                            "target_intervened": [],
+                            "intervention_effect": [],
+                        }
+                    pair_dict[intervention_name]["original_target"].append(val[target])
+                    pair_dict[intervention_name]["target_intervened"].append(
+                        val[target + "_intervened"]
+                    )
+                    pair_dict[intervention_name]["intervention_effect"].append(
+                        val["intervention_effect"]
+                    )
+            estimation_results["intervention_plot"] = {
+                "type": "category"
+                if current_intervention_column in cat_cols
+                else "numeric",
+                "intervention_diff": intervention_diff,
+                "intervention_names": intervention_names,
+                "min_target": df[target].min(),
+                "max_target": df[target].max(),
+                "pair_dict": pair_dict,
+            }
 
         return {
             "status": "SUCCESS",
