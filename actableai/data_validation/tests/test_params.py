@@ -546,8 +546,7 @@ class TestInterventionDataValidator:
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
         }
-        assert "IsNumericalChecker" in validations_dict
-        assert validations_dict["IsNumericalChecker"] == CheckLevels.CRITICAL
+        assert "IsNumericalChecker" not in validations_dict
 
     def test_validate_causal_cv(self):
         df = pd.DataFrame(
