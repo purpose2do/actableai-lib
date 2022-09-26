@@ -1,29 +1,17 @@
 import numpy as np
-import os
 from abc import ABC, abstractmethod
 from autogluon.tabular import TabularPredictor
-from econml.dml import CausalForestDML, LinearDML, NonParamDML, SparseLinearDML
+from econml.dml import CausalForestDML, LinearDML, SparseLinearDML
 from econml.drlearner import DRLearner
 from econml.iv.nnet import DeepIV
-from econml.metalearners import DomainAdaptationLearner, SLearner, TLearner, XLearner
+from econml.metalearners import DomainAdaptationLearner
 from econml.score import RScorer
 from hyperopt import hp
-from ray import tune
-from sklearn import linear_model
 from sklearn.ensemble import (
-    GradientBoostingClassifier,
-    GradientBoostingRegressor,
     RandomForestClassifier,
     RandomForestRegressor,
 )
 from sklearn.linear_model import (
-    ElasticNetCV,
-    Lasso,
-    LassoCV,
-    LinearRegression,
-    LogisticRegression,
-    LogisticRegressionCV,
-    MultiTaskElasticNet,
     MultiTaskElasticNetCV,
 )
 from sklearn.preprocessing import PolynomialFeatures
@@ -1938,9 +1926,15 @@ def get_rscorer(
     has_categorical_outcome,
     is_single_binary_outcome,
 ):
-    reg = lambda: RandomForestRegressor(min_samples_leaf=10)
-    clf = lambda: RandomForestClassifier(min_samples_leaf=10)
-    mten = lambda: MultiTaskElasticNetCV()
+    def reg():
+        return RandomForestRegressor(min_samples_leaf=10)
+
+    def clf():
+        return RandomForestClassifier(min_samples_leaf=10)
+
+    def mten():
+        return MultiTaskElasticNetCV()
+
     if (
         is_single_treatment
         and (not has_categorical_treatment)

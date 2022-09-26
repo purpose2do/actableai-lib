@@ -301,9 +301,9 @@ class AAICausalEstimator:
         else:
             W_train, W_val = None, None
         if Z is not None:
-            Z_train, Z_val = Z[id_train], Z[id_val]
+            Z_train, _ = Z[id_train], Z[id_val]
         else:
-            Z_train, Z_val = None, None
+            Z_train, _ = None, None
         Y_train, Y_val = Y[id_train], Y[id_val]
         T_train, T_val = T[id_train], T[id_val]
 
@@ -413,7 +413,7 @@ class AAICausalEstimator:
                     raise UnsupportedTargetUnitsMultipleTreatments()
                 self.estimator.fit(Y, T, X=X, W=W)
 
-            model_t_R2 = self.estimator.models_t
+            _ = self.estimator.models_t
 
         self.total_trial_time = time.time() - start + time_total_s
 
