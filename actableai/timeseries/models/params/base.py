@@ -1,3 +1,4 @@
+from enum import Enum, unique
 from typing import Callable, Any, Dict, Union, Tuple, Optional
 
 from gluonts.model.estimator import Estimator
@@ -6,10 +7,13 @@ from gluonts.mx.distribution import DistributionOutput
 from hyperopt import hp
 from mxnet.context import Context
 
+from actableai.parameters.parameters import Parameters
+from actableai.parameters.type import ParameterType
 from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
 from actableai.timeseries.transform.base import Transformation
 from actableai.timeseries.transform.clean_features import CleanFeatures
+from actableai.timeseries.transform.identity import Identity
 
 
 class BaseParams:
@@ -24,6 +28,8 @@ class BaseParams:
         handle_feat_static_cat: bool = True,
         handle_feat_dynamic_real: bool = False,
         handle_feat_dynamic_cat: bool = False,
+        hyperparameters: Dict = None,
+        process_hyperparameters: bool = True,
     ):
         """BaseParams Constructor.
 
@@ -41,17 +47,40 @@ class BaseParams:
                 real features or not.
             handle_feat_dynamic_cat: Whether the underlying model is handling dynamic
                 cat features or not.
+            hyperparameters: Dictionary representing the hyperparameters space.
+            process_hyperparameters: If True the hyperparameters will be validated and
+                processed (deactivate if they have already been validated).
         """
+        self.hyperparameters = hyperparameters
+        if self.hyperparameters is None:
+            self.hyperparameters = {}
+
+        if process_hyperparameters:
+            hyperparameters_space = self.get_hyperparameters()
+
+            (
+                hyperparameters_validation,
+                self.hyperparameters,
+            ) = hyperparameters_space.validate_process_parameter(self.hyperparameters)
+
+            if len(hyperparameters_validation) > 0:
+                raise ValueError(str(hyperparameters_validation))
+
         self.model_name = model_name
         self.is_multivariate_model = is_multivariate_model
         self.has_estimator = has_estimator
 
-        self._transformation = CleanFeatures(
-            keep_feat_static_real=handle_feat_static_real,
-            keep_feat_static_cat=handle_feat_static_cat,
-            keep_feat_dynamic_real=handle_feat_dynamic_real,
-            keep_feat_dynamic_cat=handle_feat_dynamic_cat,
-        )
+        self.handle_feat_static_real = handle_feat_static_real
+        self.handle_feat_static_cat = handle_feat_static_cat
+        self.handle_feat_dynamic_real = handle_feat_dynamic_real
+        self.handle_feat_dynamic_cat = handle_feat_dynamic_cat
+
+        self.use_feat_static_real = False
+        self.use_feat_static_cat = False
+        self.use_feat_dynamic_real = False
+        self.use_feat_dynamic_cat = False
+
+        self._transformation = Identity()
 
     def _hp_param(self, func: Callable, param_name: str, *args, **kwargs) -> Any:
         """Util function used to call hyperopt parameter function.
@@ -67,6 +96,37 @@ class BaseParams:
         """
         return func(f"{self.model_name}_{param_name}", *args, **kwargs)
 
+    def _auto_select(self, param_name: str) -> Any:
+        """Util function used to automatically call the right hyperparameter selection.
+
+        Args:
+            param_name: Name of the parameter.
+
+        Returns:
+            Choose parameter value.
+        """
+        parameter = self.get_hyperparameters().parameters[param_name]
+        parameter_type = parameter.parameter_type
+
+        options = self.hyperparameters[param_name]
+
+        if parameter_type == ParameterType.BOOL:
+            return options
+        if (
+            parameter_type == ParameterType.INT
+            or parameter_type == ParameterType.INT_RANGE
+        ):
+            return self._randint(param_name, options)
+        if (
+            parameter_type == ParameterType.FLOAT
+            or parameter_type == ParameterType.FLOAT_RANGE
+        ):
+            return self._uniform(param_name, options)
+        if parameter_type == ParameterType.OPTIONS:
+            return self._choice(param_name, options)
+
+        raise ValueError("Invalid parameter type")
+
     def _choice(self, param_name: str, options: Union[Tuple[Any, ...], Any]) -> Any:
         """Util function to represent a parameter selection over a list.
 
@@ -77,7 +137,7 @@ class BaseParams:
         Returns:
             Choose parameter value.
         """
-        if type(options) is not tuple:
+        if not isinstance(options, (list, tuple)):
             return options
         return self._hp_param(hp.choice, param_name, options)
 
@@ -91,7 +151,7 @@ class BaseParams:
         Returns:
             Choose parameter value.
         """
-        if type(options) is not tuple:
+        if not isinstance(options, (list, tuple)):
             return options
         return self._hp_param(hp.randint, param_name, *options)
 
@@ -107,12 +167,72 @@ class BaseParams:
         Returns:
             Choose parameter value.
         """
-        if type(options) is not tuple:
+        if not isinstance(options, (list, tuple)):
             return options
         return self._hp_param(hp.uniform, param_name, *options)
 
-    def tune_config(self) -> Dict[str, Any]:
+    def _get_context_length(self, prediction_length: int) -> Optional[int]:
+        """Util function to compute the context length using the prediction length and
+            the context length ratio.
+
+        Args:
+            prediction_length: Length of the prediction.
+
+        Returns:
+             Computed context length.
+        """
+        if "context_length_ratio" not in self.hyperparameters:
+            return None
+
+        context_length = self.hyperparameters["context_length_ratio"]
+        if isinstance(context_length, (tuple, list)):
+            context_length = tuple(
+                [round(e * prediction_length) for e in context_length]
+            )
+        else:
+            context_length = round(context_length * prediction_length)
+
+        return context_length
+
+    def setup(
+        self,
+        use_feat_static_real: bool,
+        use_feat_static_cat: bool,
+        use_feat_dynamic_real: bool,
+        use_feat_dynamic_cat: bool,
+    ):
+        """Set up the parameters.
+
+        Args:
+            use_feat_static_real: True if the data contains real static features.
+            use_feat_static_cat: True if the data contains categorical static features.
+            use_feat_dynamic_real: True if the data contains real dynamic features.
+            use_feat_dynamic_cat: True if the data contains categorical dynamic
+                features.
+        """
+        self.use_feat_static_real = (
+            self.handle_feat_static_real and use_feat_static_real
+        )
+        self.use_feat_static_cat = self.handle_feat_static_cat and use_feat_static_cat
+        self.use_feat_dynamic_real = (
+            self.handle_feat_dynamic_real and use_feat_dynamic_real
+        )
+        self.use_feat_dynamic_cat = (
+            self.handle_feat_dynamic_cat and use_feat_dynamic_cat
+        )
+
+        self._transformation += CleanFeatures(
+            keep_feat_static_real=self.use_feat_static_real,
+            keep_feat_static_cat=self.use_feat_static_cat,
+            keep_feat_dynamic_real=self.use_feat_dynamic_real,
+            keep_feat_dynamic_cat=self.use_feat_dynamic_cat,
+        )
+
+    def tune_config(self, prediction_length: int) -> Dict[str, Any]:
         """Select parameters in the pre-defined hyperparameter space.
+
+        Args:
+            prediction_length: Length of the prediction.
 
         Returns:
             Selected parameters.
@@ -133,7 +253,6 @@ class BaseParams:
 
         Args:
             ctx: mxnet context.
-            device: pytorch device.
             freq: Frequency of the time series used.
             prediction_length: Length of the prediction that will be forecasted.
             target_dim: Target dimension (number of columns to predict).
@@ -150,6 +269,7 @@ class BaseParams:
         *,
         freq: str,
         prediction_length: int,
+        target_dim: int,
         params: Dict[str, Any],
     ) -> Optional[AAITimeSeriesPredictor]:
         """Build a predictor from the underlying model using selected parameters.
@@ -157,6 +277,7 @@ class BaseParams:
         Args:
             freq: Frequency of the time series used.
             prediction_length: Length of the prediction that will be forecasted.
+            target_dim: Target dimension (number of columns to predict).
             params: Selected parameters from the hyperparameter space.
 
         Returns:
@@ -203,3 +324,29 @@ class BaseParams:
             predictor=predictor,
             transformation=(self._transformation + additional_transformation),
         )
+
+    # TODO cache this
+    @staticmethod
+    def get_hyperparameters() -> Parameters:
+        """Returns the hyperparameters space of the model.
+
+        Returns:
+            The hyperparameters space.
+        """
+        raise NotImplementedError
+
+
+@unique
+class Model(str, Enum):
+    """Enum representing the different model available."""
+
+    constant_value = "constant_value"
+    multivariate_constant_value = "multivariate_constant_value"
+    deep_ar = "deep_ar"
+    deep_var = "deep_var"
+    feed_forward = "feed_forward"
+    gp_var = "gp_var"
+    n_beats = "n_beats"
+    prophet = "prophet"
+    r_forecast = "r_forecast"
+    tree_predictor = "tree_predictor"

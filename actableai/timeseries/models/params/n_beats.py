@@ -1,38 +1,90 @@
-from typing import Dict, Any, Union, Tuple
+from typing import Dict, Any
 
 from gluonts.model.n_beats import NBEATSEnsembleEstimator
 from gluonts.mx import Trainer
 from mxnet import Context
 
+from actableai.parameters.numeric import FloatRangeSpace, IntegerRangeSpace
+from actableai.parameters.parameters import Parameters
 from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
-from actableai.timeseries.models.params.base import BaseParams
+from actableai.timeseries.models.params.base import BaseParams, Model
 
 
 class NBEATSParams(BaseParams):
     """Parameter class for NBEATS Model."""
 
+    # TODO cache this
+    @staticmethod
+    def get_hyperparameters() -> Parameters:
+        """Returns the hyperparameters space of the model.
+
+        Returns:
+            The hyperparameters space.
+        """
+
+        parameters = [
+            FloatRangeSpace(
+                name="context_length_ratio",
+                display_name="Context Length Ratio",
+                description="Number of steps to unroll the RNN for before computing predictions. The Context Length is computed by multiplying this ratio with the Prediction Length.",
+                default=(1, 2),
+                min=1,
+                # TODO check constraints
+            ),
+            IntegerRangeSpace(
+                name="epochs",
+                display_name="Epochs",
+                # TODO add description
+                description="description_epochs_todo",
+                default=(5, 20),
+                min=1,
+                # TODO check constraints
+            ),
+            FloatRangeSpace(
+                name="learning_rate",
+                display_name="Learning Rate",
+                # TODO add description
+                description="description_learning_rate_todo",
+                default=(0.0001, 0.01),
+                min=0.0001,
+                # TODO check constraints
+            ),
+            FloatRangeSpace(
+                name="l2",
+                display_name="L2 Regularization",
+                # TODO add description
+                description="description_l2_todo",
+                default=(1e-4, 0.01),
+                min=0,
+                # TODO check constraints
+            ),
+            IntegerRangeSpace(
+                name="meta_bagging_size",
+                display_name="Meta Bagging Size",
+                # TODO add description
+                description="description_meta_bagging_size_todo",
+                default=10,
+                # TODO check constraints
+            ),
+        ]
+
+        return Parameters(
+            name=Model.n_beats,
+            display_name="NBEATS Estimator",
+            parameters=parameters,
+        )
+
     def __init__(
         self,
-        context_length: Union[Tuple[int, int], int] = (1, 100),
-        epochs: Union[Tuple[int, int], int] = (1, 100),
-        learning_rate: Union[Tuple[float, float], float] = (0.0001, 0.01),
-        l2: Union[Tuple[float, float], float] = (1e-4, 0.01),
-        meta_bagging_size: Union[Tuple[int, int], int] = 10,
+        hyperparameters: Dict = None,
+        process_hyperparameters: bool = True,
     ):
         """NBEATSParams Constructor.
 
         Args:
-            context_length: Number of time units that condition the predictions, if
-                tuple it represents the minimum and maximum (excluded) value.
-            epochs: Number of epochs, if tuple it represents the minimum and maximum
-                (excluded) value.
-            learning_rate: Learning rate parameter, if tuple it represents the minimum
-                and maximum (excluded) value.
-            l2: L2 regularization parameter, if tuple it represents the minimum and
-                maximum (excluded) value.
-            meta_bagging_size: Bagging size (number of model to create for the
-                ensemble), if tuple it represents the minimum and the maximum (excluded)
-                value.
+            hyperparameters: Dictionary representing the hyperparameters space.
+            process_hyperparameters: If True the hyperparameters will be validated and
+                processed (deactivate if they have already been validated).
         """
         super().__init__(
             model_name="NBEATS",
@@ -42,28 +94,24 @@ class NBEATSParams(BaseParams):
             handle_feat_static_cat=False,
             handle_feat_dynamic_real=False,
             handle_feat_dynamic_cat=False,
+            hyperparameters=hyperparameters,
+            process_hyperparameters=process_hyperparameters,
         )
 
-        self.context_length = context_length
-        self.epochs = epochs
-        self.learning_rate = learning_rate
-        self.l2 = l2
-        self.meta_bagging_size = meta_bagging_size
-
-    def tune_config(self) -> Dict[str, Any]:
+    def tune_config(self, prediction_length) -> Dict[str, Any]:
         """Select parameters in the pre-defined hyperparameter space.
 
         Returns:
             Selected parameters.
         """
+        context_length = self._get_context_length(prediction_length)
+
         return {
-            "context_length": self._randint("context_length", self.context_length),
-            "epochs": self._randint("epochs", self.epochs),
-            "learning_rate": self._uniform("learning_rate", self.learning_rate),
-            "l2": self._uniform("l2", self.l2),
-            "meta_bagging_size": self._randint(
-                "meta_bagging_size", self.meta_bagging_size
-            ),
+            "context_length": self._randint("context_length", context_length),
+            "epochs": self._auto_select("epochs"),
+            "learning_rate": self._auto_select("learning_rate"),
+            "l2": self._auto_select("l2"),
+            "meta_bagging_size": self._auto_select("meta_bagging_size"),
         }
 
     def build_estimator(
@@ -91,16 +139,14 @@ class NBEATSParams(BaseParams):
             NBEATSEnsembleEstimator(
                 freq=freq,
                 prediction_length=prediction_length,
-                meta_context_length=[params.get("context_length", self.context_length)],
+                meta_context_length=[params.get("context_length", prediction_length)],
                 meta_loss_function=["MAPE"],
-                meta_bagging_size=params.get(
-                    "meta_bagging_size", self.meta_bagging_size
-                ),
+                meta_bagging_size=params["meta_bagging_size"],
                 trainer=Trainer(
                     ctx=ctx,
-                    epochs=params.get("epochs", self.epochs),
-                    learning_rate=params.get("learning_rate", self.learning_rate),
-                    weight_decay=params.get("l2", self.l2),
+                    epochs=params["epochs"],
+                    learning_rate=params["learning_rate"],
+                    weight_decay=params["l2"],
                     hybridize=False,
                 ),
             )

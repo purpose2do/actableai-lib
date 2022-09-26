@@ -1,26 +1,73 @@
-from typing import Union, Tuple, Dict, Any
+from typing import Dict, Any
 
 from gluonts.model.prophet import ProphetPredictor
 
-from actableai.timeseries.models.params.base import BaseParams
+from actableai.parameters.options import OptionsSpace
+from actableai.parameters.parameters import Parameters
+from actableai.timeseries.models.params.base import BaseParams, Model
 from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
 
 
 class ProphetParams(BaseParams):
     """Parameter class for Prophet Model."""
 
+    # TODO cache this
+    @staticmethod
+    def get_hyperparameters() -> Parameters:
+        """Returns the hyperparameters space of the model.
+
+        Returns:
+            The hyperparameters space.
+        """
+
+        parameters = [
+            OptionsSpace[str](
+                name="growth",
+                display_name="Growth",
+                # TODO add description
+                description="description_growth",
+                default=["linear"],
+                options={
+                    "linear": {"display_name": "Linear", "value": "linear"},
+                    "logistic": {"display_name": "Logistic", "value": "logistic"},
+                    "flat": {"display_name": "Flat", "value": "flat"},
+                },
+                # TODO check available options
+            ),
+            OptionsSpace[str](
+                name="seasonality_mode",
+                display_name="Seasonality Mode",
+                # TODO add description
+                description="description_seasonality_mode",
+                default=["additive", "multiplicative"],
+                options={
+                    "additive": {"display_name": "Additive", "value": "additive"},
+                    "multiplicative": {
+                        "display_name": "Multiplicative",
+                        "value": "multiplicative",
+                    },
+                },
+                # TODO check available options
+            ),
+        ]
+
+        return Parameters(
+            name=Model.prophet,
+            display_name="Prophet Predictor",
+            parameters=parameters,
+        )
+
     def __init__(
         self,
-        growth: Union[Tuple[str, ...], str] = "linear",
-        seasonality_mode: Union[Tuple[str, ...], str] = ("additive", "multiplicative"),
+        hyperparameters: Dict = None,
+        process_hyperparameters: bool = True,
     ):
         """ProphetParams Constructor.
 
         Args:
-            growth: Specify trend ["linear", "logistic", "flat"], if tuple it represents
-                the different values to choose from.
-            seasonality_mode: Seasonality mode parameter ["additive", "multiplicative"],
-                if tuple it represents the different values to choose from.
+            hyperparameters: Dictionary representing the hyperparameters space.
+            process_hyperparameters: If True the hyperparameters will be validated and
+                processed (deactivate if they have already been validated).
         """
         super().__init__(
             model_name="Prophet",
@@ -30,20 +77,19 @@ class ProphetParams(BaseParams):
             handle_feat_static_cat=True,
             handle_feat_dynamic_real=True,
             handle_feat_dynamic_cat=True,
+            hyperparameters=hyperparameters,
+            process_hyperparameters=process_hyperparameters,
         )
 
-        self.growth = growth
-        self.seasonality_mode = seasonality_mode
-
-    def tune_config(self) -> Dict[str, Any]:
+    def tune_config(self, prediction_length) -> Dict[str, Any]:
         """Select parameters in the pre-defined hyperparameter space.
 
         Returns:
             Selected parameters.
         """
         return {
-            "growth": self._choice("growth", self.growth),
-            "seasonality_mode": self._choice("seasonality_mode", self.seasonality_mode),
+            "growth": self._auto_select("growth"),
+            "seasonality_mode": self._auto_select("seasonality_mode"),
         }
 
     def build_predictor(
@@ -63,10 +109,8 @@ class ProphetParams(BaseParams):
             ProphetPredictor(
                 prediction_length=prediction_length,
                 prophet_params={
-                    "growth": params.get("growth", self.growth),
-                    "seasonality_mode": params.get(
-                        "seasonality_mode", self.seasonality_mode
-                    ),
+                    "growth": params["growth"],
+                    "seasonality_mode": params["seasonality_mode"],
                 },
             )
         )

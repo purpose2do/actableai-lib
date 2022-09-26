@@ -1,50 +1,131 @@
-from typing import Union, Tuple, Dict, Any
+from typing import Dict, Any
 
 from gluonts.model.gpvar import GPVAREstimator
 from gluonts.mx.trainer import Trainer
 from mxnet.context import Context
 
+from actableai.parameters.numeric import IntegerRangeSpace, FloatRangeSpace
+from actableai.parameters.options import OptionsSpace
+from actableai.parameters.parameters import Parameters
 from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
-from actableai.timeseries.models.params.base import BaseParams
+from actableai.timeseries.models.params.base import BaseParams, Model
 
 
 class GPVarParams(BaseParams):
     """Parameter class for GP Var Model."""
 
+    # TODO cache this
+    @staticmethod
+    def get_hyperparameters() -> Parameters:
+        """Returns the hyperparameters space of the model.
+
+        Returns:
+            The hyperparameters space.
+        """
+
+        parameters = [
+            IntegerRangeSpace(
+                name="epochs",
+                display_name="Epochs",
+                # TODO add description
+                description="description_epochs_todo",
+                default=(1, 100),
+                min=1,
+                # TODO check constraints
+            ),
+            IntegerRangeSpace(
+                name="num_cells",
+                display_name="Number of Cells",
+                # TODO add description
+                description="description_num_cells_todo",
+                default=(1, 100),
+                min=1,
+                # TODO check constraints
+            ),
+            IntegerRangeSpace(
+                name="num_layers",
+                display_name="Number of Layers",
+                # TODO add description
+                description="description_num_layers_todo",
+                default=(1, 32),
+                min=1,
+                # TODO check constraints
+            ),
+            OptionsSpace[str](
+                name="cell_type",
+                display_name="Cell Type",
+                # TODO add description
+                description="description_cell_type_todo",
+                default=["lstm", "gru"],
+                options={
+                    "lstm": {"display_name": "LSTM", "value": "lstm"},
+                    "gru": {"display_name": "GRU", "value": "gru"},
+                },
+                # TODO check available options
+            ),
+            FloatRangeSpace(
+                name="dropout_rate",
+                display_name="Dropout Rate",
+                # TODO add description
+                description="description_dropout_rate_todo",
+                default=(0, 0.5),
+                min=0,
+                max=1,
+                # TODO check constraints
+            ),
+            IntegerRangeSpace(
+                name="rank",
+                display_name="Rank",
+                # TODO add description
+                description="description_rank_todo",
+                default=(1, 20),
+                # TODO check constraints
+            ),
+            FloatRangeSpace(
+                name="context_length_ratio",
+                display_name="Context Length Ratio",
+                description="Number of steps to unroll the RNN for before computing predictions. The Context Length is computed by multiplying this ratio with the Prediction Length.",
+                default=(1, 2),
+                min=1,
+                # TODO check constraints
+            ),
+            FloatRangeSpace(
+                name="learning_rate",
+                display_name="Learning Rate",
+                # TODO add description
+                description="description_learning_rate_todo",
+                default=(0.0001, 0.01),
+                min=0.0001,
+                # TODO check constraints
+            ),
+            FloatRangeSpace(
+                name="l2",
+                display_name="L2 Regularization",
+                # TODO add description
+                description="description_l2_todo",
+                default=(1e-4, 0.01),
+                min=0,
+                # TODO check constraints
+            ),
+        ]
+
+        return Parameters(
+            name=Model.gp_var,
+            display_name="GP VAR Estimator",
+            parameters=parameters,
+        )
+
     def __init__(
         self,
-        epochs: Union[Tuple[int, int], int] = (1, 100),
-        num_cells: Union[Tuple[int, int], int] = (1, 100),
-        num_layers: Union[Tuple[int, int], int] = (1, 32),
-        cell_type: Union[Tuple[str, ...], str] = ("lstm", "gru"),
-        dropout_rate: Union[Tuple[float, float], float] = (0, 0.5),
-        rank: Union[Tuple[int, int], int] = (1, 20),
-        context_length: Union[Tuple[int, int], int] = (1, 100),
-        learning_rate: Union[Tuple[float, float], float] = (0.0001, 0.01),
-        l2: Union[Tuple[float, float], float] = (1e-4, 0.01),
+        hyperparameters: Dict = None,
+        process_hyperparameters: bool = True,
     ):
         """GPVarParams Constructor.
 
         Args:
-            epochs: Number of epochs, if tuple it represents the minimum and maximum
-                (excluded) value.
-            num_cells: Number of RNN cells for each layer, if tuple it represents the
-                minimum and maximum (excluded) value.
-            num_layers: Number of RNN layers, if tuple it represents the minimum and
-                maximum (excluded) value.
-            cell_type: Type of recurrent cells to use (available: 'lstm' or 'gru'), if
-                tuple it represents the different values to choose from.
-            dropout_rate: Dropout regularization parameter, if tuple it represents the
-                minimum and maximum (excluded) value.
-            rank: Rank for the LowrankMultivariateGaussianOutput, if tuple it represents
-                the minimum and maximum (excluded) value.
-            context_length: Number of steps to unroll the RNN for before computing
-                predictions, if tuple it represents the minimum and maximum (excluded)
-                value.
-            learning_rate: Learning rate parameter, if tuple it represents the minimum
-                and maximum (excluded) value.
-            l2: L2 regularization parameter, if tuple it represents the minimum and
-                maximum (excluded) value.
+            hyperparameters: Dictionary representing the hyperparameters space.
+            process_hyperparameters: If True the hyperparameters will be validated and
+                processed (deactivate if they have already been validated).
         """
         super().__init__(
             model_name="GPVar",
@@ -54,34 +135,28 @@ class GPVarParams(BaseParams):
             handle_feat_static_cat=True,
             handle_feat_dynamic_real=False,
             handle_feat_dynamic_cat=False,
+            hyperparameters=hyperparameters,
+            process_hyperparameters=process_hyperparameters,
         )
 
-        self.epochs = epochs
-        self.num_layers = num_layers
-        self.num_cells = num_cells
-        self.cell_type = cell_type
-        self.dropout_rate = dropout_rate
-        self.learning_rate = learning_rate
-        self.rank = rank
-        self.context_length = context_length
-        self.l2 = l2
-
-    def tune_config(self) -> Dict[str, Any]:
+    def tune_config(self, prediction_length) -> Dict[str, Any]:
         """Select parameters in the pre-defined hyperparameter space.
 
         Returns:
             Selected parameters.
         """
+        context_length = self._get_context_length(prediction_length)
+
         return {
-            "context_length": self._randint("context_length", self.context_length),
-            "epochs": self._randint("epochs", self.epochs),
-            "num_cells": self._randint("num_cells", self.num_cells),
-            "num_layers": self._randint("num_layers", self.num_layers),
-            "dropout_rate": self._uniform("dropout_rate", self.dropout_rate),
-            "learning_rate": self._uniform("learning_rate", self.learning_rate),
-            "rank": self._randint("rank", self.rank),
-            "cell_type": self._choice("cell_type", self.cell_type),
-            "l2": self._uniform("l2", self.l2),
+            "epochs": self._auto_select("epochs"),
+            "num_cells": self._auto_select("num_cells"),
+            "num_layers": self._auto_select("num_layers"),
+            "dropout_rate": self._auto_select("dropout_rate"),
+            "learning_rate": self._auto_select("learning_rate"),
+            "rank": self._auto_select("rank"),
+            "context_length": self._randint("context_length", context_length),
+            "cell_type": self._auto_select("cell_type"),
+            "l2": self._auto_select("l2"),
         }
 
     def build_estimator(
@@ -111,13 +186,13 @@ class GPVarParams(BaseParams):
             GPVAREstimator(
                 freq=freq,
                 prediction_length=prediction_length,
-                cell_type=params.get("cell_type", self.cell_type),
-                dropout_rate=params.get("dropout_rate", self.dropout_rate),
-                num_layers=params.get("num_layers", self.num_layers),
-                num_cells=params.get("num_cells", self.num_cells),
+                cell_type=params["cell_type"],
+                dropout_rate=params["dropout_rate"],
+                num_layers=params["num_layers"],
+                num_cells=params["num_cells"],
                 context_length=params.get("context_length", prediction_length),
                 num_parallel_samples=100,
-                rank=params.get("rank", self.rank),
+                rank=params["rank"],
                 scaling=False,
                 pick_incomplete=True,
                 shuffle_target_dim=True,
@@ -126,9 +201,9 @@ class GPVarParams(BaseParams):
                 target_dim=target_dim,
                 trainer=Trainer(
                     ctx=ctx,
-                    epochs=params.get("epochs", self.epochs),
-                    learning_rate=params.get("learning_rate", self.learning_rate),
-                    weight_decay=params.get("l2", self.l2),
+                    epochs=params["epochs"],
+                    learning_rate=params["learning_rate"],
+                    weight_decay=params["l2"],
                     hybridize=False,
                 ),
             )

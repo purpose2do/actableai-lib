@@ -1,33 +1,60 @@
-from typing import Optional, Union, Tuple, Dict, Any
+from typing import Dict, Any
 
 from gluonts.model.r_forecast import RForecastPredictor
 
-from actableai.timeseries.models.params.base import BaseParams
+from actableai.parameters.options import OptionsSpace
+from actableai.parameters.parameters import Parameters
+from actableai.timeseries.models.params.base import BaseParams, Model
 from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
 
 
 class RForecastParams(BaseParams):
     """Parameters class for RForecast Model."""
 
+    # TODO cache this
+    @staticmethod
+    def get_hyperparameters() -> Parameters:
+        """Returns the hyperparameters space of the model.
+
+        Returns:
+            The hyperparameters space.
+        """
+
+        parameters = [
+            OptionsSpace[str](
+                name="method_name",
+                display_name="Method Name",
+                # TODO add description
+                description="description_method_name_todo",
+                default=["arima", "ets"],
+                options={
+                    "tbats": {"display_name": "TBATS", "value": "tbats"},
+                    "thetaf": {"display_name": "THETAF", "value": "thetaf"},
+                    "stlar": {"display_name": "STLAR", "value": "stlar"},
+                    "arima": {"display_name": "ARIMA", "value": "arima"},
+                    "ets": {"display_name": "ETS", "value": "ets"},
+                },
+                # TODO check available options
+            ),
+        ]
+
+        return Parameters(
+            name=Model.r_forecast,
+            display_name="R Forecast Predictor",
+            parameters=parameters,
+        )
+
     def __init__(
         self,
-        method_name: Union[Tuple[str, ...], str] = (
-            "tbats",
-            "thetaf",
-            "stlar",
-            "arima",
-            "ets",
-        ),
-        period: Optional[Union[Tuple[int, int], int]] = None,
+        hyperparameters: Dict = None,
+        process_hyperparameters: bool = True,
     ):
         """RForecastParams Constructor.
 
         Args:
-            method_name: Name of the method, it tuples it represents the different
-                values to choose from.
-            period: Period to be used (this is called `frequency` in the R forecast
-                package),  if tuple it represents the minimum and maximum (excluded)
-                value.
+            hyperparameters: Dictionary representing the hyperparameters space.
+            process_hyperparameters: If True the hyperparameters will be validated and
+                processed (deactivate if they have already been validated).
         """
         super().__init__(
             model_name="RForecast",
@@ -37,20 +64,18 @@ class RForecastParams(BaseParams):
             handle_feat_static_cat=True,
             handle_feat_dynamic_real=True,
             handle_feat_dynamic_cat=True,
+            hyperparameters=hyperparameters,
+            process_hyperparameters=process_hyperparameters,
         )
 
-        self.method_name = method_name
-        self.period = period
-
-    def tune_config(self) -> Dict[str, Any]:
+    def tune_config(self, prediction_length) -> Dict[str, Any]:
         """Select parameters in the pre-defined hyperparameter space.
 
         Returns:
             Selected parameters.
         """
         return {
-            "method_name": self._choice("method_name", self.method_name),
-            "period": self._randint("period", self.period),
+            "method_name": self._auto_select("method_name"),
         }
 
     def build_predictor(
@@ -71,7 +96,6 @@ class RForecastParams(BaseParams):
             RForecastPredictor(
                 freq=freq,
                 prediction_length=prediction_length,
-                method_name=params.get("method_name", self.method_name),
-                period=params.get("period", self.period),
+                method_name=params["method_name"],
             )
         )

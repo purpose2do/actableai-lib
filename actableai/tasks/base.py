@@ -5,6 +5,7 @@ from copy import deepcopy
 from functools import wraps
 from typing import Any, Callable, List, Optional, Tuple, Union
 
+from actableai.parameters.models import ModelSpace
 from actableai.tasks import TaskType
 from actableai.utils.resources.predict import ResourcePredictorType
 from actableai.utils.resources.profile import ResourceProfilerType
@@ -523,5 +524,19 @@ class AAITask(ABC):
     def run(self, *args, **kwargs):
         """
         Abstract method called to run the task
+        """
+        raise NotImplementedError()
+
+
+class AAITunableTask(AAITask, ABC):
+    """Base abstract class to represent a Tunable Actable AI Task."""
+
+    @staticmethod
+    @abstractmethod
+    def get_hyperparameters_space(*args, **kwargs) -> ModelSpace:
+        """Return the hyperparameters space oof the task.
+
+        Returns:
+            Hyperparameters space represented as a ModelSpace.
         """
         raise NotImplementedError()
