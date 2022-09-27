@@ -18,7 +18,7 @@ This Machine Learning library is Open Source and licensed under Apache v2 so fre
 and modify.
 
 Actable-AI implements Machine Learning models usable out of the box for multiple tasks.
-You can discover each task usage with our notebooks :
+You can discover each task usage with our notebooks:
 
    - `Classification <https://github.com/Actable-AI/actableai-lib/blob/master/examples/classification.ipynb>`_
    - `Regression <https://github.com/Actable-AI/actableai-lib/blob/master/examples/regression.ipynb>`_
