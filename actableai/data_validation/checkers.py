@@ -1178,3 +1178,26 @@ class PositiveOutcomeForBinaryChecker(IChecker):
                     level=self.level,
                     message="If the outcome is binary, the positive outcome value must be specified.",
                 )
+
+
+class IsSufficientSampleCrossValidationChecker(IChecker):
+    def __init__(self, level, name: str = "IsSufficientSampleCrossValidationChecker"):
+        super().__init__(name)
+        self.level = level
+
+    def check(self, df: pd.DataFrame, kfolds: int) -> Optional[CheckResult]:
+        """Check that there is more values than the number of kfolds
+
+        Args:
+            df: Input dataframe
+            kfolds: Number of cross validated folds
+
+        Returns:
+            Optional[CheckResult]: Check result
+        """
+        if kfolds > len(df):
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"The number of kfolds ({kfolds}) must be lower or equal to the number of samples ({len(df)})",
+            )

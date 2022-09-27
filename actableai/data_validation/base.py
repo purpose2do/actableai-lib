@@ -1,6 +1,6 @@
 import abc
 import pandas as pd
-from typing import List
+from typing import Optional
 
 MINIMUM_NUMBER_OF_SAMPLE = 20
 CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS = 2
@@ -54,5 +54,5 @@ class IChecker(metaclass=abc.ABCMeta):
         self.name = name
 
     @abc.abstractmethod
-    def check(self, df: pd.DataFrame) -> CheckResult:
+    def check(self, df: pd.DataFrame) -> Optional[CheckResult]:
         pass
