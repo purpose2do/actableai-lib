@@ -274,3 +274,8 @@ class SKLearnMultilabelWrapper(SKLearnWrapper):
             }
         else:
             raise UnsupportedProblemType()
+
+    def feature_importance(self) -> pd.DataFrame:
+        if self.train_data is None:
+            raise Exception("The predictor needs to be fitted before")
+        return self.ag_predictor.feature_importance(self.train_data)
