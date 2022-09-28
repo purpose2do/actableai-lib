@@ -253,3 +253,61 @@ class TestIntervention:
         assert r["status"] == "SUCCESS"
         assert "df" in r["data"]
         assert r["data"]["df"].shape == (20, 12)
+
+    def test_intervention_numeric_treatment_categorical_outcome(
+        self, intervention_task: AAIInterventionTask, tmp_path
+    ):
+        df = pd.DataFrame(
+            {
+                "x": [2, 2, 2, 2, 2, None, 3, 3, 4, 4] * 2,
+                "y": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"] * 2,
+                "current_intervention": [2, 2, 2, 2, None, 3, None, 3, 4, 4] * 2,
+            }
+        )
+        df["new_intervention"] = df["current_intervention"] * 2
+
+        result = intervention_task.run(
+            df,
+            "y",
+            "current_intervention",
+            "new_intervention",
+            model_directory=tmp_path,
+            causal_hyperparameters=unittest_hyperparameters(),
+            drop_unique=False,
+            drop_useless_features=False,
+        )
+
+        assert result["status"] == "SUCCESS"
+        assert "df" in result["data"]
+        assert result["data"]["df"].shape == (20, 5)
+
+    def test_intervention_categorical_outcome_with_common_causes(
+        self, intervention_task: AAIInterventionTask, tmp_path
+    ):
+        current_intervention = ["a", None, "a", "a", "a", "b", "b", "b", "b", "b"]
+        new_intervention = ["b", "b", "b", "b", "b", None, None, "a", "a", "a"]
+        df = pd.DataFrame(
+            {
+                "x": [2, 2, 2, 2, 2, None, 3, 3, 4, 4] * 2,
+                "y": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"] * 2,
+                "z": ["a", "a", "a", "b", "b", "b", "b", "b", "b", "b"] * 2,
+                "current_intervention": current_intervention * 2,
+                "new_intervention": new_intervention * 2,
+            }
+        )
+
+        r = intervention_task.run(
+            df,
+            "y",
+            "current_intervention",
+            "new_intervention",
+            common_causes=["y", "z"],
+            model_directory=tmp_path,
+            causal_hyperparameters=unittest_hyperparameters(),
+            drop_unique=False,
+            drop_useless_features=False,
+        )
+
+        assert r["status"] == "SUCCESS"
+        assert "df" in r["data"]
+        assert r["data"]["df"].shape == (20, 6)
