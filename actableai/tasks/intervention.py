@@ -52,7 +52,8 @@ class AAIInterventionTask(AAITask):
             causal_cv: Number of folds for causal cross validation
             causal_hyperparameters: Hyperparameters for AutoGluon
                 See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
-            cate_alpha: Alpha for intervention effect
+            cate_alpha: Alpha for intervention effect. Ignored if df[target] is
+                categorical or if target_proba is not None
             presets: Presets for AutoGluon.
                 See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
             model_directory: Model directory
@@ -158,6 +159,10 @@ class AAIInterventionTask(AAITask):
             logging.warning(
                 "`df[target]` is a numerical column and `target_proba` is not None: `target_proba` will be ignored"
             )
+        if target not in num_cols and cate_alpha is not None:
+            logging.warning(
+                "`df[target]` is a categorical column and `cate_alpha` is not None: `cate_alpha` will be ignored"
+            )
 
         df = df.replace(to_replace=[None], value=np.nan)
         if len(num_cols):
@@ -206,6 +211,7 @@ class AAIInterventionTask(AAITask):
             holdout_frac=model_t_holdout_frac,
         )
 
+        logit_target = None
         if target in num_cols:
             model_y_predictor = TabularPredictor(
                 path=mkdtemp(prefix=str(model_directory)),
@@ -223,7 +229,6 @@ class AAIInterventionTask(AAITask):
         else:
             # Target is categorical. We need to OneHotEncode the target or use
             # target_proba. Apply Logit, run econml, sum effect with logit output
-            logit_target = None
             if target_proba is not None:
                 logit_target = logit(target_proba)
             else:
@@ -264,18 +269,34 @@ class AAIInterventionTask(AAITask):
                 discrete_treatment=current_intervention_column in cat_cols,
             )
         else:
-            model_final = TabularPredictor(
-                path=mkdtemp(prefix=str(model_directory)),
-                label="y_res",
-                problem_type="regression",
-            )
-            model_final = SKLearnTabularWrapper(
-                model_final,
-                hyperparameters=causal_hyperparameters,
-                presets=presets,
-                ag_args_fit=ag_args_fit,
-                feature_generator=feature_generator,
-            )
+            if target in num_cols:
+                model_final = TabularPredictor(
+                    path=mkdtemp(prefix=str(model_directory)),
+                    label="y_res",
+                    problem_type="regression",
+                )
+                model_final = SKLearnTabularWrapper(
+                    model_final,
+                    hyperparameters=causal_hyperparameters,
+                    presets=presets,
+                    ag_args_fit=ag_args_fit,
+                    feature_generator=feature_generator,
+                )
+            else:
+                model_final_predictor = MultilabelPredictor(
+                    labels=logit_target.columns,
+                    path=mkdtemp(prefix=str(model_directory)),
+                    problem_types=["regression"] * len(logit_target.columns),
+                )
+                model_final = SKLearnMultilabelWrapper(
+                    ag_predictor=model_final_predictor,
+                    hyperparameters=causal_hyperparameters,
+                    presets=presets,
+                    ag_args_fit=ag_args_fit,
+                    feature_generator=feature_generator,
+                    holdout_frac=None,
+                )
+
             causal_model = NonParamDML(
                 model_t=model_t,
                 model_y=model_y,
@@ -290,7 +311,7 @@ class AAIInterventionTask(AAITask):
         if target in num_cols:
             target_df = df[[target]]
         else:
-            ohe_target = OneHotEncoder(sparse=False)
+            ohe_target = OneHotEncoder(sparse=False, handle_unknown="ignore")
             if target_proba is not None:
                 ohe_target.fit(target_proba)
                 target_df = pd.DataFrame(
