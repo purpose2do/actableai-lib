@@ -819,11 +819,12 @@ class AAIClassificationTask(AAITask):
             for x in failed_checks
         ]
         if intervention_run_params is not None:
+            intervention_run_params["target_proba"] = predictor.predict_proba(df)
             intervention_task_result = AAIInterventionTask(
                 return_model=True, upload_model=False
             ).run(**intervention_run_params)
             if intervention_task_result["status"] == "SUCCESS":
-                causal_model = intervention_task_result["causal_model"]
+                causal_model = intervention_task_result["model"]
                 discrete_treatment = intervention_task_result["discrete_treatment"]
                 current_intervention_column = intervention_run_params[
                     "current_intervention_column"
