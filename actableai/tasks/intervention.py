@@ -306,29 +306,22 @@ class AAIInterventionTask(AAITask):
                 discrete_treatment=current_intervention_column in cat_cols,
             )
 
-        target_df = None
+        Y_target = None
         ohe_target = None
         if target in num_cols:
-            target_df = df[[target]]
+            Y_target = df[[target]].values
         else:
-            ohe_target = OneHotEncoder(sparse=False, handle_unknown="ignore")
             if target_proba is not None:
-                ohe_target.fit(target_proba)
-                target_df = pd.DataFrame(
-                    logit(target_proba),
-                    columns=ohe_target.get_feature_names_out([target]),
-                )
+                Y_target = logit(target_proba).values
             else:
-                target_df = pd.DataFrame(
-                    ohe_target.fit_transform(df[[target]]),
-                    columns=ohe_target.get_feature_names_out([target]),
-                )
-                target_df = pd.DataFrame(
-                    logit(target_df), columns=target_df.columns
-                ).clip(LOGIT_MIN_VALUE, LOGIT_MAX_VALUE)
+                ohe_target = OneHotEncoder(sparse=False, handle_unknown="ignore")
+                Y_target = ohe_target.fit_transform(df[[target]])
+                Y_target = pd.DataFrame(logit(Y_target)).clip(
+                    LOGIT_MIN_VALUE, LOGIT_MAX_VALUE
+                ).values
 
         causal_model.fit(
-            Y=target_df.values,
+            Y=Y_target,
             T=df[[current_intervention_column]].values,
             X=X.values if X is not None else None,
             cache_values=True,
@@ -359,7 +352,7 @@ class AAIInterventionTask(AAITask):
             target_intervened = df[target] + effects.flatten()
         else:
             target_intervened = ohe_target.inverse_transform(
-                expit(target_df.values + effects)
+                expit(Y_target + effects)
             )
 
         df[target + "_intervened"] = target_intervened  # type: ignore
