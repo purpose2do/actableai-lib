@@ -1,6 +1,4 @@
 from typing import Dict, List, Optional
-from autogluon.tabular import TabularPredictor
-from econml.dml import DML
 import pandas as pd
 import numpy as np
 
@@ -8,10 +6,10 @@ import numpy as np
 def custom_intervention_effect(
     df: pd.DataFrame,
     pred: Dict,
-    causal_model: DML,
+    causal_model,
     intervened_column: str,
     common_causes: Optional[List[str]],
-    predictor: TabularPredictor,
+    predictor,
     discrete_treatment: Optional[bool],
 ) -> pd.DataFrame:
     cta = pred["prediction"][predictor.label].replace("", np.nan).astype(float)

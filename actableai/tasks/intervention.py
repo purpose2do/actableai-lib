@@ -7,7 +7,6 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import r2_score
 from scipy.special import logit, expit
-from actableai.causal.predictors import SKLearnMultilabelWrapper
 
 from actableai.data_validation.base import CheckLevels
 from actableai.intervention.config import LOGIT_MIN_VALUE, LOGIT_MAX_VALUE
@@ -96,6 +95,7 @@ class AAIInterventionTask(AAITask):
         import numpy as np
         import networkx as nx
 
+        from actableai.causal.predictors import SKLearnMultilabelWrapper
         from actableai.data_validation.params import InterventionDataValidator
         from actableai.causal.predictors import SKLearnTabularWrapper
         from actableai.utils.preprocessors.autogluon_preproc import DMLFeaturizer
