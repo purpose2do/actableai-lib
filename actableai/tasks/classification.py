@@ -810,8 +810,6 @@ class AAIClassificationTask(AAITask):
             str
         )
 
-        causal_model = None
-        current_intervention_column = None
         validations = [
             {"name": x.name, "level": x.level, "message": x.message}
             for x in failed_checks
@@ -822,7 +820,7 @@ class AAIClassificationTask(AAITask):
                 return_model=True, upload_model=False
             ).run(**intervention_run_params)
             if intervention_task_result["status"] == "SUCCESS":
-                aaiinterventionalmodel = intervention_task_result["model"]
+                aai_interventional_model = intervention_task_result["model"]
             else:
                 validations.append(
                     {
@@ -868,11 +866,11 @@ class AAIClassificationTask(AAITask):
             model = AAITabularModel(
                 version=MODEL_DEPLOYMENT_VERSION, predictor=predictor
             )
-            if causal_model and current_intervention_column:
+            if aai_interventional_model is not None:
                 model = AAITabularModelInterventional(
                     version=MODEL_DEPLOYMENT_VERSION,
                     predictor=predictor,
-                    intervention_model=aaiinterventionalmodel,
+                    intervention_model=aai_interventional_model,
                 )
 
         runtime = time.time() - start

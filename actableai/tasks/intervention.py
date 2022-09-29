@@ -313,10 +313,13 @@ class AAIInterventionTask(AAITask):
         if target in num_cols:
             Y_target = df[[target]].values
         else:
+            ohe_target = OneHotEncoder(sparse=False, handle_unknown="ignore")
             if target_proba is not None:
-                Y_target = logit(target_proba).values
+                ohe_target.fit(df[[target]])
+                Y_target = (
+                    logit(target_proba).clip(LOGIT_MIN_VALUE, LOGIT_MAX_VALUE).values
+                )
             else:
-                ohe_target = OneHotEncoder(sparse=False, handle_unknown="ignore")
                 Y_target = ohe_target.fit_transform(df[[target]])
                 Y_target = (
                     pd.DataFrame(logit(Y_target))
