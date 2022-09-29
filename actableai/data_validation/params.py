@@ -383,7 +383,7 @@ class ClassificationDataValidator:
 
         if target in df.columns and not pd.isnull(df[target]).all():
             validation_results += [
-                IsCategoricalChecker(level=CheckLevels.CRITICAL).check(df[target]),
+                IsCategoricalChecker(level=CheckLevels.WARNING).check(df[target]),
                 IsSufficientNumberOfClassChecker(level=CheckLevels.CRITICAL).check(
                     df[target]
                 ),

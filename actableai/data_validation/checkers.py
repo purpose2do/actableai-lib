@@ -59,8 +59,6 @@ class IsCategoricalChecker(IChecker):
 
         data_type = get_type_special(df)  # type: ignore
         if data_type not in ["category", "integer", "boolean"]:
-            if data_type == "integer":
-                self.level = CheckLevels.WARNING
             return CheckResult(
                 name=self.name,
                 level=self.level,
