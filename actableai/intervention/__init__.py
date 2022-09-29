@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional
 import pandas as pd
 import numpy as np
-from scipy.special import logit
+from scipy.special import logit, expit
 
 from actableai.intervention.config import LOGIT_MIN_VALUE, LOGIT_MAX_VALUE
 
@@ -23,7 +23,11 @@ def custom_intervention_effect(
     outcome_transformer = aai_interventional_model.outcome_transformer
     if predictor.problem_type in ["binary", "multiclass"]:
         if "df_proba" in pred:
-            cta = pd.DataFrame(logit(pred["df_proba"]))
+            cta = (
+                pd.DataFrame(logit(pred["df_proba"]))
+                .clip(LOGIT_MIN_VALUE, LOGIT_MAX_VALUE)
+                .values
+            )
         else:
             cta = pd.DataFrame(
                 outcome_transformer.transform(pred["prediction"][predictor.label]),
@@ -36,11 +40,14 @@ def custom_intervention_effect(
         raise InterventionalProblemTypeException()
     new_inter = [None for _ in range(len(df))]
     new_out = [None for _ in range(len(df))]
+    # Simply use effect function if treatment or outcome is categorical
+    # outcome_transfomer not None means that we onehotencode so outcome is categorical
     if discrete_treatment or outcome_transformer is not None:
         custom_effect = []
         for index_lab in range(len(df)):
             curr_discrete_effect = np.nan
-            if isinstance(df[f"intervened_{intervened_column}"][index_lab], str):
+            curr_value = df[f"intervened_{intervened_column}"][index_lab]
+            if isinstance(curr_value, str) or isinstance(curr_value, float):
                 curr_discrete_effect = causal_model.effect(
                     df[common_causes][index_lab : index_lab + 1]
                     if common_causes is not None and len(common_causes) != 0
@@ -52,10 +59,14 @@ def custom_intervention_effect(
                 )
                 curr_discrete_effect = curr_discrete_effect  # type: ignore
             custom_effect.append(curr_discrete_effect)
-        custom_effect = np.array(custom_effect)
+        custom_effect = np.array(custom_effect).squeeze()
         new_out = [None for _ in range(len(df))]
         if f"intervened_{intervened_column}" in df:
             new_out = custom_effect + cta
+            if outcome_transformer is not None:
+                new_out = outcome_transformer.inverse_transform(
+                    expit(new_out)
+                ).squeeze()
         return pd.DataFrame(
             {
                 f"expected_{predictor.label}": new_out,
