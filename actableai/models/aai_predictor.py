@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict
 from autogluon.tabular import TabularPredictor
 import pandas as pd
 
