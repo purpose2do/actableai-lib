@@ -1,6 +1,5 @@
 from typing import Dict, List, Optional
 from autogluon.tabular import TabularPredictor
-from econml.dml import DML
 import pandas as pd
 
 from actableai.intervention import custom_intervention_effect
@@ -23,32 +22,41 @@ class AAITabularModel(AAIModel):
         self.predictor = predictor
 
 
+class AAIInterventionalModel(AAIModel):
+    def __init__(
+        self,
+        version: int,
+        causal_model,
+        outcome_transformer,
+        discrete_treatment,
+        common_causes,
+        intervened_column,
+    ) -> None:
+        super().__init__(version)
+        self.common_causes = common_causes
+        self.causal_model = causal_model
+        self.outcome_transformer = outcome_transformer
+        self.discrete_treatment = discrete_treatment
+        self.intervened_column = intervened_column
+
+
 class AAITabularModelInterventional(AAITabularModel):
     def __init__(
         self,
         version: int,
         predictor: TabularPredictor,
-        causal_model: DML,
-        intervened_column: str,
-        common_causes: Optional[List[str]],
-        discrete_treatment: Optional[bool],
+        intervention_model: AAIInterventionalModel,
     ) -> None:
         super().__init__(
             version,
             predictor,
         )
-        self.causal_model = causal_model
-        self.intervened_column = intervened_column
-        self.common_causes = common_causes
-        self.discrete_treatment = discrete_treatment
+        self.intervention_model = intervention_model
 
     def intervention_effect(self, df: pd.DataFrame, pred: Dict) -> pd.DataFrame:
         return custom_intervention_effect(
             df=df,
             pred=pred,
-            causal_model=self.causal_model,
-            intervened_column=self.intervened_column,
-            common_causes=self.common_causes,
             predictor=self.predictor,
-            discrete_treatment=self.discrete_treatment,
+            aai_interventional_model=self.intervention_model,
         )

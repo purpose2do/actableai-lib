@@ -100,6 +100,8 @@ class AAIInterventionTask(AAITask):
         from actableai.causal.predictors import SKLearnTabularWrapper
         from actableai.utils.preprocessors.autogluon_preproc import DMLFeaturizer
         from actableai.utils.multilabel_predictor import MultilabelPredictor
+        from actableai.models.aai_predictor import AAIInterventionalModel
+        from actableai.models.config import MODEL_DEPLOYMENT_VERSION
         from actableai.utils import get_type_special_no_ag
 
         start = time.time()
@@ -316,9 +318,11 @@ class AAIInterventionTask(AAITask):
             else:
                 ohe_target = OneHotEncoder(sparse=False, handle_unknown="ignore")
                 Y_target = ohe_target.fit_transform(df[[target]])
-                Y_target = pd.DataFrame(logit(Y_target)).clip(
-                    LOGIT_MIN_VALUE, LOGIT_MAX_VALUE
-                ).values
+                Y_target = (
+                    pd.DataFrame(logit(Y_target))
+                    .clip(LOGIT_MIN_VALUE, LOGIT_MAX_VALUE)
+                    .values
+                )
 
         causal_model.fit(
             Y=Y_target,
@@ -337,8 +341,14 @@ class AAIInterventionTask(AAITask):
                 ],
                 "data": {},
                 "runtime": time.time() - start,
-                "model": causal_model,
-                "discrete_treatment": current_intervention_column in cat_cols,
+                "model": AAIInterventionalModel(
+                    MODEL_DEPLOYMENT_VERSION,
+                    causal_model=causal_model,
+                    outcome_transformer=ohe_target,
+                    discrete_treatment=current_intervention_column in cat_cols,
+                    intervened_column=current_intervention_column,
+                    common_causes=common_causes,
+                ),
             }
 
         effects = causal_model.effect(
@@ -351,9 +361,7 @@ class AAIInterventionTask(AAITask):
         if target in num_cols or ohe_target is None:
             target_intervened = df[target] + effects.flatten()
         else:
-            target_intervened = ohe_target.inverse_transform(
-                expit(Y_target + effects)
-            )
+            target_intervened = ohe_target.inverse_transform(expit(Y_target + effects))
 
         df[target + "_intervened"] = target_intervened  # type: ignore
         if target in num_cols:
@@ -513,6 +521,12 @@ class AAIInterventionTask(AAITask):
             ],
             "data": estimation_results,
             "runtime": time.time() - start,
-            "model": causal_model,
-            "discrete_treatment": current_intervention_column in cat_cols,
+            "model": AAIInterventionalModel(
+                MODEL_DEPLOYMENT_VERSION,
+                causal_model=causal_model,
+                outcome_transformer=ohe_target,
+                discrete_treatment=current_intervention_column in cat_cols,
+                intervened_column=current_intervention_column,
+                common_causes=common_causes,
+            ),
         }
