@@ -3,10 +3,11 @@ from autogluon.tabular import TabularPredictor
 import pandas as pd
 
 from actableai.intervention import custom_intervention_effect
+from actableai.models.config import MODEL_DEPLOYMENT_VERSION
 
 
 class AAIModel:
-    model_version = 1
+    model_version = MODEL_DEPLOYMENT_VERSION
 
     def __init__(self, version: int = model_version) -> None:
         self.version = version

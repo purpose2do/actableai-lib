@@ -117,13 +117,22 @@ class AAIModelInference:
                 probability_threshold,
                 positive_label,
             )
-            # Intervention effect part
+            # Here for legacy, previously the causal model was directly in the AAITabularModel
+            # Now intervention has its own custom model
+            if task_model.model_version <= 1:
+                if isinstance(task_model, AAITabularModelInterventional) and (
+                    f"intervened_{task_model.intervened_column}" in df
+                    or f"expected_{task_model.predictor.label}" in df
+                ):
+                    pred["intervention"] = task_model.intervention_effect(df, pred)
+                    return pred
             if isinstance(task_model, AAITabularModelInterventional) and (
-                f"intervened_{task_model.intervened_column}" in df
+                f"intervened_{task_model.intervention_model.intervened_column}"
+                in df
                 or f"expected_{task_model.predictor.label}" in df
             ):
                 pred["intervention"] = task_model.intervention_effect(df, pred)
-            return pred
+                return pred
 
         # Run legacy task_model directly
         return self._predict(
@@ -232,13 +241,17 @@ class AAIModelInference:
         if isinstance(task_model, AAITabularModel):
             metadata = self._get_metadata(task_model.predictor)
 
-            if (
-                isinstance(task_model, AAITabularModelInterventional)
-                and task_model.causal_model is not None
-                and task_model.intervened_column is not None
-            ):
-                metadata["intervened_column"] = task_model.intervened_column
-                metadata["discrete_treatment"] = task_model.discrete_treatment
+            if isinstance(task_model, AAITabularModelInterventional):
+                if task_model.model_version <= 1:
+                    metadata["intervened_column"] = task_model.intervened_column
+                    metadata["discrete_treatment"] = task_model.discrete_treatment
+                else:
+                    metadata[
+                        "intervened_column"
+                    ] = task_model.intervention_model.intervened_column
+                    metadata[
+                        "discrete_treatment"
+                    ] = task_model.intervention_model.discrete_treatment
             return metadata
         return self._get_metadata(task_model)
 

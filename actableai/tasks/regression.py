@@ -782,25 +782,18 @@ class AAIRegressionTask(AAITask):
             "leaderboard": leaderboard,
         }
 
-        causal_model = None
-        current_intervention_column = None
-        common_causes = None
-        discrete_treatment = None
         validations = [
             {"name": x.name, "level": x.level, "message": x.message}
             for x in failed_checks
         ]
+
+        aai_interventional_model = None
         if intervention_run_params is not None:
             intervention_task_result = AAIInterventionTask(
                 return_model=True, upload_model=False
             ).run(**intervention_run_params)
             if intervention_task_result["status"] == "SUCCESS":
-                causal_model = intervention_task_result["model"]
-                discrete_treatment = intervention_task_result["discrete_treatment"]
-                current_intervention_column = intervention_run_params[
-                    "current_intervention_column"
-                ]
-                common_causes = intervention_run_params["common_causes"]
+                aai_interventional_model = intervention_task_result["model"]
             else:
                 validations.append(
                     {
@@ -846,14 +839,11 @@ class AAIRegressionTask(AAITask):
             model = AAITabularModel(
                 version=MODEL_DEPLOYMENT_VERSION, predictor=predictor
             )
-            if causal_model and current_intervention_column:
+            if aai_interventional_model:
                 model = AAITabularModelInterventional(
                     version=MODEL_DEPLOYMENT_VERSION,
                     predictor=predictor,
-                    causal_model=causal_model,
-                    intervened_column=current_intervention_column,
-                    common_causes=common_causes,
-                    discrete_treatment=discrete_treatment,
+                    intervention_model=aai_interventional_model,
                 )
 
         runtime = time.time() - start

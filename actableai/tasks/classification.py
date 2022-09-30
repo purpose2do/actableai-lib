@@ -814,6 +814,7 @@ class AAIClassificationTask(AAITask):
             {"name": x.name, "level": x.level, "message": x.message}
             for x in failed_checks
         ]
+        aai_interventional_model = None
         if intervention_run_params is not None:
             intervention_run_params["target_proba"] = predictor.predict_proba(df)
             intervention_task_result = AAIInterventionTask(
