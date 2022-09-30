@@ -576,6 +576,12 @@ class AAIClassificationTask(AAITask):
                     ag_automm_enabled and any_text_cols
                 )
 
+        from actableai.utils import get_type_special
+
+        # If the types are mixed, the train_test_split function with stratify crashes
+        if get_type_special(df[target]) == "mixed":
+            df[target] = df[target].astype(str)
+
         # Split data
         df_train = df[pd.notnull(df[target])]
         if drop_duplicates:
