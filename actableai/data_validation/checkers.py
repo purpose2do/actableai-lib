@@ -1,3 +1,4 @@
+from cgitb import small
 from collections import Counter
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
@@ -1221,11 +1222,8 @@ class IsSufficientDataClassificationStratification(IChecker):
         df_train = df_train.groupby(target).filter(
             lambda x: len(x) >= CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE
         )
-        df_train, df_val = train_test_split(
-            df_train, test_size=validation_ratio, stratify=df_train[target]
-        )
-        if df_train[target].nunique() != df_val[target].nunique():
-            smallest_value = df[target].value_counts().min()
+        smallest_value = df[target].value_counts().min()
+        if smallest_value * validation_ratio < 1:
             return CheckResult(
                 name=self.name,
                 level=self.level,
