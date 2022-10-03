@@ -1,4 +1,5 @@
 from collections import Counter
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
 from typing import Any, List, Optional, Union
 import pandas as pd
@@ -1198,4 +1199,36 @@ class IsSufficientSampleCrossValidationChecker(IChecker):
                 name=self.name,
                 level=self.level,
                 message=f"The number of kfolds ({kfolds}) must be lower or equal to the number of samples ({len(df)})",
+            )
+
+
+class IsSufficientDataClassificationStratification(IChecker):
+    def __init__(self, level, name="IsSufficientDataClassificationStratification"):
+        super().__init__(name)
+        self.level = level
+
+    def check(
+        self,
+        df: pd.DataFrame,
+        target: str,
+        validation_ratio: float,
+        drop_duplicates: bool,
+        features: List[str],
+    ) -> Optional[CheckResult]:
+        df_train = df[pd.notnull(df[target])]
+        if drop_duplicates:
+            df_train = df_train.drop_duplicates(subset=features + [target])
+        df_train = df_train.groupby(target).filter(
+            lambda x: len(x) >= CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE
+        )
+        df_train, df_val = train_test_split(
+            df_train, test_size=validation_ratio, stratify=df_train[target]
+        )
+        if df_train[target].nunique() != df_val[target].nunique():
+            smallest_value = df[target].value_counts().min()
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"The validation ratio ({validation_ratio}) is not high enough to represent the target in validation set."
+                + f" Please set it to ({1 / smallest_value}+) or add more data.",
             )
