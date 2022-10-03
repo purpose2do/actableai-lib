@@ -10,6 +10,7 @@ from scipy.special import logit, expit
 
 from actableai.data_validation.base import CheckLevels
 from actableai.intervention.config import LOGIT_MIN_VALUE, LOGIT_MAX_VALUE
+from actableai.intervention.model import AAIInterventionEffectPredictor
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 from actableai.utils import memory_efficient_hyperparameters
@@ -118,11 +119,6 @@ class AAIInterventionTask(AAITask):
             causal_hyperparameters = memory_efficient_hyperparameters()
         causal_cv = 1 if causal_cv is None else causal_cv
 
-        automl_pipeline_feature_parameters = {}
-        if not drop_useless_features:
-            automl_pipeline_feature_parameters["pre_drop_useless"] = False
-            automl_pipeline_feature_parameters["post_generators"] = []
-
         df = df.copy()
 
         # Validate parameters
@@ -150,189 +146,27 @@ class AAIInterventionTask(AAITask):
                 "runtime": time.time() - start,
             }
 
-        # Preprocess data
-        type_special = df.apply(get_type_special_no_ag)
-        num_cols = (type_special == "numeric") | (type_special == "integer")
-        num_cols = list(df.loc[:, num_cols].columns)
-        cat_cols = type_special == "category"
-        cat_cols = list(df.loc[:, cat_cols].columns)
-
-        if target in num_cols and target_proba is not None:
-            logging.warning(
-                "`df[target]` is a numerical column and `target_proba` is not None: `target_proba` will be ignored"
-            )
-        if target not in num_cols and cate_alpha is not None:
-            logging.warning(
-                "`df[target]` is a categorical column and `cate_alpha` is not None: `cate_alpha` will be ignored"
-            )
-
-        df = df.replace(to_replace=[None], value=np.nan)
-        if len(num_cols):
-            df.loc[:, num_cols] = SimpleImputer(strategy="median").fit_transform(
-                df.loc[:, num_cols]
-            )
-        if len(cat_cols):
-            df.loc[:, cat_cols] = SimpleImputer(strategy="most_frequent").fit_transform(
-                df.loc[:, cat_cols]
-            )
-
-        X = df[common_causes] if len(common_causes) > 0 else None
-
-        model_t_problem_type = (
-            "regression" if current_intervention_column in num_cols else "multiclass"
+        model = AAIInterventionEffectPredictor(
+            target,
+            current_intervention_column,
+            new_intervention_column,
+            common_causes,
+            causal_cv,
+            causal_hyperparameters,
+            cate_alpha,
+            presets,
+            model_directory,
+            num_gpus,
+            feature_importance,
+            drop_unique,
+            drop_useless_features,
         )
 
-        model_t_holdout_frac = None
-        if model_t_problem_type == "multiclass" and len(df) > 0:
-            model_t_holdout_frac = len(df[current_intervention_column].unique()) / len(
-                df
-            )
-        model_t = None
-        model_y = None
-        ag_args_fit = {"num_gpus": num_gpus, "drop_unique": drop_unique}
-        feature_generator = AutoMLPipelineFeatureGenerator(
-            **automl_pipeline_feature_parameters
-        )
-        model_t_predictor = TabularPredictor(
-            path=mkdtemp(prefix=str(model_directory)),
-            label="t",
-            problem_type=model_t_problem_type,
-        )
+        model.check_params(df, target_proba)
 
-        xw_col = []
-        if X is not None:
-            xw_col += list(X.columns)
+        df = model.preprocess_data(df)
 
-        model_t = SKLearnTabularWrapper(
-            model_t_predictor,
-            x_w_columns=xw_col,
-            hyperparameters=causal_hyperparameters,
-            presets=presets,
-            ag_args_fit=ag_args_fit,
-            feature_generator=feature_generator,
-            holdout_frac=model_t_holdout_frac,
-        )
-
-        logit_target = None
-        if target in num_cols:
-            model_y_predictor = TabularPredictor(
-                path=mkdtemp(prefix=str(model_directory)),
-                label="y",
-                problem_type="regression",
-            )
-            model_y = SKLearnTabularWrapper(
-                model_y_predictor,
-                x_w_columns=xw_col,
-                hyperparameters=causal_hyperparameters,
-                presets=presets,
-                ag_args_fit=ag_args_fit,
-                feature_generator=feature_generator,
-            )
-        else:
-            # Target is categorical. We need to OneHotEncode the target or use
-            # target_proba. Apply Logit, run econml, sum effect with logit output
-            if target_proba is not None:
-                logit_target = logit(target_proba)
-            else:
-                ohe = OneHotEncoder(sparse=False)
-                logit_target = pd.DataFrame(
-                    ohe.fit_transform(df[[target]]), columns=ohe.get_feature_names_out()
-                )
-            model_y_predictor = MultilabelPredictor(
-                labels=logit_target.columns,
-                path=mkdtemp(prefix=str(model_directory)),
-                problem_types=["regression"] * len(logit_target.columns),
-            )
-            model_y = SKLearnMultilabelWrapper(
-                ag_predictor=model_y_predictor,
-                x_w_columns=xw_col,
-                hyperparameters=causal_hyperparameters,
-                presets=presets,
-                ag_args_fit=ag_args_fit,
-                feature_generator=feature_generator,
-                holdout_frac=None,
-            )
-
-        if (
-            X is None
-            or cate_alpha is not None
-            or (
-                current_intervention_column in cat_cols
-                and len(df[current_intervention_column].unique()) > 2
-            )
-        ):
-            # Multiclass treatment
-            causal_model = LinearDML(
-                model_t=model_t,
-                model_y=model_y,
-                featurizer=None if X is None else DMLFeaturizer(),
-                cv=causal_cv,
-                linear_first_stages=False,
-                discrete_treatment=current_intervention_column in cat_cols,
-            )
-        else:
-            if target in num_cols:
-                model_final = TabularPredictor(
-                    path=mkdtemp(prefix=str(model_directory)),
-                    label="y_res",
-                    problem_type="regression",
-                )
-                model_final = SKLearnTabularWrapper(
-                    model_final,
-                    hyperparameters=causal_hyperparameters,
-                    presets=presets,
-                    ag_args_fit=ag_args_fit,
-                    feature_generator=feature_generator,
-                )
-            else:
-                model_final_predictor = MultilabelPredictor(
-                    labels=logit_target.columns,
-                    path=mkdtemp(prefix=str(model_directory)),
-                    problem_types=["regression"] * len(logit_target.columns),
-                )
-                model_final = SKLearnMultilabelWrapper(
-                    ag_predictor=model_final_predictor,
-                    hyperparameters=causal_hyperparameters,
-                    presets=presets,
-                    ag_args_fit=ag_args_fit,
-                    feature_generator=feature_generator,
-                    holdout_frac=None,
-                )
-
-            causal_model = NonParamDML(
-                model_t=model_t,
-                model_y=model_y,
-                model_final=model_final,
-                featurizer=None if X is None else DMLFeaturizer(),
-                cv=causal_cv,
-                discrete_treatment=current_intervention_column in cat_cols,
-            )
-
-        Y_target = None
-        ohe_target = None
-        if target in num_cols:
-            Y_target = df[[target]].values
-        else:
-            ohe_target = OneHotEncoder(sparse=False, handle_unknown="ignore")
-            if target_proba is not None:
-                ohe_target.fit(df[[target]])
-                Y_target = (
-                    logit(target_proba).clip(LOGIT_MIN_VALUE, LOGIT_MAX_VALUE).values
-                )
-            else:
-                Y_target = ohe_target.fit_transform(df[[target]])
-                Y_target = (
-                    pd.DataFrame(logit(Y_target))
-                    .clip(LOGIT_MIN_VALUE, LOGIT_MAX_VALUE)
-                    .values
-                )
-
-        causal_model.fit(
-            Y=Y_target,
-            T=df[[current_intervention_column]].values,
-            X=X.values if X is not None else None,
-            cache_values=True,
-        )
+        model.fit(df, target_proba)
 
         if only_fit:
             return {
@@ -354,32 +188,7 @@ class AAIInterventionTask(AAITask):
                 ),
             }
 
-        effects = causal_model.effect(
-            X.values if X is not None else None,
-            T0=df[[current_intervention_column]],  # type: ignore
-            T1=df[[new_intervention_column]],  # type: ignore
-        )
-
-        target_intervened = None
-        if target in num_cols or ohe_target is None:
-            target_intervened = df[target] + effects.flatten()
-        else:
-            target_intervened = ohe_target.inverse_transform(expit(Y_target + effects))
-
-        df[target + "_intervened"] = target_intervened  # type: ignore
-        if target in num_cols:
-            df["intervention_effect"] = effects.flatten()  # type: ignore
-            if cate_alpha is not None:
-                lb, ub = causal_model.effect_interval(
-                    X.values if X is not None else None,
-                    T0=df[[current_intervention_column]],  # type: ignore
-                    T1=df[[new_intervention_column]],  # type: ignore
-                    alpha=cate_alpha,
-                )  # type: ignore
-                df[target + "_intervened_low"] = df[target] + lb.flatten()
-                df[target + "_intervened_high"] = df[target] + ub.flatten()
-                df["intervention_effect_low"] = lb.flatten()
-                df["intervention_effect_high"] = ub.flatten()
+        effects = model.predict(df, target_proba)
 
         # Construct Causal Graph
         buffer = StringIO()

@@ -1,5 +1,7 @@
 from typing import Dict
 
+from actableai.exceptions.models import UnknownModelClassError
+
 
 class AAIModelInference:
     """
@@ -100,6 +102,8 @@ class AAIModelInference:
         probability_threshold=0.5,
         positive_label=None,
     ):
+        from autogluon.tabular import TabularPredictor
+
         from actableai.models.aai_predictor import (
             AAITabularModel,
             AAITabularModelInterventional,
@@ -110,7 +114,6 @@ class AAIModelInference:
         # We used to pickle TabularPredictor. This check is for legacy
         if isinstance(task_model, AAITabularModel):
             pred = self._predict(
-                task_id,
                 task_model.predictor,
                 df,
                 return_probabilities,
@@ -125,28 +128,23 @@ class AAIModelInference:
                     or f"expected_{task_model.predictor.label}" in df
                 ):
                     pred["intervention"] = task_model.intervention_effect(df, pred)
-                    return pred
+                return pred
             if isinstance(task_model, AAITabularModelInterventional) and (
-                f"intervened_{task_model.intervention_model.intervened_column}"
-                in df
+                f"intervened_{task_model.intervention_model.intervened_column}" in df
                 or f"expected_{task_model.predictor.label}" in df
             ):
                 pred["intervention"] = task_model.intervention_effect(df, pred)
-                return pred
-
-        # Run legacy task_model directly
-        return self._predict(
-            task_id,
-            task_model,
-            df,
-            return_probabilities,
-            probability_threshold,
-            positive_label,
-        )
+            return pred
+        elif isinstance(task_model, TabularPredictor):
+            # Run legacy task_model directly
+            return self._predict(
+                task_model, df, return_probabilities, probability_threshold, positive_label
+            )
+        else:
+            raise UnknownModelClassError()
 
     def _predict(
         self,
-        task_id,
         task_model,
         df,
         return_probabilities=False,
@@ -160,7 +158,7 @@ class AAIModelInference:
 
         result = {}
 
-        df_proba = self.predict_proba(task_id, df)
+        df_proba = self._predict_proba(task_model, df)
 
         class_labels = list(df_proba.columns)
 

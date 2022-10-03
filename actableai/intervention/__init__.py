@@ -30,7 +30,7 @@ def custom_intervention_effect(
             )
         else:
             cta = pd.DataFrame(
-                outcome_transformer.transform(pred["prediction"][predictor.label]),
+                outcome_transformer.transform(pred["prediction"]),
                 columns=outcome_transformer.get_feature_names_out(),
             )
             cta = pd.DataFrame(logit(cta)).clip(LOGIT_MIN_VALUE, LOGIT_MAX_VALUE)
