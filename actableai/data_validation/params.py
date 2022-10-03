@@ -35,6 +35,7 @@ from actableai.data_validation.checkers import (
     IsSufficientClassSampleChecker,
     IsSufficientClassSampleForCrossValidationChecker,
     IsSufficientDataChecker,
+    IsSufficientDataClassificationStratification,
     IsSufficientNumberOfClassChecker,
     IsSufficientSampleCrossValidationChecker,
     IsSufficientValidationSampleChecker,
@@ -376,6 +377,12 @@ class ClassificationDataValidator:
                         validation_ratio=validation_ratio,
                     )
                 ),
+        if validation_ratio is not None:
+            validation_results.append(
+                IsSufficientDataClassificationStratification(
+                    level=CheckLevels.CRITICAL
+                ).check(df, target, validation_ratio, drop_duplicates, features)
+            )
         if drop_unique:
             validation_results.append(
                 OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features)

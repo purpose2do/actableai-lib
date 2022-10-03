@@ -208,8 +208,8 @@ class TestRemoteClassification:
         """
         df = pd.DataFrame(
             {
-                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2,
-                "y": [1, 2, 3, 2, 1, None, 1, 2, 1, 3] * 2,
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 3,
+                "y": [1, 2, 3, 2, 1, None, 1, 2, 1, 3] * 3,
             }
         )
 
@@ -414,8 +414,8 @@ class TestRemoteClassification:
 
         assert r["status"] == "FAILURE"
         assert len(r["validations"]) >= 1
-        assert r["validations"][0]["name"] == "IsSufficientValidationSampleChecker"
-        assert r["validations"][0]["level"] == CheckLevels.CRITICAL
+        assert r["validations"][1]["name"] == "IsSufficientValidationSampleChecker"
+        assert r["validations"][1]["level"] == CheckLevels.CRITICAL
 
     def test_insufficient_cls_sample(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -430,21 +430,9 @@ class TestRemoteClassification:
             classification_task, tmp_path, df, "y", ["x1"], validation_ratio=0.2
         )
 
-        assert r["status"] == "SUCCESS"
-        assert "fields" in r["data"]
-        assert "exdata" in r["data"]
-        assert "predictData" in r["data"]
-        assert "predict_shaps" in r["data"]
-        assert "evaluate" in r["data"]
-        assert "validation_shaps" in r["data"]
-        assert "importantFeatures" in r["data"]
-        for feat in r["data"]["importantFeatures"]:
-            assert feat["feature"] in ["x1"]
-            assert "importance" in feat
-            assert "p_value" in feat
+        assert r["status"] == "FAILURE"
         assert len(r["validations"]) >= 1
-        assert r["validations"][0]["name"] == "IsSufficientClassSampleChecker"
-        assert r["model"] is not None
+        assert r["validations"][0]["name"] == "IsSufficientDataClassificationStratification"
 
     def test_insufficient_class(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -546,9 +534,9 @@ class TestRemoteClassification:
     ):
         df = pd.DataFrame(
             {
-                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2,
-                "y": [1, 2, 1, 3, 1, None, 3, 2, None, 2] * 2,
-                "z": [True, False, None, True, False] * 4,
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 4,
+                "y": [1, 2, 1, 3, 1, None, 3, 2, None, 2] * 4,
+                "z": [True, False, None, True, False] * 8,
             }
         )
 
@@ -922,8 +910,8 @@ class TestRemoteClassificationCrossValidation:
         assert r["status"] == "FAILURE"
         assert len(r["validations"]) > 0
         assert (
-            r["validations"][1]["name"]
-            == "IsSufficientClassSampleForCrossValidationChecker"
+            r["validations"][0]["name"]
+            == "IsSufficientDataClassificationStratification"
         )
 
     def test_debiasing_feature(self, classification_task, tmp_path):
