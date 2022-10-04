@@ -1,8 +1,6 @@
-from typing import Dict
 from autogluon.tabular import TabularPredictor
-import pandas as pd
 
-from actableai.intervention import custom_intervention_effect
+from actableai.intervention.model import AAIInterventionEffectPredictor
 from actableai.models.config import MODEL_DEPLOYMENT_VERSION
 
 
@@ -23,30 +21,12 @@ class AAITabularModel(AAIModel):
         self.predictor = predictor
 
 
-class AAIInterventionalModel(AAIModel):
-    def __init__(
-        self,
-        version: int,
-        causal_model,
-        outcome_transformer,
-        discrete_treatment,
-        common_causes,
-        intervened_column,
-    ) -> None:
-        super().__init__(version)
-        self.common_causes = common_causes
-        self.causal_model = causal_model
-        self.outcome_transformer = outcome_transformer
-        self.discrete_treatment = discrete_treatment
-        self.intervened_column = intervened_column
-
-
 class AAITabularModelInterventional(AAITabularModel):
     def __init__(
         self,
         version: int,
         predictor: TabularPredictor,
-        intervention_model: AAIInterventionalModel,
+        intervention_model: AAIInterventionEffectPredictor,
     ) -> None:
         super().__init__(
             version,
@@ -54,10 +34,10 @@ class AAITabularModelInterventional(AAITabularModel):
         )
         self.intervention_model = intervention_model
 
-    def intervention_effect(self, df: pd.DataFrame, pred: Dict) -> pd.DataFrame:
-        return custom_intervention_effect(
-            df=df,
-            pred=pred,
-            predictor=self.predictor,
-            aai_interventional_model=self.intervention_model,
-        )
+
+class AAIInterventionalModel(AAIModel):
+    def __init__(
+        self, version: int, intervention_predictor: AAIInterventionEffectPredictor
+    ) -> None:
+        super().__init__(version)
+        self.intervention_predictor = intervention_predictor

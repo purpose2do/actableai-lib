@@ -23,7 +23,8 @@ class AAIInterventionEffectPredictor:
         self,
         target: str,
         current_intervention_column: str,
-        new_intervention_column: str,
+        new_intervention_column: Optional[str],
+        expected_target: Optional[str] = None,
         common_causes: Optional[List[str]] = None,
         causal_cv: Optional[int] = None,
         causal_hyperparameters: Optional[Dict] = None,
@@ -39,6 +40,7 @@ class AAIInterventionEffectPredictor:
         self.target = target
         self.current_intervention_column = current_intervention_column
         self.new_intervention_column = new_intervention_column
+        self.expected_target = expected_target
         self.common_causes = common_causes
         self.causal_cv = 1 if causal_cv is None else causal_cv
         self.causal_hyperparameters = causal_hyperparameters
@@ -306,12 +308,6 @@ class AAIInterventionEffectPredictor:
         T1 = df[[self.new_intervention_column]]
         return T0, T1, Y, X
 
-    def evaluate(self):
-        pass
-
-    def plot(self):
-        pass
-
     def preprocess_data(self, df) -> pd.DataFrame:
         # Preprocess data
         type_special = df.apply(get_type_special_no_ag)
@@ -344,3 +340,39 @@ class AAIInterventionEffectPredictor:
                 "`df[target]` is a categorical column and `cate_alpha` is not None: `cate_alpha` will be ignored"
             )
         return
+
+    def predict_two_way_effect(self, df):
+        # Only works for treatment + outcome being continuous
+        # Maybe raise Exception if not called well
+
+        if self.causal_model is None:
+            raise NotFittedError()
+
+        T0, T1, Y, X = self._generate_TYX(df, None, False)
+
+        new_inter = [None for _ in range(len(df))]
+        new_out = [None for _ in range(len(df))]
+        ctr = T0
+        cta = df[self.expected_target]
+        custom_effect = []
+        for index_lab in range(len(df)):
+            curr_CME = self.causal_model.const_marginal_effect(
+                X[index_lab : index_lab + 1] if X is not None else None
+            )
+            curr_CME = curr_CME.squeeze()
+            custom_effect.append(curr_CME)
+        CME = np.array(custom_effect)
+        # New Outcome
+        if self.new_intervention_column in df:
+            ntr = df[self.new_intervention_column]
+            new_out = (ntr - ctr) * CME + cta
+        # New Intervention
+        if self.expected_target in df:
+            nta = df[self.expected_target]
+            new_inter = ((nta - cta) / CME) + ctr
+        return pd.DataFrame(
+            {
+                self.expected_target: new_out,
+                self.new_intervention_column: new_inter,
+            }
+        )

@@ -26,6 +26,7 @@ class InvalidPositiveLabelError(KeyError):
 
     pass
 
+
 class UnknownModelClassError(Exception):
     """Exception representing a Model being loaded corresponding to no known Model"""
 
