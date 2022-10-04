@@ -249,17 +249,15 @@ class AAIInterventionEffectPredictor:
         )
 
         target_intervened = None
-        if self.outcome_featurizer is None:
-            target_intervened = Y + effects.flatten()
-        else:
+        target_intervened = Y + effects
+        if self.outcome_featurizer is not None:
             target_intervened = self.outcome_featurizer.inverse_transform(
-                expit(Y + effects)
+                expit(target_intervened)
             )
 
         result[self.target + "_intervened"] = target_intervened.squeeze()  # type: ignore
         if len(Y.columns) == 1:
-            result = result.join(pd.DataFrame(effects))
-            result["intervention_effect"] = effects.flatten()
+            result["intervention_effect"] = effects.squeeze()
             if self.cate_alpha is not None:
                 lb, ub = self.causal_model.effect_interval(
                     X,

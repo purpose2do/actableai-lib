@@ -5,4 +5,3 @@ import numpy as np
 
 class InterventionalProblemTypeException(Exception):
     pass
-
