@@ -145,7 +145,8 @@ class AAIInterventionEffectPredictor:
         )
         ag_args_fit = {"num_gpus": self.num_gpus, "drop_unique": self.drop_unique}
 
-        if len(Y.columns) != 1:
+        if len(Y.columns) == 1:
+            # This tabular predictor might be useless we could use only the multilabel
             model_final = TabularPredictor(
                 path=mkdtemp(prefix=str(self.model_directory)),
                 label="y_res",
@@ -178,10 +179,11 @@ class AAIInterventionEffectPredictor:
     def _generate_dml_model(self, model_t, model_y, model_final, X, T):
         T_type = get_type_special_no_ag(T[self.current_intervention_column])
         if (
-            (self.common_causes and len(self.common_causes) != 0)
+            self.common_causes is None
+            or len(self.common_causes) == 0
             or self.cate_alpha is not None
             or (
-                T_type == "categorical"
+                T_type == "category"
                 and len(T[self.current_intervention_column].unique()) > 2
             )
         ):
@@ -194,7 +196,7 @@ class AAIInterventionEffectPredictor:
                 else DMLFeaturizer(),
                 cv=self.causal_cv,
                 linear_first_stages=False,
-                discrete_treatment=T_type == "categorical",
+                discrete_treatment=T_type == "category",
             )
         else:
             causal_model = NonParamDML(
@@ -203,7 +205,7 @@ class AAIInterventionEffectPredictor:
                 model_final=model_final,
                 featurizer=None if X is None else DMLFeaturizer(),
                 cv=self.causal_cv,
-                discrete_treatment=T_type == "categorical",
+                discrete_treatment=T_type == "category",
             )
         return causal_model
 
@@ -214,7 +216,7 @@ class AAIInterventionEffectPredictor:
         cat_cols = type_special == "category"
         cat_cols = list(df.loc[:, cat_cols].columns)
 
-        T0, _, Y, X = self._generate_TYX(df, target_proba)
+        T0, _, Y, X = self._generate_TYX(df, target_proba, True)
 
         model_t = self._generate_model_t(X, T0)
         model_y = self._generate_model_y(X, Y)
@@ -236,11 +238,12 @@ class AAIInterventionEffectPredictor:
 
         if self.causal_model is None:
             raise NotFittedError()
-        T0, T1, Y, X = self._generate_TYX(df, target_proba)
+        T0, T1, Y, X = self._generate_TYX(df, target_proba, False)
+
         effects = self.causal_model.effect(
-            X.values if X is not None else None,
-            T0=df[[current_intervention_column]],  # type: ignore
-            T1=df[[new_intervention_column]],  # type: ignore
+            X,
+            T0=T0,  # type: ignore
+            T1=T1,  # type: ignore
         )
 
         target_intervened = None
@@ -251,26 +254,27 @@ class AAIInterventionEffectPredictor:
                 expit(Y + effects)
             )
 
-        result[target + "_intervened"] = target_intervened  # type: ignore
+        result[self.target + "_intervened"] = target_intervened.squeeze()  # type: ignore
         if len(Y.columns) == 1:
-            result = result.join(pd.DataFrame(effects)
-            df["intervention_effect"] = effects.flatten()  # type: ignore
-            if cate_alpha is not None:
-                lb, ub = causal_model.effect_interval(
-                    X.values if X is not None else None,
-                    T0=df[[current_intervention_column]],  # type: ignore
-                    T1=df[[new_intervention_column]],  # type: ignore
-                    alpha=cate_alpha,
+            result = result.join(pd.DataFrame(effects))
+            result["intervention_effect"] = effects.flatten()
+            if self.cate_alpha is not None:
+                lb, ub = self.causal_model.effect_interval(
+                    X,
+                    T0=T0,  # type: ignore
+                    T1=T1,  # type: ignore
+                    alpha=self.cate_alpha,
                 )  # type: ignore
-                df[target + "_intervened_low"] = df[target] + lb.flatten()
-                df[target + "_intervened_high"] = df[target] + ub.flatten()
-                df["intervention_effect_low"] = lb.flatten()
-                df["intervention_effect_high"] = ub.flatten()
-        
-        return target_intervened
+                result[self.target + "_intervened_low"] = df[self.target] + lb.flatten()
+                result[self.target + "_intervened_high"] = (
+                    df[self.target] + ub.flatten()
+                )
+                result["intervention_effect_low"] = lb.flatten()
+                result["intervention_effect_high"] = ub.flatten()
+        return result
 
     def _generate_TYX(
-        self, df, target_proba
+        self, df, target_proba, fit
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Optional[pd.DataFrame]]:
         type_special = df.apply(get_type_special_no_ag)
         num_cols = (type_special == "numeric") | (type_special == "integer")
@@ -282,17 +286,21 @@ class AAIInterventionEffectPredictor:
             if self.common_causes and len(self.common_causes) > 0
             else None
         )
-        Y = None
         if self.target in num_cols:
             Y = df[[self.target]]
         else:
-            self.outcome_featurizer = OneHotEncoder(
-                sparse=False, handle_unknown="ignore"
-            )
+            if fit:
+                self.outcome_featurizer = OneHotEncoder(
+                    sparse=False, handle_unknown="ignore"
+                )
+                self.outcome_featurizer.fit(df[[self.target]])
             if target_proba is not None:
                 Y = target_proba
             else:
-                Y = self.outcome_featurizer.fit_transform(df[[self.target]])
+                Y = pd.DataFrame(
+                    self.outcome_featurizer.transform(df[[self.target]]),
+                    columns=self.outcome_featurizer.get_feature_names_out(),
+                )
             Y = pd.DataFrame(logit(Y)).clip(LOGIT_MIN_VALUE, LOGIT_MAX_VALUE)
         T0 = df[[self.current_intervention_column]]
         T1 = df[[self.new_intervention_column]]
