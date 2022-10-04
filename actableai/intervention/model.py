@@ -250,7 +250,7 @@ class AAIInterventionEffectPredictor:
 
         target_intervened = None
         if self.outcome_featurizer is None:
-            target_intervened = Y + effects.squeeze()
+            target_intervened = Y + effects.flatten()
         else:
             target_intervened = self.outcome_featurizer.inverse_transform(
                 expit(Y + effects)

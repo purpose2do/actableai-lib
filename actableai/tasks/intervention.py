@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import r2_score
 from actableai.data_validation.base import CheckLevels
-from actableai.intervention.model import AAIInterventionEffectPredictor
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 from actableai.utils import memory_efficient_hyperparameters
@@ -18,8 +17,9 @@ class AAIInterventionTask(AAITask):
         df: pd.DataFrame,
         target: str,
         current_intervention_column: str,
-        new_intervention_column: str,
-        target_proba: Optional[pd.DataFrame] = None,
+        new_intervention_column: Optional[str],
+        expected_target: Optional[str] = None,
+        target_proba: Optional[str] = None,
         common_causes: Optional[List[str]] = None,
         causal_cv: Optional[int] = None,
         causal_hyperparameters: Optional[Dict] = None,
@@ -89,6 +89,7 @@ class AAIInterventionTask(AAITask):
 
         from actableai.data_validation.params import InterventionDataValidator
         from actableai.utils import get_type_special_no_ag
+        from actableai.intervention.model import AAIInterventionEffectPredictor
 
         start = time.time()
         # Handle default parameters
@@ -132,19 +133,20 @@ class AAIInterventionTask(AAITask):
             }
 
         model = AAIInterventionEffectPredictor(
-            target,
-            current_intervention_column,
-            new_intervention_column,
-            common_causes,
-            causal_cv,
-            causal_hyperparameters,
-            cate_alpha,
-            presets,
-            model_directory,
-            num_gpus,
-            feature_importance,
-            drop_unique,
-            drop_useless_features,
+            target=target,
+            current_intervention_column=current_intervention_column,
+            new_intervention_column=new_intervention_column,
+            expected_target=expected_target,
+            common_causes=common_causes,
+            causal_cv=causal_cv,
+            causal_hyperparameters=causal_hyperparameters,
+            cate_alpha=cate_alpha,
+            presets=presets,
+            model_directory=model_directory,
+            num_gpus=num_gpus,
+            feature_importance=feature_importance,
+            drop_unique=drop_unique,
+            drop_useless_features=drop_useless_features,
         )
 
         model.check_params(df, target_proba)
@@ -299,9 +301,7 @@ class AAIInterventionTask(AAITask):
                         val["intervention_effect"]
                     )
             estimation_results["intervention_plot"] = {
-                "type": "category"
-                if causal_model.discrete_treatment
-                else "numeric",
+                "type": "category" if causal_model.discrete_treatment else "numeric",
                 "intervention_diff": intervention_diff,
                 "intervention_names": intervention_names,
                 "min_target": df[target].min(),
