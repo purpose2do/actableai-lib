@@ -1,7 +1,9 @@
+from io import StringIO
 import time
 from typing import List, Dict, Optional
+import numpy as np
 import pandas as pd
-
+from sklearn.metrics import r2_score
 from actableai.data_validation.base import CheckLevels
 from actableai.intervention.model import AAIInterventionEffectPredictor
 from actableai.tasks import TaskType
@@ -82,6 +84,7 @@ class AAIInterventionTask(AAITask):
                 - runtime: Runtime of the task
         """
         from tempfile import mkdtemp
+        from dowhy import CausalModel
 
         from actableai.data_validation.params import InterventionDataValidator
         from actableai.models.aai_predictor import AAIInterventionalModel
@@ -160,153 +163,148 @@ class AAIInterventionTask(AAITask):
                 ],
                 "data": {},
                 "runtime": time.time() - start,
-                "model": AAIInterventionalModel(
-                    MODEL_DEPLOYMENT_VERSION,
-                    causal_model=causal_model,
-                    outcome_transformer=ohe_target,
-                    discrete_treatment=current_intervention_column in cat_cols,
-                    intervened_column=current_intervention_column,
-                    common_causes=common_causes,
-                ),
+                "model": model,
             }
 
         new_outcome = model.predict_effect(df, target_proba)
 
         df = df.join(pd.DataFrame(new_outcome))
 
-        # # Construct Causal Graph
-        # buffer = StringIO()
-        # causal_model_do_why = CausalModel(
-        #     data=df,
-        #     treatment=[current_intervention_column],
-        #     outcome=target,
-        #     common_causes=common_causes,
-        # )
-        # nx.drawing.nx_pydot.write_dot(
-        #     causal_model_do_why._graph._graph, buffer
-        # )  # type: ignore # noqa
-        # causal_graph_dot = buffer.getvalue()
+        causal_model = model.causal_model
 
-        # Y_res, T_res, X_, W_ = causal_model.residuals_
+        # Construct Causal Graph
+        buffer = StringIO()
+        causal_model_do_why = CausalModel(
+            data=df,
+            treatment=[current_intervention_column],
+            outcome=target,
+            common_causes=common_causes,
+        )
+        nx.drawing.nx_pydot.write_dot(
+            causal_model_do_why._graph._graph, buffer
+        )  # type: ignore # noqa
+        causal_graph_dot = buffer.getvalue()
+
+        Y_res, T_res, X_, W_ = causal_model.residuals_
 
         # # This has lots of redundant code with causal_inferences.py
         # # Should be refactored
         estimation_results = {
-            # "causal_graph_dot": causal_graph_dot,
-            # "T_res": T_res,
-            # "Y_res": Y_res,
-            # "X": X_,
+            "causal_graph_dot": causal_graph_dot,
+            "T_res": T_res,
+            "Y_res": Y_res,
+            "X": X_,
             "df": df,
         }
 
-        # model_t_scores, model_y_scores = [], []
-        # for i in range(len(causal_model.nuisance_scores_t)):
-        #     model_t_scores.append(
-        #         r2_score(
-        #             np.concatenate([n["y"] for n in causal_model.nuisance_scores_t[i]]),
-        #             np.concatenate(
-        #                 [n["y_pred"] for n in causal_model.nuisance_scores_t[i]]
-        #             ),
-        #         )
-        #     )
-        #     model_y_scores.append(
-        #         r2_score(
-        #             np.concatenate([n["y"] for n in causal_model.nuisance_scores_y[i]]),
-        #             np.concatenate(
-        #                 [n["y_pred"] for n in causal_model.nuisance_scores_y[i]]
-        #             ),
-        #         )
-        #     )
+        model_t_scores, model_y_scores = [], []
+        for i in range(len(causal_model.nuisance_scores_t)):
+            model_t_scores.append(
+                r2_score(
+                    np.concatenate([n["y"] for n in causal_model.nuisance_scores_t[i]]),
+                    np.concatenate(
+                        [n["y_pred"] for n in causal_model.nuisance_scores_t[i]]
+                    ),
+                )
+            )
+            model_y_scores.append(
+                r2_score(
+                    np.concatenate([n["y"] for n in causal_model.nuisance_scores_y[i]]),
+                    np.concatenate(
+                        [n["y_pred"] for n in causal_model.nuisance_scores_y[i]]
+                    ),
+                )
+            )
 
-        # estimation_results["model_t_scores"] = {
-        #     "values": model_t_scores,
-        #     "mean": np.mean(model_t_scores),
-        #     "stderr": np.std(model_t_scores) / np.sqrt(len(model_t_scores)),
-        #     "metric": "r2",
-        # }
+        estimation_results["model_t_scores"] = {
+            "values": model_t_scores,
+            "mean": np.mean(model_t_scores),
+            "stderr": np.std(model_t_scores) / np.sqrt(len(model_t_scores)),
+            "metric": "r2",
+        }
 
-        # estimation_results["model_y_scores"] = {
-        #     "values": model_y_scores,
-        #     "mean": np.mean(model_y_scores),
-        #     "stderr": np.std(model_y_scores) / np.sqrt(len(model_y_scores)),
-        #     "metric": "r2",
-        # }
+        estimation_results["model_y_scores"] = {
+            "values": model_y_scores,
+            "mean": np.mean(model_y_scores),
+            "stderr": np.std(model_y_scores) / np.sqrt(len(model_y_scores)),
+            "metric": "r2",
+        }
 
-        # if feature_importance and X is not None:
-        #     importances = []
-        #     # Only run feature importance for first mc_iter to speed it up
-        #     for _, m in enumerate(causal_model.models_t[0]):
-        #         importances.append(m.feature_importance())
-        #     model_t_feature_importances = sum(importances) / causal_cv
-        #     model_t_feature_importances["stderr"] = model_t_feature_importances[
-        #         "stddev"
-        #     ] / np.sqrt(causal_cv)
-        #     model_t_feature_importances.sort_values(
-        #         ["importance"], ascending=False, inplace=True
-        #     )
-        #     estimation_results[
-        #         "model_t_feature_importances"
-        #     ] = model_t_feature_importances
+        if feature_importance and common_causes is not None and len(common_causes) != 0:
+            importances = []
+            # Only run feature importance for first mc_iter to speed it up
+            for _, m in enumerate(causal_model.models_t[0]):
+                importances.append(m.feature_importance())
+            model_t_feature_importances = sum(importances) / causal_cv
+            model_t_feature_importances["stderr"] = model_t_feature_importances[
+                "stddev"
+            ] / np.sqrt(causal_cv)
+            model_t_feature_importances.sort_values(
+                ["importance"], ascending=False, inplace=True
+            )
+            estimation_results[
+                "model_t_feature_importances"
+            ] = model_t_feature_importances
 
-        #     importances = []
-        #     for _, m in enumerate(causal_model.models_y[0]):
-        #         importances.append(m.feature_importance())
-        #     model_y_feature_importances = sum(importances) / causal_cv
-        #     model_y_feature_importances["stderr"] = model_y_feature_importances[
-        #         "stddev"
-        #     ] / np.sqrt(causal_cv)
-        #     model_y_feature_importances.sort_values(
-        #         ["importance"], ascending=False, inplace=True
-        #     )
-        #     estimation_results[
-        #         "model_y_feature_importances"
-        #     ] = model_y_feature_importances
+            importances = []
+            for _, m in enumerate(causal_model.models_y[0]):
+                importances.append(m.feature_importance())
+            model_y_feature_importances = sum(importances) / causal_cv
+            model_y_feature_importances["stderr"] = model_y_feature_importances[
+                "stddev"
+            ] / np.sqrt(causal_cv)
+            model_y_feature_importances.sort_values(
+                ["importance"], ascending=False, inplace=True
+            )
+            estimation_results[
+                "model_y_feature_importances"
+            ] = model_y_feature_importances
 
-        # # Display plot in front end
-        # if target in num_cols:
-        #     intervention_names = None
-        #     intervention_diff = None
-        #     pair_dict = None
-        #     if current_intervention_column in num_cols:
-        #         intervention_diff = (
-        #             df[new_intervention_column] - df[current_intervention_column]
-        #         )
-        #     else:
-        #         intervention_names = (
-        #             df[current_intervention_column]
-        #             + " -> "
-        #             + df[new_intervention_column]
-        #         )
-        #         pair_dict = {}
-        #         for _, val in df.iterrows():
-        #             intervention_name = (
-        #                 val[current_intervention_column]
-        #                 + " -> "
-        #                 + val[new_intervention_column]
-        #             )
-        #             if intervention_name not in pair_dict:
-        #                 pair_dict[intervention_name] = {
-        #                     "original_target": [],
-        #                     "target_intervened": [],
-        #                     "intervention_effect": [],
-        #                 }
-        #             pair_dict[intervention_name]["original_target"].append(val[target])
-        #             pair_dict[intervention_name]["target_intervened"].append(
-        #                 val[target + "_intervened"]
-        #             )
-        #             pair_dict[intervention_name]["intervention_effect"].append(
-        #                 val["intervention_effect"]
-        #             )
-        #     estimation_results["intervention_plot"] = {
-        #         "type": "category"
-        #         if current_intervention_column in cat_cols
-        #         else "numeric",
-        #         "intervention_diff": intervention_diff,
-        #         "intervention_names": intervention_names,
-        #         "min_target": df[target].min(),
-        #         "max_target": df[target].max(),
-        #         "pair_dict": pair_dict,
-        #     }
+        # Display plot in front end
+        if target in num_cols:
+            intervention_names = None
+            intervention_diff = None
+            pair_dict = None
+            if causal_model.discrete_treatment:
+                intervention_diff = (
+                    df[new_intervention_column] - df[current_intervention_column]
+                )
+            else:
+                intervention_names = (
+                    df[current_intervention_column]
+                    + " -> "
+                    + df[new_intervention_column]
+                )
+                pair_dict = {}
+                for _, val in df.iterrows():
+                    intervention_name = (
+                        val[current_intervention_column]
+                        + " -> "
+                        + val[new_intervention_column]
+                    )
+                    if intervention_name not in pair_dict:
+                        pair_dict[intervention_name] = {
+                            "original_target": [],
+                            "target_intervened": [],
+                            "intervention_effect": [],
+                        }
+                    pair_dict[intervention_name]["original_target"].append(val[target])
+                    pair_dict[intervention_name]["target_intervened"].append(
+                        val[target + "_intervened"]
+                    )
+                    pair_dict[intervention_name]["intervention_effect"].append(
+                        val["intervention_effect"]
+                    )
+            estimation_results["intervention_plot"] = {
+                "type": "category"
+                if causal_model.discrete_treatment
+                else "numeric",
+                "intervention_diff": intervention_diff,
+                "intervention_names": intervention_names,
+                "min_target": df[target].min(),
+                "max_target": df[target].max(),
+                "pair_dict": pair_dict,
+            }
 
         return {
             "status": "SUCCESS",
@@ -317,12 +315,5 @@ class AAIInterventionTask(AAITask):
             ],
             "data": estimation_results,
             "runtime": time.time() - start,
-            # "model": AAIInterventionalModel(
-            #     MODEL_DEPLOYMENT_VERSION,
-            #     causal_model=causal_model,
-            #     outcome_transformer=ohe_target,
-            #     discrete_treatment=current_intervention_column in cat_cols,
-            #     intervened_column=current_intervention_column,
-            #     common_causes=common_causes,
-            # ),
+            "model": model,
         }
