@@ -85,10 +85,9 @@ class AAIInterventionTask(AAITask):
         """
         from tempfile import mkdtemp
         from dowhy import CausalModel
+        import networkx as nx
 
         from actableai.data_validation.params import InterventionDataValidator
-        from actableai.models.aai_predictor import AAIInterventionalModel
-        from actableai.models.config import MODEL_DEPLOYMENT_VERSION
 
         start = time.time()
         # Handle default parameters
