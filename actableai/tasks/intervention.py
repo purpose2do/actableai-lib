@@ -88,6 +88,7 @@ class AAIInterventionTask(AAITask):
         import networkx as nx
 
         from actableai.data_validation.params import InterventionDataValidator
+        from actableai.utils import get_type_special_no_ag
 
         start = time.time()
         # Handle default parameters
@@ -258,6 +259,9 @@ class AAIInterventionTask(AAITask):
             estimation_results[
                 "model_y_feature_importances"
             ] = model_y_feature_importances
+
+        type_special = df.apply(get_type_special_no_ag)
+        num_cols = (type_special == "numeric") | (type_special == "integer")
 
         # Display plot in front end
         if target in num_cols:
