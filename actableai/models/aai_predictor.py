@@ -1,6 +1,3 @@
-from autogluon.tabular import TabularPredictor
-
-from actableai.intervention.model import AAIInterventionEffectPredictor
 from actableai.models.config import MODEL_DEPLOYMENT_VERSION
 
 
@@ -15,7 +12,7 @@ class AAITabularModel(AAIModel):
     def __init__(
         self,
         version: int,
-        predictor: TabularPredictor,
+        predictor,
     ) -> None:
         super().__init__(version)
         self.predictor = predictor
@@ -25,8 +22,8 @@ class AAITabularModelInterventional(AAITabularModel):
     def __init__(
         self,
         version: int,
-        predictor: TabularPredictor,
-        intervention_model: AAIInterventionEffectPredictor,
+        predictor,
+        intervention_model,
     ) -> None:
         super().__init__(
             version,
@@ -36,8 +33,6 @@ class AAITabularModelInterventional(AAITabularModel):
 
 
 class AAIInterventionalModel(AAIModel):
-    def __init__(
-        self, version: int, intervention_predictor: AAIInterventionEffectPredictor
-    ) -> None:
+    def __init__(self, version: int, intervention_predictor) -> None:
         super().__init__(version)
         self.intervention_predictor = intervention_predictor
