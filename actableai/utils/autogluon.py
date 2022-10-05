@@ -19,9 +19,19 @@ def _get_xgboost_feature_links(xgboost_model):
     feature_links = {}
 
     # Add cat cols
-    for feature, categories in ohe_generator.labels.items():
+    for (feature, categories), infrequent_indices in zip(
+        ohe_generator.labels.items(), ohe_generator.ohe_encs.infrequent_indices_
+    ):
         feature_links[feature] = []
-        for category in categories:
+
+        if len(infrequent_indices) > 0:
+            feature_links[feature].append(f"{feature}_infrequent")
+            _categories = categories[: -len(infrequent_indices)]
+        else:
+            _categories = categories
+        # TODO handle drop? Should not be needed at the moment
+
+        for category in _categories:
             feature_links[feature].append(f"{feature}_{category}")
 
     # Add other cols
@@ -45,7 +55,7 @@ def get_feature_links(predictor, model_name):
     # Second preprocessing level links
     second_feature_links = None
     features_to_drop = []
-    if model_name == "XGBoost":
+    if model_name == "XGBoost" or model_name == "XGBoost_Prune":
         second_feature_links = _get_xgboost_feature_links(autogluon_model)
 
     final_features = get_final_features(predictor, model_name)
@@ -75,7 +85,13 @@ def _get_xgboost_final_features(xgboost_model):
     """
     TODO write documentation
     """
-    return list(xgboost_model._ohe_generator._feature_map.keys())
+    feature_links = _get_xgboost_feature_links(xgboost_model)
+    final_features = []
+
+    for feature, links in feature_links.items():
+        final_features += links
+
+    return final_features
 
 
 def get_final_features(predictor, model_name):
@@ -85,7 +101,7 @@ def get_final_features(predictor, model_name):
     autogluon_model = predictor._trainer.load_model(model_name)
 
     final_features = None
-    if model_name == "XGBoost":
+    if model_name == "XGBoost" or model_name == "XGBoost_Prune":
         final_features = _get_xgboost_final_features(autogluon_model)
 
     if final_features is None:
