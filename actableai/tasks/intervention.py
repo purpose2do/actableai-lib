@@ -170,7 +170,8 @@ class AAIInterventionTask(AAITask):
 
         new_outcome = model.predict_effect(df, target_proba)
 
-        df = df.join(pd.DataFrame(new_outcome))
+        for col in new_outcome.columns:
+            df[col] = new_outcome[col]
 
         causal_model = model.causal_model
 
@@ -264,13 +265,14 @@ class AAIInterventionTask(AAITask):
 
         type_special = df.apply(get_type_special_no_ag)
         num_cols = (type_special == "numeric") | (type_special == "integer")
+        num_cols = list(df.loc[:, num_cols].columns)
 
         # Display plot in front end
         if target in num_cols:
             intervention_names = None
             intervention_diff = None
             pair_dict = None
-            if causal_model.discrete_treatment:
+            if not causal_model.discrete_treatment:
                 intervention_diff = (
                     df[new_intervention_column] - df[current_intervention_column]
                 )
