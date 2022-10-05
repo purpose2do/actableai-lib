@@ -55,7 +55,7 @@ def get_feature_links(predictor, model_name):
     # Second preprocessing level links
     second_feature_links = None
     features_to_drop = []
-    if model_name == "XGBoost" or model_name == "XGBoost_Prune":
+    if model_name in ["XGBoost", "XGBoost_Prune"]:
         second_feature_links = _get_xgboost_feature_links(autogluon_model)
 
     final_features = get_final_features(predictor, model_name)
@@ -101,7 +101,7 @@ def get_final_features(predictor, model_name):
     autogluon_model = predictor._trainer.load_model(model_name)
 
     final_features = None
-    if model_name == "XGBoost" or model_name == "XGBoost_Prune":
+    if model_name in ["XGBoost", "XGBoost_Prune"]:
         final_features = _get_xgboost_final_features(autogluon_model)
 
     if final_features is None:
