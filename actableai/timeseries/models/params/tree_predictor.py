@@ -1,9 +1,12 @@
-from gluonts.model.rotbaum import TreeEstimator
 from typing import Optional, Dict, Tuple, Any, Union, List
+
+from gluonts.model.rotbaum import TreeEstimator
 
 from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.params.base import BaseParams
+from actableai.timeseries.transform.deseasonalizing import MultiDeseasonalizing
 from actableai.timeseries.transform.detrend import Detrend
+from actableai.timeseries.transform.power_transformation import PowerTransformation
 
 
 class TreePredictorParams(BaseParams):
@@ -57,6 +60,7 @@ class TreePredictorParams(BaseParams):
         self.max_workers = max_workers
         self.max_n_datapts = max_n_datapts
 
+        self._transformation += PowerTransformation()
         self._transformation += Detrend()
 
     def tune_config(self) -> Dict[str, Any]:
@@ -71,7 +75,12 @@ class TreePredictorParams(BaseParams):
         }
 
     def build_estimator(
-        self, *, freq: str, prediction_length: int, params: Dict[str, Any], **kwargs
+        self,
+        *,
+        freq: str,
+        prediction_length: int,
+        params: Dict[str, Any],
+        **kwargs
     ) -> AAITimeSeriesEstimator:
         """Build an estimator from the underlying model using selected parameters.
 
@@ -85,7 +94,7 @@ class TreePredictorParams(BaseParams):
             Built estimator.
         """
         return self._create_estimator(
-            TreeEstimator(
+            estimator=TreeEstimator(
                 freq=freq,
                 prediction_length=prediction_length,
                 context_length=params.get("context_length", self.context_length),
@@ -97,5 +106,6 @@ class TreePredictorParams(BaseParams):
                 quantiles=self.quantiles,
                 max_workers=self.max_workers,
                 max_n_datapts=self.max_n_datapts,
-            )
+            ),
+            additional_transformation=MultiDeseasonalizing(),
         )

@@ -9,7 +9,9 @@ class ConstantValueParams(BaseParams):
     """Parameters class for the Constant Value Model."""
 
     def __init__(
-        self, value: Union[Tuple[int, int], int] = (0, 100), target_dim: int = 1
+        self,
+        value: Union[Tuple[int, int], int] = (0, 100),
+        target_dim: int = 1,
     ):
         """ConstantValueParams Constructor.
 
@@ -17,6 +19,7 @@ class ConstantValueParams(BaseParams):
             value: Value to return, if tuple it represents minimum and maximum
                 (excluded) value.
             target_dim: Dimension of the target.
+            TODO
         """
 
         super().__init__(

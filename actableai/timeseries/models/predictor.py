@@ -1,7 +1,8 @@
+from typing import Tuple, Iterable, Optional, Union
+
 import pandas as pd
 from gluonts.evaluation.backtest import make_evaluation_predictions
 from gluonts.model.predictor import Predictor
-from typing import Tuple, Iterable, Optional, Union
 
 from actableai.timeseries.dataset import AAITimeSeriesDataset
 from actableai.timeseries.forecast import AAITimeSeriesForecast

@@ -1,6 +1,7 @@
+from typing import List, Tuple, Any, Dict, Optional
+
 import mxnet as mx
 import pandas as pd
-from typing import List, Tuple, Any, Dict, Optional
 
 from actableai.exceptions.timeseries import UntrainedModelException
 from actableai.timeseries.dataset import AAITimeSeriesDataset
@@ -18,6 +19,7 @@ class AAITimeSeriesForecaster:
         date_column: str,
         target_columns: List[str],
         prediction_length: int,
+        seasonal_periods: Optional[List[int]],
         group_by: List[str] = None,
         feature_columns: List[str] = None,
     ):
@@ -32,10 +34,12 @@ class AAITimeSeriesForecaster:
             group_by: List of columns to use to separate different time series/groups.
             feature_columns: List of columns containing extraneous features used to
                 forecast.
+            TODO
         """
         self.date_column = date_column
         self.target_columns = target_columns
         self.prediction_length = prediction_length
+        self.seasonal_periods = seasonal_periods
         self.group_by = group_by
         self.feature_columns = feature_columns
 
@@ -98,6 +102,7 @@ class AAITimeSeriesForecaster:
         date_column: str,
         target_columns: List[str],
         prediction_length: int,
+        seasonal_periods: Optional[List[int]],
         feature_columns: List[str] = None,
         group_by: Optional[List[str]] = None,
         inplace: bool = True,
@@ -115,6 +120,7 @@ class AAITimeSeriesForecaster:
                 forecast.
             group_by: List of columns to use to separate different time series/groups.
             inplace: If True this function will modify the original DataFrame.
+            TODO
 
         Returns:
             - Dictionary containing the time series for each group.
@@ -132,6 +138,7 @@ class AAITimeSeriesForecaster:
             group_by=group_by,
             date_column=date_column,
             feature_columns=feature_columns,
+            seasonal_periods=seasonal_periods,
         )
 
     def fit(
@@ -188,6 +195,7 @@ class AAITimeSeriesForecaster:
                 date_column=self.date_column,
                 target_columns=self.target_columns,
                 prediction_length=self.prediction_length,
+                seasonal_periods=self.seasonal_periods,
                 feature_columns=self.feature_columns,
                 group_by=self.group_by,
                 inplace=False,
@@ -246,6 +254,7 @@ class AAITimeSeriesForecaster:
                 date_column=self.date_column,
                 target_columns=self.target_columns,
                 prediction_length=self.prediction_length,
+                seasonal_periods=self.seasonal_periods,
                 feature_columns=self.feature_columns,
                 group_by=self.group_by,
                 inplace=False,
@@ -294,6 +303,7 @@ class AAITimeSeriesForecaster:
                 date_column=self.date_column,
                 target_columns=self.target_columns,
                 prediction_length=self.prediction_length,
+                seasonal_periods=self.seasonal_periods,
                 feature_columns=self.feature_columns,
                 group_by=self.group_by,
                 inplace=False,
@@ -363,6 +373,7 @@ class AAITimeSeriesForecaster:
                 date_column=self.date_column,
                 target_columns=self.target_columns,
                 prediction_length=self.prediction_length,
+                seasonal_periods=self.seasonal_periods,
                 feature_columns=self.feature_columns,
                 group_by=self.group_by,
                 inplace=False,

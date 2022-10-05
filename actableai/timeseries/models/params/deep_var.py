@@ -1,7 +1,8 @@
+from typing import Union, Tuple, Dict, Any
+
 from gluonts.model.deepvar import DeepVAREstimator
 from gluonts.mx.trainer import Trainer
 from mxnet.context import Context
-from typing import Union, Tuple, Dict, Any
 
 from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.params.base import BaseParams
@@ -49,6 +50,7 @@ class DeepVARParams(BaseParams):
             l2: L2 regularization parameter, if tuple it represents the minimum and
                 maximum (excluded) value.
             scaling: Whether to automatically scale the target values.
+            TODO
         """
         super().__init__(
             model_name="DeepVAR",

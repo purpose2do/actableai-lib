@@ -1,8 +1,9 @@
+from typing import Union, Tuple, Optional, Dict, Any
+
 from gluonts.model.simple_feedforward import SimpleFeedForwardEstimator
 from gluonts.mx.distribution import DistributionOutput
 from gluonts.mx.trainer import Trainer
 from mxnet.context import Context
-from typing import Union, Tuple, Optional, Dict, Any
 
 from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.params.base import BaseParams
@@ -41,6 +42,7 @@ class FeedForwardParams(BaseParams):
                 maximum (excluded) value.
             mean_scaling: Scale the network input by the data mean and the network
                 output by its inverse.
+            TODO
         """
         super().__init__(
             model_name="FeedFoward",

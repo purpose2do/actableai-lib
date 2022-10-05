@@ -1,12 +1,14 @@
+from typing import Callable, Any, Dict, Union, Tuple, Optional
+
 from gluonts.model.estimator import Estimator
 from gluonts.model.predictor import Predictor
 from gluonts.mx.distribution import DistributionOutput
 from hyperopt import hp
 from mxnet.context import Context
-from typing import Callable, Any, Dict, Union, Tuple, Optional
 
 from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
+from actableai.timeseries.transform.base import Transformation
 from actableai.timeseries.transform.clean_features import CleanFeatures
 
 
@@ -144,7 +146,11 @@ class BaseParams:
         return None
 
     def build_predictor(
-        self, *, freq: str, prediction_length: int, params: Dict[str, Any]
+        self,
+        *,
+        freq: str,
+        prediction_length: int,
+        params: Dict[str, Any],
     ) -> Optional[AAITimeSeriesPredictor]:
         """Build a predictor from the underlying model using selected parameters.
 
@@ -158,28 +164,40 @@ class BaseParams:
         """
         return None
 
-    def _create_estimator(self, estimator: Estimator) -> AAITimeSeriesEstimator:
+    def _create_estimator(
+        self,
+        estimator: Estimator,
+        additional_transformation: Optional[Transformation] = None,
+    ) -> AAITimeSeriesEstimator:
         """Create the estimator associated with the model.
 
         Args:
             estimator: Underlying GluonTS estimator.
+            TODO
 
         Returns:
             The wrapped estimator.
         """
         return AAITimeSeriesEstimator(
-            estimator=estimator, transformation=self._transformation
+            estimator=estimator,
+            transformation=(self._transformation + additional_transformation),
         )
 
-    def _create_predictor(self, predictor: Predictor) -> AAITimeSeriesPredictor:
+    def _create_predictor(
+        self,
+        predictor: Predictor,
+        additional_transformation: Optional[Transformation] = None,
+    ) -> AAITimeSeriesPredictor:
         """Create the predictor associated with the model.
 
         Args:
             predictor: Underlying GluonTS predictor.
+            TODO
 
         Returns:
             The wrapped predictor.
         """
         return AAITimeSeriesPredictor(
-            predictor=predictor, transformation=self._transformation
+            predictor=predictor,
+            transformation=(self._transformation + additional_transformation),
         )

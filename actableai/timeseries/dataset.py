@@ -1,9 +1,17 @@
 from copy import deepcopy
+from typing import (
+    cast,
+    List,
+    Iterator,
+    Tuple,
+    Union,
+    Dict,
+    Optional,
+    Callable,
+    Any,
+)
 
 import pandas as pd
-
-from typing import cast, List, Iterator, Tuple, Union, Dict, Optional, Callable, Any
-
 from gluonts.dataset import DataEntry
 from gluonts.dataset.common import ProcessDataEntry
 from gluonts.dataset.field_names import FieldName
@@ -103,6 +111,7 @@ class AAITimeSeriesDataset:
         feat_dynamic_cat: Optional[List[str]] = None,
         feat_static_real: Optional[List[str]] = None,
         feat_static_cat: Optional[List[str]] = None,
+        seasonal_periods: Optional[List[int]] = None,
     ):
         """AAITimeSeriesDataset Constructor.
 
@@ -126,6 +135,7 @@ class AAITimeSeriesDataset:
             feat_dynamic_cat: List of dynamic categorical feature columns.
             feat_static_real: List of static real feature columns.
             feat_static_cat: List of static categorical feature columns.
+            TODO
         """
         self.dataframes = {}
         self.freq = freq
@@ -139,6 +149,8 @@ class AAITimeSeriesDataset:
         self.feat_static_real = feat_static_real
         self.feat_static_cat = feat_static_cat
 
+        self.seasonal_periods = seasonal_periods
+
         if not isinstance(self.target_columns, list):
             self.target_columns = [self.target_columns]
 
@@ -150,6 +162,9 @@ class AAITimeSeriesDataset:
             self.feat_static_real = []
         if self.feat_static_cat is None:
             self.feat_static_cat = []
+
+        if self.seasonal_periods is None:
+            self.seasonal_periods = []
 
         if group_by is None:
             group_by = []
@@ -293,6 +308,7 @@ class AAITimeSeriesDataset:
             feat_dynamic_cat=self.feat_dynamic_cat,
             feat_static_real=self.feat_static_real,
             feat_static_cat=self.feat_static_cat,
+            seasonal_periods=self.seasonal_periods,
         )
 
     def clean_features(
@@ -327,6 +343,7 @@ class AAITimeSeriesDataset:
             if keep_feat_dynamic_real
             else None,
             feat_dynamic_cat=self.feat_dynamic_cat if keep_feat_dynamic_cat else None,
+            seasonal_periods=self.seasonal_periods,
         )
 
     def _as_dataentry(

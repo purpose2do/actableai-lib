@@ -1,11 +1,12 @@
+import time
+from copy import deepcopy
+from functools import partial
+from typing import Dict, List, Optional, Tuple, Any
+
 import mxnet as mx
 import numpy as np
 import pandas as pd
-import time
 import visions
-from copy import deepcopy
-from functools import partial
-
 from gluonts.mx.distribution import DistributionOutput
 from gluonts.mx.distribution.poisson import PoissonOutput
 from gluonts.mx.distribution.student_t import StudentTOutput
@@ -13,14 +14,13 @@ from hyperopt import hp, fmin, tpe, space_eval, Trials
 from ray import tune
 from ray.tune.suggest import ConcurrencyLimiter
 from ray.tune.suggest.hyperopt import HyperOptSearch
-from typing import Dict, List, Optional, Tuple, Any
 
 from actableai.exceptions.timeseries import UntrainedModelException
 from actableai.timeseries.dataset import AAITimeSeriesDataset
 from actableai.timeseries.models.base import AAITimeSeriesBaseModel
+from actableai.timeseries.models.evaluator import AAITimeSeriesEvaluator
 from actableai.timeseries.models.params.base import BaseParams
 from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
-from actableai.timeseries.models.evaluator import AAITimeSeriesEvaluator
 
 
 class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
@@ -246,6 +246,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
             feat_dynamic_cat=dataset.feat_dynamic_cat,
             feat_static_real=dataset.feat_static_real,
             feat_static_cat=dataset.feat_static_cat,
+            seasonal_periods=dataset.seasonal_periods,
         )
 
         return train_dataset, train_dataset_partial, tune_dataset

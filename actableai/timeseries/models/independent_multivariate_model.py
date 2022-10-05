@@ -1,8 +1,8 @@
 from time import time
+from typing import List, Optional, Dict, Tuple, Any, Iterator
 
 import mxnet as mx
 import pandas as pd
-from typing import List, Optional, Dict, Tuple, Any, Iterator
 
 from actableai.exceptions.timeseries import UntrainedModelException
 from actableai.timeseries.dataset import AAITimeSeriesDataset
@@ -101,6 +101,7 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
                 feat_dynamic_cat=dataset.feat_dynamic_cat,
                 feat_static_real=dataset.feat_static_real,
                 feat_static_cat=dataset.feat_static_cat,
+                seasonal_periods=dataset.seasonal_periods,
             ),
             shift_target_columns_dict,
         )
@@ -155,6 +156,7 @@ class AAITimeSeriesIndependentMultivariateModel(AAITimeSeriesBaseModel):
                     feat_dynamic_cat=dataset_shift.feat_dynamic_cat,
                     feat_static_real=dataset_shift.feat_static_real,
                     feat_static_cat=dataset_shift.feat_static_cat,
+                    seasonal_periods=dataset_shift.seasonal_periods,
                 )
 
                 yield target_column, self.predictor_dict[target_column], target_dataset
