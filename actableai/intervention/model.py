@@ -23,9 +23,9 @@ class AAIInterventionEffectPredictor:
         self,
         target: str,
         current_intervention_column: str,
-        new_intervention_column: Optional[str],
-        expected_target: Optional[str] = None,
         common_causes: Optional[List[str]] = None,
+        new_intervention_column: Optional[str] = None,
+        expected_target: Optional[str] = None,
         causal_cv: Optional[int] = None,
         causal_hyperparameters: Optional[Dict] = None,
         cate_alpha: Optional[float] = None,
@@ -218,7 +218,7 @@ class AAIInterventionEffectPredictor:
         cat_cols = type_special == "category"
         cat_cols = list(df.loc[:, cat_cols].columns)
 
-        T0, _, Y, X = self._generate_TYX(df, target_proba, True)
+        T0, _, Y, X = self._generate_TYX(df, target_proba, fit=True)
 
         model_t = self._generate_model_t(X, T0)
         model_y = self._generate_model_y(X, Y)
@@ -240,7 +240,7 @@ class AAIInterventionEffectPredictor:
 
         if self.causal_model is None:
             raise NotFittedError()
-        T0, T1, Y, X = self._generate_TYX(df, target_proba, False)
+        T0, T1, Y, X = self._generate_TYX(df, target_proba, fit=False)
 
         effects = self.causal_model.effect(
             X,
@@ -255,8 +255,10 @@ class AAIInterventionEffectPredictor:
                 expit(target_intervened)
             )
 
-        result[self.target + "_intervened"] = target_intervened.squeeze()  # type: ignore
-        if len(Y.columns) == 1:
+        result[
+            self.target + "_intervened"
+        ] = target_intervened.squeeze()  # type: ignore
+        if self.outcome_featurizer is None:
             result["intervention_effect"] = effects.squeeze()
             if self.cate_alpha is not None:
                 lb, ub = self.causal_model.effect_interval(
@@ -275,7 +277,9 @@ class AAIInterventionEffectPredictor:
 
     def _generate_TYX(
         self, df, target_proba, fit
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Optional[pd.DataFrame]]:
+    ) -> Tuple[
+        pd.DataFrame, Optional[pd.DataFrame], pd.DataFrame, Optional[pd.DataFrame]
+    ]:
         type_special = df.apply(get_type_special_no_ag)
         num_cols = (type_special == "numeric") | (type_special == "integer")
         num_cols = list(df.loc[:, num_cols].columns)
@@ -303,7 +307,9 @@ class AAIInterventionEffectPredictor:
                 )
             Y = pd.DataFrame(logit(Y)).clip(LOGIT_MIN_VALUE, LOGIT_MAX_VALUE)
         T0 = df[[self.current_intervention_column]]
-        T1 = df[[self.new_intervention_column]]
+        T1 = None
+        if not fit:
+            T1 = df[[self.new_intervention_column]]
         return T0, T1, Y, X
 
     def preprocess_data(self, df) -> pd.DataFrame:
@@ -351,7 +357,7 @@ class AAIInterventionEffectPredictor:
         new_inter = [None for _ in range(len(df))]
         new_out = [None for _ in range(len(df))]
         ctr = T0
-        cta = df[self.expected_target]
+        cta = Y
         custom_effect = []
         for index_lab in range(len(df)):
             curr_CME = self.causal_model.const_marginal_effect(
@@ -362,15 +368,13 @@ class AAIInterventionEffectPredictor:
         CME = np.array(custom_effect)
         # New Outcome
         if self.new_intervention_column in df:
-            ntr = df[self.new_intervention_column]
+            ntr = T1
             new_out = (ntr - ctr) * CME + cta
         # New Intervention
         if self.expected_target in df:
             nta = df[self.expected_target]
             new_inter = ((nta - cta) / CME) + ctr
         return pd.DataFrame(
-            {
-                self.expected_target: new_out,
-                self.new_intervention_column: new_inter,
-            }
+            {self.expected_target: new_out, self.new_intervention_column: new_inter}
         )
+

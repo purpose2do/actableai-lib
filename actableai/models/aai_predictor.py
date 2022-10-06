@@ -1,3 +1,4 @@
+from actableai.intervention.model import AAIInterventionEffectPredictor
 from actableai.models.config import MODEL_DEPLOYMENT_VERSION
 
 
@@ -9,13 +10,17 @@ class AAIModel:
 
 
 class AAITabularModel(AAIModel):
-    def __init__(
-        self,
-        version: int,
-        predictor,
-    ) -> None:
+    def __init__(self, version: int, predictor) -> None:
         super().__init__(version)
         self.predictor = predictor
+
+
+class AAIInterventionalModel(AAIModel):
+    def __init__(
+        self, version: int, intervention_predictor: AAIInterventionEffectPredictor
+    ) -> None:
+        super().__init__(version)
+        self.intervention_predictor = intervention_predictor
 
 
 class AAITabularModelInterventional(AAITabularModel):
@@ -23,16 +28,7 @@ class AAITabularModelInterventional(AAITabularModel):
         self,
         version: int,
         predictor,
-        intervention_model,
+        intervention_model: AAIInterventionEffectPredictor,
     ) -> None:
-        super().__init__(
-            version,
-            predictor,
-        )
+        super().__init__(version, predictor)
         self.intervention_model = intervention_model
-
-
-class AAIInterventionalModel(AAIModel):
-    def __init__(self, version: int, intervention_predictor) -> None:
-        super().__init__(version)
-        self.intervention_predictor = intervention_predictor

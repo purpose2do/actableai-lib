@@ -816,7 +816,7 @@ class InterventionDataValidator:
         if len([x for x in validations if x is not None]) > 0:
             return validations
         # Columns are sane now we treat
-        if new_intervention_column:
+        if new_intervention_column and new_intervention_column in df:
             validations += [
                 IsCategoricalOrNumericalChecker(level=CheckLevels.CRITICAL).check(
                     df, [current_intervention_column, new_intervention_column]

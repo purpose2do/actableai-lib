@@ -1,4 +1,6 @@
 from typing import Dict
+import numpy as np
+import pandas as pd
 
 from actableai.exceptions.models import UnknownModelClassError
 
@@ -130,15 +132,49 @@ class AAIModelInference:
                     pred["intervention"] = task_model.intervention_effect(df, pred)
                 return pred
             if isinstance(task_model, AAITabularModelInterventional) and (
-                f"intervened_{task_model.intervention_model.intervened_column}" in df
+                f"intervened_{task_model.intervention_model.current_intervention_column}"
+                in df
                 or f"expected_{task_model.predictor.label}" in df
             ):
-                pred["intervention"] = task_model.intervention_effect(df, pred)
+                target_proba = None
+                if "df_proba" in pred:
+                    target_proba = pred["df_proba"]
+                df[task_model.predictor.label] = pred["prediction"]
+                if (
+                    task_model.intervention_model.causal_model.discrete_treatment
+                    == False
+                ):
+                    new_int_col = (
+                        "intervened_"
+                        + task_model.intervention_model.current_intervention_column
+                    )
+                    int_col = task_model.intervention_model.current_intervention_column
+                    df[int_col] = df[int_col].replace("", np.nan).astype(float)
+                    df[new_int_col] = df[new_int_col].replace("", np.nan).astype(float)
+                new_outcome = task_model.intervention_model.predict_effect(
+                    df, target_proba
+                )
+                import logging
+                logging.warning(new_outcome)
+                pred["intervention"] = pd.DataFrame(
+                    {
+                        f"expected_{task_model.predictor.label}": new_outcome[
+                            task_model.predictor.label + "_intervened"
+                        ],
+                        f"intervened_{task_model.intervention_model.current_intervention_column}": [
+                            None for _ in range(len(df))
+                        ],
+                    }
+                )
             return pred
         elif isinstance(task_model, TabularPredictor):
             # Run legacy task_model directly
             return self._predict(
-                task_model, df, return_probabilities, probability_threshold, positive_label
+                task_model,
+                df,
+                return_probabilities,
+                probability_threshold,
+                positive_label,
             )
         else:
             raise UnknownModelClassError()
@@ -246,10 +282,10 @@ class AAIModelInference:
                 else:
                     metadata[
                         "intervened_column"
-                    ] = task_model.intervention_model.intervened_column
+                    ] = task_model.intervention_model.current_intervention_column
                     metadata[
                         "discrete_treatment"
-                    ] = task_model.intervention_model.discrete_treatment
+                    ] = task_model.intervention_model.causal_model.discrete_treatment
             return metadata
         return self._get_metadata(task_model)
 
