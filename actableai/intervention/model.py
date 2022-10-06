@@ -254,10 +254,9 @@ class AAIInterventionEffectPredictor:
             target_intervened = self.outcome_featurizer.inverse_transform(
                 expit(target_intervened)
             )
+            target_intervened = target_intervened.squeeze()
 
-        result[
-            self.target + "_intervened"
-        ] = target_intervened.squeeze()  # type: ignore
+        result[self.target + "_intervened"] = target_intervened  # type: ignore
         if self.outcome_featurizer is None:
             result["intervention_effect"] = effects.squeeze()
             if self.cate_alpha is not None:
@@ -377,4 +376,3 @@ class AAIInterventionEffectPredictor:
         return pd.DataFrame(
             {self.expected_target: new_out, self.new_intervention_column: new_inter}
         )
-
