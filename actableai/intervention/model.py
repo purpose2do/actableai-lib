@@ -245,12 +245,12 @@ class AAIInterventionEffectPredictor:
         t1_indices_non_na = T1.dropna(how='all', axis=0).index
 
         effects_on_indices = self.causal_model.effect(
-            X.iloc[t1_indices_non_na] if X is not None else None,
-            T0=T0.iloc[t1_indices_non_na],  # type: ignore
-            T1=T1.iloc[t1_indices_non_na],  # type: ignore
+            X.iloc[t1_indices_non_na].values if X is not None else None,
+            T0=T0.iloc[t1_indices_non_na].values,  # type: ignore
+            T1=T1.iloc[t1_indices_non_na].values,  # type: ignore
         )
 
-        effects = pd.DataFrame(np.zeros_like(Y.values))
+        effects = pd.DataFrame(np.zeros_like(Y.values), columns=Y.columns)
         effects.iloc[t1_indices_non_na] = effects_on_indices
 
         target_intervened = Y + effects
@@ -258,9 +258,8 @@ class AAIInterventionEffectPredictor:
             target_intervened = self.outcome_featurizer.inverse_transform(
                 expit(target_intervened)
             )
-            target_intervened = target_intervened.squeeze()
 
-        result[self.target + "_intervened"] = target_intervened  # type: ignore
+        result[self.target + "_intervened"] = target_intervened.flatten()  # type: ignore
         if self.outcome_featurizer is None:
             result["intervention_effect"] = effects.squeeze()
             if self.cate_alpha is not None:
