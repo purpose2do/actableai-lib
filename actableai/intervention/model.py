@@ -242,13 +242,17 @@ class AAIInterventionEffectPredictor:
             raise NotFittedError()
         T0, T1, Y, X = self._generate_TYX(df, target_proba, fit=False)
 
-        effects = self.causal_model.effect(
-            X,
-            T0=T0,  # type: ignore
-            T1=T1,  # type: ignore
+        t1_indices_non_na = T1.dropna(how='all', axis=0).index
+
+        effects_on_indices = self.causal_model.effect(
+            X.iloc[t1_indices_non_na] if X is not None else None,
+            T0=T0.iloc[t1_indices_non_na],  # type: ignore
+            T1=T1.iloc[t1_indices_non_na],  # type: ignore
         )
 
-        target_intervened = None
+        effects = pd.DataFrame(np.zeros_like(Y.values))
+        effects.iloc[t1_indices_non_na] = effects_on_indices
+
         target_intervened = Y + effects
         if self.outcome_featurizer is not None:
             target_intervened = self.outcome_featurizer.inverse_transform(

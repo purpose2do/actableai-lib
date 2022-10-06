@@ -836,7 +836,7 @@ class InterventionDataValidator:
                     )
                 )
         if (
-            new_intervention_column
+            new_intervention_column and new_intervention_column in df
             and get_type_special_no_ag(df[current_intervention_column]) == "category"
         ):
             validations.append(
