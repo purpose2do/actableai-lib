@@ -19,7 +19,6 @@ class ConstantValueParams(BaseParams):
             value: Value to return, if tuple it represents minimum and maximum
                 (excluded) value.
             target_dim: Dimension of the target.
-            TODO
         """
 
         super().__init__(

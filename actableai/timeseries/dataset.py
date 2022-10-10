@@ -135,7 +135,7 @@ class AAITimeSeriesDataset:
             feat_dynamic_cat: List of dynamic categorical feature columns.
             feat_static_real: List of static real feature columns.
             feat_static_cat: List of static categorical feature columns.
-            TODO
+            seasonal_periods: List of seasonal periods (seasonality).
         """
         self.dataframes = {}
         self.freq = freq

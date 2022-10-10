@@ -42,7 +42,6 @@ class FeedForwardParams(BaseParams):
                 maximum (excluded) value.
             mean_scaling: Scale the network input by the data mean and the network
                 output by its inverse.
-            TODO
         """
         super().__init__(
             model_name="FeedFoward",

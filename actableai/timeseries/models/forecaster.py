@@ -19,7 +19,7 @@ class AAITimeSeriesForecaster:
         date_column: str,
         target_columns: List[str],
         prediction_length: int,
-        seasonal_periods: Optional[List[int]],
+        seasonal_periods: Optional[List[int]] = None,
         group_by: List[str] = None,
         feature_columns: List[str] = None,
     ):
@@ -31,10 +31,10 @@ class AAITimeSeriesForecaster:
             target_columns: List of columns to forecast, if None all the columns will
                 be selected.
             prediction_length: Length of the prediction to forecast.
+            seasonal_periods: List of seasonal periods (seasonality).
             group_by: List of columns to use to separate different time series/groups.
             feature_columns: List of columns containing extraneous features used to
                 forecast.
-            TODO
         """
         self.date_column = date_column
         self.target_columns = target_columns
@@ -102,7 +102,7 @@ class AAITimeSeriesForecaster:
         date_column: str,
         target_columns: List[str],
         prediction_length: int,
-        seasonal_periods: Optional[List[int]],
+        seasonal_periods: Optional[List[int]] = None,
         feature_columns: List[str] = None,
         group_by: Optional[List[str]] = None,
         inplace: bool = True,
@@ -116,11 +116,11 @@ class AAITimeSeriesForecaster:
             target_columns: List of columns to forecast, if None all the columns will
                 be selected.
             prediction_length: Length of the prediction to forecast.
+            seasonal_periods: List of seasonal periods (seasonality).
             feature_columns: List of columns containing extraneous features used to
                 forecast.
             group_by: List of columns to use to separate different time series/groups.
             inplace: If True this function will modify the original DataFrame.
-            TODO
 
         Returns:
             - Dictionary containing the time series for each group.

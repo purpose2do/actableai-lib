@@ -173,7 +173,8 @@ class BaseParams:
 
         Args:
             estimator: Underlying GluonTS estimator.
-            TODO
+            additional_transformation: Additional transformation to add to this specific
+                estimator. Will be chained with the BaseParams transformation.
 
         Returns:
             The wrapped estimator.
@@ -192,7 +193,8 @@ class BaseParams:
 
         Args:
             predictor: Underlying GluonTS predictor.
-            TODO
+            additional_transformation: Additional transformation to add to this specific
+                estimator. Will be chained with the BaseParams transformation.
 
         Returns:
             The wrapped predictor.

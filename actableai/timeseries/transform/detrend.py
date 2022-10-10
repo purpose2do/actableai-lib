@@ -11,7 +11,12 @@ from actableai.timeseries.transform.base import ArrayTransformation
 
 
 class Detrend(ArrayTransformation):
-    """Detrend transformation using model fitting."""
+    """Detrend transformation using model fitting.
+
+    The trend is computed using a simple Linear Regression. This transformation computes
+    the trend and subtracts it from the time series. Since it is a simple Linear
+    Regression this transformation does not handle multiple trends.
+    """
 
     def __init__(self):
         """Detrend constructor."""
@@ -25,9 +30,7 @@ class Detrend(ArrayTransformation):
         """Train model representing the trend.
 
         Args:
-            FIXME
-            dataset: Dataset to use for training.
-            group: Group to use when selecting the time series from the dataset.
+            data: Data to use for training.
 
         Returns:
             The trained model.
@@ -64,11 +67,10 @@ class Detrend(ArrayTransformation):
         return self._trend_models[group].predict(X)
 
     def _setup_data(self, data_it: Iterable[DataEntry]):
-        """Set up the transformation with a dataset.
+        """Set up the transformation with data.
 
         Args:
-            dataset: Dataset to set up the transformation with.
-            FIXME
+            data_it: Data to set up the transformation with.
         """
         super()._setup_data(data_it)
 

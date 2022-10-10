@@ -75,12 +75,7 @@ class TreePredictorParams(BaseParams):
         }
 
     def build_estimator(
-        self,
-        *,
-        freq: str,
-        prediction_length: int,
-        params: Dict[str, Any],
-        **kwargs
+        self, *, freq: str, prediction_length: int, params: Dict[str, Any], **kwargs
     ) -> AAITimeSeriesEstimator:
         """Build an estimator from the underlying model using selected parameters.
 

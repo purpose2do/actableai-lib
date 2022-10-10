@@ -50,7 +50,6 @@ class DeepVARParams(BaseParams):
             l2: L2 regularization parameter, if tuple it represents the minimum and
                 maximum (excluded) value.
             scaling: Whether to automatically scale the target values.
-            TODO
         """
         super().__init__(
             model_name="DeepVAR",

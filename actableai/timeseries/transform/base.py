@@ -23,6 +23,7 @@ class Transformation(metaclass=abc.ABCMeta):
 
     def setup(self, dataset: AAITimeSeriesDataset):
         """Set up the transformation with a dataset.
+
         Args:
             dataset: Dataset to set up the transformation with.
         """
@@ -38,19 +39,22 @@ class Transformation(metaclass=abc.ABCMeta):
         group_list: List[Tuple[Any, ...]],
         seasonal_periods: List[int],
     ):
-        """Set up the transformation with a dataset.
+        """Set up the transformation.
 
         Args:
-            dataset: Dataset to set up the transformation with.
-            FIXME
+            data_it: Data to set up the transformation with.
+            group_list: List of groups corresponding to the `data_it`.
+            seasonal_periods: List of seasonal periods corresponding to the `data_it`.
         """
         self.group_list = group_list
         self.seasonal_periods = seasonal_periods
         self._setup_data(data_it)
 
     def _setup_data(self, data_it: Iterable[DataEntry]):
-        """
-        TODO write documentation
+        """Set up the transformation with data.
+
+        Args:
+            data_it: Data to set up the transformation with.
         """
         pass
 
@@ -145,11 +149,13 @@ class Chain(Transformation):
         group_list: List[Tuple[Any, ...]],
         seasonal_periods: List[int],
     ):
-        """Set up the transformation with a dataset.
+
+        """Set up the transformation.
 
         Args:
-            dataset: Dataset to set up the transformation with.
-            FIXME
+            data_it: Data to set up the transformation with.
+            group_list: List of groups corresponding to the `data_it`.
+            seasonal_periods: List of seasonal periods corresponding to the `data_it`.
         """
         super()._setup(data_it, group_list, seasonal_periods)
 
@@ -322,8 +328,15 @@ class ArrayTransformation(MapTransformation):
     def _transform_array(
         self, array: np.ndarray, start_date: pd.Period, group: Tuple[Any, ...]
     ) -> np.ndarray:
-        """
-        TODO write documentation
+        """Transform an array (sub function ensuring the shape of the array).
+
+        Args:
+            array: Array to transform.
+            start_date: Starting date of the array (in the time series context).
+            group: Array's group.
+
+        Returns:
+            The transformed array.
         """
         univariate = len(array.shape) == 1
 
@@ -402,8 +415,16 @@ class ArrayTransformation(MapTransformation):
     def _revert_array(
         self, array: np.ndarray, start_date: pd.Period, group: Tuple[Any, ...]
     ) -> np.ndarray:
-        """
-        TODO write documentation
+        """Revert a transformation on an array (sub function ensuring the shape of the
+            array).
+
+        Args:
+            array: Array to revert.
+            start_date: Starting date of the array (in the time series context).
+            group: Array's group.
+
+        Returns:
+            The transformed array.
         """
         univariate = len(array.shape) == 1
 

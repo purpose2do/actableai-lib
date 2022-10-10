@@ -332,7 +332,7 @@ class AAIForecastTask(AAITask):
             sampling_method: Method used when extracting the samples for the tuning
                 ["random", "last"].
             tuning_metric: Metric to to minimize when tuning.
-            TODO
+            seasonal_periods: List of seasonal periods (seasonality).
 
         Returns:
             Dict: Dictionary containing the results.

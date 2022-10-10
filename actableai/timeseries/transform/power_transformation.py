@@ -4,29 +4,34 @@ import numpy as np
 import pandas as pd
 from gluonts.dataset.common import DataEntry
 from gluonts.dataset.field_names import FieldName
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import make_pipeline, Pipeline
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 from actableai.timeseries.transform.base import ArrayTransformation
 
 
 class PowerTransformation(ArrayTransformation):
-    """
-    TODO write documentation
+    """Power transformation.
+
+    This transformation will have for effect to make the data more Gaussian-like.
+    see: https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html
     """
 
     def __init__(self):
-        """
-        TODO write documentation
-        """
+        """PowerTransformation constructor."""
         super().__init__()
 
         self._transformation_models = None
 
     @staticmethod
-    def _train_transformation_model(data: DataEntry):
-        """
-        TODO write documentation
+    def _train_transformation_model(data: DataEntry) -> Pipeline:
+        """Train model representing the power transformation.
+
+        Args:
+            data: Data used for training.
+
+        Returns:
+            The trained model.
         """
         X = data[FieldName.TARGET]
 
@@ -42,11 +47,10 @@ class PowerTransformation(ArrayTransformation):
         return model
 
     def _setup_data(self, data_it: Iterable[DataEntry]):
-        """Set up the transformation with a dataset.
+        """Set up the transformation with data.
 
         Args:
-            dataset: Dataset to set up the transformation with.
-            FIXME
+            data_it: Data to set up the transformation with.
         """
         super()._setup_data(data_it)
 

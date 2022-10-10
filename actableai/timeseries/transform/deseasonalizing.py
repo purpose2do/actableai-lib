@@ -12,14 +12,10 @@ from actableai.timeseries.transform.base import (
 
 
 class MultiDeseasonalizing(Chain):
-    """
-    TODO write documentation
-    """
+    """Remove multiple seasonality."""
 
     def __init__(self):
-        """
-        TODO write documentation
-        """
+        """MultiDeseasonalizing constructor."""
         super().__init__(transformations=[], is_flattenable=False)
 
     def _setup(
@@ -28,8 +24,12 @@ class MultiDeseasonalizing(Chain):
         group_list: List[Tuple[Any, ...]],
         seasonal_periods: List[int],
     ):
-        """
-        TODO write documentation
+        """Set up the transformation.
+
+        Args:
+            data_it: Data to set up the transformation with.
+            group_list: List of groups corresponding to the `data_it`.
+            seasonal_periods: List of seasonal periods corresponding to the `data_it`.
         """
         self.transformations = []
 
@@ -41,13 +41,21 @@ class MultiDeseasonalizing(Chain):
 
 
 class Deseasonalizing(ArrayTransformation):
-    """
-    TODO write documentation
+    """Remove seasonality.
+
+    Will compute the mean of all the values over a specified period of time. This mean
+    values represent what is called the seasonality component. This transformation
+    consists in removing this component from the time series.
+
+    For a more accurate representation of the seasonality it is advised to run a
+    PowerTransformation and Detrend transformation beforehand.
     """
 
     def __init__(self, seasonal_period: int):
-        """
-        TODO write documentation
+        """Deseasonalizing constructor.
+
+        Args:
+            seasonal_period: Period to use to determine seasonality.
         """
         super().__init__()
 
@@ -56,9 +64,14 @@ class Deseasonalizing(ArrayTransformation):
         self._seasonality = None
         self._seasonal_start_date = None
 
-    def _train_seasonal_model(self, data: DataEntry):
-        """
-        TODO write documentation
+    def _compute_seasonality(self, data: DataEntry) -> np.ndarray:
+        """Compute seasonality of a data entry.
+
+        Args:
+            data: Data entry to compute the seasonality on.
+
+        Returns:
+            Computed seasonality, array of shape (n_targets, seasonal_period).
         """
 
         df = pd.DataFrame(data[FieldName.TARGET].T)
@@ -76,13 +89,20 @@ class Deseasonalizing(ArrayTransformation):
 
             seasonality.append(df_col_seasonality.values)
 
-        return seasonality
+        return np.array(seasonality)
 
-    def _predict_seasonality(
+    def _get_seasonality(
         self, group: Tuple[Any, ...], start_date: pd.Period, prediction_length: int
     ):
-        """
-        TODO write documentation
+        """Return seasonality for a specific group.
+
+        Args:
+            group: Group to get the seasonality for.
+            start_date: Starting date of the prediction.
+            prediction_length: Number of periods to predict.
+
+        Returns:
+            The seasonality.
         """
         periods = (
             start_date
@@ -96,16 +116,15 @@ class Deseasonalizing(ArrayTransformation):
         )
 
     def _setup_data(self, data_it: Iterable[DataEntry]):
-        """Set up the transformation with a dataset.
+        """Set up the transformation with data.
 
         Args:
-            dataset: Dataset to set up the transformation with.
-            FIXME
+            data_it: Data to set up the transformation with.
         """
         super()._setup_data(data_it)
 
         self._seasonality = {
-            group: self._train_seasonal_model(data)
+            group: self._compute_seasonality(data)
             for data, group in zip(data_it, self.group_list)
         }
 
@@ -127,7 +146,7 @@ class Deseasonalizing(ArrayTransformation):
         Returns:
             The transformed array.
         """
-        seasonality = self._predict_seasonality(group, start_date, array.shape[-1])
+        seasonality = self._get_seasonality(group, start_date, array.shape[-1])
         return array - seasonality
 
     def revert_array(
@@ -143,5 +162,5 @@ class Deseasonalizing(ArrayTransformation):
         Returns:
             The transformed array.
         """
-        seasonality = self._predict_seasonality(group, start_date, array.shape[-1])
+        seasonality = self._get_seasonality(group, start_date, array.shape[-1])
         return array + seasonality
