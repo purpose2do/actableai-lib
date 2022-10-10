@@ -1,5 +1,6 @@
-from gluonts.model.r_forecast import RForecastPredictor
 from typing import Optional, Union, Tuple, Dict, Any
+
+from gluonts.model.r_forecast import RForecastPredictor
 
 from actableai.timeseries.models.params.base import BaseParams
 from actableai.timeseries.models.predictor import AAITimeSeriesPredictor

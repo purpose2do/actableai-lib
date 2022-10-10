@@ -1,10 +1,8 @@
 from functools import partial
+from typing import Union, Optional, List, Callable
 
 import numpy as np
 import pandas as pd
-
-from typing import Union, Optional, List, Callable
-
 from gluonts.model import Forecast
 
 
