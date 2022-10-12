@@ -156,7 +156,6 @@ class AAIInterventionEffectPredictor:
             )
             model_final = SKLearnTabularWrapper(
                 model_final,
-                x_w_columns=T.columns,
                 hyperparameters=self.causal_hyperparameters,
                 presets=self.presets,
                 ag_args_fit=ag_args_fit,
