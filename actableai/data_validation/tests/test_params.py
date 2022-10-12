@@ -487,8 +487,8 @@ class TestInterventionDataValidator:
         validation_results = InterventionDataValidator().validate(
             df=df,
             target="x",
-            current_intervention_column="y",
-            new_intervention_column="b",
+            current_intervention_column="b",
+            new_intervention_column="z",
             common_causes=["t"],
             causal_cv=1,
             drop_unique=False,

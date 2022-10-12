@@ -253,7 +253,7 @@ class AAIInterventionEffectPredictor:
         effects = pd.DataFrame(np.zeros_like(Y.values), columns=Y.columns)
         effects.iloc[t1_indices_non_na] = effects_on_indices
 
-        target_intervened = Y + effects
+        target_intervened = np.array(Y + effects)
         if self.outcome_featurizer is not None:
             target_intervened = self.outcome_featurizer.inverse_transform(
                 expit(target_intervened)
