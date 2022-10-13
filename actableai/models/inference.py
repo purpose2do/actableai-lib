@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 
 from actableai.exceptions.models import UnknownModelClassError
+from actableai.models.intervention import empty_string_to_nan
 
 
 class AAIModelInference:
@@ -115,22 +116,13 @@ class AAIModelInference:
 
         # We used to pickle TabularPredictor. This check is for legacy
         if isinstance(task_model, AAITabularModel):
-            if isinstance(task_model, AAITabularModelInterventional):
-                pred = self._predict(
-                    task_model.predictor,
-                    df,
-                    return_probabilities=True,
-                    probability_threshold=probability_threshold,
-                    positive_label=positive_label,
-                )
-            else:
-                pred = self._predict(
-                    task_model.predictor,
-                    df,
-                    return_probabilities,
-                    probability_threshold,
-                    positive_label,
-                )
+            pred = self._predict(
+                task_model.predictor,
+                df,
+                return_probabilities=isinstance(task_model, AAITabularModelInterventional) or return_probabilities,
+                probability_threshold=probability_threshold,
+                positive_label=positive_label,
+            )
             # Here for legacy, previously the causal model was directly in the AAITabularModel
             # Now intervention has its own custom model
             if task_model.model_version <= 1:
@@ -141,6 +133,11 @@ class AAIModelInference:
                     pred["intervention"] = task_model.intervention_effect(df, pred)
                 return pred
 
+            new_intervention_col = (
+                "intervened_"
+                + task_model.intervention_model.current_intervention_column
+            )
+            intervention_col = task_model.intervention_model.current_intervention_column
             if isinstance(task_model, AAITabularModelInterventional) and (
                 f"intervened_{task_model.intervention_model.current_intervention_column}"
                 in df
@@ -150,16 +147,16 @@ class AAIModelInference:
                 if "df_proba" in pred:
                     target_proba = pred["df_proba"]
                 df[task_model.predictor.label] = pred["prediction"]
-                if not task_model.intervention_model.causal_model.discrete_treatment:
-                    new_int_col = (
-                        "intervened_"
-                        + task_model.intervention_model.current_intervention_column
+                df = empty_string_to_nan(
+                    df, task_model, intervention_col, new_intervention_col
+                )
+                if (
+                    not task_model.intervention_model.causal_model.discrete_treatment
+                    and task_model.predictor.problem_type == "regression"
+                ):
+                    new_outcome = task_model.intervention_model.predict_two_way_effect(
+                        df
                     )
-                    int_col = task_model.intervention_model.current_intervention_column
-                    df[int_col] = df[int_col].replace("", np.nan).astype(float)
-                    df[new_int_col] = df[new_int_col].replace("", np.nan).astype(float)
-                if not task_model.intervention_model.causal_model.discrete_treatment and task_model.predictor.problem_type == "regression":
-                    new_outcome = task_model.intervention_model.predict_two_way_effect(df)
                     pred["intervention"] = new_outcome
                 else:
                     new_outcome = task_model.intervention_model.predict_effect(
