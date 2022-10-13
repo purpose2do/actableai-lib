@@ -115,13 +115,22 @@ class AAIModelInference:
 
         # We used to pickle TabularPredictor. This check is for legacy
         if isinstance(task_model, AAITabularModel):
-            pred = self._predict(
-                task_model.predictor,
-                df,
-                return_probabilities,
-                probability_threshold,
-                positive_label,
-            )
+            if isinstance(task_model, AAITabularModelInterventional):
+                pred = self._predict(
+                    task_model.predictor,
+                    df,
+                    return_probabilities=True,
+                    probability_threshold=probability_threshold,
+                    positive_label=positive_label,
+                )
+            else:
+                pred = self._predict(
+                    task_model.predictor,
+                    df,
+                    return_probabilities,
+                    probability_threshold,
+                    positive_label,
+                )
             # Here for legacy, previously the causal model was directly in the AAITabularModel
             # Now intervention has its own custom model
             if task_model.model_version <= 1:
@@ -131,6 +140,7 @@ class AAIModelInference:
                 ):
                     pred["intervention"] = task_model.intervention_effect(df, pred)
                 return pred
+
             if isinstance(task_model, AAITabularModelInterventional) and (
                 f"intervened_{task_model.intervention_model.current_intervention_column}"
                 in df
@@ -140,10 +150,7 @@ class AAIModelInference:
                 if "df_proba" in pred:
                     target_proba = pred["df_proba"]
                 df[task_model.predictor.label] = pred["prediction"]
-                if (
-                    task_model.intervention_model.causal_model.discrete_treatment
-                    == False
-                ):
+                if not task_model.intervention_model.causal_model.discrete_treatment:
                     new_int_col = (
                         "intervened_"
                         + task_model.intervention_model.current_intervention_column
@@ -151,21 +158,23 @@ class AAIModelInference:
                     int_col = task_model.intervention_model.current_intervention_column
                     df[int_col] = df[int_col].replace("", np.nan).astype(float)
                     df[new_int_col] = df[new_int_col].replace("", np.nan).astype(float)
-                new_outcome = task_model.intervention_model.predict_effect(
-                    df, target_proba
-                )
-                import logging
-                logging.warning(new_outcome)
-                pred["intervention"] = pd.DataFrame(
-                    {
-                        f"expected_{task_model.predictor.label}": new_outcome[
-                            task_model.predictor.label + "_intervened"
-                        ],
-                        f"intervened_{task_model.intervention_model.current_intervention_column}": [
-                            None for _ in range(len(df))
-                        ],
-                    }
-                )
+                if not task_model.intervention_model.causal_model.discrete_treatment and task_model.predictor.problem_type == "regression":
+                    new_outcome = task_model.intervention_model.predict_two_way_effect(df)
+                    pred["intervention"] = new_outcome
+                else:
+                    new_outcome = task_model.intervention_model.predict_effect(
+                        df, target_proba
+                    )
+                    pred["intervention"] = pd.DataFrame(
+                        {
+                            f"expected_{task_model.predictor.label}": new_outcome[
+                                task_model.predictor.label + "_intervened"
+                            ],
+                            f"intervened_{task_model.intervention_model.current_intervention_column}": [
+                                None for _ in range(len(df))
+                            ],
+                        }
+                    )
             return pred
         elif isinstance(task_model, TabularPredictor):
             # Run legacy task_model directly

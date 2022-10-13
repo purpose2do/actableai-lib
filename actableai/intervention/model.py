@@ -126,7 +126,7 @@ class AAIInterventionEffectPredictor:
             )
         else:
             model_y_predictor = MultilabelPredictor(
-                labels=Y.columns,
+                labels=[str(x) for x in Y.columns],
                 path=mkdtemp(prefix=str(self.model_directory)),
                 problem_types=["regression"] * len(Y.columns),
             )
@@ -163,7 +163,7 @@ class AAIInterventionEffectPredictor:
             )
         else:
             model_final_predictor = MultilabelPredictor(
-                labels=Y.columns,
+                labels=[str(x) for x in Y.columns],
                 path=mkdtemp(prefix=str(self.model_directory)),
                 problem_types=["regression"] * len(Y.columns),
             )
@@ -241,13 +241,18 @@ class AAIInterventionEffectPredictor:
             raise NotFittedError()
         T0, T1, Y, X = self._generate_TYX(df, target_proba, fit=False)
 
-        t1_indices_non_na = T1.dropna(how='all', axis=0).index
+        t1_indices_non_na = T1.dropna(how="all", axis=0).index
 
-        effects_on_indices = self.causal_model.effect(
-            X.iloc[t1_indices_non_na].values if X is not None else None,
-            T0=T0.iloc[t1_indices_non_na].values,  # type: ignore
-            T1=T1.iloc[t1_indices_non_na].values,  # type: ignore
-        )
+        if len(t1_indices_non_na) == 0:
+            effects_on_indices = pd.DataFrame(
+                np.zeros_like(Y.values), columns=Y.columns
+            )
+        else:
+            effects_on_indices = self.causal_model.effect(
+                X.iloc[t1_indices_non_na].values if X is not None else None,
+                T0=T0.iloc[t1_indices_non_na].values,  # type: ignore
+                T1=T1.iloc[t1_indices_non_na].values,  # type: ignore
+            )
 
         effects = pd.DataFrame(np.zeros_like(Y.values), columns=Y.columns)
         effects.iloc[t1_indices_non_na] = effects_on_indices
@@ -258,22 +263,39 @@ class AAIInterventionEffectPredictor:
                 expit(target_intervened)
             )
 
-        result[self.target + "_intervened"] = target_intervened.flatten()  # type: ignore
+        result[self.target + "_intervened"] = target_intervened.flatten()
         if self.outcome_featurizer is None:
-            result["intervention_effect"] = effects.squeeze()
+            # Here the effect is one column so we can send it in the result
+            result["intervention_effect"] = effects.values.flatten()
             if self.cate_alpha is not None:
-                lb, ub = self.causal_model.effect_interval(
-                    X,
-                    T0=T0,  # type: ignore
-                    T1=T1,  # type: ignore
-                    alpha=self.cate_alpha,
-                )  # type: ignore
-                result[self.target + "_intervened_low"] = df[self.target] + lb.flatten()
-                result[self.target + "_intervened_high"] = (
-                    df[self.target] + ub.flatten()
+                if len(t1_indices_non_na) == 0:
+                    lb_custom_indices, ub_custom_indices = (
+                        pd.DataFrame(np.zeros_like(Y.values), columns=Y.columns),
+                        pd.DataFrame(np.zeros_like(Y.values), columns=Y.columns),
+                    )
+                else:
+                    lb_custom_indices, ub_custom_indices = self.causal_model.effect_interval(
+                        X.iloc[t1_indices_non_na].values if X is not None else None,
+                        T0=T0.iloc[t1_indices_non_na].values,  # type: ignore
+                        T1=T1.iloc[t1_indices_non_na].values,  # type: ignore
+                        alpha=self.cate_alpha,
+                    )  # type: ignore
+                lb, ub = (
+                    pd.DataFrame(np.zeros_like(Y.values), columns=Y.columns),
+                    pd.DataFrame(np.zeros_like(Y.values), columns=Y.columns),
                 )
-                result["intervention_effect_low"] = lb.flatten()
-                result["intervention_effect_high"] = ub.flatten()
+                lb.iloc[t1_indices_non_na], ub.iloc[t1_indices_non_na] = (
+                    lb_custom_indices,
+                    ub_custom_indices,
+                )
+                result[self.target + "_intervened_low"] = (
+                    df[self.target] + lb.values.flatten()
+                )
+                result[self.target + "_intervened_high"] = (
+                    df[self.target] + ub.values.flatten()
+                )
+                result["intervention_effect_low"] = lb.values.flatten()
+                result["intervention_effect_high"] = ub.values.flatten()
         return result
 
     def _generate_TYX(
@@ -291,7 +313,7 @@ class AAIInterventionEffectPredictor:
             if self.common_causes and len(self.common_causes) > 0
             else None
         )
-        if self.target in num_cols:
+        if self.target in num_cols and target_proba is None:
             Y = df[[self.target]]
         else:
             if fit:
@@ -346,7 +368,7 @@ class AAIInterventionEffectPredictor:
             )
         return
 
-    def predict_two_way_effect(self, df):
+    def predict_two_way_effect(self, df: pd.DataFrame):
         # Only works for treatment + outcome being continuous
         # Maybe raise Exception if not called well
 
@@ -355,26 +377,35 @@ class AAIInterventionEffectPredictor:
 
         T0, T1, Y, X = self._generate_TYX(df, None, False)
 
+        t1_indices_non_na = T1.dropna(how="all", axis=0).index
+
+        if len(t1_indices_non_na) == 0:
+            cme_on_indices = pd.DataFrame(np.zeros_like(Y.values), columns=Y.columns)
+        else:
+            cme_on_indices = self.causal_model.const_marginal_effect(
+                X.iloc[t1_indices_non_na].values if X is not None else None
+            )
+
+        cme = pd.DataFrame(np.zeros_like(Y.values), columns=Y.columns)
+        cme.iloc[t1_indices_non_na] = cme_on_indices
         new_inter = [None for _ in range(len(df))]
         new_out = [None for _ in range(len(df))]
-        ctr = T0
-        cta = Y
-        custom_effect = []
-        for index_lab in range(len(df)):
-            curr_CME = self.causal_model.const_marginal_effect(
-                X[index_lab : index_lab + 1] if X is not None else None
-            )
-            curr_CME = curr_CME.squeeze()
-            custom_effect.append(curr_CME)
-        CME = np.array(custom_effect)
+
+        T0, T1, Y, X, cme = (
+            np.array(T0).flatten(),
+            np.array(T1).flatten(),
+            np.array(Y).flatten(),
+            np.array(X).flatten(),
+            np.array(cme).flatten(),
+        )
+
         # New Outcome
         if self.new_intervention_column in df:
-            ntr = T1
-            new_out = (ntr - ctr) * CME + cta
+            new_out = (T1 - T0) * cme + Y
         # New Intervention
         if self.expected_target in df:
-            nta = df[self.expected_target]
-            new_inter = ((nta - cta) / CME) + ctr
+            nta = df[self.expected_target].astype(float)
+            new_inter = ((nta - Y) / cme) + Y
         return pd.DataFrame(
             {self.expected_target: new_out, self.new_intervention_column: new_inter}
         )
