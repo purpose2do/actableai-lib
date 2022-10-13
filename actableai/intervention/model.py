@@ -377,17 +377,10 @@ class AAIInterventionEffectPredictor:
 
         T0, T1, Y, X = self._generate_TYX(df, None, False)
 
-        t1_indices_non_na = T1.dropna(how="all", axis=0).index
+        cme = self.causal_model.const_marginal_effect(
+            X
+        )
 
-        if len(t1_indices_non_na) == 0:
-            cme_on_indices = pd.DataFrame(np.zeros_like(Y.values), columns=Y.columns)
-        else:
-            cme_on_indices = self.causal_model.const_marginal_effect(
-                X.iloc[t1_indices_non_na].values if X is not None else None
-            )
-
-        cme = pd.DataFrame(np.zeros_like(Y.values), columns=Y.columns)
-        cme.iloc[t1_indices_non_na] = cme_on_indices
         new_inter = [None for _ in range(len(df))]
         new_out = [None for _ in range(len(df))]
 
