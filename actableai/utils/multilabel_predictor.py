@@ -3,7 +3,6 @@ from autogluon.common.loaders import load_pkl
 from autogluon.common.savers import save_pkl
 from autogluon.common.utils.utils import setup_outputdir
 from autogluon.tabular import TabularDataset, TabularPredictor
-import pandas as pd
 
 
 class MultilabelPredictor:
