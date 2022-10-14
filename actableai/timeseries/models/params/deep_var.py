@@ -1,7 +1,8 @@
+from typing import Union, Tuple, Dict, Any
+
 from gluonts.model.deepvar import DeepVAREstimator
 from gluonts.mx.trainer import Trainer
 from mxnet.context import Context
-from typing import Union, Tuple, Dict, Any
 
 from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.params.base import BaseParams

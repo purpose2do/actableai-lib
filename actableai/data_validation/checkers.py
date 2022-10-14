@@ -1,4 +1,6 @@
+from cgitb import small
 from collections import Counter
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
 from typing import Any, List, Optional, Union
 import pandas as pd
@@ -59,8 +61,6 @@ class IsCategoricalChecker(IChecker):
 
         data_type = get_type_special(df)  # type: ignore
         if data_type not in ["category", "integer", "boolean"]:
-            if data_type == "integer":
-                self.level = CheckLevels.WARNING
             return CheckResult(
                 name=self.name,
                 level=self.level,
@@ -870,13 +870,14 @@ class TimeSeriesTuningMetricChecker(IChecker):
             "ND",
             "mean_absolute_QuantileLoss",
             "mean_wQuantileLoss",
-            "MAE_Coverage"
+            "MAE_Coverage",
         ]
 
         if tuning_metric not in possible_metrics:
             return CheckResult(
                 name=self.name, level=self.level, message="Invalid tuning_metric"
             )
+
 
 class MaxTrainSamplesChecker(IChecker):
     def __init__(self, level, name="MaxTrainSamplesChecker"):
@@ -1177,3 +1178,55 @@ class PositiveOutcomeForBinaryChecker(IChecker):
                     level=self.level,
                     message="If the outcome is binary, the positive outcome value must be specified.",
                 )
+
+
+class IsSufficientSampleCrossValidationChecker(IChecker):
+    def __init__(self, level, name: str = "IsSufficientSampleCrossValidationChecker"):
+        super().__init__(name)
+        self.level = level
+
+    def check(self, df: pd.DataFrame, kfolds: int) -> Optional[CheckResult]:
+        """Check that there is more values than the number of kfolds
+
+        Args:
+            df: Input dataframe
+            kfolds: Number of cross validated folds
+
+        Returns:
+            Optional[CheckResult]: Check result
+        """
+        if kfolds > len(df):
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"The number of kfolds ({kfolds}) must be lower or equal to the number of samples ({len(df)})",
+            )
+
+
+class IsSufficientDataClassificationStratification(IChecker):
+    def __init__(self, level, name="IsSufficientDataClassificationStratification"):
+        super().__init__(name)
+        self.level = level
+
+    def check(
+        self,
+        df: pd.DataFrame,
+        target: str,
+        validation_ratio: float,
+        drop_duplicates: bool,
+        features: List[str],
+    ) -> Optional[CheckResult]:
+        df_train = df[pd.notnull(df[target])]
+        if drop_duplicates:
+            df_train = df_train.drop_duplicates(subset=features + [target])
+        df_train = df_train.groupby(target).filter(
+            lambda x: len(x) >= CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE
+        )
+        smallest_value = df[target].value_counts().min()
+        if smallest_value * validation_ratio < 1:
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"The validation ratio ({validation_ratio}) is not high enough to represent the target in validation set."
+                + f" Please set it to ({1 / smallest_value}+) or add more data.",
+            )

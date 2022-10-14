@@ -68,7 +68,7 @@ class AAISentimentAnalysisTask(AAITask):
                 )
             except RayTaskError as err:
                 if type(err.cause) is UnsupportedLanguageError:
-                    unsupported_language_codes.add(err.cause.language_code)
+                    unsupported_language_codes.add(err.cause.language_code or "Unknown")
 
         validations = []
         if len(unsupported_language_codes) > 0:

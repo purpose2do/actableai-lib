@@ -13,6 +13,7 @@ from actableai.data_validation.checkers import (
     IsDatetimeChecker,
     IsNumericalChecker,
     IsSufficientClassSampleChecker,
+    IsSufficientSampleCrossValidationChecker,
     MaxTrainSamplesChecker,
     NoFrequentItemSet,
     OnlyOneValueChecker,
@@ -371,4 +372,17 @@ class TestPositiveOutcomeForBinaryChecker:
         result = checker.check(df=df, outcomes=["x"], positive_outcome_value=None)
         assert result is not None
         assert result.name == "PositiveOutcomeForBinaryChecker"
+        assert result.level == CheckLevels.CRITICAL
+
+
+class TestIsSufficientSampleCrossValidationChecker:
+    def test_check(self):
+        checker = IsSufficientSampleCrossValidationChecker(
+            level=CheckLevels.CRITICAL,
+            name=IsSufficientSampleCrossValidationChecker.__name__,
+        )
+        df = pd.DataFrame({"x": [1, 2, 1], "y": [1, 1, 1], "z": [1, 2, 3]})
+        result = checker.check(df=df, kfolds=5)
+        assert result is not None
+        assert result.name == IsSufficientSampleCrossValidationChecker.__name__
         assert result.level == CheckLevels.CRITICAL

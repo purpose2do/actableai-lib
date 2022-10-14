@@ -2,6 +2,7 @@ import logging
 import numpy as np
 import pandas as pd
 from typing import Any, Dict, List, Optional, Tuple, Union
+from actableai.models.config import MODEL_DEPLOYMENT_VERSION
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
@@ -281,10 +282,7 @@ class _AAIRegressionTrainTask(AAITask):
                     )
 
             evaluate["metrics"] = pd.DataFrame(
-                {
-                    "metric": metric_list,
-                    "value": metric_value_list,
-                }
+                {"metric": metric_list, "value": metric_value_list}
             )
 
         predictions = None
@@ -331,8 +329,8 @@ class AAIRegressionTask(AAITask):
         debiased_features: Optional[List[str]] = None,
         eval_metric: str = "r2",
         validation_ratio: float = 0.2,
-        prediction_quantile_low: int = 5,
-        prediction_quantile_high: int = 95,
+        prediction_quantile_low: Optional[int] = None,
+        prediction_quantile_high: Optional[int] = None,
         explain_samples: bool = False,
         model_directory: Optional[str] = None,
         presets: str = "medium_quality_faster_train",
@@ -348,11 +346,12 @@ class AAIRegressionTask(AAITask):
         time_limit: Optional[int] = None,
         drop_unique: bool = True,
         drop_useless_features: bool = True,
-        datetime_column: Optional[str] = None,
         split_by_datetime: bool = False,
+        datetime_column: Optional[str] = None,
         ag_automm_enabled: bool = False,
         refit_full: bool = False,
         feature_pruning: bool = True,
+        intervention_run_params: Optional[Dict] = None,
     ):
         """Run this regression task and return results.
 
@@ -361,52 +360,57 @@ class AAIRegressionTask(AAITask):
             target: Target columns in df. If there are emtpy values in this columns,
                 predictions will be generated for these rows.
             features: A list of features to be used for prediction. If None, all columns
-                except target are used as features. Defaults to None.
+                except target are used as features
             biased_groups: A list of columns of groups that should be protected from
-                biases (e.g. gender, race, age). Defaults to None.
+                biases (e.g. gender, race, age)
             debiased_features: A list of proxy features that need to be debiased for
-                protection of sensitive groups. Defaults to None.
+                protection of sensitive groups
             eval_metric: Metric to be optimized during training. Possible values include
                 'root_mean_squared_error', 'mean_squared_error', 'mean_absolute_error',
-                'median_absolute_error', 'r2'. Defaults to "r2".
+                'median_absolute_error', 'r2'
             validation_ratio: The ratio to randomly split data for training and
-                validation. Defaults to .2.
+                validation
             prediction_quantile_low: Lower quantile for quantile regression (in
-                percentage). Defaults to 5.
+                percentage)
             prediction_quantile_high: Higher quantile for quantile regression
-                (in percentage). Defaults to 95.
+                (in percentage)
             explain_samples: If true, explanations for predictions in test and
                 validation will be generated. It takes significantly longer time to run.
-                Defaults to False.
             model_directory: Destination to store trained model. If not set, a temporary
-                folder will be created. Defaults to None.
+                folder will be created
             presets: Autogluon's presets for training model.
                 See
                 https://auto.gluon.ai/stable/_modules/autogluon/tabular/predictor/predictor.html#TabularPredictor.fit.
-                Defaults to "medium_quality_faster_train".
             hyperparameters: Autogluon's hyperparameters for training model.
                 See
                 https://auto.gluon.ai/stable/_modules/autogluon/tabular/predictor/predictor.html#TabularPredictor.fit.
-                Defaults to "medium_quality_faster_train".
             train_task_params: Parameters for _AAITrainTask constructor.
-                Defaults to None.
             kfolds: Number of folds for cross validation. If 1, train test split is used
-                instead.. Defaults to 1.
+                instead.
             cross_validation_max_concurrency: Maximum number of Ray actors used for
-                cross validation (each actor execute for one split). Defaults to 1.
+                cross validation (each actor execute for one split)
             residuals_hyperparameters: Autogluon's hyperparameteres used in final model
-                of counterfactual predictions. Defaults to None.
+                of counterfactual predictions
             drop_duplicates: Whether duplicate values should be dropped before training.
-                Defaults to True.
             return_residuals: Whether residual values should be returned in
-                counterfactual prediction. Defaults to False.
-            kde_steps: Steps used to generate KDE plots with debiasing. Defaults to 10.
+                counterfactual prediction
+            kde_steps: Steps used to generate KDE plots with debiasing
             num_gpus: Number of GPUs used in nuisnace models in counterfactual
-                prediction. Defaults to 0.
-            time_limit: time limit (in seconds) of training. Defaults to None, which means
-                there is no time limit.
+                prediction
+            time_limit: time limit (in seconds) of training. None means no time limit
+            drop_unique: Wether to drop columns with only unique values as preprocessing step
+            drop_useless_features: Whether to drop columns with only unique values at fit time
+            split_by_datetime: Wether train/validation sets are split using datetime.
+                Training will be the most recent data and validation the latest.
+            datetime_column: The specified datetime column if split_by_datetime is enabled
             ag_automm_enabled: Whether to use autogluon multimodal model on text
                 columns.
+            refit_full: Wether the model is completely refitted on validation at
+                the end of the task. Training time is divided by 2 to allow reffiting
+                for the other half of the time
+            feature_pruning: Wether feature pruning is enabled. Can increase accuracy
+                by removing hurtfull features for the model. If no training time left this step
+                is skipped
 
         Examples:
             >>> import pandas as pd
@@ -418,7 +422,22 @@ class AAIRegressionTask(AAITask):
             ... )
 
         Returns:
-            Dict: Dictionnary containing results.
+            Dict: Dictionnary containing the results for this task
+                - "status": "SUCCESS" if the task successfully ran else "FAILURE"
+                - "messenger": Message returned with the task
+                - "validations": List of validations on the data.
+                    non-empty if the data presents a problem for the task
+                - "runtime": Execution time of the task
+                - "data": Dictionnary containing the data for the task
+                    - "validation_table": Validation table
+                    - "prediction_table": Prediction table
+                    - "predict_shaps": Shapley values for prediction table
+                    - "evaluate": Evaluation metrics for the task
+                    - "validation_shaps": Shapley values for the validation table
+                    - "importantFeatures": Feature importance for the validation table
+                    - "debiasing_charts": If debiasing enabled, charts to display debiasing
+                    - "leaderboard": Leaderboard of the best trained models
+            - "model": AAIModel to redeploy the model
         """
         import time
         from tempfile import mkdtemp
@@ -437,6 +456,11 @@ class AAIRegressionTask(AAITask):
         from actableai.data_validation.base import (
             CheckLevels,
             UNIQUE_CATEGORY_THRESHOLD,
+        )
+        from actableai import AAIInterventionTask
+        from actableai.models.aai_predictor import (
+            AAITabularModel,
+            AAITabularModelInterventional,
         )
         from actableai.regression.cross_validation import run_cross_validation
         from actableai.utils.sanitize import sanitize_timezone
@@ -758,6 +782,34 @@ class AAIRegressionTask(AAITask):
             "leaderboard": leaderboard,
         }
 
+        causal_model = None
+        current_intervention_column = None
+        common_causes = None
+        discrete_treatment = None
+        validations = [
+            {"name": x.name, "level": x.level, "message": x.message}
+            for x in failed_checks
+        ]
+        if intervention_run_params is not None:
+            intervention_task_result = AAIInterventionTask(
+                return_model=True, upload_model=False
+            ).run(**intervention_run_params)
+            if intervention_task_result["status"] == "SUCCESS":
+                causal_model = intervention_task_result["model"]
+                discrete_treatment = intervention_task_result["discrete_treatment"]
+                current_intervention_column = intervention_run_params[
+                    "current_intervention_column"
+                ]
+                common_causes = intervention_run_params["common_causes"]
+            else:
+                validations.append(
+                    {
+                        "name": "Intervention Failed",
+                        "level": CheckLevels.WARNING,
+                        "message": "Counterfactual ran into an issue",
+                    }
+                )
+
         if refit_full:
             df_only_full_training = df.loc[df[target].notnull()]
             predictor, _, _, _, _, _, _, _, _, _ = _AAIRegressionTrainTask(
@@ -789,16 +841,28 @@ class AAIRegressionTask(AAITask):
             )
             predictor.refit_full(model="best", set_best_to_refit_full=True)
 
+        model = None
+        if (kfolds <= 1 or refit_full) and predictor:
+            model = AAITabularModel(
+                version=MODEL_DEPLOYMENT_VERSION, predictor=predictor
+            )
+            if causal_model and current_intervention_column:
+                model = AAITabularModelInterventional(
+                    version=MODEL_DEPLOYMENT_VERSION,
+                    predictor=predictor,
+                    causal_model=causal_model,
+                    intervened_column=current_intervention_column,
+                    common_causes=common_causes,
+                    discrete_treatment=discrete_treatment,
+                )
+
         runtime = time.time() - start
         return {
             "status": "SUCCESS",
             "messenger": "",
-            "validations": [
-                {"name": x.name, "level": x.level, "message": x.message}
-                for x in failed_checks
-            ],
+            "validations": validations,
             "runtime": runtime,
             "data": data,
-            "model": predictor if kfolds <= 1 or refit_full else None,
+            "model": model,
             # FIXME this predictor is not really usable as is for now
         }

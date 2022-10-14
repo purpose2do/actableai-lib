@@ -1,6 +1,6 @@
 import abc
 import pandas as pd
-from typing import List
+from typing import Optional
 
 MINIMUM_NUMBER_OF_SAMPLE = 20
 CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS = 2
@@ -15,6 +15,8 @@ CORRELATION_MINIMUM_NUMBER_OF_SAMPLE = 3
 
 
 class CheckLevels:
+    """Class holding the check levels for data validation"""
+
     CRITICAL = "CRITICAL"
     WARNING = "WARNING"
 
@@ -46,9 +48,11 @@ class CheckResult:
 
 
 class IChecker(metaclass=abc.ABCMeta):
+    """Abstract class for Checker"""
+
     def __init__(self, name: str):
         self.name = name
 
     @abc.abstractmethod
-    def check(self, df: pd.DataFrame) -> CheckResult:
+    def check(self, df: pd.DataFrame) -> Optional[CheckResult]:
         pass

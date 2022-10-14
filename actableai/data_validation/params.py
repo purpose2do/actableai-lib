@@ -35,7 +35,9 @@ from actableai.data_validation.checkers import (
     IsSufficientClassSampleChecker,
     IsSufficientClassSampleForCrossValidationChecker,
     IsSufficientDataChecker,
+    IsSufficientDataClassificationStratification,
     IsSufficientNumberOfClassChecker,
+    IsSufficientSampleCrossValidationChecker,
     IsSufficientValidationSampleChecker,
     IsValidFrequencyChecker,
     IsValidNumberOfClusterChecker,
@@ -50,7 +52,8 @@ from actableai.data_validation.checkers import (
     SameTypeChecker,
     SplitByDatetimeValidationChecker,
     StratifiedKFoldChecker,
-    UniqueDateTimeChecker, TimeSeriesTuningMetricChecker,
+    UniqueDateTimeChecker,
+    TimeSeriesTuningMetricChecker,
 )
 from actableai.timeseries.utils import find_freq
 from actableai.utils import get_type_special_no_ag
@@ -132,6 +135,9 @@ class RegressionDataValidator:
             ),
             ColumnsInList(level=CheckLevels.CRITICAL).check(
                 features, debiased_features
+            ),
+            IsSufficientSampleCrossValidationChecker(level=CheckLevels.CRITICAL).check(
+                df, kfolds
             ),
         ]
         if split_by_datetime and kfolds > 1:
@@ -371,6 +377,12 @@ class ClassificationDataValidator:
                         validation_ratio=validation_ratio,
                     )
                 ),
+        if validation_ratio is not None:
+            validation_results.append(
+                IsSufficientDataClassificationStratification(
+                    level=CheckLevels.CRITICAL
+                ).check(df, target, validation_ratio, drop_duplicates, features)
+            )
         if drop_unique:
             validation_results.append(
                 OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, features)
@@ -378,7 +390,7 @@ class ClassificationDataValidator:
 
         if target in df.columns and not pd.isnull(df[target]).all():
             validation_results += [
-                IsCategoricalChecker(level=CheckLevels.CRITICAL).check(df[target]),
+                IsCategoricalChecker(level=CheckLevels.WARNING).check(df[target]),
                 IsSufficientNumberOfClassChecker(level=CheckLevels.CRITICAL).check(
                     df[target]
                 ),
@@ -477,7 +489,15 @@ class TimeSeriesDataValidator:
     def __init__(self):
         pass
 
-    def validate(self, df, date_column, predicted_columns, feature_columns, group_by, tuning_metric):
+    def validate(
+        self,
+        df,
+        date_column,
+        predicted_columns,
+        feature_columns,
+        group_by,
+        tuning_metric,
+    ):
         validation_results = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
                 df, [date_column] + predicted_columns + feature_columns + group_by
@@ -485,7 +505,9 @@ class TimeSeriesDataValidator:
             DoNotContainEmptyColumnsChecker(level=CheckLevels.CRITICAL).check(
                 df, [date_column] + predicted_columns + feature_columns + group_by
             ),
-            TimeSeriesTuningMetricChecker(level=CheckLevels.CRITICAL).check(tuning_metric)
+            TimeSeriesTuningMetricChecker(level=CheckLevels.CRITICAL).check(
+                tuning_metric
+            ),
         ]
 
         group_df_dict = {}
@@ -836,7 +858,19 @@ class AssociationRulesDataValidator:
     def __init__(self):
         pass
 
-    def validate(self, df: pd.DataFrame, group_by: List[str], items: str):
+    def validate(
+        self, df: pd.DataFrame, group_by: List[str], items: str
+    ) -> List[Optional[CheckResult]]:
+        """Method to validate data before running association rules algorithm
+
+        Args:
+            df: DataFrame to validate
+            group_by: Columns of df that groups the buyers for the association
+            items: Column in df representing the associated items
+
+        Returns:
+
+        """
         return [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
                 df, group_by + [items]

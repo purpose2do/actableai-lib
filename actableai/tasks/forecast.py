@@ -61,6 +61,7 @@ class AAIForecastTask(AAITask):
                 feat_dynamic_cat=dataset.feat_dynamic_cat,
                 feat_static_real=dataset.feat_static_real,
                 feat_static_cat=dataset.feat_static_cat,
+                seasonal_periods=dataset.seasonal_periods,
             ),
             AAITimeSeriesDataset(
                 dataframes=df_valid_dict,
@@ -71,6 +72,7 @@ class AAIForecastTask(AAITask):
                 feat_dynamic_cat=dataset.feat_dynamic_cat,
                 feat_static_real=dataset.feat_static_real,
                 feat_static_cat=dataset.feat_static_cat,
+                seasonal_periods=dataset.seasonal_periods,
             ),
             AAITimeSeriesDataset(
                 dataframes=df_predict_dict,
@@ -81,6 +83,7 @@ class AAIForecastTask(AAITask):
                 feat_dynamic_cat=dataset.feat_dynamic_cat,
                 feat_static_real=dataset.feat_static_real,
                 feat_static_cat=dataset.feat_static_cat,
+                seasonal_periods=dataset.seasonal_periods,
             ),
         )
 
@@ -298,6 +301,7 @@ class AAIForecastTask(AAITask):
         seed: int = 123,
         sampling_method: str = "random",
         tuning_metric: str = "mean_wQuantileLoss",
+        seasonal_periods: Optional[List[int]] = None,
     ) -> Dict[str, Any]:
         """Run time series forecasting task and return results.
 
@@ -328,6 +332,7 @@ class AAIForecastTask(AAITask):
             sampling_method: Method used when extracting the samples for the tuning
                 ["random", "last"].
             tuning_metric: Metric to to minimize when tuning.
+            seasonal_periods: List of seasonal periods (seasonality).
 
         Returns:
             Dict: Dictionary containing the results.
@@ -398,6 +403,7 @@ class AAIForecastTask(AAITask):
             date_column=date_column,
             target_columns=predicted_columns,
             prediction_length=prediction_length,
+            seasonal_periods=seasonal_periods,
             feature_columns=feature_columns,
             group_by=group_by,
             inplace=True,
@@ -458,6 +464,7 @@ class AAIForecastTask(AAITask):
             date_column=date_column,
             target_columns=predicted_columns,
             prediction_length=prediction_length,
+            seasonal_periods=seasonal_periods,
             group_by=group_by,
             feature_columns=feature_columns,
         )

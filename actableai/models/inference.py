@@ -1,3 +1,6 @@
+from typing import Dict
+
+
 class AAIModelInference:
     """
     TODO write documentation
@@ -97,12 +100,56 @@ class AAIModelInference:
         probability_threshold=0.5,
         positive_label=None,
     ):
+        from actableai.models.aai_predictor import (
+            AAITabularModel,
+            AAITabularModelInterventional,
+        )
+
+        task_model = self._get_model(task_id)
+
+        # We used to pickle TabularPredictor. This check is for legacy
+        if isinstance(task_model, AAITabularModel):
+            pred = self._predict(
+                task_id,
+                task_model.predictor,
+                df,
+                return_probabilities,
+                probability_threshold,
+                positive_label,
+            )
+            # Intervention effect part
+            if isinstance(task_model, AAITabularModelInterventional) and (
+                f"intervened_{task_model.intervened_column}" in df
+                or f"expected_{task_model.predictor.label}" in df
+            ):
+                pred["intervention"] = task_model.intervention_effect(df, pred)
+            return pred
+
+        # Run legacy task_model directly
+        return self._predict(
+            task_id,
+            task_model,
+            df,
+            return_probabilities,
+            probability_threshold,
+            positive_label,
+        )
+
+    def _predict(
+        self,
+        task_id,
+        task_model,
+        df,
+        return_probabilities=False,
+        probability_threshold=0.5,
+        positive_label=None,
+    ) -> Dict:
         """
         TODO write documentation
         """
         from actableai.exceptions.models import InvalidPositiveLabelError
 
-        task_model = self._get_model(task_id)
+        result = {}
 
         df_proba = self.predict_proba(task_id, df)
 
@@ -110,14 +157,16 @@ class AAIModelInference:
 
         # Regression
         if len(class_labels) <= 1:
-            return df_proba
+            result["prediction"] = df_proba
+            return result
 
         # Multiclass
         if len(class_labels) > 2:
-            df_pred = df_proba.idxmax(axis="columns").to_frame(name=task_model.label)
+            prediction = df_proba.idxmax(axis="columns").to_frame(name=task_model.label)
             if return_probabilities:
-                return df_pred, df_proba
-            return df_pred
+                result["df_proba"] = df_proba
+            result["prediction"] = prediction
+            return result
 
         # Binary
         if positive_label is None:
@@ -136,17 +185,25 @@ class AAIModelInference:
         )
 
         if return_probabilities:
-            return df_true_label, df_proba
-        return df_true_label
+            result["df_proba"] = df_proba
+        result["prediction"] = df_true_label
+        return result
 
     def predict_proba(self, task_id, df):
+        from actableai.models.aai_predictor import AAITabularModel
+
+        task_model = self._get_model(task_id)
+
+        if isinstance(task_model, AAITabularModel):
+            return self._predict_proba(task_model.predictor, df)
+        return self._predict_proba(task_model, df)
+
+    def _predict_proba(self, task_model, df):
         """
         TODO write documentation
         """
         import pandas as pd
         from actableai.exceptions.models import MissingFeaturesError
-
-        task_model = self._get_model(task_id)
 
         # FIXME this considers that the model we have is an AutoGluon which will not
         #  be the case in the future
@@ -166,10 +223,29 @@ class AAIModelInference:
         return df_proba
 
     def get_metadata(self, task_id):
+        from actableai.models.aai_predictor import (
+            AAITabularModel,
+            AAITabularModelInterventional,
+        )
+
+        task_model = self._get_model(task_id)
+        if isinstance(task_model, AAITabularModel):
+            metadata = self._get_metadata(task_model.predictor)
+
+            if (
+                isinstance(task_model, AAITabularModelInterventional)
+                and task_model.causal_model is not None
+                and task_model.intervened_column is not None
+            ):
+                metadata["intervened_column"] = task_model.intervened_column
+                metadata["discrete_treatment"] = task_model.discrete_treatment
+            return metadata
+        return self._get_metadata(task_model)
+
+    def _get_metadata(self, task_model):
         """
         TODO write documentation
         """
-        task_model = self._get_model(task_id)
 
         # FIXME this considers that the model we have is an AutoGluon which will not
         #  be the case in the future
@@ -183,6 +259,7 @@ class AAIModelInference:
             "features": features,
             "problem_type": problem_type,
             "class_labels": None,
+            "prediction_target": task_model.label,
         }
 
         if problem_type == "multiclass" or problem_type == "binary":

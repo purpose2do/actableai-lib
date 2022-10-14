@@ -1,5 +1,6 @@
-from gluonts.model.prophet import ProphetPredictor
 from typing import Union, Tuple, Dict, Any
+
+from gluonts.model.prophet import ProphetPredictor
 
 from actableai.timeseries.models.params.base import BaseParams
 from actableai.timeseries.models.predictor import AAITimeSeriesPredictor

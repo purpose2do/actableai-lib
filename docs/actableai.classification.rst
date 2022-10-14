@@ -20,6 +20,14 @@ actableai.classification.cross\_validation module
    :undoc-members:
    :show-inheritance:
 
+actableai.classification.roc\_curve\_cross\_validation module
+-------------------------------------------------------------
+
+.. automodule:: actableai.classification.roc_curve_cross_validation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 actableai.classification.utils module
 -------------------------------------
 

@@ -1,6 +1,7 @@
 import re
-import pandas as pd
 from typing import Optional, Tuple, List
+
+import pandas as pd
 
 
 def interpolate(df: pd.DataFrame, freq: str) -> pd.DataFrame:

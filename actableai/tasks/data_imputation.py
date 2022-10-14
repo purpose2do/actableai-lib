@@ -82,10 +82,19 @@ class AAIDataImputationTask(AAITask):
 
         Examples:
             >>> df = pd.read_csv("path/to/dataframe")
-            >>> AAIDataImputationTask().run(df)
+            >>> result = AAIDataImputationTask().run(df)
+            >>> result
 
         Returns:
             Dict: Dictionnary of results
+                - "status": "SUCCESS" if the task successfully ran else "FAILURE"
+                - "messenger": Message returned with the task
+                - "validations": List of validations on the data.
+                    non-empty if the data presents a problem for the task
+                - "runtime": Execution time of the task
+                - "data": Dictionnary containing the data for the task
+                    - "columns": Columns of the new table
+                    - "records": Records containing the new values after imputation
         """
         from actableai.data_imputation.error_detector import (
             NullDetector,

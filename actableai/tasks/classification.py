@@ -3,6 +3,7 @@ import numpy as np
 from typing import Any, Dict, List, Optional, Tuple, Union
 import logging
 
+from actableai.models.config import MODEL_DEPLOYMENT_VERSION
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 
@@ -83,14 +84,31 @@ class _AAIClassificationTrainTask(AAITask):
             num_gpus: Number of gpus used by AutoGluon
             eval_metric: Metric to be optimized for.
             time_limit: Time limit for training (in seconds)
+            drop_unique: Whether the classification algorithm drops columns that
+                only have a unique value accross all rows at fit time
+            drop_useless_features: Whether the classification algorithm drops columns that
+                only have a unique value accross all rows as preprocessing
+            feature_pruning: Wether the feature_pruning is enabled or not.
+                This option improves results but extend the training time.
+                If there is no time left to do feature_pruning after training
+                this step is skipped.
 
         Returns:
-            Tuple[object, object, object, object, object]: Return results for
-            classification :
+            Tuple[
+                Any,
+                Any,
+                Optional[List],
+                Optional[dict],
+                Optional[np.ndarray],
+                Union[np.ndarray, List],
+                pd.DataFrame
+            ]: Return results for classification :
                 - AutoGluon's predictor
+                - Explainer for SHAP values
                 - List of important features
                 - Dictionnary of evaluated metrics
                 - Class probabilities for predicted values
+                - Shap values on test set
                 - Leaderboard of the best trained models
         """
         import pandas as pd
@@ -364,11 +382,12 @@ class AAIClassificationTask(AAITask):
         time_limit: Optional[int] = None,
         drop_unique: bool = True,
         drop_useless_features: bool = True,
-        datetime_column: Optional[str] = None,
         split_by_datetime: bool = False,
+        datetime_column: Optional[str] = None,
         ag_automm_enabled=False,
         refit_full=False,
         feature_pruning=True,
+        intervention_run_params: Optional[Dict] = None,
     ) -> Dict:
         """Run this classification task and return results.
 
@@ -410,8 +429,21 @@ class AAIClassificationTask(AAITask):
                 ‘recall_micro’, ‘recall_weighted’, ‘log_loss’, ‘pac_score’.
                 Defaults to "accuracy".
             time_limit: Time limit of training (in seconds)
+            drop_unique: Wether to drop columns with only unique values as preprocessing step.
+            drop_useless_features: Whether to drop columns with only unique values at fit time.
+            split_by_datetime: Whether the training/validation has to be split based on a datetime column.
+            datetime_column: If *split_by_datetime*, the column that will split training and validation,
+                else, the parameter is ignored.
             ag_automm_enabled: Whether to use autogluon multimodal model on text
-                columns.
+                columns. This features makes text classification way more accurate by using
+                text models. This feature is heavy on resources and requires GPU.
+            refit_full: Whether at the end of classification, a second task is launched to
+                refit a new model on the whole dataset. This makes accuracy much better but divides
+                the training time in half. (half for first task, other half for refitting)
+            feature_pruning: Wether the feature_pruning is enabled or not.
+                This option improves results but extend the training time.
+                If there is no time left to do feature_pruning after training
+                this step is skipped.
 
         Raises:
             Exception: If the target has less than 2 unique values.
@@ -421,7 +453,25 @@ class AAIClassificationTask(AAITask):
             >>> AAIClassificationTask(df, ["feature1", "feature2", "feature3"], "target")
 
         Returns:
-            Dict: Dictionnary of results
+            Dict: Dictionnary containing the results
+                - "status": "SUCCESS" if the task successfully ran else "FAILURE"
+                - "messenger": Message returned with the task
+                - "validations": List of validations on the data.
+                    non-empty if the data presents a problem for the task
+                - "runtime": Execution time of the task
+                - "data": Dictionnary containing the data for the task
+                    - "validation_table": Validation table
+                    - "prediction_table": Prediction table
+                    - "fields": Column names of the prediction table
+                    - "predictData": Prediction Table
+                    - "predict_shaps": Shapley values for prediction table
+                    - "validation_shaps": Shapley values for validation table
+                    - "exdata": Validation Table
+                    - "evaluate": Evaluation metrics on validation set
+                    - "importantFeatures": Feature importance on validation set
+                    - "debiasing_charts": If debiasing enabled, debiasing data to create charts
+                    - "leaderboard": Leaderboard of the best model on validation
+                - "model": AAIModel to redeploy the model
         """
         import json
         import time
@@ -441,6 +491,11 @@ class AAIClassificationTask(AAITask):
             CheckLevels,
             CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE,
             UNIQUE_CATEGORY_THRESHOLD,
+        )
+        from actableai import AAIInterventionTask
+        from actableai.models.aai_predictor import (
+            AAITabularModel,
+            AAITabularModelInterventional,
         )
         from actableai.classification.cross_validation import run_cross_validation
         from actableai.utils.sanitize import sanitize_timezone
@@ -520,6 +575,12 @@ class AAIClassificationTask(AAITask):
                 hyperparameters = memory_efficient_hyperparameters(
                     ag_automm_enabled and any_text_cols
                 )
+
+        from actableai.utils import get_type_special
+
+        # If the types are mixed, the train_test_split function with stratify crashes
+        if get_type_special(df[target]) == "mixed":
+            df[target] = df[target].astype(str)
 
         # Split data
         df_train = df[pd.notnull(df[target])]
@@ -749,7 +810,33 @@ class AAIClassificationTask(AAITask):
             str
         )
 
-        runtime = time.time() - start
+        causal_model = None
+        current_intervention_column = None
+        common_causes = None
+        discrete_treatment = None
+        validations = [
+            {"name": x.name, "level": x.level, "message": x.message}
+            for x in failed_checks
+        ]
+        if intervention_run_params is not None:
+            intervention_task_result = AAIInterventionTask(
+                return_model=True, upload_model=False
+            ).run(**intervention_run_params)
+            if intervention_task_result["status"] == "SUCCESS":
+                causal_model = intervention_task_result["causal_model"]
+                discrete_treatment = intervention_task_result["discrete_treatment"]
+                current_intervention_column = intervention_run_params[
+                    "current_intervention_column"
+                ]
+                common_causes = intervention_run_params["common_causes"]
+            else:
+                validations.append(
+                    {
+                        "name": "Intervention Failed",
+                        "level": CheckLevels.WARNING,
+                        "message": "Counterfactual ran into an issue",
+                    }
+                )
 
         if refit_full:
             df_only_training = df.loc[df[target].notnull()]
@@ -782,6 +869,22 @@ class AAIClassificationTask(AAITask):
             )
             predictor.refit_full(model="best", set_best_to_refit_full=True)
 
+        model = None
+        if (kfolds <= 1 or refit_full) and predictor:
+            model = AAITabularModel(
+                version=MODEL_DEPLOYMENT_VERSION, predictor=predictor
+            )
+            if causal_model and current_intervention_column:
+                model = AAITabularModelInterventional(
+                    version=MODEL_DEPLOYMENT_VERSION,
+                    predictor=predictor,
+                    causal_model=causal_model,
+                    intervened_column=current_intervention_column,
+                    common_causes=common_causes,
+                    discrete_treatment=discrete_treatment,
+                )
+
+        runtime = time.time() - start
         return {
             "messenger": "",
             "status": "SUCCESS",
@@ -803,6 +906,6 @@ class AAIClassificationTask(AAITask):
                 "debiasing_charts": debiasing_charts,
                 "leaderboard": leaderboard,
             },
-            "model": predictor if kfolds <= 1 or refit_full else None,
+            "model": model,
             # FIXME this predictor is not really usable as is for now
         }

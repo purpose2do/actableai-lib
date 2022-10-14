@@ -44,7 +44,7 @@ class AutoGluonShapTreeExplainer:
             shap.TreeExplainer(
                 autogluon_predictor._trainer.load_model(model_name).model
             )
-        except:
+        except Exception:
             return False
         return True
 
@@ -53,7 +53,7 @@ class AutoGluonShapTreeExplainer:
         data: Union[pd.DataFrame, np.ndarray],
         *args: List[Any],
         **kwargs: Dict[str, Any]
-    ) -> np.ndarray:
+    ) -> pd.DataFrame:
         """Compute shap values.
 
         Args:
@@ -125,4 +125,4 @@ class AutoGluonShapTreeExplainer:
 
             df_final_shap_values[column] = df_shap_values[column_links].sum(axis=1)
 
-        return df_final_shap_values.to_numpy()
+        return df_final_shap_values
