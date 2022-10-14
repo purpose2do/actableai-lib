@@ -227,13 +227,3 @@ class MultilabelPredictor:
             if not isinstance(self.predictors[label], str):
                 self.predictors[label].unpersist_models()
                 self.predictors[label] = self.predictors[label].path
-
-    def feature_importance(self, data, importance_list=False):
-        result = []
-        for label in self.labels:
-            tabular_predictor = self.get_predictor(label=label)
-            result.append(tabular_predictor.feature_importance(data=data))
-        result_mean = pd.concat(result).reset_index().groupby("index").mean()
-        if importance_list:
-            return result_mean, result
-        return result_mean

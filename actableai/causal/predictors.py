@@ -144,13 +144,10 @@ class SKLearnWrapper:
         return y_pred_proba.values
 
     def set_sample_weight(self, sample_weight=None):
-        # raise NotImplementedError
-        self.ag_predictor.sample_weight = sample_weight
+        raise NotImplementedError
 
     def add_output(self, train_data, y):
-        # raise NotImplementedError
-        train_data[self.ag_predictor.label] = y
-        return train_data
+        raise NotImplementedError()
 
     def score(self, X, y, sample_weight=None) -> Dict[str, Any]:
         raise NotImplementedError()
@@ -274,8 +271,3 @@ class SKLearnMultilabelWrapper(SKLearnWrapper):
             }
         else:
             raise UnsupportedProblemType()
-
-    def feature_importance(self) -> pd.DataFrame:
-        if self.train_data is None:
-            raise Exception("The predictor needs to be fitted before")
-        return self.ag_predictor.feature_importance(self.train_data)

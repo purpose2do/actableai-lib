@@ -32,7 +32,6 @@ class AAIInterventionEffectPredictor:
         presets: Optional[str] = None,
         model_directory: Optional[str] = None,
         num_gpus: Optional[int] = 0,
-        feature_importance: Optional[bool] = True,
         drop_unique: bool = True,
         drop_useless_features: bool = True,
         automl_pipeline_feature_parameters: Optional[Dict[str, Any]] = None,
@@ -48,7 +47,6 @@ class AAIInterventionEffectPredictor:
         self.presets = presets
         self.model_directory = model_directory
         self.num_gpus = num_gpus
-        self.feature_importance = feature_importance
         self.drop_unique = drop_unique
         self.drop_useless_features = drop_useless_features
         self.automl_pipeline_feature_parameters = automl_pipeline_feature_parameters

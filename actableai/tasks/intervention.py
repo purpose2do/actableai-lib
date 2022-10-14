@@ -27,7 +27,7 @@ class AAIInterventionTask(AAITask):
         presets: Optional[str] = None,
         model_directory: Optional[str] = None,
         num_gpus: Optional[int] = 0,
-        feature_importance: Optional[bool] = True,
+        feature_importance: bool = True,
         drop_unique: bool = True,
         drop_useless_features: bool = True,
         only_fit: bool = False,
@@ -144,7 +144,6 @@ class AAIInterventionTask(AAITask):
             presets=presets,
             model_directory=model_directory,
             num_gpus=num_gpus,
-            feature_importance=feature_importance,
             drop_unique=drop_unique,
             drop_useless_features=drop_useless_features,
         )
@@ -233,7 +232,19 @@ class AAIInterventionTask(AAITask):
             "metric": "r2",
         }
 
-        if feature_importance and common_causes is not None and len(common_causes) != 0:
+        type_special = df.apply(get_type_special_no_ag)
+        num_cols = (type_special == "numeric") | (type_special == "integer")
+        num_cols = list(df.loc[:, num_cols].columns)
+        cat_cols = type_special == "category"
+        cat_cols = list(df.loc[:, cat_cols].columns)
+
+        if (
+            feature_importance
+            and common_causes is not None
+            and len(common_causes) != 0
+            and target not in cat_cols
+            and target_proba is None
+        ):
             importances = []
             # Only run feature importance for first mc_iter to speed it up
             for _, m in enumerate(causal_model.models_t[0]):
@@ -262,10 +273,6 @@ class AAIInterventionTask(AAITask):
             estimation_results[
                 "model_y_feature_importances"
             ] = model_y_feature_importances
-
-        type_special = df.apply(get_type_special_no_ag)
-        num_cols = (type_special == "numeric") | (type_special == "integer")
-        num_cols = list(df.loc[:, num_cols].columns)
 
         # Display plot in front end
         if target in num_cols:

@@ -133,16 +133,16 @@ class AAIModelInference:
                     pred["intervention"] = task_model.intervention_effect(df, pred)
                 return pred
 
-            new_intervention_col = (
-                "intervened_"
-                + task_model.intervention_model.current_intervention_column
-            )
-            intervention_col = task_model.intervention_model.current_intervention_column
             if isinstance(task_model, AAITabularModelInterventional) and (
                 f"intervened_{task_model.intervention_model.current_intervention_column}"
                 in df
                 or f"expected_{task_model.predictor.label}" in df
             ):
+                new_intervention_col = (
+                    "intervened_"
+                    + task_model.intervention_model.current_intervention_column
+                )
+                intervention_col = task_model.intervention_model.current_intervention_column
                 target_proba = None
                 if "df_proba" in pred:
                     target_proba = pred["df_proba"]
