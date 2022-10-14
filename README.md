@@ -13,7 +13,7 @@
     <img src="https://docs.actable.ai/_images/logo.png" alt="Logo">
 
   <p align="center">
-    Advanced Analyitcs and Data Science made easy
+    Advanced Analytics and Data Science made easy
     <br />
     <a href="https://lib.actable.ai" target="_blank"><strong>Explore the docs</strong></a>
     <br />
