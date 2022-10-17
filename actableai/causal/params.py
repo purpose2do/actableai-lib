@@ -1926,13 +1926,13 @@ def get_rscorer(
     has_categorical_outcome,
     is_single_binary_outcome,
 ):
-    def reg():
+    def create_regressor():
         return RandomForestRegressor(min_samples_leaf=10)
 
-    def clf():
+    def create_classifier():
         return RandomForestClassifier(min_samples_leaf=10)
 
-    def mten():
+    def create_elasticnet():
         return MultiTaskElasticNetCV()
 
     if (
@@ -1942,8 +1942,8 @@ def get_rscorer(
         and (not has_categorical_outcome)
     ):
         scorer = RScorer(
-            model_y=reg(),
-            model_t=reg(),
+            model_y=create_regressor(),
+            model_t=create_regressor(),
             discrete_treatment=False,
             cv=3,
             mc_iters=3,
@@ -1956,8 +1956,8 @@ def get_rscorer(
     ):
         if is_single_binary_treatment:
             scorer = RScorer(
-                model_y=reg(),
-                model_t=clf(),
+                model_y=create_regressor(),
+                model_t=create_classifier(),
                 discrete_treatment=True,
                 cv=3,
                 mc_iters=3,
@@ -1965,8 +1965,8 @@ def get_rscorer(
             )
         else:
             scorer = RScorer(
-                model_y=reg(),
-                model_t=mten(),
+                model_y=create_regressor(),
+                model_t=create_elasticnet(),
                 discrete_treatment=True,
                 cv=3,
                 mc_iters=3,
@@ -1979,8 +1979,8 @@ def get_rscorer(
     ):
         if is_single_binary_outcome:
             scorer = RScorer(
-                model_y=clf(),
-                model_t=reg(),
+                model_y=create_classifier(),
+                model_t=create_regressor(),
                 discrete_treatment=False,
                 cv=3,
                 mc_iters=3,
@@ -1988,8 +1988,8 @@ def get_rscorer(
             )
         else:
             scorer = RScorer(
-                model_y=mten(),
-                model_t=reg(),
+                model_y=create_elasticnet(),
+                model_t=create_regressor(),
                 discrete_treatment=False,
                 cv=3,
                 mc_iters=3,
@@ -1997,8 +1997,8 @@ def get_rscorer(
             )
     else:
         scorer = RScorer(
-            model_y=mten(),
-            model_t=mten(),
+            model_y=create_elasticnet(),
+            model_t=create_elasticnet(),
             discrete_treatment=False,
             cv=3,
             mc_iters=3,

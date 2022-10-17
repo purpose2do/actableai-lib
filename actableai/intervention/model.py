@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from tempfile import mkdtemp
 from typing import Any, Optional, List, Dict, Tuple, Union
@@ -33,9 +35,32 @@ class AAIInterventionEffectPredictor:
         model_directory: Optional[str] = None,
         num_gpus: Optional[int] = 0,
         drop_unique: bool = True,
-        drop_useless_features: bool = True,
-        automl_pipeline_feature_parameters: Optional[Dict[str, Any]] = None,
+        drop_useless_features: bool = False,
     ) -> None:
+        """Predictor for intervention effect
+
+        Args:
+            target: Column name of target variable
+            current_intervention_column: Column name of the current intervention
+            common_causes: List of common causes to be used for the intervention
+            new_intervention_column : Column name of a new intervention
+            expected_target: Column name of an expected target used to find the
+                associated intervention. This only works if the current intervention and
+                the outcome are continuous.
+            causal_cv: Number of folds for causal cross validation
+            causal_hyperparameters: Hyperparameters for AutoGluon predictor
+                See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
+            cate_alpha: Alpha for intervention effect. Ignored if df[target] is
+                categorical or if target_proba is not None
+            presets: Presets for AutoGluon.
+                See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
+            model_directory: Model directory
+            num_gpus: Number of GPUs used by causal models
+            drop_unique: Whether the classification algorithm drops columns that
+                only have a unique value accross all rows at fit time
+            drop_useless_features: Whether the classification algorithm drops columns
+                that only have a unique value accross all rows at preprocessing time
+        """
         self.target = target
         self.current_intervention_column = current_intervention_column
         self.new_intervention_column = new_intervention_column
@@ -48,14 +73,25 @@ class AAIInterventionEffectPredictor:
         self.model_directory = model_directory
         self.num_gpus = num_gpus
         self.drop_unique = drop_unique
-        self.drop_useless_features = drop_useless_features
-        self.automl_pipeline_feature_parameters = automl_pipeline_feature_parameters
         self.causal_model = None
         self.outcome_featurizer = None
-        if automl_pipeline_feature_parameters is None:
-            self.automl_pipeline_feature_parameters = {}
+        self.automl_pipeline_feature_parameters = {}
+        if not drop_useless_features:
+            self.automl_pipeline_feature_parameters["pre_drop_useless"] = False
+            self.automl_pipeline_feature_parameters["post_generators"] = []
 
-    def _generate_model_t(self, X, T) -> SKLearnTabularWrapper:
+    def _generate_model_t(
+        self, X: Optional[pd.DataFrame], T: pd.DataFrame
+    ) -> SKLearnTabularWrapper:
+        """Generate the treatment model
+
+        Args:
+            X: Common causes
+            T: Treatment
+
+        Returns:
+            SKLearnTabularWrapper: Model to find the treatment with the common causes
+        """
         type_special = T.apply(get_type_special_no_ag)
         num_cols = (type_special == "numeric") | (type_special == "integer")
         num_cols = list(T.loc[:, num_cols].columns)
@@ -99,8 +135,18 @@ class AAIInterventionEffectPredictor:
         return model_t
 
     def _generate_model_y(
-        self, X, Y
+        self, X: Optional[pd.DataFrame], Y: pd.DataFrame
     ) -> Union[SKLearnTabularWrapper, SKLearnMultilabelWrapper]:
+        """Generate the outcome model
+
+        Args:
+            X: Common causes
+            Y: Outcome
+
+        Returns:
+            Union[SKLearnTabularWrapper, SKLearnMultilabelWrapper]: Model to find the
+                outcome with the common causes
+        """
         xw_col = []
         if X is not None:
             xw_col += list(X.columns)
@@ -139,7 +185,19 @@ class AAIInterventionEffectPredictor:
             )
         return model_y
 
-    def _generate_model_final(self, T, Y):
+    def _generate_model_final(
+        self, T: pd.DataFrame, Y: pd.DataFrame
+    ) -> Union[SKLearnTabularWrapper, SKLearnMultilabelWrapper]:
+        """Generate the residual model
+
+        Args:
+            T: Treatment
+            Y: Outcome
+
+        Returns:
+            Union[SKLearnTabularWrapper, SKLearnMultilabelWrapper]: Model to find the
+                treatment residuals with the outcome residuals
+        """
         feature_generator = AutoMLPipelineFeatureGenerator(
             **(self.automl_pipeline_feature_parameters)
         )
@@ -175,14 +233,29 @@ class AAIInterventionEffectPredictor:
             )
         return model_final
 
-    def _generate_dml_model(self, model_t, model_y, model_final, X, T):
-        T_type = get_type_special_no_ag(T[self.current_intervention_column])
+    def _generate_dml_model(
+        self, model_t, model_y, model_final, X, T
+    ) -> Union[LinearDML, NonParamDML]:
+        """Generate the DML Model
+
+        Args:
+            model_t: Treatment model
+            model_y: Outcome model
+            model_final: Residuals model
+            X: Common causes
+            T: Treatment
+
+        Returns:
+            Union[LinearDML, NonParamDML]: Double Machine Learning model to infer the
+                causal effect of the treatment on the outcome
+        """
+        treatment_type = get_type_special_no_ag(T[self.current_intervention_column])
         if (
             self.common_causes is None
             or len(self.common_causes) == 0
             or self.cate_alpha is not None
             or (
-                T_type == "category"
+                treatment_type == "category"
                 and len(T[self.current_intervention_column].unique()) > 2
             )
         ):
@@ -195,7 +268,7 @@ class AAIInterventionEffectPredictor:
                 else DMLFeaturizer(),
                 cv=self.causal_cv,
                 linear_first_stages=False,
-                discrete_treatment=T_type == "category",
+                discrete_treatment=treatment_type == "category",
             )
         else:
             causal_model = NonParamDML(
@@ -204,11 +277,25 @@ class AAIInterventionEffectPredictor:
                 model_final=model_final,
                 featurizer=None if X is None else DMLFeaturizer(),
                 cv=self.causal_cv,
-                discrete_treatment=T_type == "category",
+                discrete_treatment=treatment_type == "category",
             )
         return causal_model
 
-    def fit(self, df: pd.DataFrame, target_proba: Optional[pd.DataFrame] = None):
+    def fit(
+        self, df: pd.DataFrame, target_proba: Optional[pd.DataFrame] = None
+    ) -> AAIInterventionEffectPredictor:
+        """Generate each appropriate models (treatment, outcome and residuals)
+            then fit the final DML causal model
+
+        Args:
+            df: DataFrame containing the values to fit on
+            target_proba: If the target is a multiclass, Optional DataFrame containing
+                the class probabilities, this DataFrame is used for Y instead of
+                df[self.target]
+
+        Returns:
+            AAIInterventionEffectPredictor: Self fitted predictor
+        """
         type_special = df.apply(get_type_special_no_ag)
         num_cols = (type_special == "numeric") | (type_special == "integer")
         num_cols = list(df.loc[:, num_cols].columns)
@@ -232,7 +319,22 @@ class AAIInterventionEffectPredictor:
 
         return self
 
-    def predict_effect(self, df, target_proba):
+    def predict(self, df: pd.DataFrame, target_proba: pd.DataFrame) -> pd.DataFrame:
+        """Predict the effect of the treatment on the outcome
+
+        Args:
+            df: DataFrame containing the values to predict on
+            target_proba: If the target is a multiclass, Optional DataFrame containing
+                the class probabilities, this DataFrame is used for Y instead of
+                df[self.target]
+
+        Raises:
+            NotFittedError: If this method is called before fit
+
+        Returns:
+            pd.DataFrame: DataFrame containing the effect of the treatment on the
+                outcome
+        """
         result = pd.DataFrame()
 
         if self.causal_model is None:
@@ -248,8 +350,8 @@ class AAIInterventionEffectPredictor:
         else:
             effects_on_indices = self.causal_model.effect(
                 X.iloc[t1_indices_non_na].values if X is not None else None,
-                T0=T0.iloc[t1_indices_non_na].values,  # type: ignore
-                T1=T1.iloc[t1_indices_non_na].values,  # type: ignore
+                T0=T0.iloc[t1_indices_non_na].values,
+                T1=T1.iloc[t1_indices_non_na].values,
             )
 
         effects = pd.DataFrame(np.zeros_like(Y.values), columns=Y.columns)
@@ -297,10 +399,28 @@ class AAIInterventionEffectPredictor:
         return result
 
     def _generate_TYX(
-        self, df, target_proba, fit
+        self, df: pd.DataFrame, target_proba: pd.DataFrame, fit: bool
     ) -> Tuple[
         pd.DataFrame, Optional[pd.DataFrame], pd.DataFrame, Optional[pd.DataFrame]
     ]:
+        """Helper function to generate the correct treatments, outcomes and common
+            causes to generate the models
+
+        Args:
+            df: DataFrame to get the data from
+            target_proba: If the target is a multiclass, Optional DataFrame containing
+                the class probabilities, this DataFrame is used for Y instead of
+                df[self.target]
+            fit: Wether this function is used during fit time or not
+
+        Returns:
+            Tuple[
+                pd.DataFrame,
+                Optional[pd.DataFrame],
+                pd.DataFrame,
+                Optional[pd.DataFrame]
+            ]: Current treatment, New Treatment, Outcome, Common Causes
+        """
         type_special = df.apply(get_type_special_no_ag)
         num_cols = (type_special == "numeric") | (type_special == "integer")
         num_cols = list(df.loc[:, num_cols].columns)
@@ -333,7 +453,15 @@ class AAIInterventionEffectPredictor:
             T1 = df[[self.new_intervention_column]]
         return T0, T1, Y, X
 
-    def preprocess_data(self, df) -> pd.DataFrame:
+    def _preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Data Imputation
+
+        Args:
+            df: DataFrame to preprocess
+
+        Returns:
+            pd.DataFrame: Preprocessed DataFrame
+        """
         # Preprocess data
         type_special = df.apply(get_type_special_no_ag)
         num_cols = (type_special == "numeric") | (type_special == "integer")
@@ -352,7 +480,15 @@ class AAIInterventionEffectPredictor:
             )
         return df
 
-    def check_params(self, df, target_proba):
+    def _check_params(self, df: pd.DataFrame, target_proba: pd.DataFrame):
+        """Warning on parameters if conflict in params
+
+        Args:
+            df: Input DataFrame
+            target_proba: If the target is a multiclass, Optional DataFrame containing
+                the class probabilities, this DataFrame is used for Y instead of
+                df[self.target]
+        """
         type_special = df.apply(get_type_special_no_ag)
         num_cols = (type_special == "numeric") | (type_special == "integer")
         num_cols = list(df.loc[:, num_cols].columns)
@@ -364,9 +500,25 @@ class AAIInterventionEffectPredictor:
             logging.warning(
                 "`df[target]` is a categorical column and `cate_alpha` is not None: `cate_alpha` will be ignored"
             )
-        return
 
-    def predict_two_way_effect(self, df: pd.DataFrame):
+    def predict_two_way(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Predict effect of the new treatment on the outcome AND predict the treatment
+            necessary to obtain an expected outcome
+
+        Args:
+            df: Input DataFrame.
+                NB : Here df can also contain the "expected_outcome". When the new
+                treatment is set the expected outcome must be nan and when the expected
+                outcome is set the new treatment must be nan
+
+        Raises:
+            NotFittedError: If this method is called before fit
+
+        Returns:
+            pd.DataFrame: Result containing the expected outcome when the treatment
+                is not nan and the new treatment when the expected outcome is not nan
+        """
+
         # Only works for treatment + outcome being continuous
         # Maybe raise Exception if not called well
 
@@ -375,9 +527,7 @@ class AAIInterventionEffectPredictor:
 
         T0, T1, Y, X = self._generate_TYX(df, None, False)
 
-        cme = self.causal_model.const_marginal_effect(
-            X
-        )
+        cme = self.causal_model.const_marginal_effect(X)
 
         new_inter = [None for _ in range(len(df))]
         new_out = [None for _ in range(len(df))]

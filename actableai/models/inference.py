@@ -119,7 +119,10 @@ class AAIModelInference:
             pred = self._predict(
                 task_model.predictor,
                 df,
-                return_probabilities=isinstance(task_model, AAITabularModelInterventional) or return_probabilities,
+                return_probabilities=isinstance(
+                    task_model, AAITabularModelInterventional
+                )
+                or return_probabilities,
                 probability_threshold=probability_threshold,
                 positive_label=positive_label,
             )
@@ -142,7 +145,9 @@ class AAIModelInference:
                     "intervened_"
                     + task_model.intervention_model.current_intervention_column
                 )
-                intervention_col = task_model.intervention_model.current_intervention_column
+                intervention_col = (
+                    task_model.intervention_model.current_intervention_column
+                )
                 target_proba = None
                 if "df_proba" in pred:
                     target_proba = pred["df_proba"]
@@ -154,12 +159,10 @@ class AAIModelInference:
                     not task_model.intervention_model.causal_model.discrete_treatment
                     and task_model.predictor.problem_type == "regression"
                 ):
-                    new_outcome = task_model.intervention_model.predict_two_way_effect(
-                        df
-                    )
+                    new_outcome = task_model.intervention_model.predict_two_way(df)
                     pred["intervention"] = new_outcome
                 else:
-                    new_outcome = task_model.intervention_model.predict_effect(
+                    new_outcome = task_model.intervention_model.predict(
                         df, target_proba
                     )
                     pred["intervention"] = pd.DataFrame(

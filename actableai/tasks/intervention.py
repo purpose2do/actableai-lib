@@ -148,9 +148,9 @@ class AAIInterventionTask(AAITask):
             drop_useless_features=drop_useless_features,
         )
 
-        model.check_params(df, target_proba)
+        model._check_params(df, target_proba)
 
-        df = model.preprocess_data(df)
+        df = model._preprocess_data(df)
 
         model.fit(df, target_proba)
 
@@ -167,7 +167,7 @@ class AAIInterventionTask(AAITask):
                 "model": model,
             }
 
-        new_outcome = model.predict_effect(df, target_proba)
+        new_outcome = model.predict(df, target_proba)
 
         for col in new_outcome.columns:
             df[col] = new_outcome[col]
@@ -182,15 +182,13 @@ class AAIInterventionTask(AAITask):
             outcome=target,
             common_causes=common_causes,
         )
-        nx.drawing.nx_pydot.write_dot(
-            causal_model_do_why._graph._graph, buffer
-        )  # type: ignore # noqa
+        nx.drawing.nx_pydot.write_dot(causal_model_do_why._graph._graph, buffer)
         causal_graph_dot = buffer.getvalue()
 
         Y_res, T_res, X_, W_ = causal_model.residuals_
 
-        # # This has lots of redundant code with causal_inferences.py
-        # # Should be refactored
+        # This has lots of redundant code with causal_inferences.py
+        # Should be refactored
         estimation_results = {
             "causal_graph_dot": causal_graph_dot,
             "T_res": T_res,

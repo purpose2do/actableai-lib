@@ -260,7 +260,7 @@ class TestIntervention:
         df = pd.DataFrame(
             {
                 "x": [2, 2, 2, 2, 2, None, 3, 3, 4, 4] * 2,
-                "y": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"] * 2,
+                "y": ["1", "2", "3", "a", "5", "b", "7", "8", "9", "10"] * 2,
                 "current_intervention": [2, 2, 2, 2, None, 3, None, 3, 4, 4] * 2,
             }
         )
@@ -289,7 +289,7 @@ class TestIntervention:
         df = pd.DataFrame(
             {
                 "x": [2, 2, 2, 2, 2, None, 3, 3, 4, 4] * 2,
-                "y": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"] * 2,
+                "y": ["1", "2", "3", "a", "5", "b", "7", "8", "9", "10"] * 2,
                 "z": ["a", "a", "a", "b", "b", "b", "b", "b", "b", "b"] * 2,
                 "current_intervention": current_intervention * 2,
                 "new_intervention": new_intervention * 2,

@@ -3,7 +3,6 @@ import numpy as np
 from typing import Any, Dict, List, Optional, Tuple, Union
 import logging
 
-from actableai.models.config import MODEL_DEPLOYMENT_VERSION
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 
@@ -814,14 +813,14 @@ class AAIClassificationTask(AAITask):
             {"name": x.name, "level": x.level, "message": x.message}
             for x in failed_checks
         ]
-        aai_interventional_model = None
+        aai_intervention_model = None
         if intervention_run_params is not None:
             intervention_run_params["target_proba"] = predictor.predict_proba(df)
             intervention_task_result = AAIInterventionTask(
                 return_model=True, upload_model=False
             ).run(**intervention_run_params)
             if intervention_task_result["status"] == "SUCCESS":
-                aai_interventional_model = intervention_task_result["model"]
+                aai_intervention_model = intervention_task_result["model"]
             else:
                 validations.append(
                     {
@@ -865,13 +864,12 @@ class AAIClassificationTask(AAITask):
         model = None
         if (kfolds <= 1 or refit_full) and predictor:
             model = AAITabularModel(
-                version=MODEL_DEPLOYMENT_VERSION, predictor=predictor
+                predictor=predictor
             )
-            if aai_interventional_model is not None:
+            if aai_intervention_model is not None:
                 model = AAITabularModelInterventional(
-                    version=MODEL_DEPLOYMENT_VERSION,
                     predictor=predictor,
-                    intervention_model=aai_interventional_model,
+                    intervention_model=aai_intervention_model,
                 )
 
         runtime = time.time() - start
