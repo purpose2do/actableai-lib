@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Optional, Union
+from __future__ import annotations
+from typing import Any, Dict, Iterable, List, Optional, Union
 import numpy as np
 import pandas as pd
 from autogluon.tabular import TabularDataset, TabularPredictor
@@ -77,14 +78,14 @@ class LinearRegressionWrapper(LinearRegression):
 class SKLearnWrapper(ABC):
     def __init__(
         self,
-        ag_predictor,
+        ag_predictor: Union[MultilabelPredictor, TabularPredictor],
         x_w_columns: Optional[List] = None,
         hyperparameters: Optional[Union[List, Dict]] = None,
         presets: Optional[str] = "best_quality",
         ag_args_fit: Optional[Dict] = None,
         feature_generator: Optional[AbstractFeatureGenerator] = None,
         holdout_frac: Optional[float] = None,
-    ):
+    ) -> None:
         """Construct a sklearn wrapper object
 
         Args:
@@ -116,7 +117,12 @@ class SKLearnWrapper(ABC):
         if self.feature_generator is None:
             self.feature_generator = AutoMLPipelineFeatureGenerator()
 
-    def fit(self, X, y, sample_weight=None):
+    def fit(
+        self,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+        sample_weight: Optional[List] = None,
+    ) -> SKLearnWrapper:
         """Fit the model
 
         Args:
@@ -144,7 +150,9 @@ class SKLearnWrapper(ABC):
         self.train_data = train_data
         return self
 
-    def predict(self, X):
+    def predict(
+        self, X: Union[pd.DataFrame, np.ndarray]
+    ) -> Union[pd.DataFrame, pd.Series]:
         """Infer the result from the data
 
         Args:
@@ -158,7 +166,7 @@ class SKLearnWrapper(ABC):
         y_pred = self.ag_predictor.predict(test_data).values
         return y_pred
 
-    def predict_proba(self, X):
+    def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
         """Predict the probabilities of classes if classification problem else returns
             the result.
 
@@ -173,7 +181,7 @@ class SKLearnWrapper(ABC):
         return y_pred_proba.values
 
     @abstractmethod
-    def set_sample_weight(self, sample_weight=None):
+    def set_sample_weight(self, sample_weight: Optional[Iterable] = None) -> None:
         """Set samples weight for the model
 
         Args:
@@ -182,7 +190,7 @@ class SKLearnWrapper(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def add_output(self, train_data, y):
+    def add_output(self, train_data: pd.DataFrame, y: np.ndarray) -> pd.DataFrame:
         """Method to add the output to the train_data. Necessary for AutoGLuon
 
         Args:
@@ -195,7 +203,12 @@ class SKLearnWrapper(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def score(self, X, y, sample_weight=None) -> Dict[str, Any]:
+    def score(
+        self,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: np.ndarray,
+        sample_weight: Optional[Iterable] = None,
+    ) -> Dict[str, Any]:
         """Score for the model
 
         Args:
@@ -232,7 +245,7 @@ class SKLearnWrapper(ABC):
 class SKLearnTabularWrapper(SKLearnWrapper):
     def __init__(
         self,
-        ag_predictor,
+        ag_predictor: TabularPredictor,
         x_w_columns: Optional[List] = None,
         hyperparameters: Optional[Union[List, Dict]] = None,
         presets: Optional[str] = "best_quality",
@@ -266,7 +279,7 @@ class SKLearnTabularWrapper(SKLearnWrapper):
             holdout_frac,
         )
 
-    def set_sample_weight(self, sample_weight=None):
+    def set_sample_weight(self, sample_weight=None) -> None:
         self.ag_predictor.sample_weight = sample_weight
 
     def score(self, X, y, sample_weight=None) -> Dict[str, Any]:
