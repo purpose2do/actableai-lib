@@ -1222,7 +1222,7 @@ class IsSufficientDataClassificationStratification(IChecker):
         df_train = df_train.groupby(target).filter(
             lambda x: len(x) >= CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE
         )
-        smallest_value = df[target].value_counts().min()
+        smallest_value = df_train[target].value_counts().min()
         if smallest_value * validation_ratio < 1:
             return CheckResult(
                 name=self.name,
