@@ -54,7 +54,7 @@ class DMLFeaturizer(TransformerMixin):
                 (
                     OneHotEncoder.__name__,
                     OneHotEncoder(handle_unknown="ignore"),
-                    type_special == "category",
+                    (type_special == "category") | (type_special == "boolean"),
                 ),
                 (
                     DatetimeFeatureGenerator.__name__,

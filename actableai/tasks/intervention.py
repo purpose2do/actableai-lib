@@ -19,7 +19,7 @@ class AAIInterventionTask(AAITask):
         current_intervention_column: str,
         new_intervention_column: Optional[str],
         expected_target: Optional[str] = None,
-        target_proba: Optional[str] = None,
+        target_proba: Optional[pd.DataFrame] = None,
         common_causes: Optional[List[str]] = None,
         causal_cv: Optional[int] = None,
         causal_hyperparameters: Optional[Dict] = None,

@@ -153,7 +153,11 @@ class AAIModelInference:
                     target_proba = pred["df_proba"]
                 df[task_model.predictor.label] = pred["prediction"]
                 df = empty_string_to_nan(
-                    df, task_model, intervention_col, new_intervention_col
+                    df,
+                    task_model,
+                    intervention_col,
+                    new_intervention_col,
+                    f"expected_{task_model.predictor.label}",
                 )
                 if (
                     not task_model.intervention_model.causal_model.discrete_treatment

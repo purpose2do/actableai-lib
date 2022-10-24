@@ -95,7 +95,7 @@ class AAIInterventionEffectPredictor:
         type_special = T.apply(get_type_special_no_ag)
         num_cols = (type_special == "numeric") | (type_special == "integer")
         num_cols = list(T.loc[:, num_cols].columns)
-        cat_cols = type_special == "category"
+        cat_cols = (type_special == "category") | (type_special == "boolean")
         cat_cols = list(T.loc[:, cat_cols].columns)
         model_t_problem_type = (
             "regression"
@@ -268,7 +268,7 @@ class AAIInterventionEffectPredictor:
                 else DMLFeaturizer(),
                 cv=self.causal_cv,
                 linear_first_stages=False,
-                discrete_treatment=treatment_type == "category",
+                discrete_treatment=treatment_type in ["category", "boolean"],
             )
         else:
             causal_model = NonParamDML(
@@ -277,7 +277,7 @@ class AAIInterventionEffectPredictor:
                 model_final=model_final,
                 featurizer=None if X is None else DMLFeaturizer(),
                 cv=self.causal_cv,
-                discrete_treatment=treatment_type == "category",
+                discrete_treatment=treatment_type in ["category", "boolean"],
             )
         return causal_model
 
@@ -319,7 +319,9 @@ class AAIInterventionEffectPredictor:
 
         return self
 
-    def predict(self, df: pd.DataFrame, target_proba: pd.DataFrame) -> pd.DataFrame:
+    def predict(
+        self, df: pd.DataFrame, target_proba: Optional[pd.DataFrame]
+    ) -> pd.DataFrame:
         """Predict the effect of the treatment on the outcome
 
         Args:
@@ -424,7 +426,7 @@ class AAIInterventionEffectPredictor:
         type_special = df.apply(get_type_special_no_ag)
         num_cols = (type_special == "numeric") | (type_special == "integer")
         num_cols = list(df.loc[:, num_cols].columns)
-        cat_cols = type_special == "category"
+        cat_cols = (type_special == "category") | (type_special == "boolean")
         cat_cols = list(df.loc[:, cat_cols].columns)
         X = (
             df[self.common_causes]
@@ -480,7 +482,7 @@ class AAIInterventionEffectPredictor:
             )
         return df
 
-    def _check_params(self, df: pd.DataFrame, target_proba: pd.DataFrame):
+    def _check_params(self, df: pd.DataFrame, target_proba: Optional[pd.DataFrame]):
         """Warning on parameters if conflict in params
 
         Args:
@@ -546,7 +548,7 @@ class AAIInterventionEffectPredictor:
         # New Intervention
         if self.expected_target in df:
             nta = df[self.expected_target].astype(float)
-            new_inter = ((nta - Y) / cme) + Y
+            new_inter = ((nta - Y) / cme) + T0
         return pd.DataFrame(
             {self.expected_target: new_out, self.new_intervention_column: new_inter}
         )
