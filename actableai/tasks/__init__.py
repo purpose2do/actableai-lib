@@ -8,6 +8,7 @@ class TaskType(str, Enum):
     """
 
     CAUSAL_INFERENCE = "causal_inference"
+    DIRECT_CAUSAL_FEATURE_SELECTION = "direct_causal_feature_selection"
     CLASSIFICATION = "classification"
     CLASSIFICATION_TRAIN = "classification_train"
     CLUSTERING = "clustering"

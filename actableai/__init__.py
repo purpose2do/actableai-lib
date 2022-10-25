@@ -1,6 +1,6 @@
 from .tasks.association_rules import AAIAssociationRulesTask
 from .tasks.bayesian_regression import AAIBayesianRegressionTask
-from .tasks.causal_inference import infer_causal
+from .tasks.causal_inference import AAICausalInferenceTask
 from .tasks.classification import AAIClassificationTask
 from .tasks.clustering import AAIClusteringTask
 from .tasks.correlation import AAICorrelationTask
