@@ -1,35 +1,23 @@
 import numpy as np
-import os
 from abc import ABC, abstractmethod
 from autogluon.tabular import TabularPredictor
-from econml.dml import CausalForestDML, LinearDML, NonParamDML, SparseLinearDML
+from econml.dml import CausalForestDML, LinearDML, SparseLinearDML
 from econml.drlearner import DRLearner
 from econml.iv.nnet import DeepIV
-from econml.metalearners import DomainAdaptationLearner, SLearner, TLearner, XLearner
+from econml.metalearners import DomainAdaptationLearner
 from econml.score import RScorer
 from hyperopt import hp
-from ray import tune
-from sklearn import linear_model
 from sklearn.ensemble import (
-    GradientBoostingClassifier,
-    GradientBoostingRegressor,
     RandomForestClassifier,
     RandomForestRegressor,
 )
 from sklearn.linear_model import (
-    ElasticNetCV,
-    Lasso,
-    LassoCV,
-    LinearRegression,
-    LogisticRegression,
-    LogisticRegressionCV,
-    MultiTaskElasticNet,
     MultiTaskElasticNetCV,
 )
 from sklearn.preprocessing import PolynomialFeatures
 from tensorflow import keras
 
-from actableai.causal.predictors import SKLearnWrapper
+from actableai.causal.predictors import SKLearnTabularWrapper
 from actableai.utils import random_directory
 
 
@@ -138,7 +126,7 @@ class LinearDMLSingleContTreatmentAGParams(BaseCausalEstimatorParams):
             label=self.label_t,
             problem_type="regression",
         )
-        model_t = SKLearnWrapper(
+        model_t = SKLearnTabularWrapper(
             model_t, hyperparameters=self.hyperparameters, presets=self.presets
         )
         model_y = TabularPredictor(
@@ -146,7 +134,7 @@ class LinearDMLSingleContTreatmentAGParams(BaseCausalEstimatorParams):
             label=self.label_y,
             problem_type="regression",
         )
-        model_y = SKLearnWrapper(
+        model_y = SKLearnTabularWrapper(
             model_y, hyperparameters=self.hyperparameters, presets=self.presets
         )
         return LinearDML(
@@ -248,7 +236,7 @@ class SparseLinearDMLSingleContTreatmentAGParams(BaseCausalEstimatorParams):
             label=self.label_t,
             problem_type="regression",
         )
-        model_t = SKLearnWrapper(
+        model_t = SKLearnTabularWrapper(
             model_t, hyperparameters=self.hyperparameters, presets=self.presets
         )
         model_y = TabularPredictor(
@@ -256,7 +244,7 @@ class SparseLinearDMLSingleContTreatmentAGParams(BaseCausalEstimatorParams):
             label=self.label_y,
             problem_type="regression",
         )
-        model_y = SKLearnWrapper(
+        model_y = SKLearnTabularWrapper(
             model_y, hyperparameters=self.hyperparameters, presets=self.presets
         )
         return SparseLinearDML(
@@ -421,7 +409,7 @@ class LinearDMLSingleBinaryTreatmentAGParams(BaseCausalEstimatorParams):
             label=self.label_t,
             problem_type="multiclass",
         )
-        model_t = SKLearnWrapper(
+        model_t = SKLearnTabularWrapper(
             model_t, hyperparameters=self.hyperparameters, presets=self.presets
         )
         model_y = TabularPredictor(
@@ -429,7 +417,7 @@ class LinearDMLSingleBinaryTreatmentAGParams(BaseCausalEstimatorParams):
             label=self.label_y,
             problem_type="regression",
         )
-        model_y = SKLearnWrapper(
+        model_y = SKLearnTabularWrapper(
             model_y, hyperparameters=self.hyperparameters, presets=self.presets
         )
         return LinearDML(
@@ -525,7 +513,7 @@ class LinearDMLSingleBinaryOutcomeAGParams(BaseCausalEstimatorParams):
             label=self.label_t,
             problem_type="regression",
         )
-        model_t = SKLearnWrapper(
+        model_t = SKLearnTabularWrapper(
             model_t, hyperparameters=self.hyperparameters, presets=self.presets
         )
         model_y = TabularPredictor(
@@ -533,7 +521,7 @@ class LinearDMLSingleBinaryOutcomeAGParams(BaseCausalEstimatorParams):
             label=self.label_y,
             problem_type="binary",
         )
-        model_y = SKLearnWrapper(
+        model_y = SKLearnTabularWrapper(
             model_y, hyperparameters=self.hyperparameters, presets=self.presets
         )
 
@@ -648,7 +636,7 @@ class SparseLinearDMLSingleBinaryTreatmentAGParams(BaseCausalEstimatorParams):
             label=self.label_t,
             problem_type="binary",
         )
-        model_t = SKLearnWrapper(
+        model_t = SKLearnTabularWrapper(
             model_t, hyperparameters=self.hyperparameters, presets=self.presets
         )
         model_y = TabularPredictor(
@@ -656,7 +644,7 @@ class SparseLinearDMLSingleBinaryTreatmentAGParams(BaseCausalEstimatorParams):
             label=self.label_y,
             problem_type="regression",
         )
-        model_y = SKLearnWrapper(
+        model_y = SKLearnTabularWrapper(
             model_y, hyperparameters=self.hyperparameters, presets=self.presets
         )
 
@@ -775,7 +763,7 @@ class SparseLinearDMLSingleBinaryOutcomeAGParams(BaseCausalEstimatorParams):
             label=self.label_y,
             problem_type="binary",
         )
-        model_y = SKLearnWrapper(
+        model_y = SKLearnTabularWrapper(
             model_y, hyperparameters=self.hyperparameters, presets=self.presets
         )
         model_t = TabularPredictor(
@@ -783,7 +771,7 @@ class SparseLinearDMLSingleBinaryOutcomeAGParams(BaseCausalEstimatorParams):
             label=self.label_t,
             problem_type="regression",
         )
-        model_t = SKLearnWrapper(
+        model_t = SKLearnTabularWrapper(
             model_t, hyperparameters=self.hyperparameters, presets=self.presets
         )
 
@@ -842,8 +830,7 @@ class LinearDMLCategoricalTreatmentParams(BaseCausalEstimatorParams):
         return LinearDML(
             model_y=model_y_class(n_jobs=2),
             model_t=model_t_class(
-                n_jobs=2,
-                l1_ratio=params.get("l1_ratio", self.l1_ratio),
+                n_jobs=2, l1_ratio=params.get("l1_ratio", self.l1_ratio)
             ),
             discrete_treatment=False,  # no need if model_t already do one-hot encoding
             linear_first_stages=False,
@@ -884,7 +871,7 @@ class LinearDMLCategoricalTreatmentAGParams(BaseCausalEstimatorParams):
             label=self.label_y,
             problem_type="regression",
         )
-        model_y = SKLearnWrapper(
+        model_y = SKLearnTabularWrapper(
             model_y, hyperparameters=self.hyperparameters, presets=self.presets
         )
         model_t = TabularPredictor(
@@ -892,7 +879,7 @@ class LinearDMLCategoricalTreatmentAGParams(BaseCausalEstimatorParams):
             label=self.label_t,
             problem_type="multiclass",
         )
-        model_t = SKLearnWrapper(
+        model_t = SKLearnTabularWrapper(
             model_t, hyperparameters=self.hyperparameters, presets=self.presets
         )
         return LinearDML(
@@ -946,8 +933,7 @@ class LinearDMLCategoricalOutcomeParams(BaseCausalEstimatorParams):
         return LinearDML(
             model_t=model_t_class(n_jobs=2),
             model_y=model_y_class(
-                n_jobs=2,
-                l1_ratio=params.get("l1_ratio", self.l1_ratio),
+                n_jobs=2, l1_ratio=params.get("l1_ratio", self.l1_ratio)
             ),
             discrete_treatment=False,  # no need if model_t already do one-hot encoding
             linear_first_stages=False,
@@ -988,7 +974,7 @@ class LinearDMLCategoricalOutcomeAGParams(BaseCausalEstimatorParams):
             label=self.label_y,
             problem_type="multiclass",
         )
-        model_y = SKLearnWrapper(
+        model_y = SKLearnTabularWrapper(
             model_y, hyperparameters=self.hyperparameters, presets=self.presets
         )
         model_t = TabularPredictor(
@@ -996,7 +982,7 @@ class LinearDMLCategoricalOutcomeAGParams(BaseCausalEstimatorParams):
             label=self.label_t,
             problem_type="regression",
         )
-        model_t = SKLearnWrapper(
+        model_t = SKLearnTabularWrapper(
             model_t, hyperparameters=self.hyperparameters, presets=self.presets
         )
         return LinearDML(
@@ -1056,12 +1042,10 @@ class LinearDMLCategoricalTreatmentAndOutcomeParams(BaseCausalEstimatorParams):
         model_t_class = globals()[params.get("model_t", self.model_t)]
         return LinearDML(
             model_t=model_t_class(
-                n_jobs=2,
-                l1_ratio=params.get("l1_ratio_t", self.l1_ratio_t),
+                n_jobs=2, l1_ratio=params.get("l1_ratio_t", self.l1_ratio_t)
             ),
             model_y=model_y_class(
-                n_jobs=2,
-                l1_ratio=params.get("l1_ratio_y", self.l1_ratio_y),
+                n_jobs=2, l1_ratio=params.get("l1_ratio_y", self.l1_ratio_y)
             ),
             discrete_treatment=False,  # no need if model_t already do one-hot encoding
             linear_first_stages=False,
@@ -1102,7 +1086,7 @@ class LinearDMLCategoricalTreatmentAndOutcomeAGParams(BaseCausalEstimatorParams)
             label=self.label_y,
             problem_type="multiclass",
         )
-        model_y = SKLearnWrapper(
+        model_y = SKLearnTabularWrapper(
             model_y, hyperparameters=self.hyperparameters, presets=self.presets
         )
         model_t = TabularPredictor(
@@ -1110,7 +1094,7 @@ class LinearDMLCategoricalTreatmentAndOutcomeAGParams(BaseCausalEstimatorParams)
             label=self.label_t,
             problem_type="multiclass",
         )
-        model_t = SKLearnWrapper(
+        model_t = SKLearnTabularWrapper(
             model_t, hyperparameters=self.hyperparameters, presets=self.presets
         )
         return LinearDML(
@@ -1170,8 +1154,7 @@ class SparseLinearDMLCategoricalTreatmentParams(BaseCausalEstimatorParams):
         return SparseLinearDML(
             model_y=model_y_class(n_jobs=2),
             model_t=model_t_class(
-                n_jobs=2,
-                l1_ratio=params.get("l1_ratio", self.l1_ratio),
+                n_jobs=2, l1_ratio=params.get("l1_ratio", self.l1_ratio)
             ),
             featurizer=PolynomialFeatures(
                 degree=params.get("polyfeat_degree", self.polyfeat_degree)
@@ -1224,7 +1207,7 @@ class SparseLinearDMLCategoricalTreatmentAGParams(BaseCausalEstimatorParams):
             label=self.label_y,
             problem_type="regression",
         )
-        model_y = SKLearnWrapper(
+        model_y = SKLearnTabularWrapper(
             model_y, hyperparameters=self.hyperparameters, presets=self.presets
         )
         model_t = TabularPredictor(
@@ -1232,7 +1215,7 @@ class SparseLinearDMLCategoricalTreatmentAGParams(BaseCausalEstimatorParams):
             label=self.label_t,
             problem_type="multiclass",
         )
-        model_t = SKLearnWrapper(
+        model_t = SKLearnTabularWrapper(
             model_t, hyperparameters=self.hyperparameters, presets=self.presets
         )
 
@@ -1297,8 +1280,7 @@ class SparseLinearDMLCategoricalOutcomeParams(BaseCausalEstimatorParams):
         return SparseLinearDML(
             model_t=model_t_class(n_jobs=2),
             model_y=model_y_class(
-                n_jobs=2,
-                l1_ratio=params.get("l1_ratio", self.l1_ratio),
+                n_jobs=2, l1_ratio=params.get("l1_ratio", self.l1_ratio)
             ),
             featurizer=PolynomialFeatures(
                 degree=params.get("polyfeat_degree", self.polyfeat_degree)
@@ -1351,7 +1333,7 @@ class SparseLinearDMLCategoricalOutcomeAGParams(BaseCausalEstimatorParams):
             label=self.label_y,
             problem_type="multiclass",
         )
-        model_y = SKLearnWrapper(
+        model_y = SKLearnTabularWrapper(
             model_y, hyperparameters=self.hyperparameters, presets=self.presets
         )
         model_t = TabularPredictor(
@@ -1359,7 +1341,7 @@ class SparseLinearDMLCategoricalOutcomeAGParams(BaseCausalEstimatorParams):
             label=self.label_t,
             problem_type="regression",
         )
-        model_t = SKLearnWrapper(
+        model_t = SKLearnTabularWrapper(
             model_t, hyperparameters=self.hyperparameters, presets=self.presets
         )
 
@@ -1433,8 +1415,7 @@ class SparseLinearDMLCategoricalTreatmentAndOutcomeParams(BaseCausalEstimatorPar
                 n_jobs=2, l1_ratio=params.get("l1_ratio_t", self.l1_ratio_t)
             ),
             model_y=model_y_class(
-                n_jobs=2,
-                l1_ratio=params.get("l1_ratio_y", self.l1_ratio_y),
+                n_jobs=2, l1_ratio=params.get("l1_ratio_y", self.l1_ratio_y)
             ),
             featurizer=PolynomialFeatures(
                 degree=params.get("polyfeat_degree", self.polyfeat_degree)
@@ -1488,7 +1469,7 @@ class SparseLinearDMLCategoricalTreatmentAndOutcomeAGParams(BaseCausalEstimatorP
             label=self.label_y,
             problem_type="multiclass",
         )
-        model_y = SKLearnWrapper(
+        model_y = SKLearnTabularWrapper(
             model_y, hyperparameters=self.hyperparameters, presets=self.presets
         )
         model_t = TabularPredictor(
@@ -1496,7 +1477,7 @@ class SparseLinearDMLCategoricalTreatmentAndOutcomeAGParams(BaseCausalEstimatorP
             label=self.label_t,
             problem_type="multiclass",
         )
-        model_t = SKLearnWrapper(
+        model_t = SKLearnTabularWrapper(
             model_t, hyperparameters=self.hyperparameters, presets=self.presets
         )
 
@@ -1945,9 +1926,15 @@ def get_rscorer(
     has_categorical_outcome,
     is_single_binary_outcome,
 ):
-    reg = lambda: RandomForestRegressor(min_samples_leaf=10)
-    clf = lambda: RandomForestClassifier(min_samples_leaf=10)
-    mten = lambda: MultiTaskElasticNetCV()
+    def create_regressor():
+        return RandomForestRegressor(min_samples_leaf=10)
+
+    def create_classifier():
+        return RandomForestClassifier(min_samples_leaf=10)
+
+    def create_elasticnet():
+        return MultiTaskElasticNetCV()
+
     if (
         is_single_treatment
         and (not has_categorical_treatment)
@@ -1955,8 +1942,8 @@ def get_rscorer(
         and (not has_categorical_outcome)
     ):
         scorer = RScorer(
-            model_y=reg(),
-            model_t=reg(),
+            model_y=create_regressor(),
+            model_t=create_regressor(),
             discrete_treatment=False,
             cv=3,
             mc_iters=3,
@@ -1969,8 +1956,8 @@ def get_rscorer(
     ):
         if is_single_binary_treatment:
             scorer = RScorer(
-                model_y=reg(),
-                model_t=clf(),
+                model_y=create_regressor(),
+                model_t=create_classifier(),
                 discrete_treatment=True,
                 cv=3,
                 mc_iters=3,
@@ -1978,8 +1965,8 @@ def get_rscorer(
             )
         else:
             scorer = RScorer(
-                model_y=reg(),
-                model_t=mten(),
+                model_y=create_regressor(),
+                model_t=create_elasticnet(),
                 discrete_treatment=True,
                 cv=3,
                 mc_iters=3,
@@ -1992,8 +1979,8 @@ def get_rscorer(
     ):
         if is_single_binary_outcome:
             scorer = RScorer(
-                model_y=clf(),
-                model_t=reg(),
+                model_y=create_classifier(),
+                model_t=create_regressor(),
                 discrete_treatment=False,
                 cv=3,
                 mc_iters=3,
@@ -2001,8 +1988,8 @@ def get_rscorer(
             )
         else:
             scorer = RScorer(
-                model_y=mten(),
-                model_t=reg(),
+                model_y=create_elasticnet(),
+                model_t=create_regressor(),
                 discrete_treatment=False,
                 cv=3,
                 mc_iters=3,
@@ -2010,8 +1997,8 @@ def get_rscorer(
             )
     else:
         scorer = RScorer(
-            model_y=mten(),
-            model_t=mten(),
+            model_y=create_elasticnet(),
+            model_t=create_elasticnet(),
             discrete_treatment=False,
             cv=3,
             mc_iters=3,

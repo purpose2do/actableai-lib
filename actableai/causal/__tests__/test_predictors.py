@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 from autogluon.tabular import TabularPredictor
 
-from actableai.causal.predictors import DataFrameTransformer, SKLearnWrapper
+from actableai.causal.predictors import DataFrameTransformer, SKLearnTabularWrapper
 from actableai.utils.testing import unittest_hyperparameters
 
 
@@ -22,9 +22,9 @@ class TestDataFrameTransformer:
         assert list(df.columns) == ["a", "b", "c"]
 
 
-class TestSKLearnWrapper:
+class TestSKLearnTabularWrapper:
     def test_init(self):
-        sklw = SKLearnWrapper(
+        sklw = SKLearnTabularWrapper(
             TabularPredictor("y"),
             x_w_columns=["a", "b"],
             hyperparameters=unittest_hyperparameters(),
@@ -38,7 +38,7 @@ class TestSKLearnWrapper:
 
     def test_fit(self):
         width, height = 10, 20
-        sklw = SKLearnWrapper(
+        sklw = SKLearnTabularWrapper(
             TabularPredictor("y"),
             x_w_columns=[str(i) for i in range(width)],
             hyperparameters=unittest_hyperparameters(),
@@ -53,7 +53,7 @@ class TestSKLearnWrapper:
 
     def test_feature_importance(self):
         width, height = 10, 20
-        sklw = SKLearnWrapper(
+        sklw = SKLearnTabularWrapper(
             TabularPredictor("y"),
             x_w_columns=[str(i) for i in range(width)],
             hyperparameters=unittest_hyperparameters(),
@@ -69,7 +69,7 @@ class TestSKLearnWrapper:
         assert set(feat_imp.index) == set([str(i) for i in range(width)])
 
     def test_feature_importance_no_fit(self):
-        sklw = SKLearnWrapper(
+        sklw = SKLearnTabularWrapper(
             TabularPredictor("y"),
             x_w_columns=["a", "b", "c"],
             hyperparameters=unittest_hyperparameters(),
