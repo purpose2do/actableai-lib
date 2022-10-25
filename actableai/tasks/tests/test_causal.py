@@ -27,7 +27,7 @@ def epsilon_sample(n):
 
 
 def eta_sample(n):
-    returnnp.random.uniform(-1, 1, size=n)
+    return np.random.uniform(-1, 1, size=n)
 
 
 @pytest.fixture(scope="function")
@@ -916,7 +916,7 @@ class TestRemoteCausal:
         pd_table = (
             pd_table[pd_table["v0"]]
             .head(20)
-            .append(pd_table[pd_table["v0"] is False].head(10))
+            .append(pd_table[pd_table["v0"] == False].head(10))
         )
 
         model_params = [LinearDMLSingleBinaryTreatmentParams(min_samples_leaf=5)]
