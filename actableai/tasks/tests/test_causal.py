@@ -4,8 +4,6 @@ import pandas as pd
 import pytest
 import string
 from tempfile import mkdtemp
-from actableai import causal
-from actableai.causal.models import AAICausalEstimator
 
 from actableai.causal.params import (
     LinearDMLSingleContTreatmentParams,
@@ -22,6 +20,14 @@ from actableai.tasks.causal_inference import (
     AAICausalInferenceTask,
 )
 from actableai.utils.testing import unittest_hyperparameters
+
+
+def epsilon_sample(n):
+    return np.random.uniform(-1, 1, size=n)
+
+
+def eta_sample(n):
+    returnnp.random.uniform(-1, 1, size=n)
 
 
 @pytest.fixture(scope="function")
@@ -94,11 +100,9 @@ def single_cont_treatment_dataset():
     # Outcome support
     support_Y = np.random.choice(np.arange(n_w), size=support_size, replace=False)
     coefs_Y = np.random.uniform(0, 1, size=support_size)
-    epsilon_sample = lambda n: np.random.uniform(-1, 1, size=n)
     # Treatment support
     support_T = support_Y
     coefs_T = np.random.uniform(0, 1, size=support_size)
-    eta_sample = lambda n: np.random.uniform(-1, 1, size=n)
 
     # Generate controls, covariates, treatments and outcomes
     W = np.random.normal(0, 1, size=(n, n_w))
@@ -143,11 +147,9 @@ def single_binary_treatment_dataset():
     # Outcome support
     support_Y = np.random.choice(range(n_w), size=support_size, replace=False)
     coefs_Y = np.random.uniform(0, 1, size=support_size)
-    epsilon_sample = lambda n: np.random.uniform(-1, 1, size=n)
     # Treatment support
     support_T = support_Y
     coefs_T = np.random.uniform(0, 1, size=support_size)
-    eta_sample = lambda n: np.random.uniform(-1, 1, size=n)
 
     # Generate controls, covariates, treatments and outcomes
     W = np.random.normal(0, 1, size=(n, n_w))
@@ -342,7 +344,7 @@ class TestRemoteCausal:
 
         model_params = [LinearDMLSingleContTreatmentParams()]
         with pytest.raises(LogCategoricalOutcomeNotAllowed):
-            results = causal_inference_task.run(
+            causal_inference_task.run(
                 pd_table=pd_table,
                 treatments=treatments,
                 outcomes=outcomes,
@@ -914,7 +916,7 @@ class TestRemoteCausal:
         pd_table = (
             pd_table[pd_table["v0"]]
             .head(20)
-            .append(pd_table[pd_table["v0"] == False].head(10))
+            .append(pd_table[pd_table["v0"] is False].head(10))
         )
 
         model_params = [LinearDMLSingleBinaryTreatmentParams(min_samples_leaf=5)]
