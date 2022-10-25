@@ -136,9 +136,7 @@ class AAIInterventionEffectPredictor:
         )
         return model_t
 
-    def _generate_model_y(
-        self, X: Optional[pd.DataFrame], Y: pd.DataFrame
-    ) -> Union[SKLearnTabularWrapper, SKLearnMultilabelWrapper]:
+    def _generate_model_y(self, X: Optional[pd.DataFrame], Y: pd.DataFrame):
         """Generate the outcome model
 
         Args:
@@ -187,9 +185,7 @@ class AAIInterventionEffectPredictor:
             )
         return model_y
 
-    def _generate_model_final(
-        self, T: pd.DataFrame, Y: pd.DataFrame
-    ) -> Union[SKLearnTabularWrapper, SKLearnMultilabelWrapper]:
+    def _generate_model_final(self, T: pd.DataFrame, Y: pd.DataFrame):
         """Generate the residual model
 
         Args:
