@@ -794,13 +794,15 @@ class AAIRegressionTask(AAITask):
             if intervention_task_result["status"] == "SUCCESS":
                 aai_intervention_model = intervention_task_result["model"]
             else:
-                validations.append(
+                intervention_validation = [
                     {
-                        "name": "Intervention Failed",
-                        "level": CheckLevels.WARNING,
-                        "message": "Counterfactual ran into an issue",
+                        "name": "Intervention: " + x["name"],
+                        "level": x["level"],
+                        "message": x["message"],
                     }
-                )
+                    for x in intervention_task_result["validations"]
+                ]
+                validations.extend(intervention_validation)
 
         if refit_full:
             df_only_full_training = df.loc[df[target].notnull()]
@@ -835,13 +837,10 @@ class AAIRegressionTask(AAITask):
 
         model = None
         if (kfolds <= 1 or refit_full) and predictor:
-            model = AAITabularModel(
-                predictor=predictor
-            )
+            model = AAITabularModel(predictor=predictor)
             if aai_intervention_model:
                 model = AAITabularModelInterventional(
-                    predictor=predictor,
-                    intervention_model=aai_intervention_model,
+                    predictor=predictor, intervention_model=aai_intervention_model
                 )
 
         runtime = time.time() - start
