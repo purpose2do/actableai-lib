@@ -100,6 +100,7 @@ class AAIClusteringTask(AAITask):
         from actableai.data_validation.params import ClusteringDataValidator
         from actableai.data_validation.base import CheckLevels
         from actableai.utils.preprocessors.preprocessing import impute_df
+        from actableai.utils import handle_boolean_features
         from actableai.clustering import ClusteringDataTransformer
         from actableai.clustering.explain import generate_cluster_descriptions
 
@@ -111,6 +112,7 @@ class AAIClusteringTask(AAITask):
         # To resolve any issues of acces rights make a copy
         df = df.copy()
         df = sanitize_timezone(df)
+        df = handle_boolean_features(df)
 
         if features is None:
             features = list(df.columns)
