@@ -353,8 +353,8 @@ class AAIRegressionTask(AAITask):
         feature_pruning: bool = True,
         intervention_run_params: Optional[Dict] = None,
         causal_feature_selection: bool = False,
-        causal_feature_selection_task_params: Optional[dict] = None,
         causal_feature_selection_max_concurrent_tasks: int = 20,
+        ci_for_causal_feature_selection_task_params: Optional[dict] = None,
     ):
         """Run this regression task and return results.
 
@@ -416,9 +416,9 @@ class AAIRegressionTask(AAITask):
                 is skipped
             causal_feature_selection: if True, it will search for direct causal
                 features and use only these features for the prediction
-            causal_feature_selection_task_params: Parameters for AAIDirectCausalFeatureSelectionTask
             causal_feature_selection_max_concurrent_tasks: maximum number of concurrent
                 tasks for selecting causal features
+            ci_for_causal_feature_selection_task_params: Parameters for AAIDirectCausalFeatureSelectionTask
 
         Examples:
             >>> import pandas as pd
@@ -490,8 +490,6 @@ class AAIRegressionTask(AAITask):
             model_directory = mkdtemp(prefix="autogluon_model")
         if train_task_params is None:
             train_task_params = {}
-        if causal_feature_selection_task_params is None:
-            causal_feature_selection_task_params = {}
         if refit_full and time_limit is not None:
             # Half the time limit for train and half the time for refit
             time_limit = time_limit // 2
@@ -573,14 +571,13 @@ class AAIRegressionTask(AAITask):
         df_predict = df_test.copy()
 
         if causal_feature_selection:
-            causal_feature_selection_task = AAIDirectCausalFeatureSelection(
-                **causal_feature_selection_task_params
-            )
+            causal_feature_selection_task = AAIDirectCausalFeatureSelection()
             causal_feature_selection = causal_feature_selection_task.run(
                 df_train,
                 target,
                 features,
                 max_concurrent_ci_tasks=causal_feature_selection_max_concurrent_tasks,
+                causal_inference_task_params=ci_for_causal_feature_selection_task_params,
             )
 
             if causal_feature_selection["status"] == "FAILURE":

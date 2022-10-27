@@ -21,6 +21,7 @@ class AAIDirectCausalFeatureSelection(AAITask):
         max_concurrent_ci_tasks=4,
         dummy_prefix_sep=":::",
         positive_outcome_value=None,
+        causal_inference_task_params=None,
     ):
         dummies = pd.get_dummies(df[features], prefix_sep=dummy_prefix_sep)
         dummy_features = dummies.columns
@@ -42,6 +43,7 @@ class AAIDirectCausalFeatureSelection(AAITask):
                         target,
                         other_features,
                         positive_outcome_value,
+                        causal_inference_task_params or {},
                     )
                 ] = feature
 
@@ -53,8 +55,16 @@ class AAIDirectCausalFeatureSelection(AAITask):
             result[feature] = re
         return {"status": "SUCCESS", "data": result, "validations": []}
 
-    def _run_ci(self, dummies, feature, target, common_causes, positive_outcome_value):
-        task = AAICausalInferenceTask(ray_params=self.ray_params)
+    def _run_ci(
+        self,
+        dummies,
+        feature,
+        target,
+        common_causes,
+        positive_outcome_value,
+        causal_inference_task_params,
+    ):
+        task = AAICausalInferenceTask(**causal_inference_task_params)
         re = task.run(
             dummies,
             [feature],
