@@ -17,9 +17,22 @@ from actableai.data_validation.base import (
 )
 from actableai.tasks.causal_inference import (
     LogCategoricalOutcomeNotAllowed,
-    infer_causal,
+    AAICausalInferenceTask,
 )
 from actableai.utils.testing import unittest_hyperparameters
+
+
+def epsilon_sample(n):
+    return np.random.uniform(-1, 1, size=n)
+
+
+def eta_sample(n):
+    return np.random.uniform(-1, 1, size=n)
+
+
+@pytest.fixture(scope="function")
+def causal_inference_task():
+    yield AAICausalInferenceTask(use_ray=False)
 
 
 @pytest.fixture
@@ -87,11 +100,9 @@ def single_cont_treatment_dataset():
     # Outcome support
     support_Y = np.random.choice(np.arange(n_w), size=support_size, replace=False)
     coefs_Y = np.random.uniform(0, 1, size=support_size)
-    epsilon_sample = lambda n: np.random.uniform(-1, 1, size=n)
     # Treatment support
     support_T = support_Y
     coefs_T = np.random.uniform(0, 1, size=support_size)
-    eta_sample = lambda n: np.random.uniform(-1, 1, size=n)
 
     # Generate controls, covariates, treatments and outcomes
     W = np.random.normal(0, 1, size=(n, n_w))
@@ -136,11 +147,9 @@ def single_binary_treatment_dataset():
     # Outcome support
     support_Y = np.random.choice(range(n_w), size=support_size, replace=False)
     coefs_Y = np.random.uniform(0, 1, size=support_size)
-    epsilon_sample = lambda n: np.random.uniform(-1, 1, size=n)
     # Treatment support
     support_T = support_Y
     coefs_T = np.random.uniform(0, 1, size=support_size)
-    eta_sample = lambda n: np.random.uniform(-1, 1, size=n)
 
     # Generate controls, covariates, treatments and outcomes
     W = np.random.normal(0, 1, size=(n, n_w))
@@ -191,7 +200,7 @@ def treatment_values_filler(
 
 
 class TestRemoteCausal:
-    def test_linear_dataset(self, init_ray):
+    def test_linear_dataset(self, causal_inference_task, init_ray):
         np.random.seed(123)
         data = dowhy.datasets.linear_dataset(
             beta=10,
@@ -206,7 +215,7 @@ class TestRemoteCausal:
 
         model_params = [LinearDMLSingleBinaryTreatmentParams(min_samples_leaf=5)]
 
-        r = infer_causal(
+        r = causal_inference_task.run(
             pd_table,
             treatments=data["treatment_name"],
             outcomes=[data["outcome_name"]],
@@ -233,7 +242,9 @@ class TestRemoteCausal:
             ]
         )
 
-    def test_single_cont_treatment(self, single_cont_treatment_dataset, init_ray):
+    def test_single_cont_treatment(
+        self, causal_inference_task, single_cont_treatment_dataset, init_ray
+    ):
         (
             pd_table,
             treatments,
@@ -242,7 +253,7 @@ class TestRemoteCausal:
             common_causes,
         ) = single_cont_treatment_dataset
 
-        results = infer_causal(
+        results = causal_inference_task.run(
             pd_table=pd_table,
             treatments=treatments,
             outcomes=outcomes,
@@ -276,7 +287,9 @@ class TestRemoteCausal:
             ]
         )
 
-    def test_log_treatment(self, single_cont_treatment_dataset, init_ray):
+    def test_log_treatment(
+        self, causal_inference_task, single_cont_treatment_dataset, init_ray
+    ):
         (
             pd_table,
             treatments,
@@ -287,7 +300,7 @@ class TestRemoteCausal:
 
         model_params = [LinearDMLSingleContTreatmentParams()]
 
-        results = infer_causal(
+        results = causal_inference_task.run(
             pd_table=pd_table,
             treatments=treatments,
             outcomes=outcomes,
@@ -315,7 +328,9 @@ class TestRemoteCausal:
             ]
         )
 
-    def test_log_cat_outcome(self, single_cont_treatment_dataset, init_ray):
+    def test_log_cat_outcome(
+        self, causal_inference_task, single_cont_treatment_dataset, init_ray
+    ):
         (
             pd_table,
             treatments,
@@ -329,7 +344,7 @@ class TestRemoteCausal:
 
         model_params = [LinearDMLSingleContTreatmentParams()]
         with pytest.raises(LogCategoricalOutcomeNotAllowed):
-            results = infer_causal(
+            causal_inference_task.run(
                 pd_table=pd_table,
                 treatments=treatments,
                 outcomes=outcomes,
@@ -344,7 +359,9 @@ class TestRemoteCausal:
                 drop_useless_features=False,
             )
 
-    def test_single_binary_treatment(self, single_binary_treatment_dataset, init_ray):
+    def test_single_binary_treatment(
+        self, causal_inference_task, single_binary_treatment_dataset, init_ray
+    ):
         (
             pd_table,
             treatments,
@@ -362,7 +379,7 @@ class TestRemoteCausal:
             )
         ]
 
-        results = infer_causal(
+        results = causal_inference_task.run(
             pd_table=pd_table,
             treatments=treatments,
             outcomes=outcomes,
@@ -398,7 +415,9 @@ class TestRemoteCausal:
             ]
         )
 
-    def test_boolean_treatment(self, single_binary_treatment_dataset, init_ray):
+    def test_boolean_treatment(
+        self, causal_inference_task, single_binary_treatment_dataset, init_ray
+    ):
         (
             pd_table,
             treatments,
@@ -419,7 +438,7 @@ class TestRemoteCausal:
             )
         ]
 
-        results = infer_causal(
+        results = causal_inference_task.run(
             pd_table=pd_table,
             treatments=treatments,
             outcomes=outcomes,
@@ -455,7 +474,9 @@ class TestRemoteCausal:
             ]
         )
 
-    def test_missing_treatment(self, simple_linear_dataset, init_ray):
+    def test_missing_treatment(
+        self, causal_inference_task, simple_linear_dataset, init_ray
+    ):
         np.random.seed(123)
         (
             pd_table,
@@ -468,7 +489,7 @@ class TestRemoteCausal:
 
         model_params = [LinearDMLSingleBinaryTreatmentParams()]
 
-        results = infer_causal(
+        results = causal_inference_task.run(
             pd_table=pd_table_no_treatment,
             treatments=treatments,
             outcomes=outcomes,
@@ -484,7 +505,9 @@ class TestRemoteCausal:
         assert results["validations"][0]["name"] == "ColumnsExistChecker"
         assert results["validations"][0]["level"] == CheckLevels.CRITICAL
 
-    def test_missing_outcome(self, simple_linear_dataset, init_ray):
+    def test_missing_outcome(
+        self, causal_inference_task, simple_linear_dataset, init_ray
+    ):
         np.random.seed(123)
         (
             pd_table,
@@ -497,7 +520,7 @@ class TestRemoteCausal:
 
         model_params = [LinearDMLSingleBinaryTreatmentParams()]
 
-        results = infer_causal(
+        results = causal_inference_task.run(
             pd_table=pd_table_no_outcome,
             treatments=treatments,
             outcomes=outcomes,
@@ -515,7 +538,9 @@ class TestRemoteCausal:
         assert results["validations"][0]["name"] == "ColumnsExistChecker"
         assert results["validations"][0]["level"] == CheckLevels.CRITICAL
 
-    def test_no_effect_modifiers(self, simple_linear_dataset, init_ray):
+    def test_no_effect_modifiers(
+        self, causal_inference_task, simple_linear_dataset, init_ray
+    ):
         np.random.seed(123)
         (
             pd_table,
@@ -530,7 +555,7 @@ class TestRemoteCausal:
 
         model_params = [LinearDMLSingleBinaryTreatmentParams(min_samples_leaf=5)]
 
-        results = infer_causal(
+        results = causal_inference_task.run(
             pd_table=pd_table,
             treatments=treatments,
             outcomes=outcomes,
@@ -555,7 +580,9 @@ class TestRemoteCausal:
             ]
         )
 
-    def test_missing_effect_modifiers(self, simple_linear_dataset, init_ray):
+    def test_missing_effect_modifiers(
+        self, causal_inference_task, simple_linear_dataset, init_ray
+    ):
         np.random.seed(123)
         (
             pd_table,
@@ -568,7 +595,7 @@ class TestRemoteCausal:
 
         model_params = [LinearDMLSingleBinaryTreatmentParams(min_samples_leaf=5)]
 
-        results = infer_causal(
+        results = causal_inference_task.run(
             pd_table=pd_table_missing_effect_modifier,
             treatments=treatments,
             outcomes=outcomes,
@@ -586,7 +613,9 @@ class TestRemoteCausal:
         assert results["validations"][0]["name"] == "ColumnsExistChecker"
         assert results["validations"][0]["level"] == CheckLevels.CRITICAL
 
-    def test_no_common_causes(self, simple_linear_dataset, init_ray):
+    def test_no_common_causes(
+        self, causal_inference_task, simple_linear_dataset, init_ray
+    ):
         np.random.seed(123)
         (
             pd_table,
@@ -601,7 +630,7 @@ class TestRemoteCausal:
 
         model_params = [LinearDMLSingleBinaryTreatmentParams(min_samples_leaf=5)]
 
-        results = infer_causal(
+        results = causal_inference_task.run(
             pd_table=pd_table,
             treatments=treatments,
             outcomes=outcomes,
@@ -626,7 +655,9 @@ class TestRemoteCausal:
             ]
         )
 
-    def test_missing_common_causes(self, simple_linear_dataset, init_ray):
+    def test_missing_common_causes(
+        self, causal_inference_task, simple_linear_dataset, init_ray
+    ):
         np.random.seed(123)
         (
             pd_table,
@@ -639,7 +670,7 @@ class TestRemoteCausal:
 
         model_params = [LinearDMLSingleBinaryTreatmentParams(min_samples_leaf=5)]
 
-        results = infer_causal(
+        results = causal_inference_task.run(
             pd_table=pd_table_missing_common_cause,
             treatments=treatments,
             outcomes=outcomes,
@@ -658,7 +689,7 @@ class TestRemoteCausal:
         assert results["validations"][0]["level"] == CheckLevels.CRITICAL
 
     def test_no_effect_modifiers_and_common_causes(
-        self, simple_linear_dataset, init_ray
+        self, causal_inference_task, simple_linear_dataset, init_ray
     ):
         np.random.seed(123)
         (
@@ -674,7 +705,7 @@ class TestRemoteCausal:
 
         model_params = [LinearDMLSingleBinaryTreatmentParams(min_samples_leaf=5)]
 
-        results = infer_causal(
+        results = causal_inference_task.run(
             pd_table=pd_table,
             treatments=treatments,
             outcomes=outcomes,
@@ -701,7 +732,9 @@ class TestRemoteCausal:
             ]
         )
 
-    def test_binary_outcome(self, simple_linear_dataset, init_ray):
+    def test_binary_outcome(
+        self, causal_inference_task, simple_linear_dataset, init_ray
+    ):
         np.random.seed(123)
         (
             pd_table,
@@ -719,7 +752,7 @@ class TestRemoteCausal:
         # Ensure there is enough treatment control values
         pd_table = treatment_values_filler(pd_table=pd_table)
 
-        results = infer_causal(
+        results = causal_inference_task.run(
             pd_table=pd_table,
             treatments=treatments,
             outcomes=outcomes,
@@ -747,7 +780,9 @@ class TestRemoteCausal:
             ]
         )
 
-    def test_categorical_effect_modifier(self, cat_em_dataset, init_ray):
+    def test_categorical_effect_modifier(
+        self, causal_inference_task, cat_em_dataset, init_ray
+    ):
         np.random.seed(123)
         (
             pd_table,
@@ -757,7 +792,7 @@ class TestRemoteCausal:
             common_causes,
         ) = cat_em_dataset
 
-        r = infer_causal(
+        r = causal_inference_task.run(
             pd_table,
             treatments=treatments,
             outcomes=outcomes,
@@ -783,7 +818,7 @@ class TestRemoteCausal:
             ]
         )
 
-    def test_categorical_outcome(self):
+    def test_categorical_outcome(self, causal_inference_task):
         df = pd.DataFrame(
             {
                 "t": [2, 2, 2, 2, 2, None, 3, 3, 4, 4] * 10,
@@ -792,7 +827,7 @@ class TestRemoteCausal:
                 "w": ["a", "a", "a", "a", "a", "b", "b", None, "b", "b"] * 10,
             }
         )
-        r = infer_causal(
+        r = causal_inference_task.run(
             df,
             treatments=["t"],
             outcomes=["y"],
@@ -867,7 +902,9 @@ class TestRemoteCausal:
         pretty_tree = make_pretty_tree(tree_interpreter_dot, [cat_name], [cat_vals])
         assert pretty_tree == final_dot
 
-    def test_not_enough_values(self, simple_linear_dataset, init_ray):
+    def test_not_enough_values(
+        self, causal_inference_task, simple_linear_dataset, init_ray
+    ):
         np.random.seed(123)
         (
             pd_table,
@@ -884,7 +921,7 @@ class TestRemoteCausal:
 
         model_params = [LinearDMLSingleBinaryTreatmentParams(min_samples_leaf=5)]
 
-        results = infer_causal(
+        results = causal_inference_task.run(
             pd_table=pd_table,
             treatments=treatments,
             outcomes=outcomes,
