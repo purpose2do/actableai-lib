@@ -6,18 +6,14 @@ from actableai.parameters.type import ParameterType
 
 
 class BooleanParameter(BaseParameter):
-    """
-    TODO write documentation
-    """
+    """Simple Boolean parameter."""
 
     parameter_type: ParameterType = ParameterType.BOOL
     default: bool
 
 
 class BooleanSpace(OptionsSpace[bool]):
-    """
-    TODO write description
-    """
+    """Boolean space parameter."""
 
     options: Dict[bool, Option[bool]] = {
         "true": Option(display_name="True", value=True),

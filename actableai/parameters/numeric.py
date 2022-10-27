@@ -10,17 +10,20 @@ NumericT = TypeVar("NumericT", float, int)
 
 
 class NumericParameter(BaseParameter, GenericModel, Generic[NumericT]):
-    """
-    TODO write documentation
-    """
+    """Simple Numeric parameter (either integer or float)."""
 
     default: NumericT
     min: Optional[NumericT]
     max: Optional[NumericT]
 
     def validate_parameter(self, value: Any) -> ParameterValidationErrors:
-        """
-        TODO write documentation
+        """ "Validate value using the current parameter.
+
+        Args:
+            value: Value to validate.
+
+        Returns:
+            ParameterValidationErrors object containing the validation errors.
         """
         errors = super().validate_parameter(value)
         if len(errors) > 0:
@@ -39,17 +42,20 @@ class NumericParameter(BaseParameter, GenericModel, Generic[NumericT]):
 
 
 class NumericRangeSpace(BaseParameter, GenericModel, Generic[NumericT]):
-    """
-    TODO write documentation
-    """
+    """Simple Numeric range space (either integer or float)."""
 
     default: Union[NumericT, Tuple[NumericT, NumericT]]
     min: Optional[NumericT]
     max: Optional[NumericT]
 
     def validate_parameter(self, value: Any) -> ParameterValidationErrors:
-        """
-        TODO write documentation
+        """Validate value using the current parameter.
+
+        Args:
+            value: Value to validate.
+
+        Returns:
+            ParameterValidationErrors object containing the validation errors.
         """
         errors = super().validate_parameter(value)
         if len(errors) > 0:
@@ -74,8 +80,13 @@ class NumericRangeSpace(BaseParameter, GenericModel, Generic[NumericT]):
         return errors
 
     def process_parameter(self, value: Any) -> Any:
-        """
-        TODO write documentation
+        """Process a value using the current parameter.
+
+        Args:
+            value: Value to process.
+
+        Returns:
+            Processed value.
         """
         if isinstance(value, list):
             value = tuple(value)
@@ -87,32 +98,24 @@ class NumericRangeSpace(BaseParameter, GenericModel, Generic[NumericT]):
 
 
 class FloatParameter(NumericParameter[float]):
-    """
-    TODO write documentation
-    """
+    """Simple Float parameter."""
 
     parameter_type: ParameterType = ParameterType.FLOAT
 
 
 class IntegerParameter(NumericParameter[int]):
-    """
-    TODO write documentation
-    """
+    """Simple Integer parameter."""
 
     parameter_type: ParameterType = ParameterType.INT
 
 
 class FloatRangeSpace(NumericRangeSpace[float]):
-    """
-    TODO write documentation
-    """
+    """Simple Float range space parameter."""
 
     parameter_type: ParameterType = ParameterType.FLOAT_RANGE
 
 
 class IntegerRangeSpace(NumericRangeSpace[int]):
-    """
-    TODO write documentation
-    """
+    """Simple Int range space parameter."""
 
     parameter_type: ParameterType = ParameterType.INT_RANGE

@@ -1,4 +1,4 @@
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Dict, Any
 
 from pydantic import BaseModel, root_validator
 
@@ -7,18 +7,18 @@ from actableai.parameters.type import ParameterType
 
 
 class ParameterValidationError(BaseModel):
-    """
-    TODO write documentation
-    """
+    """Class representing a parameter validation error."""
 
     parameter_name: str
     message: Optional[str]
     parent_parameter_list: List[str] = []
 
     @property
-    def path(self):
-        """
-        TODO write documentation
+    def path(self) -> str:
+        """Compute the path of the error.
+
+        Returns:
+            Error path.
         """
         path = ""
         for parent in reversed(self.parent_parameter_list):
@@ -29,24 +29,34 @@ class ParameterValidationError(BaseModel):
         return path
 
     def __str__(self) -> str:
-        """
-        TODO write documentation
+        """Convert the error to a readable string.
+
+        Returns:
+            Readable string.
         """
         error = self.path
         if self.message is not None:
             error = f"{error}: {self.message}"
         return error
 
-    def add_parent(self, parameter_name):
-        """
-        TODO write documentation
+    def add_parent(self, parameter_name: str):
+        """Add a new parent to the error.
+
+        Args:
+            parameter_name: Name of the parent.
         """
         self.parent_parameter_list.append(parameter_name)
 
     @staticmethod
-    def _process_message(message, values):
-        """
-        TODO write documentation
+    def _process_message(message: str, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Process (format) message.
+
+        Args:
+            message: Message to process.
+            values: Values containing the original message.
+
+        Returns:
+            Values containing the processed message.
         """
         if values.get("message") is not None:
             message = f"{message} (values['message'])"
@@ -56,33 +66,45 @@ class ParameterValidationError(BaseModel):
 
 
 class ParameterValidationErrors(BaseModel):
-    """
-    TODO write documentation
-    """
+    """Class representing a multiple validation errors."""
 
     parameter_name: str
     validation_error_list: List[ParameterValidationError] = []
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """Get the number of errors.
+
+        Returns:
+             Number of errors.
+        """
         return len(self.validation_error_list)
 
     def add_error(self, error: ParameterValidationError):
-        """
-        TODO write documentation
+        """Add a new error.
+
+        Args:
+            error: New error to add.
         """
         self.validation_error_list.append(error)
 
     def add_errors(self, errors: "ParameterValidationErrors"):
-        """
-        TODO write documentation
+        """Concatenate two `ParameterValidationErrors`.
+
+        Args:
+            errors: Other `ParameterValidationErrors` to concatenate.
         """
         for error in errors.validation_error_list:
             error.add_parent(self.parameter_name)
             self.validation_error_list.append(error)
 
-    def to_check_results(self, name) -> List[CheckResult]:
-        """
-        TODO write documentation
+    def to_check_results(self, name: str) -> List[CheckResult]:
+        """Convert to `CheckResult` list.
+
+        Args:
+            name: Name of the `CheckResult`.
+
+        Returns:
+            List of `CheckResult` objects.
         """
         check_result_list = []
         for error in self.validation_error_list:
@@ -94,35 +116,41 @@ class ParameterValidationErrors(BaseModel):
 
 
 class ParameterTypeError(ParameterValidationError):
-    """
-    TODO write documentation
-    """
+    """Class representing a parameter type error."""
 
     expected_type: Union[ParameterType, str]
     given_type: str
 
     @root_validator(pre=True)
-    def set_message(cls, values):
-        """
-        TODO write documentation
+    def set_message(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Set `message` value.
+
+        Args:
+            values: Dictionary containing the current value of the `message`.
+
+        Returns:
+            Updated dictionary containing the correct `message`.
         """
         message = f"Incorrect parameter type, given: `{values['given_type']}`, expected: `{values['expected_type']}`"
         return cls._process_message(message, values)
 
 
 class OutOfRangeError(ParameterValidationError):
-    """
-    TODO write documentation
-    """
+    """Class representing a parameter out of range error."""
 
     min: Optional[Union[int, float]]
     max: Optional[Union[int, float]]
     given: Union[int, float]
 
     @root_validator(pre=True)
-    def set_message(cls, values):
-        """
-        TODO write documentation
+    def set_message(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Set `message` value.
+
+        Args:
+            values: Dictionary containing the current value of the `message`.
+
+        Returns:
+            Updated dictionary containing the correct `message`.
         """
         message = f"Out of range value, given: `{values['given']}`"
 
@@ -135,16 +163,19 @@ class OutOfRangeError(ParameterValidationError):
 
 
 class InvalidKeyError(ParameterValidationError):
-    """
-    TODO write documentation
-    """
+    """Class representing a parameter invalid key error."""
 
     key: str
 
     @root_validator(pre=True)
-    def set_message(cls, values):
-        """
-        TODO write documentation
+    def set_message(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Set `message` value.
+
+        Args:
+            values: Dictionary containing the current value of the `message`.
+
+        Returns:
+            Updated dictionary containing the correct `message`.
         """
         message = f"The key `{values['key']}` is invalid"
 

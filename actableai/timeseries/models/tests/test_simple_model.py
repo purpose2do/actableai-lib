@@ -119,6 +119,7 @@ class TestAAITimeSeriesSingleModel:
             n_cat_dynamic_features=np_rng.integers(1, 10) if use_features else 0,
             n_real_static_features=np_rng.integers(2, 10) if use_features else 0,
             n_cat_static_features=np_rng.integers(2, 10) if use_features else 0,
+            date_range_kwargs={"min_periods": 30, "max_periods": 60},
         )
         group_list = dataset.group_list
 
@@ -141,7 +142,6 @@ class TestAAITimeSeriesSingleModel:
                     "num_cells": 1,
                     "num_layers": 1,
                     "epochs": 2,
-                    "context_length_ratio": 1,
                 }
             )
         elif model_type == "feed_forward":
@@ -149,21 +149,18 @@ class TestAAITimeSeriesSingleModel:
                 hyperparameters={
                     "hidden_layer_1_size": 1,
                     "epochs": 2,
-                    "context_length_ratio": 1,
                 }
             )
         elif model_type == "tree_predictor_qrx":
             model_param = params.TreePredictorParams(
                 hyperparameters={
                     "method": "QRX",
-                    "context_length_ratio": 1,
                 }
             )
         elif model_type == "tree_predictor_quantile_regression":
             model_param = params.TreePredictorParams(
                 hyperparameters={
                     "method": "QuantileRegression",
-                    "context_length_ratio": 1,
                 }
             )
         elif model_type == "deep_var":
@@ -172,14 +169,12 @@ class TestAAITimeSeriesSingleModel:
                     "epochs": 2,
                     "num_layers": 1,
                     "num_cells": 1,
-                    "context_length_ratio": 1,
                 }
             )
         elif model_type == "n_beats":
             model_param = params.NBEATSParams(
                 hyperparameters={
                     "epochs": 2,
-                    "context_length_ratio": 1,
                     "meta_bagging_size": 1,
                 }
             )

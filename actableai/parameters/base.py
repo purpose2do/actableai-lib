@@ -12,9 +12,7 @@ from actableai.parameters.validation import (
 
 
 class NamedParameter(BaseModel):
-    """
-    TODO write documentation
-    """
+    """Base class representing a parameter with a name."""
 
     name: str
     display_name: str
@@ -22,28 +20,47 @@ class NamedParameter(BaseModel):
 
 
 class ValidatableParameter(ABC):
+    """Abstract class representing a validatable parameter."""
+
     @abstractmethod
     def validate_parameter(self, value: Any) -> ParameterValidationErrors:
-        """
-        TODO write documentation
+        """Validate value using the current parameter.
+
+        Args:
+            value: Value to validate.
+
+        Returns:
+            ParameterValidationErrors object containing the validation errors.
         """
         raise NotImplementedError()
 
 
 class ProcessableParameter(ValidatableParameter, ABC):
+    """Abstract class representing a processable parameter (also validatable)."""
+
     @abstractmethod
     def process_parameter(self, value: Any) -> Any:
+        """Process a value using the current parameter.
 
-        """
-        TODO write documentation
+        Args:
+            value: Value to process.
+
+        Returns:
+            Processed value.
         """
         raise NotImplementedError()
 
     def validate_process_parameter(
         self, value: Any
     ) -> Tuple[ParameterValidationErrors, Any]:
-        """
-        TODO write documentation
+        """Validate and process value using current parameter.
+
+        Args:
+            value: Value to validate and process.
+
+        Returns:
+            - ParameterValidationErrors object containing the validation errors.
+            - Processed value.
         """
         validation_errors = self.validate_parameter(value)
 
@@ -54,17 +71,20 @@ class ProcessableParameter(ValidatableParameter, ABC):
 
 
 class BaseParameter(NamedParameter, ProcessableParameter):
-    """
-    TODO write documentation
-    """
+    """Base class representing a parameter."""
 
     parameter_type: ParameterType
     default: Any
     hidden: bool = False
 
     def validate_parameter(self, value: Any) -> ParameterValidationErrors:
-        """
-        TODO write documentation
+        """Validate value using the current parameter.
+
+        Args:
+            value: Value to validate.
+
+        Returns:
+            ParameterValidationErrors object containing the validation errors.
         """
         errors = ParameterValidationErrors(parameter_name=self.name)
 
@@ -122,14 +142,20 @@ class BaseParameter(NamedParameter, ProcessableParameter):
         return errors
 
     def process_parameter(self, value: Any) -> Any:
+        """Process a value using the current parameter.
 
-        """
-        TODO write documentation
+        Args:
+            value: Value to process.
+
+        Returns:
+            Processed value.
         """
         return value
 
-    def get_default(self):
-        """
-        TODO write documentation
+    def get_default(self) -> Any:
+        """Return default value for the parameter.
+
+        Returns:
+            Default value.
         """
         return self.default

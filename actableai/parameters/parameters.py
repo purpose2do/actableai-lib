@@ -9,21 +9,27 @@ from actableai.parameters.base import (
 )
 from actableai.parameters.validation import (
     InvalidKeyError,
-    ParameterValidationErrors, ParameterTypeError,
+    ParameterValidationErrors,
+    ParameterTypeError,
 )
 
 
 class Parameters(NamedParameter, ProcessableParameter):
-    """
-    TODO write documentation
-    """
+    """Class containing multiple parameters."""
 
     parameters: Union[Dict[str, BaseParameter], List[BaseParameter]]
 
     @validator("parameters", pre=True, always=True)
-    def set_parameters(cls, value):
-        """
-        TODO write documentation
+    def set_parameters(
+        cls, value: Union[Dict[str, BaseParameter], List[BaseParameter]]
+    ) -> Dict[str, BaseParameter]:
+        """Set `parameters` value.
+
+        Args:
+            value: Current value of `parameters`.
+
+        Returns:
+            New `parameters` value.
         """
         if isinstance(value, list):
             value = {parameter.name: parameter for parameter in value}
@@ -31,8 +37,13 @@ class Parameters(NamedParameter, ProcessableParameter):
         return value
 
     def validate_parameter(self, value: Any) -> ParameterValidationErrors:
-        """
-        TODO write documentation
+        """Validate value using the current parameter.
+
+        Args:
+            value: Value to validate.
+
+        Returns:
+            ParameterValidationErrors object containing the validation errors.
         """
         errors = ParameterValidationErrors(parameter_name=self.name)
 
@@ -59,8 +70,13 @@ class Parameters(NamedParameter, ProcessableParameter):
         return errors
 
     def process_parameter(self, value: Any) -> Any:
-        """
-        TODO write documentation
+        """Process a value using the current parameter.
+
+        Args:
+            value: Value to process.
+
+        Returns:
+            Processed value.
         """
         final_parameters = {}
 

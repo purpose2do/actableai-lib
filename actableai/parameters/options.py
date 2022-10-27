@@ -6,6 +6,8 @@ from typing import (
     Any,
     Union,
     get_type_hints,
+    Set,
+    Type,
 )
 
 from pydantic import validator
@@ -25,18 +27,14 @@ OptionT = TypeVar("OptionT")
 
 
 class Option(GenericModel, Generic[OptionT]):
-    """
-    TODO write documentation
-    """
+    """Class to represent a simple option, used in `OptionsParameter`."""
 
     display_name: str
     value: OptionT
 
 
 class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
-    """
-    TODO write documentation
-    """
+    """Parameter representing options of type `OptionT`"""
 
     # TODO check if all default are in options
 
@@ -48,16 +46,26 @@ class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
     options: Dict[str, Option[OptionT]]
 
     @validator("dict_parameter", pre=True, always=True)
-    def set_dict_parameter(cls, value):
-        """
-        TODO write documentation
+    def set_dict_parameter(cls, value: bool) -> bool:
+        """Set `dict_parameter` value.
+
+        Args:
+            value: Current value of `dict_parameter`.
+
+        Returns:
+            New `dict_parameter` value.
         """
         return hasattr(cls._get_option_type(), "validate_parameter")
 
     @validator("default", pre=True, always=True)
-    def set_default(cls, value):
-        """
-        TODO write documentation
+    def set_default(cls, value: Union[str, List[str]]) -> List[str]:
+        """Set `default` value.
+
+        Args:
+            value: Current value of `default`.
+
+        Returns:
+            New `default` value.
         """
         if not isinstance(value, list):
             value = [value]
@@ -65,24 +73,33 @@ class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
         return value
 
     @classmethod
-    def _get_option_type(cls):
-        """
-        TODO write documentation
+    def _get_option_type(cls) -> Type:
+        """Returns the type of the `OptionT`.
+
+        Returns:
+            `OptionT` type.
         """
         # Trick to get the generic type, impossible to use traditional method, see:
         # https://github.com/pydantic/pydantic/issues/3559
         return get_type_hints(get_args(get_type_hints(cls)["options"])[1])["value"]
 
-    def get_available_options(self):
-        """
-        TODO write documentation
+    def get_available_options(self) -> Set[OptionT]:
+        """Returns available options.
+
+        Returns:
+            Available options.
         """
         # We use set here for faster search
         return {option.value for option in self.options.values()}
 
     def validate_parameter(self, value: Any) -> ParameterValidationErrors:
-        """
-        TODO write documentation
+        """Validate value using the current parameter.
+
+        Args:
+            value: Value to validate.
+
+        Returns:
+            ParameterValidationErrors object containing the validation errors.
         """
         errors = super().validate_parameter(value)
         if len(errors) > 0:
@@ -163,8 +180,13 @@ class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
         return errors
 
     def process_parameter(self, value: Any) -> Any:
-        """
-        TODO write documentation
+        """Process a value using the current parameter.
+
+        Args:
+            value: Value to process.
+
+        Returns:
+            Processed value.
         """
         if self.dict_parameter:
             new_value = {}
@@ -183,8 +205,10 @@ class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
         return value
 
     def get_default(self):
-        """
-        TODO write documentation
+        """Return default value for the parameter.
+
+        Returns:
+            Default value.
         """
         default_list = self.default
         if not isinstance(default_list, (list, tuple)):
@@ -199,8 +223,6 @@ class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
 
 
 class OptionsSpace(OptionsParameter[OptionT], Generic[OptionT]):
-    """
-    TODO write documentation
-    """
+    """Parameter representing an options space."""
 
     is_multi: bool = True

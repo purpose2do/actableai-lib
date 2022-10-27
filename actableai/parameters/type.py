@@ -2,9 +2,7 @@ from enum import Enum
 
 
 class ParameterType(str, Enum):
-    """
-    TODO write documentation
-    """
+    """Enum representing the different parameter types available."""
 
     BOOL = "bool"
     INT = "int"
