@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Dict, Any
 
 from gluonts.model.deepvar import DeepVAREstimator
@@ -15,8 +16,8 @@ from actableai.timeseries.models.params.base import BaseParams, Model
 class DeepVARParams(BaseParams):
     """Parameter class for Deep VAR Model."""
 
-    # TODO cache this
     @staticmethod
+    @lru_cache(maxsize=None)
     def get_hyperparameters() -> Parameters:
         """Returns the hyperparameters space of the model.
 

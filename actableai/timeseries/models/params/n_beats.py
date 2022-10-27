@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Dict, Any
 
 from gluonts.model.n_beats import NBEATSEnsembleEstimator
@@ -13,8 +14,8 @@ from actableai.timeseries.models.params.base import BaseParams, Model
 class NBEATSParams(BaseParams):
     """Parameter class for NBEATS Model."""
 
-    # TODO cache this
     @staticmethod
+    @lru_cache(maxsize=None)
     def get_hyperparameters() -> Parameters:
         """Returns the hyperparameters space of the model.
 

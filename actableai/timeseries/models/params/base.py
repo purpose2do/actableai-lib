@@ -1,4 +1,5 @@
 from enum import Enum, unique
+from functools import lru_cache
 from typing import Callable, Any, Dict, Union, Tuple, Optional
 
 from gluonts.model.estimator import Estimator
@@ -325,8 +326,8 @@ class BaseParams:
             transformation=(self._transformation + additional_transformation),
         )
 
-    # TODO cache this
     @staticmethod
+    @lru_cache(maxsize=None)
     def get_hyperparameters() -> Parameters:
         """Returns the hyperparameters space of the model.
 

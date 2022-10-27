@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Dict, Any
 
 from gluonts.model.rotbaum import TreeEstimator
@@ -15,8 +16,8 @@ from actableai.timeseries.transform.power_transformation import PowerTransformat
 class TreePredictorParams(BaseParams):
     """Parameters class for Tree Predictor Model."""
 
-    # TODO cache this
     @staticmethod
+    @lru_cache(maxsize=None)
     def get_hyperparameters() -> Parameters:
         """Returns the hyperparameters space of the model.
 

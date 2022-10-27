@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Dict, Any
 
 from gluonts.model.prophet import ProphetPredictor
@@ -11,8 +12,8 @@ from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
 class ProphetParams(BaseParams):
     """Parameter class for Prophet Model."""
 
-    # TODO cache this
     @staticmethod
+    @lru_cache(maxsize=None)
     def get_hyperparameters() -> Parameters:
         """Returns the hyperparameters space of the model.
 

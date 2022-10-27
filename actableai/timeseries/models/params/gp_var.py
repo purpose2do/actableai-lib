@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Dict, Any
 
 from gluonts.model.gpvar import GPVAREstimator
@@ -14,8 +15,8 @@ from actableai.timeseries.models.params.base import BaseParams, Model
 class GPVarParams(BaseParams):
     """Parameter class for GP Var Model."""
 
-    # TODO cache this
     @staticmethod
+    @lru_cache(maxsize=None)
     def get_hyperparameters() -> Parameters:
         """Returns the hyperparameters space of the model.
 

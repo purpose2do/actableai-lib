@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Dict, Any
 
 from actableai.parameters.numeric import FloatRangeSpace
@@ -10,8 +11,8 @@ from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
 class ConstantValueParams(BaseParams):
     """Parameters class for the Constant Value Model."""
 
-    # TODO cache this
     @staticmethod
+    @lru_cache(maxsize=None)
     def get_hyperparameters() -> Parameters:
         """Returns the hyperparameters space of the model.
 
