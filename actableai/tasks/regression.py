@@ -416,6 +416,9 @@ class AAIRegressionTask(AAITask):
                 is skipped
             causal_feature_selection: if True, it will search for direct causal
                 features and use only these features for the prediction
+            causal_feature_selection_task_params: Parameters for AAIDirectCausalFeatureSelectionTask
+            causal_feature_selection_max_concurrent_tasks: maximum number of concurrent
+                tasks for selecting causal features
 
         Examples:
             >>> import pandas as pd
@@ -584,8 +587,8 @@ class AAIRegressionTask(AAITask):
                 return causal_feature_selection
 
             causal_features = set()
-            for f in causal_feature_selection["data"]:
-                if causal_feature_selection["data"][f]["is_direct_cause"]:
+            for f, v in causal_feature_selection["data"].items():
+                if v["is_direct_cause"]:
                     causal_features.add(f.split(":::")[0])
             features = [f for f in features if f in causal_features]
             debiased_features = [f for f in debiased_features if f in debiased_features]
