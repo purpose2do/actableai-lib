@@ -17,7 +17,7 @@ class AAIInterventionTask(AAITask):
         df: pd.DataFrame,
         target: str,
         current_intervention_column: str,
-        new_intervention_column: Optional[str],
+        new_intervention_column: Optional[str] = None,
         expected_target: Optional[str] = None,
         target_proba: Optional[pd.DataFrame] = None,
         common_causes: Optional[List[str]] = None,
@@ -109,13 +109,13 @@ class AAIInterventionTask(AAITask):
 
         # Validate parameters
         data_validation_results = InterventionDataValidator().validate(
-            df,
-            target,
-            current_intervention_column,
-            new_intervention_column,
-            common_causes,
-            causal_cv,
-            drop_unique,
+            df=df,
+            target=target,
+            current_intervention_column=current_intervention_column,
+            new_intervention_column=new_intervention_column,
+            common_causes=common_causes,
+            causal_cv=causal_cv,
+            drop_unique=drop_unique,
         )
         failed_checks = [
             check for check in data_validation_results if check is not None

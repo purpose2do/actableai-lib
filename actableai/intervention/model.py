@@ -13,7 +13,6 @@ from autogluon.tabular import TabularPredictor
 from autogluon.features import AutoMLPipelineFeatureGenerator
 from econml.dml import LinearDML, NonParamDML
 
-from actableai.causal.predictors import SKLearnMultilabelWrapper, SKLearnTabularWrapper
 from actableai.classification.config import MINIMUM_CLASSIFICATION_VALIDATION
 from actableai.intervention.config import LOGIT_MAX_VALUE, LOGIT_MIN_VALUE
 from actableai.utils import get_type_special_no_ag
@@ -81,9 +80,9 @@ class AAIInterventionEffectPredictor:
             self.automl_pipeline_feature_parameters["pre_drop_useless"] = False
             self.automl_pipeline_feature_parameters["post_generators"] = []
 
-    def _generate_model_t(
-        self, X: Optional[pd.DataFrame], T: pd.DataFrame
-    ) -> SKLearnTabularWrapper:
+    def _generate_model_t(self, X: Optional[pd.DataFrame], T: pd.DataFrame):
+        from actableai.causal.predictors import SKLearnTabularWrapper
+
         """Generate the treatment model
 
         Args:
@@ -147,6 +146,11 @@ class AAIInterventionEffectPredictor:
             Union[SKLearnTabularWrapper, SKLearnMultilabelWrapper]: Model to find the
                 outcome with the common causes
         """
+        from actableai.causal.predictors import (
+            SKLearnMultilabelWrapper,
+            SKLearnTabularWrapper,
+        )
+
         xw_col = []
         if X is not None:
             xw_col += list(X.columns)
@@ -196,6 +200,11 @@ class AAIInterventionEffectPredictor:
             Union[SKLearnTabularWrapper, SKLearnMultilabelWrapper]: Model to find the
                 treatment residuals with the outcome residuals
         """
+        from actableai.causal.predictors import (
+            SKLearnMultilabelWrapper,
+            SKLearnTabularWrapper,
+        )
+
         feature_generator = AutoMLPipelineFeatureGenerator(
             **(self.automl_pipeline_feature_parameters)
         )
