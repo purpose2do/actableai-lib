@@ -351,6 +351,9 @@ class AAIRegressionTask(AAITask):
         refit_full: bool = False,
         feature_pruning: bool = True,
         intervention_run_params: Optional[Dict] = None,
+        causal_feature_selection: bool = False,
+        causal_feature_selection_max_concurrent_tasks: int = 20,
+        ci_for_causal_feature_selection_task_params: Optional[dict] = None,
     ):
         """Run this regression task and return results.
 
@@ -410,6 +413,11 @@ class AAIRegressionTask(AAITask):
             feature_pruning: Wether feature pruning is enabled. Can increase accuracy
                 by removing hurtfull features for the model. If no training time left this step
                 is skipped
+            causal_feature_selection: if True, it will search for direct causal
+                features and use only these features for the prediction
+            causal_feature_selection_max_concurrent_tasks: maximum number of concurrent
+                tasks for selecting causal features
+            ci_for_causal_feature_selection_task_params: Parameters for AAIDirectCausalFeatureSelectionTask
 
         Examples:
             >>> import pandas as pd
@@ -463,6 +471,7 @@ class AAIRegressionTask(AAITask):
         )
         from actableai.regression.cross_validation import run_cross_validation
         from actableai.utils.sanitize import sanitize_timezone
+        from actableai.tasks.direct_causal import AAIDirectCausalFeatureSelection
 
         start = time.time()
         # To resolve any issues of acces rights make a copy
@@ -559,6 +568,26 @@ class AAIRegressionTask(AAITask):
         run_model = df_test.shape[0] > 0
 
         df_predict = df_test.copy()
+
+        if causal_feature_selection:
+            causal_feature_selection_task = AAIDirectCausalFeatureSelection()
+            causal_feature_selection = causal_feature_selection_task.run(
+                df_train,
+                target,
+                features,
+                max_concurrent_ci_tasks=causal_feature_selection_max_concurrent_tasks,
+                causal_inference_task_params=ci_for_causal_feature_selection_task_params,
+            )
+
+            if causal_feature_selection["status"] == "FAILURE":
+                return causal_feature_selection
+
+            causal_features = set()
+            for f, v in causal_feature_selection["data"].items():
+                if v["is_direct_cause"]:
+                    causal_features.add(f.split(":::")[0])
+            features = [f for f in features if f in causal_features]
+            debiased_features = [f for f in debiased_features if f in debiased_features]
 
         # Train
         regression_train_task = _AAIRegressionTrainTask(**train_task_params)
