@@ -29,8 +29,7 @@ class DeepVARParams(BaseParams):
             IntegerRangeSpace(
                 name="epochs",
                 display_name="Epochs",
-                # TODO add description
-                description="description_epochs_todo",
+                description="Number of epochs used during training.",
                 default=(5, 20),
                 min=1,
                 # TODO check constraints
@@ -38,8 +37,7 @@ class DeepVARParams(BaseParams):
             IntegerRangeSpace(
                 name="num_cells",
                 display_name="Number of Cells",
-                # TODO add description
-                description="description_num_cells_todo",
+                description="Number of RNN cells for each layer.",
                 default=(1, 20),
                 min=1,
                 # TODO check constraints
@@ -47,8 +45,7 @@ class DeepVARParams(BaseParams):
             IntegerRangeSpace(
                 name="num_layers",
                 display_name="Number of Layers",
-                # TODO add description
-                description="description_num_layers_todo",
+                description="Number of RNN layers.",
                 default=(1, 3),
                 min=1,
                 # TODO check constraints
@@ -56,8 +53,7 @@ class DeepVARParams(BaseParams):
             OptionsSpace[str](
                 name="cell_type",
                 display_name="Cell Type",
-                # TODO add description
-                description="description_cell_type_todo",
+                description="Type of recurrent cells to use.",
                 default=["lstm"],
                 options={
                     "lstm": {"display_name": "LSTM", "value": "lstm"},
@@ -68,8 +64,7 @@ class DeepVARParams(BaseParams):
             FloatRangeSpace(
                 name="dropout_rate",
                 display_name="Dropout Rate",
-                # TODO add description
-                description="description_dropout_rate_todo",
+                description="Dropout regularization rate used during training.",
                 default=(0, 0.5),
                 min=0,
                 max=1,
@@ -78,8 +73,7 @@ class DeepVARParams(BaseParams):
             IntegerRangeSpace(
                 name="rank",
                 display_name="Rank",
-                # TODO add description
-                description="description_rank_todo",
+                description="Rank for the LowrankMultivariateGaussianOutput.",
                 default=5,
                 # TODO check constraints
             ),
@@ -94,8 +88,7 @@ class DeepVARParams(BaseParams):
             FloatRangeSpace(
                 name="learning_rate",
                 display_name="Learning Rate",
-                # TODO add description
-                description="description_learning_rate_todo",
+                description="Learning rate used during training.",
                 default=(0.0001, 0.01),
                 min=0.0001,
                 # TODO check constraints
@@ -103,8 +96,7 @@ class DeepVARParams(BaseParams):
             FloatRangeSpace(
                 name="l2",
                 display_name="L2 Regularization",
-                # TODO add description
-                description="description_l2_todo",
+                description="L2 regularization used during training.",
                 default=(1e-4, 0.01),
                 min=0,
                 # TODO check constraints
@@ -112,6 +104,7 @@ class DeepVARParams(BaseParams):
             BooleanSpace(
                 name="scaling",
                 display_name="Scaling",
+                description="Whether to automatically scale the target values.",
                 default="true",
                 hidden=True,
             ),

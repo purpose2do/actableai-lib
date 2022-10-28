@@ -25,8 +25,7 @@ class RForecastParams(BaseParams):
             OptionsSpace[str](
                 name="method_name",
                 display_name="Method Name",
-                # TODO add description
-                description="description_method_name_todo",
+                description="Forecasting method to use.",
                 default=["arima", "ets"],
                 options={
                     "tbats": {"display_name": "TBATS", "value": "tbats"},
@@ -35,7 +34,6 @@ class RForecastParams(BaseParams):
                     "arima": {"display_name": "ARIMA", "value": "arima"},
                     "ets": {"display_name": "ETS", "value": "ets"},
                 },
-                # TODO check available options
             ),
         ]
 

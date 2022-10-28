@@ -24,8 +24,7 @@ class ConstantValueParams(BaseParams):
             FloatRangeSpace(
                 name="value",
                 display_name="Value",
-                # TODO add description
-                description="description_value_todo",
+                description="Constant value used for prediction.",
                 default=(0, 100),
             ),
         ]

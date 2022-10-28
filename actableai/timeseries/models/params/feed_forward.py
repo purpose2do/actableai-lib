@@ -29,8 +29,7 @@ class FeedForwardParams(BaseParams):
             IntegerRangeSpace(
                 name="hidden_layer_1_size",
                 display_name="Hidden Layer 1 Size",
-                # TODO add description
-                description="description_hidden_layer_1_size_todo",
+                description="Dimension of first layer.",
                 default=40,
                 min=1,
                 # TODO check constraints
@@ -38,8 +37,7 @@ class FeedForwardParams(BaseParams):
             IntegerRangeSpace(
                 name="hidden_layer_2_size",
                 display_name="Hidden Layer 2 Size",
-                # TODO add description
-                description="description_hidden_layer_2_size_todo",
+                description="Dimension of second layer.",
                 default=40,
                 min=0,
                 # TODO check constraints
@@ -47,8 +45,7 @@ class FeedForwardParams(BaseParams):
             IntegerRangeSpace(
                 name="hidden_layer_3_size",
                 display_name="Hidden Layer 3 Size",
-                # TODO add description
-                description="description_hidden_layer_3_size_todo",
+                description="Dimension of third layer.",
                 default=0,
                 min=0,
                 # TODO check constraints
@@ -56,8 +53,7 @@ class FeedForwardParams(BaseParams):
             IntegerRangeSpace(
                 name="epochs",
                 display_name="Epochs",
-                # TODO add description
-                description="description_epochs_todo",
+                description="Number of epochs used during training.",
                 default=(1, 1000),
                 min=1,
                 # TODO check constraints
@@ -65,8 +61,7 @@ class FeedForwardParams(BaseParams):
             FloatRangeSpace(
                 name="learning_rate",
                 display_name="Learning Rate",
-                # TODO add description
-                description="description_learning_rate_todo",
+                description="Learning rate used during training.",
                 default=(0.001, 0.01),
                 min=0.0001,
                 # TODO check constraints
@@ -82,8 +77,7 @@ class FeedForwardParams(BaseParams):
             FloatRangeSpace(
                 name="l2",
                 display_name="L2 Regularization",
-                # TODO add description
-                description="description_l2_todo",
+                description="L2 regularization used during training.",
                 default=(1e-8, 0.01),
                 min=0,
                 # TODO check constraints
@@ -91,6 +85,7 @@ class FeedForwardParams(BaseParams):
             BooleanSpace(
                 name="mean_scaling",
                 display_name="Mean Scaling",
+                description="Scale the network input by the data mean and the network output by its inverse.",
                 default="true",
                 hidden=True,
             ),

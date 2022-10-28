@@ -25,8 +25,7 @@ class ProphetParams(BaseParams):
             OptionsSpace[str](
                 name="growth",
                 display_name="Growth",
-                # TODO add description
-                description="description_growth",
+                description="Specify trend.",
                 default=["linear"],
                 options={
                     "linear": {"display_name": "Linear", "value": "linear"},
@@ -38,8 +37,6 @@ class ProphetParams(BaseParams):
             OptionsSpace[str](
                 name="seasonality_mode",
                 display_name="Seasonality Mode",
-                # TODO add description
-                description="description_seasonality_mode",
                 default=["additive", "multiplicative"],
                 options={
                     "additive": {"display_name": "Additive", "value": "additive"},
@@ -48,7 +45,6 @@ class ProphetParams(BaseParams):
                         "value": "multiplicative",
                     },
                 },
-                # TODO check available options
             ),
         ]
 

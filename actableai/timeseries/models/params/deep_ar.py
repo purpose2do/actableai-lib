@@ -29,8 +29,7 @@ class DeepARParams(BaseParams):
             IntegerRangeSpace(
                 name="epochs",
                 display_name="Epochs",
-                # TODO add description
-                description="description_epochs_todo",
+                description="Number of epochs used during training.",
                 default=(1, 20),
                 min=1,
                 # TODO check constraints
@@ -38,8 +37,7 @@ class DeepARParams(BaseParams):
             IntegerRangeSpace(
                 name="num_cells",
                 display_name="Number of Cells",
-                # TODO add description
-                description="description_num_cells_todo",
+                description="Number of RNN cells for each layer.",
                 default=(1, 10),
                 min=1,
                 # TODO check constraints
@@ -47,8 +45,7 @@ class DeepARParams(BaseParams):
             IntegerRangeSpace(
                 name="num_layers",
                 display_name="Number of Layers",
-                # TODO add description
-                description="description_num_layers_todo",
+                description="Number of RNN layers.",
                 default=(1, 3),
                 min=1,
                 # TODO check constraints
@@ -56,8 +53,7 @@ class DeepARParams(BaseParams):
             FloatRangeSpace(
                 name="dropout_rate",
                 display_name="Dropout Rate",
-                # TODO add description
-                description="description_dropout_rate_todo",
+                description="Dropout regularization rate used during training.",
                 default=(0, 0.5),
                 min=0,
                 max=1,
@@ -66,8 +62,7 @@ class DeepARParams(BaseParams):
             FloatRangeSpace(
                 name="learning_rate",
                 display_name="Learning Rate",
-                # TODO add description
-                description="description_learning_rate_todo",
+                description="Learning rate used during training.",
                 default=(0.0001, 0.01),
                 min=0.0001,
                 # TODO check constraints
@@ -83,8 +78,7 @@ class DeepARParams(BaseParams):
             FloatRangeSpace(
                 name="l2",
                 display_name="L2 Regularization",
-                # TODO add description
-                description="description_l2_todo",
+                description="L2 regularization used during training.",
                 default=(1e-8, 0.01),
                 min=0,
                 # TODO check constraints
@@ -92,12 +86,17 @@ class DeepARParams(BaseParams):
             BooleanSpace(
                 name="scaling",
                 display_name="Scaling",
+                description="Whether to automatically scale the target values.",
                 default="true",
                 hidden=True,
             ),
             BooleanSpace(
                 name="impute_missing_values",
                 display_name="Impute Missing Values",
+                description="Whether to impute the missing values during training\
+                by using the current model parameters. Recommended if the dataset\
+                contains many missing values. However, this is a lot slower than the\
+                default mode.",
                 default="true",
                 hidden=True,
             ),

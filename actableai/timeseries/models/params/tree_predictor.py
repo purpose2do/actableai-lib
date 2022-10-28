@@ -29,8 +29,7 @@ class TreePredictorParams(BaseParams):
             OptionsSpace[str](
                 name="method",
                 display_name="Method",
-                # TODO add description
-                description="description_method_todo",
+                description="Method to use.",
                 default=["QRX", "QuantileRegression"],
                 options={
                     "QRX": {"display_name": "QRX", "value": "QRX"},
@@ -45,7 +44,7 @@ class TreePredictorParams(BaseParams):
             FloatRangeSpace(
                 name="context_length_ratio",
                 display_name="Context Length Ratio",
-                description="Number of steps to unroll the RNN for before computing predictions. The Context Length is computed by multiplying this ratio with the Prediction Length.",
+                description="Number of time units that condition the predictions. The Context Length is computed by multiplying this ratio with the Prediction Length.",
                 default=(1, 2),
                 min=1,
                 # TODO check constraints

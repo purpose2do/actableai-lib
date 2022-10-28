@@ -27,7 +27,7 @@ class NBEATSParams(BaseParams):
             FloatRangeSpace(
                 name="context_length_ratio",
                 display_name="Context Length Ratio",
-                description="Number of steps to unroll the RNN for before computing predictions. The Context Length is computed by multiplying this ratio with the Prediction Length.",
+                description="Number of time units that condition the predictions. The Context Length is computed by multiplying this ratio with the Prediction Length.",
                 default=(1, 2),
                 min=1,
                 # TODO check constraints
@@ -35,8 +35,7 @@ class NBEATSParams(BaseParams):
             IntegerRangeSpace(
                 name="epochs",
                 display_name="Epochs",
-                # TODO add description
-                description="description_epochs_todo",
+                description="Number of epochs used during training.",
                 default=(5, 20),
                 min=1,
                 # TODO check constraints
@@ -44,8 +43,7 @@ class NBEATSParams(BaseParams):
             FloatRangeSpace(
                 name="learning_rate",
                 display_name="Learning Rate",
-                # TODO add description
-                description="description_learning_rate_todo",
+                description="Learning rate used during training.",
                 default=(0.0001, 0.01),
                 min=0.0001,
                 # TODO check constraints
@@ -53,8 +51,7 @@ class NBEATSParams(BaseParams):
             FloatRangeSpace(
                 name="l2",
                 display_name="L2 Regularization",
-                # TODO add description
-                description="description_l2_todo",
+                description="L2 regularization used during training.",
                 default=(1e-4, 0.01),
                 min=0,
                 # TODO check constraints
@@ -62,8 +59,7 @@ class NBEATSParams(BaseParams):
             IntegerRangeSpace(
                 name="meta_bagging_size",
                 display_name="Meta Bagging Size",
-                # TODO add description
-                description="description_meta_bagging_size_todo",
+                description="Bagging size (number of model to create for the ensemble).",
                 default=10,
                 # TODO check constraints
             ),
