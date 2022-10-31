@@ -902,7 +902,7 @@ statsmodels==0.13.2
 sympy==1.10.1
     # via dowhy
 tabpfn==0.1.5
-    # via -r requirements-gpu.in
+    # via -r requirements.in
 tabulate==0.8.10
     # via
     #   flair
