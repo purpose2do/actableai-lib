@@ -21,11 +21,6 @@ class TabPFNModel(AbstractModel):
         super().__init__(**kwargs)
         self.model = TabPFNClassifier()
 
-    def _preprocess(self, X, **kwargs):
-        X = super()._preprocess(X, **kwargs)
-        X = X.fillna(0).to_numpy(dtype=np.float32)
-        return X
-
     def save(self, path: str = None, verbose=True) -> str:
         if path is None:
             path = self.path
