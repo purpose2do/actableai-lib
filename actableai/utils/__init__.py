@@ -1,3 +1,4 @@
+from typing import Optional
 import numpy as np
 import os
 import pandas as pd
@@ -6,6 +7,8 @@ from copy import deepcopy
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 from sklearn.metrics._ranking import _binary_clf_curve
+from actableai.classification import TabPFNModel
+
 
 
 def fill_na(df, fillna_dict=None, fill_median=True):
@@ -190,7 +193,9 @@ def check_if_integer_feature(X: pd.Series):
     return np.array_equal(clean_X.values, clean_X.values.astype(int))
 
 
-def memory_efficient_hyperparameters(ag_automm_enabled: bool = False):
+def memory_efficient_hyperparameters(
+    ag_automm_enabled: bool = False
+):
     from autogluon.tabular.configs.hyperparameter_configs import (
         hyperparameter_config_dict,
     )
@@ -210,6 +215,7 @@ def memory_efficient_hyperparameters(ag_automm_enabled: bool = False):
     if ag_automm_enabled:
         hyperparameters["AG_AUTOMM"] = simple_presets["multilingual"]  # type: ignore
     # hyperparameters["AG_AUTOMM"]["env.per_gpu_batch_size"] = 4
+    hyperparameters[TabPFNModel] = {}
 
     return hyperparameters
 
