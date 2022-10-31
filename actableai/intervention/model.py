@@ -81,8 +81,6 @@ class AAIInterventionEffectPredictor:
             self.automl_pipeline_feature_parameters["post_generators"] = []
 
     def _generate_model_t(self, X: Optional[pd.DataFrame], T: pd.DataFrame):
-        from actableai.causal.predictors import SKLearnTabularWrapper
-
         """Generate the treatment model
 
         Args:
@@ -92,6 +90,8 @@ class AAIInterventionEffectPredictor:
         Returns:
             SKLearnTabularWrapper: Model to find the treatment with the common causes
         """
+        from actableai.causal.predictors import SKLearnTabularWrapper
+
         type_special = T.apply(get_type_special_no_ag)
         num_cols = (type_special == "numeric") | (type_special == "integer")
         num_cols = list(T.loc[:, num_cols].columns)
@@ -178,6 +178,7 @@ class AAIInterventionEffectPredictor:
                 path=mkdtemp(prefix=str(self.model_directory)),
                 problem_types=["regression"] * len(Y.columns),
             )
+
             model_y = SKLearnMultilabelWrapper(
                 ag_predictor=model_y_predictor,
                 x_w_columns=xw_col,
