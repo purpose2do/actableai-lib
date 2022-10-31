@@ -7,8 +7,6 @@ from copy import deepcopy
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 from sklearn.metrics._ranking import _binary_clf_curve
-from actableai.classification import TabPFNModel
-
 
 
 def fill_na(df, fillna_dict=None, fill_median=True):
@@ -193,13 +191,12 @@ def check_if_integer_feature(X: pd.Series):
     return np.array_equal(clean_X.values, clean_X.values.astype(int))
 
 
-def memory_efficient_hyperparameters(
-    ag_automm_enabled: bool = False
-):
+def memory_efficient_hyperparameters(ag_automm_enabled: bool = False):
     from autogluon.tabular.configs.hyperparameter_configs import (
         hyperparameter_config_dict,
     )
     from autogluon.text.text_prediction.presets import list_text_presets
+    from actableai.classification.models import TabPFNModel
 
     # Returns autogluon tabular predictor's hyperparameters without the heavy-memory models
 
