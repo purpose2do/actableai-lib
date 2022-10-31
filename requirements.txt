@@ -160,6 +160,8 @@ decorator==5.1.1
     # via ipython
 deprecated==1.2.13
     # via flair
+dill==0.3.6
+    # via -r requirements.in
 distlib==0.3.4
     # via virtualenv
 distributed==2021.11.2
