@@ -11,7 +11,7 @@ class TabPFNModel(AbstractModel):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.model = TabPFNClassifier()
+        self.model = TabPFNClassifier(N_ensemble_configurations=20)
 
     def save(self, path: str = None, verbose=True) -> str:
         if path is None:
