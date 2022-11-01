@@ -558,15 +558,16 @@ class AAIClassificationTask(AAITask):
         failed_checks = [
             check for check in data_validation_results if check is not None
         ]
+        validations = [
+            {"name": check.name, "level": check.level, "message": check.message}
+            for check in failed_checks
+        ]
 
         if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
             return {
                 "status": "FAILURE",
                 "data": {},
-                "validations": [
-                    {"name": check.name, "level": check.level, "message": check.message}
-                    for check in failed_checks
-                ],
+                "validations": validations,
                 "runtime": time.time() - start,
             }
 
@@ -816,10 +817,6 @@ class AAIClassificationTask(AAITask):
             str
         )
 
-        validations = [
-            {"name": x.name, "level": x.level, "message": x.message}
-            for x in failed_checks
-        ]
         aai_intervention_model = None
         if intervention_run_params is not None:
             intervention_run_params["target_proba"] = predictor.predict_proba(df)
@@ -832,7 +829,7 @@ class AAIClassificationTask(AAITask):
                 intervention_validation = [
                     {
                         "name": "Intervention: " + x["name"],
-                        "level": x["level"],
+                        "level": CheckLevels.WARNING,
                         "message": x["message"],
                     }
                     for x in intervention_task_result["validations"]
@@ -882,10 +879,7 @@ class AAIClassificationTask(AAITask):
         return {
             "messenger": "",
             "status": "SUCCESS",
-            "validations": [
-                {"name": x.name, "level": x.level, "message": x.message}
-                for x in failed_checks
-            ],
+            "validations": validations,
             "runtime": runtime,
             "data": {
                 "validation_table": df_val if not use_cross_validation else None,

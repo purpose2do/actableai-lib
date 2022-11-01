@@ -523,15 +523,16 @@ class AAIRegressionTask(AAITask):
         failed_checks = [
             check for check in data_validation_results if check is not None
         ]
+        validations = [
+            {"name": check.name, "level": check.level, "message": check.message}
+            for check in failed_checks
+        ]
 
         if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
             return {
                 "status": "FAILURE",
                 "data": {},
-                "validations": [
-                    {"name": check.name, "level": check.level, "message": check.message}
-                    for check in failed_checks
-                ],
+                "validations": validations,
                 "runtime": time.time() - start,
             }
 
@@ -810,11 +811,6 @@ class AAIRegressionTask(AAITask):
             "leaderboard": leaderboard,
         }
 
-        validations = [
-            {"name": x.name, "level": x.level, "message": x.message}
-            for x in failed_checks
-        ]
-
         aai_intervention_model = None
         if intervention_run_params is not None:
             intervention_task_result = AAIInterventionTask(
@@ -826,7 +822,7 @@ class AAIRegressionTask(AAITask):
                 intervention_validation = [
                     {
                         "name": "Intervention: " + x["name"],
-                        "level": x["level"],
+                        "level": CheckLevels.WARNING,
                         "message": x["message"],
                     }
                     for x in intervention_task_result["validations"]

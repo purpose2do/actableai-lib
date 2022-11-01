@@ -36,6 +36,7 @@ from actableai.data_validation.checkers import (
     IsSufficientClassSampleForCrossValidationChecker,
     IsSufficientDataChecker,
     IsSufficientDataClassificationStratification,
+    IsSufficientDataTreatmentStratification,
     IsSufficientNumberOfClassChecker,
     IsSufficientSampleCrossValidationChecker,
     IsSufficientValidationSampleChecker,
@@ -836,7 +837,8 @@ class InterventionDataValidator:
                     )
                 )
         if (
-            new_intervention_column and new_intervention_column in df
+            new_intervention_column
+            and new_intervention_column in df
             and get_type_special_no_ag(df[current_intervention_column]) == "category"
         ):
             validations.append(
@@ -844,11 +846,14 @@ class InterventionDataValidator:
                     df, current_intervention_column, new_intervention_column
                 )
             )
-            validations.append(
-                StratifiedKFoldChecker(level=CheckLevels.CRITICAL).check(
-                    df, current_intervention_column, causal_cv
-                )
-            )
+        validations += [
+            StratifiedKFoldChecker(level=CheckLevels.CRITICAL).check(
+                df, current_intervention_column, causal_cv
+            ),
+            IsSufficientDataTreatmentStratification(level=CheckLevels.CRITICAL).check(
+                df=df, current_intervention_column=current_intervention_column
+            ),
+        ]
 
         return validations
 

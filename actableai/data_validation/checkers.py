@@ -896,7 +896,11 @@ class MaxTrainSamplesChecker(IChecker):
             Optional[CheckResult]: Check result.
         """
 
-        if type(n_cluster) == int and max_samples is not None and n_cluster > max_samples:  # type: ignore
+        if (
+            isinstance(n_cluster, int)
+            and max_samples is not None
+            and n_cluster > max_samples
+        ):
             return CheckResult(
                 name=self.name,
                 level=self.level,
@@ -1229,4 +1233,28 @@ class IsSufficientDataClassificationStratification(IChecker):
                 level=self.level,
                 message=f"The validation ratio ({validation_ratio}) is not high enough to represent the target in validation set."
                 + f" Please set it to ({1 / smallest_value}+) or add more data.",
+            )
+
+
+class IsSufficientDataTreatmentStratification(IChecker):
+    def __init__(self, level, name="IsSufficientDataTreatmentStratification"):
+        super().__init__(name)
+        self.level = level
+
+    def check(
+        self, df: pd.DataFrame, current_intervention_column: str
+    ) -> Optional[CheckResult]:
+        if df[current_intervention_column].dtype not in [
+            "object",
+            "category",
+            "boolean",
+        ]:
+            return
+        val_counts = df[current_intervention_column].value_counts()
+        if (val_counts <= 1).any(axis=None):
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"The current intervention column ({current_intervention_column}) has too few values for each category to perform stratified sampling."
+                + "When the current intervention is categorical, the number of samples in each category must be greater than 1.",
             )
