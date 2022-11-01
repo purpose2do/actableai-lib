@@ -178,7 +178,6 @@ class AAIInterventionEffectPredictor:
                 path=mkdtemp(prefix=str(self.model_directory)),
                 problem_types=["regression"] * len(Y.columns),
             )
-
             model_y = SKLearnMultilabelWrapper(
                 ag_predictor=model_y_predictor,
                 x_w_columns=xw_col,
@@ -384,7 +383,10 @@ class AAIInterventionEffectPredictor:
                         pd.DataFrame(np.zeros_like(Y.values), columns=Y.columns),
                     )
                 else:
-                    lb_custom_indices, ub_custom_indices = self.causal_model.effect_interval(
+                    (
+                        lb_custom_indices,
+                        ub_custom_indices,
+                    ) = self.causal_model.effect_interval(
                         X.iloc[t1_indices_non_na].values if X is not None else None,
                         T0=T0.iloc[t1_indices_non_na].values,  # type: ignore
                         T1=T1.iloc[t1_indices_non_na].values,  # type: ignore

@@ -897,10 +897,10 @@ class MaxTrainSamplesChecker(IChecker):
         """
 
         if (
-            type(n_cluster) == int
+            isinstance(n_cluster, int)
             and max_samples is not None
             and n_cluster > max_samples
-        ):  # type: ignore
+        ):
             return CheckResult(
                 name=self.name,
                 level=self.level,
@@ -1258,4 +1258,3 @@ class IsSufficientDataTreatmentStratification(IChecker):
                 message=f"The current intervention column ({current_intervention_column}) has too few values for each category to perform stratified sampling."
                 + "When the current intervention is categorical, the number of samples in each category must be greater than 1.",
             )
-
