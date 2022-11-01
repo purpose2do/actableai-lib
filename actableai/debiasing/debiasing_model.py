@@ -8,7 +8,7 @@ from copy import deepcopy
 from uuid import uuid4
 
 from actableai.debiasing.residuals_model import ResidualsModel
-from actableai.utils import memory_efficient_hyperparameters, debiasing_hyperparameters
+from actableai.utils import debiasing_hyperparameters
 
 
 class DebiasingModel(AbstractModel):

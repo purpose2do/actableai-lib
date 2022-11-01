@@ -1,3 +1,4 @@
+from typing import Optional
 import numpy as np
 import os
 import pandas as pd
@@ -195,6 +196,7 @@ def memory_efficient_hyperparameters(ag_automm_enabled: bool = False):
         hyperparameter_config_dict,
     )
     from autogluon.text.text_prediction.presets import list_text_presets
+    from actableai.classification.models import TabPFNModel
 
     # Returns autogluon tabular predictor's hyperparameters without the heavy-memory models
 
@@ -210,6 +212,7 @@ def memory_efficient_hyperparameters(ag_automm_enabled: bool = False):
     if ag_automm_enabled:
         hyperparameters["AG_AUTOMM"] = simple_presets["multilingual"]  # type: ignore
     # hyperparameters["AG_AUTOMM"]["env.per_gpu_batch_size"] = 4
+    hyperparameters[TabPFNModel] = {}
 
     return hyperparameters
 
