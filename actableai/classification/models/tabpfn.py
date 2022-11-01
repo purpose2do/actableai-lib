@@ -1,5 +1,5 @@
 import sys
-import dill
+import dill as pickle
 from tabpfn.scripts.transformer_prediction_interface import TabPFNClassifier
 from autogluon.core.models import AbstractModel
 from autogluon.common.savers import save_pkl
@@ -11,7 +11,7 @@ class TabPFNModel(AbstractModel):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.model = TabPFNClassifier()
+        self.model = TabPFNClassifier(N_ensemble_configurations=20)
 
     def save(self, path: str = None, verbose=True) -> str:
         if path is None:
@@ -20,7 +20,7 @@ class TabPFNModel(AbstractModel):
         save_pkl.save_with_fn(
             path=file_path,
             object=self,
-            pickle_fn=lambda o, buffer: dill.dump(o, buffer, protocol=4),
+            pickle_fn=lambda o, buffer: pickle.dump(o, buffer, protocol=4),
             verbose=verbose,
         )
         return path
@@ -29,7 +29,7 @@ class TabPFNModel(AbstractModel):
     def load(cls, path: str, reset_paths=True, verbose=True):
         file_path = path + cls.model_file_name
         model = load_pkl.load_with_fn(
-            path=file_path, pickle_fn=dill.load, verbose=verbose
+            path=file_path, pickle_fn=pickle.load, verbose=verbose
         )
         if reset_paths:
             model.set_contexts(path)
@@ -39,4 +39,4 @@ class TabPFNModel(AbstractModel):
         from autogluon.core.models.abstract.abstract_model import gc
 
         gc.collect()  # Try to avoid OOM error
-        return sys.getsizeof(dill.dumps(self, protocol=4))
+        return sys.getsizeof(pickle.dumps(self, protocol=4))

@@ -67,7 +67,7 @@ class AAIModelInference:
         """
         TODO write documentation
         """
-        import pickle
+        import dill as pickle
         from botocore.exceptions import ClientError
 
         path = self._get_model_path(task_id)

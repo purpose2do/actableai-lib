@@ -295,7 +295,7 @@ class AAITask(ABC):
                         # Upload model
                         import os
                         import boto3
-                        import pickle
+                        import dill as pickle
 
                         s3 = boto3.resource("s3")
                         bucket = s3.Bucket(task_object.s3_models_bucket)
