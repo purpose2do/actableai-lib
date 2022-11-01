@@ -1,23 +1,15 @@
-import numpy as np
-from autogluon.core.models import AbstractModel
-from tabpfn.scripts.transformer_prediction_interface import TabPFNClassifier
+import sys
 import dill
+from tabpfn.scripts.transformer_prediction_interface import TabPFNClassifier
+from autogluon.core.models import AbstractModel
 from autogluon.common.savers import save_pkl
 from autogluon.common.loaders import load_pkl
-import sys
 
 
 class TabPFNModel(AbstractModel):
-    """TabPFN classification Model
-
-    Args:
-        AbstractModel: Base class for all AutoGluon models.
-    """
+    """TabPFN classification Model"""
 
     def __init__(self, **kwargs) -> None:
-        """See https://scikit-garden.github.io/api/#extratreesquantileregressor
-        for more information on the parameters.
-        """
         super().__init__(**kwargs)
         self.model = TabPFNClassifier()
 
