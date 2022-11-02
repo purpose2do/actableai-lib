@@ -76,7 +76,7 @@ class AAICausalEstimator:
         target_units: str = "ate",
         trials: int = 3,
         tune_params=None,
-        cv: str = "auto",
+        cv: Union[str, int] = "auto",
         feature_importance: bool = False,
         model_directory: Optional[str] = None,
         hyperparameters: Union[dict, str] = "auto",
@@ -160,6 +160,11 @@ class AAICausalEstimator:
             mc_iters = 5
         if cv == "auto":
             cv = 5
+            if self.has_categorical_treatment or self.has_binary_outcome:
+                for col in T.columns:
+                    cv = min(T[col].value_counts().min(), cv)
+                for col in Y.columns:
+                    cv = min(Y[col].value_counts().min(), cv)
 
         xw_col = []
         if X is not None:
@@ -210,7 +215,7 @@ class AAICausalEstimator:
         )
 
         # Remove outliers
-        if remove_outliers:
+        if remove_outliers and not self.has_categorical_treatment:
             df_ = np.hstack([Y, T])
             if X is not None:
                 df_ = np.hstack([df_, X])
