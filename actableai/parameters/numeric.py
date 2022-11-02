@@ -1,5 +1,6 @@
-from typing import TypeVar, Generic, Optional, Any, Union, Tuple
+from typing import TypeVar, Generic, Optional, Any, Union, Tuple, Dict
 
+from pydantic import root_validator
 from pydantic.generics import GenericModel
 
 from actableai.parameters.base import BaseParameter
@@ -15,6 +16,28 @@ class NumericParameter(BaseParameter, GenericModel, Generic[NumericT]):
     default: NumericT
     min: Optional[NumericT]
     max: Optional[NumericT]
+
+    @root_validator
+    def check_default(clf, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Check default value using the current parameter.
+
+        Args:
+            values: Values used to create the current parameter.
+
+        Returns:
+            The validated dictionary containing the values used to create the current
+                parameters.
+        """
+        default = values["default"]
+        min_val = values["min"]
+        max_val = values["max"]
+
+        if (min_val is not None and default < min_val) or (
+            max_val is not None and default >= max_val
+        ):
+            raise ValueError(f"Default value {default} is out of range.")
+
+        return values
 
     def validate_parameter(self, value: Any) -> ParameterValidationErrors:
         """ "Validate value using the current parameter.
@@ -47,6 +70,32 @@ class NumericRangeSpace(BaseParameter, GenericModel, Generic[NumericT]):
     default: Union[NumericT, Tuple[NumericT, NumericT]]
     min: Optional[NumericT]
     max: Optional[NumericT]
+
+    @root_validator
+    def check_default(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Check default value using the current parameter.
+
+        Args:
+            values: Values used to create the current parameter.
+
+        Returns:
+            The validated dictionary containing the values used to create the current
+                parameters.
+        """
+        default = values["default"]
+        min_val = values["min"]
+        max_val = values["max"]
+
+        if not isinstance(default, (tuple, list)):
+            default = [default]
+
+        for val in default:
+            if (min_val is not None and val < min_val) or (
+                max_val is not None and val >= max_val
+            ):
+                raise ValueError(f"Default value {val} is out of range.")
+
+        return values
 
     def validate_parameter(self, value: Any) -> ParameterValidationErrors:
         """Validate value using the current parameter.

@@ -1,4 +1,4 @@
-from typing import Optional, Union, List, Dict, Any
+from typing import Optional, Union, List, Dict, Any, Type
 
 from pydantic import BaseModel, root_validator
 
@@ -79,6 +79,20 @@ class ParameterValidationErrors(BaseModel):
         """
         return len(self.validation_error_list)
 
+    def has_error(self, error_type: Type[ParameterValidationError]) -> bool:
+        """Check whether the current object contains any error of a specific type.
+
+        Args:
+            error_type: Type of the error to look for.
+
+        Returns:
+            True if the `error_type` has been found in the current errors.
+        """
+        for error in self.validation_error_list:
+            if isinstance(error, error_type):
+                return True
+        return False
+
     def add_error(self, error: ParameterValidationError):
         """Add a new error.
 
@@ -121,7 +135,7 @@ class ParameterTypeError(ParameterValidationError):
     expected_type: Union[ParameterType, str]
     given_type: str
 
-    @root_validator(pre=True)
+    @root_validator
     def set_message(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         """Set `message` value.
 
@@ -142,7 +156,7 @@ class OutOfRangeError(ParameterValidationError):
     max: Optional[Union[int, float]]
     given: Union[int, float]
 
-    @root_validator(pre=True)
+    @root_validator
     def set_message(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         """Set `message` value.
 
@@ -167,7 +181,7 @@ class InvalidKeyError(ParameterValidationError):
 
     key: str
 
-    @root_validator(pre=True)
+    @root_validator
     def set_message(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         """Set `message` value.
 

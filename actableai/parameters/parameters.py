@@ -19,7 +19,7 @@ class Parameters(NamedParameter, ProcessableParameter):
 
     parameters: Union[Dict[str, BaseParameter], List[BaseParameter]]
 
-    @validator("parameters", pre=True, always=True)
+    @validator("parameters", always=True)
     def set_parameters(
         cls, value: Union[Dict[str, BaseParameter], List[BaseParameter]]
     ) -> Dict[str, BaseParameter]:

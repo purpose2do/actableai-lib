@@ -10,7 +10,7 @@ from typing import (
     Type,
 )
 
-from pydantic import validator
+from pydantic import validator, root_validator
 from pydantic.generics import GenericModel
 from pydantic.typing import get_args
 
@@ -36,8 +36,6 @@ class Option(GenericModel, Generic[OptionT]):
 class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
     """Parameter representing options of type `OptionT`"""
 
-    # TODO check if all default are in options
-
     parameter_type: ParameterType = ParameterType.OPTIONS
     default: Union[str, List[str]]
     # Automatic dynamic field
@@ -45,7 +43,7 @@ class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
     is_multi: bool
     options: Dict[str, Option[OptionT]]
 
-    @validator("dict_parameter", pre=True, always=True)
+    @validator("dict_parameter", always=True)
     def set_dict_parameter(cls, value: bool) -> bool:
         """Set `dict_parameter` value.
 
@@ -57,7 +55,7 @@ class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
         """
         return hasattr(cls._get_option_type(), "validate_parameter")
 
-    @validator("default", pre=True, always=True)
+    @validator("default", always=True)
     def set_default(cls, value: Union[str, List[str]]) -> List[str]:
         """Set `default` value.
 
@@ -71,6 +69,30 @@ class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
             value = [value]
 
         return value
+
+    @root_validator
+    def check_default(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Check default value using the current parameter.
+
+        Args:
+            values: Values used to create the current parameter.
+
+        Returns:
+            The validated dictionary containing the values used to create the current
+                parameters.
+        """
+        for value in values["default"]:
+            if value not in values["options"]:
+                raise ValueError(
+                    f"Default value `{value}` is not available in the options."
+                )
+
+        if len(values["default"]) > 1 and not values["is_multi"]:
+            raise ValueError(
+                "`is_multi` is set to False, therefore only one default value should be given."
+            )
+
+        return values
 
     @classmethod
     def _get_option_type(cls) -> Type:
@@ -210,14 +232,10 @@ class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
         Returns:
             Default value.
         """
-        default_list = self.default
-        if not isinstance(default_list, (list, tuple)):
-            default_list = [default_list]
-
         if self.dict_parameter:
-            default = {option_name: {} for option_name in default_list}
+            default = {option_name: {} for option_name in self.default}
         else:
-            default = [self.options[option_name].value for option_name in default_list]
+            default = [self.options[option_name].value for option_name in self.default]
 
         return self.process_parameter(default)
 
