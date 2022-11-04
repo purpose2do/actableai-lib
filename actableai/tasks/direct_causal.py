@@ -35,7 +35,7 @@ class AAIDirectCausalFeatureSelection(AAITask):
         features = filter(
             lambda c: df[c].dtype != "object"
             or df[c].nunique() <= CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE,
-            features
+            features,
         )
 
         dummies = pd.get_dummies(df[features], prefix_sep=dummy_prefix_sep)
