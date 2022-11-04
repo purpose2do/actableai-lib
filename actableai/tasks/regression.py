@@ -588,7 +588,7 @@ class AAIRegressionTask(AAITask):
                 if v["is_direct_cause"]:
                     causal_features.add(f.split(":::")[0])
             features = [f for f in features if f in causal_features]
-            debiased_features = [f for f in debiased_features if f in debiased_features]
+            debiased_features = [f for f in debiased_features if f in causal_features]
 
         # Train
         regression_train_task = _AAIRegressionTrainTask(**train_task_params)
