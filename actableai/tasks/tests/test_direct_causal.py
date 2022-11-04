@@ -1,7 +1,5 @@
-import pytest
 import pandas as pd
 
-from actableai.data_validation.base import CheckLevels
 from actableai.tasks.direct_causal import AAIDirectCausalFeatureSelection
 
 
