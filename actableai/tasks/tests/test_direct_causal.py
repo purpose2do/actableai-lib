@@ -8,7 +8,7 @@ class TestCausalFeatureSelection:
         df = pd.DataFrame(
             {
                 "x": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"] * 10,
-                "w": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"] * 10,
+                "w": ["a", "b", "a", "b", "a", "b", "a", "b", "a", "b", "a"] * 10,
                 "z": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] * 10,
                 "y": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] * 10,
             }
@@ -16,6 +16,9 @@ class TestCausalFeatureSelection:
 
         task = AAIDirectCausalFeatureSelection()
         re = task.run(df, "y", ["x", "w", "z"])
-        print(re)
         assert re is not None
         assert re["status"] == "SUCCESS"
+        assert "data" in re
+        assert "w:::a" in re["data"]
+        assert "w:::b" in re["data"]
+        assert "z" in re["data"]
