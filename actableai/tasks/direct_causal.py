@@ -7,6 +7,8 @@ from scipy.stats import norm
 from actableai.tasks.base import AAITask
 from actableai.tasks import TaskType
 from actableai.tasks.causal_inference import AAICausalInferenceTask
+from actableai.data_validation.params import CausalFeatureSelectionDataValidator
+from actableai.data_validation.base import CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE
 
 
 class AAIDirectCausalFeatureSelection(AAITask):
@@ -23,6 +25,19 @@ class AAIDirectCausalFeatureSelection(AAITask):
         positive_outcome_value=None,
         causal_inference_task_params=None,
     ):
+        failed_checks = CausalFeatureSelectionDataValidator().validate(
+            target, features, df
+        )
+        validations = [
+            {"name": x.name, "level": x.level, "message": x.message}
+            for x in failed_checks
+        ]
+        features = filter(
+            lambda c: df[c].dtype != "object"
+            or df[c].nunique() <= CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE,
+            features
+        )
+
         dummies = pd.get_dummies(df[features], prefix_sep=dummy_prefix_sep)
         dummy_features = dummies.columns
         dummies[target] = df[target]
@@ -53,7 +68,7 @@ class AAIDirectCausalFeatureSelection(AAITask):
             if "status" in re:
                 return re
             result[feature] = re
-        return {"status": "SUCCESS", "data": result, "validations": []}
+        return {"status": "SUCCESS", "data": result, "validations": validations}
 
     def _run_ci(
         self,
