@@ -163,8 +163,9 @@ class AAICausalInferenceTask(AAITask):
 
         # if controls is provided, convert numeric to categorical
         for c in controls:
-            pd_table = pd_table.astype({c: str})
-            controls[c] = str(controls[c])
+            if c in pd_table.columns:
+                pd_table = pd_table.astype({c: str})
+                controls[c] = str(controls[c])
 
         data_validation_results = CausalDataValidator().validate(
             treatments,
