@@ -903,7 +903,10 @@ class TestRemoteCausal:
         assert pretty_tree == final_dot
 
     def test_not_enough_values(
-        self, causal_inference_task, simple_linear_dataset, init_ray
+        self,
+        causal_inference_task: AAICausalInferenceTask,
+        simple_linear_dataset,
+        init_ray,
     ):
         np.random.seed(123)
         (

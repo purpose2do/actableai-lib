@@ -721,14 +721,19 @@ class CausalDataValidator:
             ),
         ]
         if isinstance(cv, int):
-            validation_results += [
-                StratifiedKFoldChecker(level=CheckLevels.CRITICAL).check(
-                    df, intervention=treatments[0], causal_cv=cv
-                ),
-                StratifiedKFoldChecker(level=CheckLevels.CRITICAL).check(
-                    df, intervention=outcomes[0], causal_cv=cv
-                ),
-            ]
+            if has_categorical_column(df, treatments):
+                validation_results.append(
+                    StratifiedKFoldChecker(level=CheckLevels.CRITICAL).check(
+                        df, intervention=treatments[0], causal_cv=cv
+                    )
+                )
+            if has_categorical_column(df, outcomes):
+                validation_results.append(
+                    StratifiedKFoldChecker(level=CheckLevels.CRITICAL).check(
+                        df, intervention=outcomes[0], causal_cv=cv
+                    )
+                )
+
         if drop_unique:
             validation_results.append(
                 OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, common_causes)
@@ -753,18 +758,15 @@ class CausalDataValidator:
                 else None
             )
 
-        if CheckLevels.CRITICAL not in [
-            check.level for check in validation_results if check is not None
-        ]:
-            for treatment in treatments:
-                if has_categorical_column(df, [treatment]):
-                    validation_results.append(
-                        InsufficientCategoricalRows(level=CheckLevels.CRITICAL).check(
-                            df,
-                            treatment=treatment,
-                            n_rows=CAUSAL_INFERENCE_CATEGORICAL_MINIMUM_TREATMENT,
-                        )
+        for treatment in treatments:
+            if has_categorical_column(df, [treatment]):
+                validation_results.append(
+                    InsufficientCategoricalRows(level=CheckLevels.CRITICAL).check(
+                        df,
+                        treatment=treatment,
+                        n_rows=CAUSAL_INFERENCE_CATEGORICAL_MINIMUM_TREATMENT,
                     )
+                )
 
         if positive_outcome_value is not None:
             validation_results.append(
