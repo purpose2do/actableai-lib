@@ -215,7 +215,11 @@ class AAICausalEstimator:
         )
 
         # Remove outliers
-        if remove_outliers and not self.has_categorical_treatment:
+        if (
+            remove_outliers
+            and not self.has_categorical_treatment
+            and not self.has_binary_outcome
+        ):
             df_ = np.hstack([Y, T])
             if X is not None:
                 df_ = np.hstack([df_, X])

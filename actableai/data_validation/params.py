@@ -689,8 +689,6 @@ class CausalDataValidator:
         positive_outcome_value: Optional[Any],
         drop_unique: bool,
         cv: Union[int, str],
-        has_categorical_treatment: bool,
-        has_categorical_outcome: bool,
     ) -> List[Union[CheckResult, None]]:
         columns = effect_modifiers + common_causes
         validation_results = [
@@ -722,17 +720,14 @@ class CausalDataValidator:
                 df, outcomes=outcomes, positive_outcome_value=positive_outcome_value
             ),
         ]
-        if has_categorical_treatment and isinstance(cv, int):
+        if isinstance(cv, int):
             validation_results += [
                 StratifiedKFoldChecker(level=CheckLevels.CRITICAL).check(
                     df, intervention=treatments[0], causal_cv=cv
-                )
-            ]
-        if has_categorical_outcome and isinstance(cv, int):
-            validation_results += [
+                ),
                 StratifiedKFoldChecker(level=CheckLevels.CRITICAL).check(
                     df, intervention=outcomes[0], causal_cv=cv
-                )
+                ),
             ]
         if drop_unique:
             validation_results.append(
@@ -757,6 +752,19 @@ class CausalDataValidator:
                 if y in df.columns and not pd.isnull(df[y]).all()
                 else None
             )
+
+        if CheckLevels.CRITICAL not in [
+            check.level for check in validation_results if check is not None
+        ]:
+            for treatment in treatments:
+                if has_categorical_column(df, [treatment]):
+                    validation_results.append(
+                        InsufficientCategoricalRows(level=CheckLevels.CRITICAL).check(
+                            df,
+                            treatment=treatment,
+                            n_rows=CAUSAL_INFERENCE_CATEGORICAL_MINIMUM_TREATMENT,
+                        )
+                    )
 
         if positive_outcome_value is not None:
             validation_results.append(
