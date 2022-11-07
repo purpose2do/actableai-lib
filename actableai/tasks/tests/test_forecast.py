@@ -4,7 +4,6 @@ import pytest
 
 from actableai.data_validation.base import CheckLevels
 from actableai.tasks.forecast import AAIForecastTask
-from actableai.timeseries.models import params
 from actableai.utils.testing import generate_forecast_df
 
 
@@ -62,10 +61,10 @@ class TestTimeSeries:
             predicted_columns=target_columns,
             group_by=group_by,
             feature_columns=feature_columns,
-            model_params=[
-                params.ConstantValueParams(),
-                params.ConstantValueParams(target_dim=n_targets),
-            ],
+            hyperparameters={
+                "constant_value": {},
+                "multivariate_constant_value": {},
+            },
             trials=1,
             use_ray=False,
         )
@@ -399,7 +398,7 @@ class TestTimeSeries:
             prediction_length=prediction_length,
             date_column=date_column_str,
             predicted_columns=target_columns,
-            model_params=[params.ConstantValueParams()],
+            hyperparameters={"constant_value": {}},
             trials=1,
             use_ray=True,
             ray_tune_kwargs={
@@ -440,7 +439,7 @@ class TestTimeSeries:
             prediction_length=prediction_length,
             date_column=date_column_str,
             predicted_columns=target_columns,
-            model_params=[params.ConstantValueParams()],
+            hyperparameters={"constant_value": {}},
             trials=1,
             use_ray=False,
         )
@@ -475,7 +474,7 @@ class TestTimeSeries:
             prediction_length=prediction_length,
             date_column=date_column_str,
             predicted_columns=target_columns,
-            model_params=[params.ConstantValueParams()],
+            hyperparameters={"constant_value": {}},
             trials=1,
             use_ray=False,
         )
@@ -508,7 +507,7 @@ class TestTimeSeries:
             prediction_length=prediction_length,
             date_column=date_column_str,
             predicted_columns=target_columns,
-            model_params=[params.ConstantValueParams()],
+            hyperparameters={"constant_value": {}},
             trials=1,
             use_ray=False,
         )
@@ -541,7 +540,7 @@ class TestTimeSeries:
             prediction_length=prediction_length,
             date_column=date_column_str,
             predicted_columns=target_columns,
-            model_params=[params.ConstantValueParams()],
+            hyperparameters={"constant_value": {}},
             trials=1,
             use_ray=False,
         )
@@ -580,7 +579,7 @@ class TestTimeSeries:
             prediction_length=prediction_length,
             date_column=date_column_str,
             predicted_columns=target_columns,
-            model_params=[params.ConstantValueParams()],
+            hyperparameters={"constant_value": {}},
             trials=1,
             use_ray=False,
         )
@@ -613,7 +612,7 @@ class TestTimeSeries:
             prediction_length=prediction_length,
             date_column=date_column_str,
             predicted_columns=["test"],
-            model_params=[params.ConstantValueParams()],
+            hyperparameters={"constant_value": {}},
             trials=1,
             use_ray=False,
         )
@@ -648,7 +647,7 @@ class TestTimeSeries:
             prediction_length=prediction_length,
             date_column=date_column_str,
             predicted_columns=target_columns,
-            model_params=[params.ConstantValueParams()],
+            hyperparameters={"constant_value": {}},
             trials=1,
             use_ray=False,
         )
@@ -685,7 +684,7 @@ class TestTimeSeries:
             prediction_length=prediction_length,
             date_column=date_column_str,
             predicted_columns=target_columns,
-            model_params=[params.ConstantValueParams()],
+            hyperparameters={"constant_value": {}},
             trials=1,
             use_ray=False,
         )

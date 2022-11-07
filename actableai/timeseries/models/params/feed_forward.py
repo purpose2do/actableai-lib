@@ -1,87 +1,143 @@
-from typing import Union, Tuple, Optional, Dict, Any
+from functools import lru_cache
+from typing import Dict, Any
 
 from gluonts.model.simple_feedforward import SimpleFeedForwardEstimator
 from gluonts.mx.distribution import DistributionOutput
 from gluonts.mx.trainer import Trainer
 from mxnet.context import Context
 
+from actableai.parameters.boolean import BooleanSpace
+from actableai.parameters.numeric import IntegerRangeSpace, FloatRangeSpace
+from actableai.parameters.parameters import Parameters
 from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
-from actableai.timeseries.models.params.base import BaseParams
+from actableai.timeseries.models.params.base import BaseParams, Model
 
 
 class FeedForwardParams(BaseParams):
     """Parameter class for Feed Forward Model."""
 
+    @staticmethod
+    @lru_cache(maxsize=None)
+    def get_hyperparameters() -> Parameters:
+        """Returns the hyperparameters space of the model.
+
+        Returns:
+            The hyperparameters space.
+        """
+
+        parameters = [
+            IntegerRangeSpace(
+                name="hidden_layer_1_size",
+                display_name="Hidden Layer 1 Size",
+                description="Dimension of first layer.",
+                default=40,
+                min=1,
+                # TODO check constraints
+            ),
+            IntegerRangeSpace(
+                name="hidden_layer_2_size",
+                display_name="Hidden Layer 2 Size",
+                description="Dimension of second layer.",
+                default=40,
+                min=0,
+                # TODO check constraints
+            ),
+            IntegerRangeSpace(
+                name="hidden_layer_3_size",
+                display_name="Hidden Layer 3 Size",
+                description="Dimension of third layer.",
+                default=0,
+                min=0,
+                # TODO check constraints
+            ),
+            IntegerRangeSpace(
+                name="epochs",
+                display_name="Epochs",
+                description="Number of epochs used during training.",
+                default=(1, 1000),
+                min=1,
+                # TODO check constraints
+            ),
+            FloatRangeSpace(
+                name="learning_rate",
+                display_name="Learning Rate",
+                description="Learning rate used during training.",
+                default=(0.001, 0.01),
+                min=0.0001,
+                # TODO check constraints
+            ),
+            FloatRangeSpace(
+                name="context_length_ratio",
+                display_name="Context Length Ratio",
+                description="Number of steps to unroll the RNN for before computing predictions. The Context Length is computed by multiplying this ratio with the Prediction Length.",
+                default=(1, 2),
+                min=1,
+                # TODO check constraints
+            ),
+            FloatRangeSpace(
+                name="l2",
+                display_name="L2 Regularization",
+                description="L2 regularization used during training.",
+                default=(1e-8, 0.01),
+                min=0,
+                # TODO check constraints
+            ),
+            BooleanSpace(
+                name="mean_scaling",
+                display_name="Mean Scaling",
+                description="Scale the network input by the data mean and the network output by its inverse.",
+                default="true",
+                hidden=True,
+            ),
+        ]
+
+        return Parameters(
+            name=Model.feed_forward,
+            display_name="Feed Forward Estimator",
+            parameters=parameters,
+        )
+
     def __init__(
         self,
-        hidden_layer_1_size: Union[Tuple[int, int], int] = 40,
-        hidden_layer_2_size: Optional[Union[Tuple[int, int], int]] = 40,
-        hidden_layer_3_size: Optional[Union[Tuple[int, int], int]] = None,
-        epochs: Union[Tuple[int, int], int] = (1, 100),
-        learning_rate: Union[Tuple[float, float], float] = (0.001, 0.01),
-        context_length: Union[Tuple[int, int], int] = (1, 100),
-        l2: Union[Tuple[float, float], float] = (1e-08, 0.01),
-        mean_scaling: bool = True,
+        hyperparameters: Dict = None,
+        process_hyperparameters: bool = True,
     ):
         """FeedForwardParams Constructor.
 
         Args:
-            hidden_layer_1_size: Dimension of first layer, if tuple it represents the
-                minimum and maximum (excluded) value.
-            hidden_layer_2_size: Dimension of second layer, if tuple it represents the
-                minimum and maximum (excluded) value.
-            hidden_layer_3_size: Dimension of third layer, if tuple it represents the
-                minimum and maximum (excluded) value.
-            epochs: Number of epochs, if tuple it represents the minimum and maximum
-                (excluded) value.
-            learning_rate: Learning rate parameter, if tuple it represents the minimum
-                and maximum (excluded) value.
-            context_length: Number of time units that condition the predictions, if
-                tuple it represents the minimum and maximum (excluded) value.
-            l2: L2 regularization parameter, if tuple it represents the minimum and
-                maximum (excluded) value.
-            mean_scaling: Scale the network input by the data mean and the network
-                output by its inverse.
+            hyperparameters: Dictionary representing the hyperparameters space.
+            process_hyperparameters: If True the hyperparameters will be validated and
+                processed (deactivate if they have already been validated).
         """
         super().__init__(
-            model_name="FeedFoward",
+            model_name="FeedForward",
             is_multivariate_model=False,
             has_estimator=True,
             handle_feat_static_real=False,
             handle_feat_static_cat=False,
             handle_feat_dynamic_real=False,
             handle_feat_dynamic_cat=False,
+            hyperparameters=hyperparameters,
+            process_hyperparameters=process_hyperparameters,
         )
 
-        self.hidden_layer_1_size = hidden_layer_1_size
-        self.hidden_layer_2_size = hidden_layer_2_size
-        self.hidden_layer_3_size = hidden_layer_3_size
-        self.learning_rate = learning_rate
-        self.context_length = context_length
-        self.mean_scaling = mean_scaling
-        self.epochs = epochs
-        self.l2 = l2
-
-    def tune_config(self) -> Dict[str, Any]:
+    def tune_config(self, prediction_length) -> Dict[str, Any]:
         """Select parameters in the pre-defined hyperparameter space.
 
         Returns:
             Selected parameters.
         """
+        context_length = self._get_context_length(prediction_length)
+
         return {
-            "hidden_layer_1_size": self._randint(
-                "hidden_layer_1_size", self.hidden_layer_1_size
-            ),
-            "hidden_layer_2_size": self._randint(
-                "hidden_layer_2_size", self.hidden_layer_2_size
-            ),
-            "hidden_layer_3_size": self._randint(
-                "hidden_layer_3_size", self.hidden_layer_3_size
-            ),
-            "epochs": self._randint("epochs", self.epochs),
-            "learning_rate": self._uniform("learning_rate", self.learning_rate),
-            "context_length": self._randint("context_length", self.context_length),
-            "l2": self._uniform("l2", self.l2),
+            "hidden_layer_1_size": self._auto_select("hidden_layer_1_size"),
+            "hidden_layer_2_size": self._auto_select("hidden_layer_2_size"),
+            "hidden_layer_3_size": self._auto_select("hidden_layer_3_size"),
+            "epochs": self._auto_select("epochs"),
+            "learning_rate": self._auto_select("learning_rate"),
+            "context_length": self._randint("context_length", context_length),
+            "l2": self._auto_select("l2"),
+            "mean_scaling": self._auto_select("mean_scaling"),
         }
 
     def build_estimator(
@@ -105,21 +161,16 @@ class FeedForwardParams(BaseParams):
         Returns:
             Built estimator.
         """
-        hidden_layer_1_size = params.get(
-            "hidden_layer_1_size", self.hidden_layer_1_size
-        )
-        hidden_layer_2_size = params.get(
-            "hidden_layer_2_size", self.hidden_layer_2_size
-        )
-        hidden_layer_3_size = params.get(
-            "hidden_layer_3_size", self.hidden_layer_3_size
-        )
+        hidden_layer_1_size = params["hidden_layer_1_size"]
+        hidden_layer_2_size = params["hidden_layer_2_size"]
+        hidden_layer_3_size = params["hidden_layer_3_size"]
+
         hidden_layer_size = []
-        if hidden_layer_1_size is not None:
+        if hidden_layer_1_size is not None and hidden_layer_1_size > 0:
             hidden_layer_size.append(hidden_layer_1_size)
-        if hidden_layer_2_size is not None:
+        if hidden_layer_2_size is not None and hidden_layer_2_size > 0:
             hidden_layer_size.append(hidden_layer_2_size)
-        if hidden_layer_3_size is not None:
+        if hidden_layer_3_size is not None and hidden_layer_3_size > 0:
             hidden_layer_size.append(hidden_layer_3_size)
 
         return self._create_estimator(
@@ -127,14 +178,14 @@ class FeedForwardParams(BaseParams):
                 prediction_length=prediction_length,
                 num_hidden_dimensions=hidden_layer_size,
                 context_length=params.get("context_length", prediction_length),
-                mean_scaling=self.mean_scaling,
+                mean_scaling=params["mean_scaling"],
                 distr_output=distr_output,
                 batch_normalization=False,
                 trainer=Trainer(
                     ctx=ctx,
-                    epochs=params.get("epochs", self.epochs),
-                    learning_rate=params.get("learning_rate", self.learning_rate),
-                    weight_decay=params.get("l2", self.l2),
+                    epochs=params["epochs"],
+                    learning_rate=params["learning_rate"],
+                    weight_decay=params["l2"],
                     hybridize=False,
                 ),
             )

@@ -1,91 +1,93 @@
-from enum import Enum
-from typing import TypeVar, Generic, Dict, Any, Optional, List
+from typing import Dict, List, Any, Union
 
-from pydantic import BaseModel, root_validator
-from pydantic.generics import GenericModel
+from pydantic import validator
 
-
-class ParameterType(str, Enum):
-    """
-    TODO write documentation
-    """
-
-    BOOL = "bool"
-    INT = "int"
-    INT_RANGE = "int_range"
-    FLOAT = "float"
-    FLOAT_RANGE = "float_range"
-    OPTIONS = "options"
+from actableai.parameters.base import (
+    BaseParameter,
+    ProcessableParameter,
+    NamedParameter,
+)
+from actableai.parameters.validation import (
+    InvalidKeyError,
+    ParameterValidationErrors,
+    ParameterTypeError,
+)
 
 
-OptionT = TypeVar("OptionT")
+class Parameters(NamedParameter, ProcessableParameter):
+    """Class containing multiple parameters."""
 
+    parameters: Union[Dict[str, BaseParameter], List[BaseParameter]]
 
-class BaseParameter(BaseModel):
-    """
-    TODO write documentation
-    """
+    @validator("parameters", always=True)
+    def set_parameters(
+        cls, value: Union[Dict[str, BaseParameter], List[BaseParameter]]
+    ) -> Dict[str, BaseParameter]:
+        """Set `parameters` value.
 
-    name: str
-    display_name: str
-    description: Optional[str]
-    parameter_type: ParameterType
+        Args:
+            value: Current value of `parameters`.
 
+        Returns:
+            New `parameters` value.
+        """
+        if isinstance(value, list):
+            value = {parameter.name: parameter for parameter in value}
 
-class Option(BaseModel, Generic[OptionT]):
-    """
-    TODO write documentation
-    """
+        return value
 
-    display_name: str
-    value: OptionT
+    def validate_parameter(self, value: Any) -> ParameterValidationErrors:
+        """Validate value using the current parameter.
 
+        Args:
+            value: Value to validate.
 
-class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
-    """
-    TODO write documentation
-    """
+        Returns:
+            ParameterValidationErrors object containing the validation errors.
+        """
+        errors = ParameterValidationErrors(parameter_name=self.name)
 
-    parameter_type: ParameterType = ParameterType.OPTIONS
-    is_multi: bool
-    default: List[OptionT]
-    options: Dict[OptionT, Option[OptionT]]
+        if not isinstance(value, dict):
+            errors.add_error(
+                ParameterTypeError(
+                    parameter_name=self.name,
+                    expected_type="dict",
+                    given_type=str(type(value)),
+                )
+            )
 
+            return errors
 
-class FloatParameter(BaseParameter):
-    """
-    TODO write documentation
-    """
+        for val_name, val in value.items():
+            if val_name not in self.parameters:
+                errors.add_error(
+                    InvalidKeyError(parameter_name=self.name, key=val_name)
+                )
+                continue
 
-    parameter_type: ParameterType = ParameterType.FLOAT
-    default: float
-    min: Optional[float]
-    max: Optional[float]
+            errors.add_errors(self.parameters[val_name].validate_parameter(val))
 
+        return errors
 
-class IntegerParameter(BaseParameter):
-    """
-    TODO write documentation
-    """
+    def process_parameter(self, value: Any) -> Any:
+        """Process a value using the current parameter.
 
-    parameter_type: ParameterType = ParameterType.INT
-    default: int
-    min: Optional[int]
-    max: Optional[int]
+        Args:
+            value: Value to process.
 
+        Returns:
+            Processed value.
+        """
+        final_parameters = {}
 
-class BooleanParameter(BaseParameter):
-    """
-    TODO write documentation
-    """
+        for parameter_name, parameter in self.parameters.items():
+            if parameter_name in value:
+                final_parameters[parameter_name] = parameter.process_parameter(
+                    value[parameter_name]
+                )
+            else:
+                final_parameters[parameter_name] = self.parameters[
+                    parameter_name
+                ].get_default()
 
-    parameter_type: ParameterType = ParameterType.BOOL
-    default: bool
-
-
-class Parameters(BaseModel):
-    """
-    TODO write documentation
-    """
-
-    parameters: Dict[str, BaseParameter]
+        return final_parameters

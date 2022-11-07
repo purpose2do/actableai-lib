@@ -93,6 +93,8 @@ class TestAAITimeSeriesSingleModel:
             [True, "tree_predictor_quantile_regression"],
             [False, "deep_var"],
             [True, "n_beats"],
+            [True, "constant_value"],
+            [False, "multivariate_constant_value"],
         ],
     )
     def test_simple_model(
@@ -117,6 +119,7 @@ class TestAAITimeSeriesSingleModel:
             n_cat_dynamic_features=np_rng.integers(1, 10) if use_features else 0,
             n_real_static_features=np_rng.integers(2, 10) if use_features else 0,
             n_cat_static_features=np_rng.integers(2, 10) if use_features else 0,
+            date_range_kwargs={"min_periods": 30, "max_periods": 60},
         )
         group_list = dataset.group_list
 
@@ -135,39 +138,50 @@ class TestAAITimeSeriesSingleModel:
             model_param = params.RForecastParams()
         elif model_type == "deep_ar":
             model_param = params.DeepARParams(
-                num_cells=1,
-                num_layers=1,
-                epochs=2,
-                context_length=None,
-                use_feat_dynamic_real=use_features,
-                use_feat_static_real=use_features,
+                hyperparameters={
+                    "num_cells": 1,
+                    "num_layers": 1,
+                    "epochs": 2,
+                }
             )
         elif model_type == "feed_forward":
             model_param = params.FeedForwardParams(
-                hidden_layer_1_size=1, epochs=2, context_length=None
+                hyperparameters={
+                    "hidden_layer_1_size": 1,
+                    "epochs": 2,
+                }
             )
         elif model_type == "tree_predictor_qrx":
             model_param = params.TreePredictorParams(
-                use_feat_dynamic_cat=use_features,
-                use_feat_static_real=use_features,
-                context_length=None,
-                method="QRX",
+                hyperparameters={
+                    "method": "QRX",
+                }
             )
         elif model_type == "tree_predictor_quantile_regression":
             model_param = params.TreePredictorParams(
-                use_feat_dynamic_cat=use_features,
-                use_feat_static_real=use_features,
-                context_length=None,
-                method="QuantileRegression",
+                hyperparameters={
+                    "method": "QuantileRegression",
+                }
             )
         elif model_type == "deep_var":
             model_param = params.DeepVARParams(
-                epochs=2, num_layers=1, num_cells=1, context_length=None
+                hyperparameters={
+                    "epochs": 2,
+                    "num_layers": 1,
+                    "num_cells": 1,
+                }
             )
         elif model_type == "n_beats":
             model_param = params.NBEATSParams(
-                epochs=2, context_length=prediction_length, meta_bagging_size=1
+                hyperparameters={
+                    "epochs": 2,
+                    "meta_bagging_size": 1,
+                }
             )
+        elif model_type == "constant_value":
+            model_param = params.ConstantValueParams()
+        elif model_type == "multivariate_constant_value":
+            model_param = params.MultivariateConstantValueParams()
 
         validations, predictions = self._fit_predict_model(
             mx_ctx=mx_ctx,

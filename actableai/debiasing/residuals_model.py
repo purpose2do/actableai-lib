@@ -246,7 +246,7 @@ class ResidualsModel:
     @classmethod
     def load(cls, path):
         """
-        TOO write documentation
+        TODO write documentation
         """
         path = os.path.expanduser(path)
         if path[-1] != os.path.sep:

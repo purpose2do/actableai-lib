@@ -65,6 +65,13 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
         """
         model_params_class = model_params_dict[params["model"]["model_name"]]
 
+        model_params_class.setup(
+            use_feat_static_real=len(dataset.feat_static_real) > 0,
+            use_feat_static_cat=len(dataset.feat_static_cat) > 0,
+            use_feat_dynamic_real=len(dataset.feat_dynamic_real) > 0,
+            use_feat_dynamic_cat=len(dataset.feat_dynamic_cat) > 0,
+        )
+
         if model_params_class.has_estimator:
             estimator = model_params_class.build_estimator(
                 ctx=mx_ctx,
@@ -80,6 +87,7 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
             predictor = model_params_class.build_predictor(
                 freq=dataset.gluonts_freq,
                 prediction_length=prediction_length,
+                target_dim=len(dataset.target_columns),
                 params=params["model"],
             )
 
@@ -326,7 +334,9 @@ class AAITimeSeriesSingleModel(AAITimeSeriesBaseModel):
                 models_search_space.append(
                     {
                         "model_name": model_name,
-                        **model_param_class.tune_config(),
+                        **model_param_class.tune_config(
+                            prediction_length=self.prediction_length
+                        ),
                     }
                 )
         search_space = {"model": hp.choice("model", models_search_space)}
