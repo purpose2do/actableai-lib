@@ -1,14 +1,10 @@
-import pandas as pd
 from typing import Dict, List, Optional, Any, Tuple
+
+import pandas as pd
 
 from actableai.parameters.models import ModelSpace
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITunableTask, AAITask
-from actableai.timeseries.models.params import (
-    model_hyperparameters_dict,
-    model_params_dict,
-    Model, BaseParams,
-)
 
 
 class AAIForecastTask(AAITunableTask):
@@ -24,6 +20,8 @@ class AAIForecastTask(AAITunableTask):
         Returns:
             Hyperparameters space represented as a ModelSpace.
         """
+        from actableai.timeseries.models.params import Model
+        from actableai.timeseries.models.params import model_hyperparameters_dict
 
         available_models = [
             Model.constant_value,
@@ -144,7 +142,7 @@ class AAIForecastTask(AAITunableTask):
         )
 
     @staticmethod
-    def _hyperparameters_to_model_params(hyperparameters: Dict) -> List[BaseParams]:
+    def _hyperparameters_to_model_params(hyperparameters: Dict) -> List:
         """Convert the hyperparameters into a list of model parameters.
 
         Args:
@@ -153,6 +151,8 @@ class AAIForecastTask(AAITunableTask):
         Returns:
             List of model parameters.
         """
+        from actableai.timeseries.models.params import model_params_dict
+        from actableai.timeseries.models.params import Model
 
         model_params = []
 
