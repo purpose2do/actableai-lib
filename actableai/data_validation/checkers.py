@@ -1,6 +1,4 @@
-from cgitb import small
 from collections import Counter
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
 from typing import Any, List, Optional, Union
 import pandas as pd
@@ -1046,7 +1044,6 @@ class StratifiedKFoldChecker(IChecker):
         Returns:
             Optional[CheckResult]: Check result.
         """
-
         if df[intervention].value_counts().min() < causal_cv:
             return CheckResult(
                 name=self.name,
