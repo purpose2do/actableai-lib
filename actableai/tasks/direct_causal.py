@@ -25,9 +25,10 @@ class AAIDirectCausalFeatureSelection(AAITask):
         positive_outcome_value=None,
         causal_inference_task_params=None,
     ):
-        failed_checks = CausalFeatureSelectionDataValidator().validate(
+        validation_checks = CausalFeatureSelectionDataValidator().validate(
             target, features, df
         )
+        failed_checks = [check for check in validation_checks if check is not None]
         validations = [
             {"name": x.name, "level": x.level, "message": x.message}
             for x in failed_checks

@@ -582,6 +582,7 @@ class AAIRegressionTask(AAITask):
 
             if causal_feature_selection["status"] == "FAILURE":
                 return causal_feature_selection
+            validations = validations + causal_feature_selection["validations"]
 
             causal_features = set()
             for f, v in causal_feature_selection["data"].items():
