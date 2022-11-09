@@ -1,12 +1,66 @@
-import pandas as pd
 from typing import Dict, List, Optional, Any, Tuple
 
+import pandas as pd
+
+from actableai.parameters.models import ModelSpace
 from actableai.tasks import TaskType
-from actableai.tasks.base import AAITask
+from actableai.tasks.base import AAITunableTask, AAITask
 
 
-class AAIForecastTask(AAITask):
+class AAIForecastTask(AAITunableTask):
     """Forecast (time series) Task"""
+
+    @staticmethod
+    def get_hyperparameters_space(dataset_shape: Tuple[int, int]) -> ModelSpace:
+        """Return the hyperparameters space oof the task.
+
+        Args:
+            dataset_shape: Shape of the dataset.
+
+        Returns:
+            Hyperparameters space represented as a ModelSpace.
+        """
+        from actableai.timeseries.models.params import Model
+        from actableai.timeseries.models.params import model_hyperparameters_dict
+
+        available_models = [
+            Model.constant_value,
+            Model.multivariate_constant_value,
+            Model.deep_ar,
+            Model.deep_var,
+            Model.feed_forward,
+            Model.gp_var,
+            Model.n_beats,
+            Model.prophet,
+            Model.r_forecast,
+            Model.tree_predictor,
+        ]
+
+        default_models = [
+            Model.prophet,
+            Model.r_forecast,
+            Model.tree_predictor,
+            Model.deep_var,
+        ]
+        if dataset_shape[0] >= 1000:
+            default_models.append(Model.deep_ar)
+        if dataset_shape[0] >= 10000:
+            default_models.append(Model.n_beats)
+
+        return ModelSpace(
+            name="forecast_model_space",
+            display_name="Forecast Model Space",
+            # TODO add description
+            description="description_model_space_todo",
+            default=default_models,
+            options={
+                model: {
+                    "display_name": model_hyperparameters_dict[model].display_name,
+                    "value": model_hyperparameters_dict[model],
+                }
+                for model in available_models
+            },
+        )
 
     @staticmethod
     def _split_train_valid_predict(
@@ -88,73 +142,28 @@ class AAIForecastTask(AAITask):
         )
 
     @staticmethod
-    def _get_default_model_params(
-        train_size: float,
-        prediction_length: int,
-        n_groups: int,
-        predicted_columns: List[str],
-        feat_dynamic_real: List[str],
-        feat_dynamic_cat: List[str],
-        feat_static_real: List[str],
-        feat_static_cat: List[str],
-    ) -> List[object]:
-        """Get/generate default model parameters.
+    def _hyperparameters_to_model_params(hyperparameters: Dict) -> List:
+        """Convert the hyperparameters into a list of model parameters.
 
         Args:
-            train_size: size of the training dataset.
-            prediction_length: Length of the prediction to forecast.
-            n_groups: Number of groups.
-            predicted_columns: List of columns to forecast.
-            feat_dynamic_real: List of columns containing real dynamic
-                features.
-            feat_dynamic_cat: List of columns containing categorical dynamic
-                features.
-            feat_static_real: List of columns containing real static features.
-            feat_static_cat: List of columns containing categorical static features.
+            hyperparameters: Hyperparameters to convert.
 
         Returns:
-            List containing the default parameters.
+            List of model parameters.
         """
-        from actableai.timeseries.models import params
+        from actableai.timeseries.models.params import model_params_dict
+        from actableai.timeseries.models.params import Model
 
-        model_params = [
-            params.ProphetParams(),
-            params.RForecastParams(
-                method_name=("arima", "ets"),
-            ),
-            params.TreePredictorParams(
-                use_feat_dynamic_cat=len(feat_dynamic_cat) > 0,
-                use_feat_static_real=len(feat_static_real) > 0,
-                method=("QRX", "QuantileRegression"),
-                context_length=(1, 2 * prediction_length),
-            ),
-            params.DeepVARParams(
-                epochs=(5, 20),
-                num_layers=(1, 3),
-                num_cells=(1, 20),
-                scaling=False,
-                context_length=(prediction_length, 2 * prediction_length),
-            ),
-        ]
+        model_params = []
 
-        if train_size >= 1000:
-            model_params.append(
-                params.DeepARParams(
-                    context_length=(1, 2 * prediction_length),
-                    epochs=(1, 20),
-                    num_layers=(1, 3),
-                    num_cells=(1, 10),
-                    use_feat_dynamic_real=len(feat_dynamic_real) > 0,
-                    use_feat_static_real=len(feat_static_real) > 0,
-                ),
+        for model_name, model_parameters in hyperparameters.items():
+            model_params_class = model_params_dict[Model[model_name]]
+
+            params = model_params_class(
+                hyperparameters=model_parameters, process_hyperparameters=False
             )
-            if n_groups >= 10:
-                model_params.append(
-                    params.NBEATSParams(
-                        context_length=(prediction_length, 2 * prediction_length),
-                        epochs=(5, 20),
-                    )
-                )
+
+            model_params.append(params)
 
         return model_params
 
@@ -293,7 +302,6 @@ class AAIForecastTask(AAITask):
         ray_tune_kwargs: Optional[Dict] = None,
         max_concurrent: int = 3,
         trials: int = 1,
-        model_params: Optional[List[object]] = None,
         use_ray: bool = True,
         tune_samples: int = 20,
         refit_full: bool = True,
@@ -302,6 +310,7 @@ class AAIForecastTask(AAITask):
         sampling_method: str = "random",
         tuning_metric: str = "mean_wQuantileLoss",
         seasonal_periods: Optional[List[int]] = None,
+        hyperparameters: Dict = None,
     ) -> Dict[str, Any]:
         """Run time series forecasting task and return results.
 
@@ -321,8 +330,6 @@ class AAIForecastTask(AAITask):
             ray_tune_kwargs: Named parameters to pass to ray's `tune` function.
             max_concurrent: Maximum number of concurrent ray task.
             trials: Number of trials for hyperparameter search.
-            model_params: List of model parameters to run the tuning search on. If None
-                some default models will be used.
             use_ray: If True ray will be used for hyperparameter tuning.
             tune_samples: Number of dataset samples to use when tuning.
             refit_full: If True the final model will be fitted using all the data
@@ -331,8 +338,10 @@ class AAIForecastTask(AAITask):
             seed: Random seed to use.
             sampling_method: Method used when extracting the samples for the tuning
                 ["random", "last"].
-            tuning_metric: Metric to to minimize when tuning.
+            tuning_metric: Metric to minimize when tuning.
             seasonal_periods: List of seasonal periods (seasonality).
+            hyperparameters: Dictionary representing the hyperparameters to run the
+                tuning search on.
 
         Returns:
             Dict: Dictionary containing the results.
@@ -377,6 +386,16 @@ class AAIForecastTask(AAITask):
         df = df.copy()
         df = sanitize_timezone(df)
 
+        hyperparameters_validation = None
+        hyperparameters_space = self.get_hyperparameters_space(dataset_shape=df.shape)
+        if hyperparameters is None or len(hyperparameters) <= 0:
+            hyperparameters = hyperparameters_space.get_default()
+        else:
+            (
+                hyperparameters_validation,
+                hyperparameters,
+            ) = hyperparameters_space.validate_process_parameter(hyperparameters)
+
         if date_column is None:
             df["_date"] = df.index
             df = df.reset_index(drop=True)
@@ -385,6 +404,11 @@ class AAIForecastTask(AAITask):
         data_validation_results = TimeSeriesDataValidator().validate(
             df, date_column, predicted_columns, feature_columns, group_by, tuning_metric
         )
+        if hyperparameters_validation is not None:
+            data_validation_results += hyperparameters_validation.to_check_results(
+                name="HyperparametersChecker"
+            )
+
         failed_checks = [x for x in data_validation_results if x is not None]
 
         if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
@@ -443,22 +467,7 @@ class AAIForecastTask(AAITask):
             ray_gpu_per_trial = ray_tune_kwargs["resources_per_trial"].get("gpu", 0)
         mx_ctx = mx.gpu() if ray_gpu_per_trial > 0 else mx.cpu()
 
-        mean_train_size = 0.0
-        for group, df in train_dataset.dataframes.items():
-            mean_train_size += df.shape[0]
-        mean_train_size /= len(train_dataset)
-
-        if model_params is None:
-            model_params = self._get_default_model_params(
-                mean_train_size,
-                prediction_length,
-                len(dataset),
-                predicted_columns,
-                dataset.feat_dynamic_real,
-                dataset.feat_dynamic_cat,
-                dataset.feat_static_real,
-                dataset.feat_static_cat,
-            )
+        model_params = self._hyperparameters_to_model_params(hyperparameters)
 
         model = AAITimeSeriesForecaster(
             date_column=date_column,

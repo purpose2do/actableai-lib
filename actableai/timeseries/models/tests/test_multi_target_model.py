@@ -120,7 +120,7 @@ class TestAAITimeSeriesMultiTargetModel:
 
         model_params = [
             params.ConstantValueParams(),
-            params.ConstantValueParams(target_dim=n_targets),
+            params.MultivariateConstantValueParams(),
         ]
 
         validations, predictions = self._fit_predict_model(
@@ -228,7 +228,7 @@ class TestAAITimeSeriesMultiTargetModel:
 
         model_params = [
             params.ConstantValueParams(),
-            params.ConstantValueParams(target_dim=n_targets),
+            params.MultivariateConstantValueParams(),
         ]
 
         validations, predictions = self._fit_predict_model(

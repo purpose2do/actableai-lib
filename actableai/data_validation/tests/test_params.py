@@ -67,7 +67,14 @@ class TestCausalDataValidator:
         )
 
         validation_results = CausalDataValidator().validate(
-            ["x"], ["y"], df, [], [], None, False
+            ["x"],
+            ["y"],
+            df,
+            [],
+            [],
+            None,
+            False,
+            cv=1,
         )
 
         validations_dict = {
@@ -88,7 +95,14 @@ class TestCausalDataValidator:
         df["x"] = np.nan
 
         validation_results = CausalDataValidator().validate(
-            ["x"], ["y"], df, [], [], None, False
+            ["x"],
+            ["y"],
+            df,
+            [],
+            [],
+            None,
+            False,
+            cv=1,
         )
 
         validations_dict = {
@@ -115,6 +129,7 @@ class TestCausalDataValidator:
             common_causes=["y", "z"],
             positive_outcome_value=None,
             drop_unique=True,
+            cv=1,
         )
 
         validations_dict = {
@@ -135,7 +150,14 @@ class TestCausalDataValidator:
         df["y"] = np.nan
 
         validation_results = CausalDataValidator().validate(
-            ["x"], ["y"], df, [], [], None, False
+            ["x"],
+            ["y"],
+            df,
+            [],
+            [],
+            None,
+            False,
+            cv=1,
         )
 
         validations_dict = {
@@ -155,7 +177,14 @@ class TestCausalDataValidator:
         )
 
         validation_results = CausalDataValidator().validate(
-            ["x"], ["y"], df, [], [], 1, False
+            ["x"],
+            ["y"],
+            df,
+            [],
+            [],
+            1,
+            False,
+            cv=1,
         )
 
         validations_dict = {
