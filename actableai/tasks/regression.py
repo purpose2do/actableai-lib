@@ -2,7 +2,6 @@ import logging
 import numpy as np
 import pandas as pd
 from typing import Any, Dict, List, Optional, Tuple, Union
-from actableai.models.config import MODEL_DEPLOYMENT_VERSION
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
@@ -524,15 +523,16 @@ class AAIRegressionTask(AAITask):
         failed_checks = [
             check for check in data_validation_results if check is not None
         ]
+        validations = [
+            {"name": check.name, "level": check.level, "message": check.message}
+            for check in failed_checks
+        ]
 
         if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
             return {
                 "status": "FAILURE",
                 "data": {},
-                "validations": [
-                    {"name": check.name, "level": check.level, "message": check.message}
-                    for check in failed_checks
-                ],
+                "validations": validations,
                 "runtime": time.time() - start,
             }
 
@@ -811,33 +811,23 @@ class AAIRegressionTask(AAITask):
             "leaderboard": leaderboard,
         }
 
-        causal_model = None
-        current_intervention_column = None
-        common_causes = None
-        discrete_treatment = None
-        validations = [
-            {"name": x.name, "level": x.level, "message": x.message}
-            for x in failed_checks
-        ]
+        aai_intervention_model = None
         if intervention_run_params is not None:
             intervention_task_result = AAIInterventionTask(
                 return_model=True, upload_model=False
             ).run(**intervention_run_params)
             if intervention_task_result["status"] == "SUCCESS":
-                causal_model = intervention_task_result["model"]
-                discrete_treatment = intervention_task_result["discrete_treatment"]
-                current_intervention_column = intervention_run_params[
-                    "current_intervention_column"
-                ]
-                common_causes = intervention_run_params["common_causes"]
+                aai_intervention_model = intervention_task_result["model"]
             else:
-                validations.append(
+                intervention_validation = [
                     {
-                        "name": "Intervention Failed",
+                        "name": "Intervention: " + x["name"],
                         "level": CheckLevels.WARNING,
-                        "message": "Counterfactual ran into an issue",
+                        "message": x["message"],
                     }
-                )
+                    for x in intervention_task_result["validations"]
+                ]
+                validations.extend(intervention_validation)
 
         if refit_full:
             df_only_full_training = df.loc[df[target].notnull()]
@@ -872,17 +862,10 @@ class AAIRegressionTask(AAITask):
 
         model = None
         if (kfolds <= 1 or refit_full) and predictor:
-            model = AAITabularModel(
-                version=MODEL_DEPLOYMENT_VERSION, predictor=predictor
-            )
-            if causal_model and current_intervention_column:
+            model = AAITabularModel(predictor=predictor)
+            if aai_intervention_model:
                 model = AAITabularModelInterventional(
-                    version=MODEL_DEPLOYMENT_VERSION,
-                    predictor=predictor,
-                    causal_model=causal_model,
-                    intervened_column=current_intervention_column,
-                    common_causes=common_causes,
-                    discrete_treatment=discrete_treatment,
+                    predictor=predictor, intervention_model=aai_intervention_model
                 )
 
         runtime = time.time() - start

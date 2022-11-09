@@ -37,6 +37,7 @@ from actableai.data_validation.checkers import (
     IsSufficientClassSampleForCrossValidationChecker,
     IsSufficientDataChecker,
     IsSufficientDataClassificationStratification,
+    IsSufficientDataTreatmentStratification,
     IsSufficientNumberOfClassChecker,
     IsSufficientSampleCrossValidationChecker,
     IsSufficientValidationSampleChecker,
@@ -715,9 +716,7 @@ class CausalDataValidator:
                 df, n_sample=MINIMUM_NUMBER_OF_SAMPLE
             ),
             PositiveOutcomeForBinaryChecker(level=CheckLevels.CRITICAL).check(
-                df,
-                outcomes=outcomes,
-                positive_outcome_value=positive_outcome_value,
+                df, outcomes=outcomes, positive_outcome_value=positive_outcome_value
             ),
         ]
         if drop_unique:
@@ -806,30 +805,28 @@ class InterventionDataValidator:
         df,
         target: str,
         current_intervention_column: str,
-        new_intervention_column: str,
+        new_intervention_column: Optional[str],
         common_causes: List[str],
         causal_cv,
         drop_unique: bool,
     ):
         validations = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
-                df,
-                [current_intervention_column, new_intervention_column, target]
-                + common_causes,
+                df, [current_intervention_column, target] + common_causes
             )
         ]
         if len([x for x in validations if x is not None]) > 0:
             return validations
         # Columns are sane now we treat
-        validations += [
-            IsNumericalChecker(level=CheckLevels.CRITICAL).check(df[target]),
-            IsCategoricalOrNumericalChecker(level=CheckLevels.CRITICAL).check(
-                df, [current_intervention_column, new_intervention_column]
-            ),
-            SameTypeChecker(level=CheckLevels.CRITICAL).check(
-                df, [current_intervention_column, new_intervention_column]
-            ),
-        ]
+        if new_intervention_column and new_intervention_column in df:
+            validations += [
+                IsCategoricalOrNumericalChecker(level=CheckLevels.CRITICAL).check(
+                    df, [current_intervention_column, new_intervention_column]
+                ),
+                SameTypeChecker(level=CheckLevels.CRITICAL).check(
+                    df, [current_intervention_column, new_intervention_column]
+                ),
+            ]
         if drop_unique:
             validations.append(
                 OnlyOneValueChecker(level=CheckLevels.CRITICAL).check(df, common_causes)
@@ -840,17 +837,24 @@ class InterventionDataValidator:
                         df, [current_intervention_column]
                     )
                 )
-        if get_type_special_no_ag(df[current_intervention_column]) == "category":
+        if (
+            new_intervention_column
+            and new_intervention_column in df
+            and get_type_special_no_ag(df[current_intervention_column]) == "category"
+        ):
             validations.append(
                 CategoricalSameValuesChecker(level=CheckLevels.CRITICAL).check(
                     df, current_intervention_column, new_intervention_column
                 )
             )
-            validations.append(
-                StratifiedKFoldChecker(level=CheckLevels.CRITICAL).check(
-                    df, current_intervention_column, causal_cv
-                )
-            )
+        validations += [
+            StratifiedKFoldChecker(level=CheckLevels.CRITICAL).check(
+                df, current_intervention_column, causal_cv
+            ),
+            IsSufficientDataTreatmentStratification(level=CheckLevels.CRITICAL).check(
+                df=df, current_intervention_column=current_intervention_column
+            ),
+        ]
 
         return validations
 

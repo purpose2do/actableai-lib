@@ -1,4 +1,9 @@
 from typing import Dict
+import numpy as np
+import pandas as pd
+
+from actableai.exceptions.models import UnknownModelClassError
+from actableai.models.intervention import empty_string_to_nan
 
 
 class AAIModelInference:
@@ -62,7 +67,7 @@ class AAIModelInference:
         """
         TODO write documentation
         """
-        import pickle
+        import dill as pickle
         from botocore.exceptions import ClientError
 
         path = self._get_model_path(task_id)
@@ -100,6 +105,8 @@ class AAIModelInference:
         probability_threshold=0.5,
         positive_label=None,
     ):
+        from autogluon.tabular import TabularPredictor
+
         from actableai.models.aai_predictor import (
             AAITabularModel,
             AAITabularModelInterventional,
@@ -110,34 +117,83 @@ class AAIModelInference:
         # We used to pickle TabularPredictor. This check is for legacy
         if isinstance(task_model, AAITabularModel):
             pred = self._predict(
-                task_id,
                 task_model.predictor,
+                df,
+                return_probabilities=isinstance(
+                    task_model, AAITabularModelInterventional
+                )
+                or return_probabilities,
+                probability_threshold=probability_threshold,
+                positive_label=positive_label,
+            )
+            # Here for legacy, previously the causal model was directly in the AAITabularModel
+            # Now intervention has its own custom model
+            if task_model.model_version <= 1:
+                if isinstance(task_model, AAITabularModelInterventional) and (
+                    f"intervened_{task_model.intervened_column}" in df
+                    or f"expected_{task_model.predictor.label}" in df
+                ):
+                    pred["intervention"] = task_model.intervention_effect(df, pred)
+                return pred
+
+            if isinstance(task_model, AAITabularModelInterventional) and (
+                f"intervened_{task_model.intervention_model.current_intervention_column}"
+                in df
+                or f"expected_{task_model.predictor.label}" in df
+            ):
+                new_intervention_col = (
+                    "intervened_"
+                    + task_model.intervention_model.current_intervention_column
+                )
+                intervention_col = (
+                    task_model.intervention_model.current_intervention_column
+                )
+                target_proba = None
+                if "df_proba" in pred:
+                    target_proba = pred["df_proba"]
+                df[task_model.predictor.label] = pred["prediction"]
+                df = empty_string_to_nan(
+                    df,
+                    task_model,
+                    intervention_col,
+                    new_intervention_col,
+                    f"expected_{task_model.predictor.label}",
+                )
+                if (
+                    not task_model.intervention_model.causal_model.discrete_treatment
+                    and task_model.predictor.problem_type == "regression"
+                ):
+                    new_outcome = task_model.intervention_model.predict_two_way(df)
+                    pred["intervention"] = new_outcome
+                else:
+                    new_outcome = task_model.intervention_model.predict(
+                        df, target_proba
+                    )
+                    pred["intervention"] = pd.DataFrame(
+                        {
+                            f"expected_{task_model.predictor.label}": new_outcome[
+                                task_model.predictor.label + "_intervened"
+                            ],
+                            f"intervened_{task_model.intervention_model.current_intervention_column}": [
+                                None for _ in range(len(df))
+                            ],
+                        }
+                    )
+            return pred
+        elif isinstance(task_model, TabularPredictor):
+            # Run legacy task_model directly
+            return self._predict(
+                task_model,
                 df,
                 return_probabilities,
                 probability_threshold,
                 positive_label,
             )
-            # Intervention effect part
-            if isinstance(task_model, AAITabularModelInterventional) and (
-                f"intervened_{task_model.intervened_column}" in df
-                or f"expected_{task_model.predictor.label}" in df
-            ):
-                pred["intervention"] = task_model.intervention_effect(df, pred)
-            return pred
-
-        # Run legacy task_model directly
-        return self._predict(
-            task_id,
-            task_model,
-            df,
-            return_probabilities,
-            probability_threshold,
-            positive_label,
-        )
+        else:
+            raise UnknownModelClassError()
 
     def _predict(
         self,
-        task_id,
         task_model,
         df,
         return_probabilities=False,
@@ -151,7 +207,7 @@ class AAIModelInference:
 
         result = {}
 
-        df_proba = self.predict_proba(task_id, df)
+        df_proba = self._predict_proba(task_model, df)
 
         class_labels = list(df_proba.columns)
 
@@ -232,13 +288,17 @@ class AAIModelInference:
         if isinstance(task_model, AAITabularModel):
             metadata = self._get_metadata(task_model.predictor)
 
-            if (
-                isinstance(task_model, AAITabularModelInterventional)
-                and task_model.causal_model is not None
-                and task_model.intervened_column is not None
-            ):
-                metadata["intervened_column"] = task_model.intervened_column
-                metadata["discrete_treatment"] = task_model.discrete_treatment
+            if isinstance(task_model, AAITabularModelInterventional):
+                if task_model.model_version <= 1:
+                    metadata["intervened_column"] = task_model.intervened_column
+                    metadata["discrete_treatment"] = task_model.discrete_treatment
+                else:
+                    metadata[
+                        "intervened_column"
+                    ] = task_model.intervention_model.current_intervention_column
+                    metadata[
+                        "discrete_treatment"
+                    ] = task_model.intervention_model.causal_model.discrete_treatment
             return metadata
         return self._get_metadata(task_model)
 

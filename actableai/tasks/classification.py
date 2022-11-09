@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 from typing import Any, Dict, List, Optional, Tuple, Union
 import logging
+from actableai.classification.config import MINIMUM_CLASSIFICATION_VALIDATION
 
-from actableai.models.config import MODEL_DEPLOYMENT_VERSION
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 
@@ -179,6 +179,11 @@ class _AAIClassificationTrainTask(AAITask):
             if time_limit is not None:
                 feature_prune_kwargs["feature_prune_time_limit"] = time_limit * 0.5
 
+        holdout_frac = max(
+            len(df_train[target].unique()) / len(df_train),
+            MINIMUM_CLASSIFICATION_VALIDATION,
+        )
+
         predictor = predictor.fit(
             train_data=df_train,
             hyperparameters=hyperparameters,
@@ -188,6 +193,7 @@ class _AAIClassificationTrainTask(AAITask):
             time_limit=time_limit,
             ag_args_ensemble={"fold_fitting_strategy": "sequential_local"},
             feature_prune_kwargs=feature_prune_kwargs,
+            holdout_frac=holdout_frac,
         )
 
         explainer = None
@@ -552,15 +558,16 @@ class AAIClassificationTask(AAITask):
         failed_checks = [
             check for check in data_validation_results if check is not None
         ]
+        validations = [
+            {"name": check.name, "level": check.level, "message": check.message}
+            for check in failed_checks
+        ]
 
         if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
             return {
                 "status": "FAILURE",
                 "data": {},
-                "validations": [
-                    {"name": check.name, "level": check.level, "message": check.message}
-                    for check in failed_checks
-                ],
+                "validations": validations,
                 "runtime": time.time() - start,
             }
 
@@ -810,33 +817,24 @@ class AAIClassificationTask(AAITask):
             str
         )
 
-        causal_model = None
-        current_intervention_column = None
-        common_causes = None
-        discrete_treatment = None
-        validations = [
-            {"name": x.name, "level": x.level, "message": x.message}
-            for x in failed_checks
-        ]
+        aai_intervention_model = None
         if intervention_run_params is not None:
+            intervention_run_params["target_proba"] = predictor.predict_proba(df)
             intervention_task_result = AAIInterventionTask(
                 return_model=True, upload_model=False
             ).run(**intervention_run_params)
             if intervention_task_result["status"] == "SUCCESS":
-                causal_model = intervention_task_result["causal_model"]
-                discrete_treatment = intervention_task_result["discrete_treatment"]
-                current_intervention_column = intervention_run_params[
-                    "current_intervention_column"
-                ]
-                common_causes = intervention_run_params["common_causes"]
+                aai_intervention_model = intervention_task_result["model"]
             else:
-                validations.append(
+                intervention_validation = [
                     {
-                        "name": "Intervention Failed",
+                        "name": "Intervention: " + x["name"],
                         "level": CheckLevels.WARNING,
-                        "message": "Counterfactual ran into an issue",
+                        "message": x["message"],
                     }
-                )
+                    for x in intervention_task_result["validations"]
+                ]
+                validations.extend(intervention_validation)
 
         if refit_full:
             df_only_training = df.loc[df[target].notnull()]
@@ -871,27 +869,17 @@ class AAIClassificationTask(AAITask):
 
         model = None
         if (kfolds <= 1 or refit_full) and predictor:
-            model = AAITabularModel(
-                version=MODEL_DEPLOYMENT_VERSION, predictor=predictor
-            )
-            if causal_model and current_intervention_column:
+            model = AAITabularModel(predictor=predictor)
+            if aai_intervention_model is not None:
                 model = AAITabularModelInterventional(
-                    version=MODEL_DEPLOYMENT_VERSION,
-                    predictor=predictor,
-                    causal_model=causal_model,
-                    intervened_column=current_intervention_column,
-                    common_causes=common_causes,
-                    discrete_treatment=discrete_treatment,
+                    predictor=predictor, intervention_model=aai_intervention_model
                 )
 
         runtime = time.time() - start
         return {
             "messenger": "",
             "status": "SUCCESS",
-            "validations": [
-                {"name": x.name, "level": x.level, "message": x.message}
-                for x in failed_checks
-            ],
+            "validations": validations,
             "runtime": runtime,
             "data": {
                 "validation_table": df_val if not use_cross_validation else None,

@@ -16,7 +16,7 @@ from sklearn.model_selection import train_test_split
 from typing import Optional, Union
 
 from actableai.causal import autogluon_hyperparameters
-from actableai.causal.predictors import SKLearnWrapper
+from actableai.causal.predictors import SKLearnTabularWrapper
 from actableai.regression import PolynomialLinearPredictor
 from actableai.utils import random_directory
 from actableai.utils.sklearn import sklearn_canonical_pipeline
@@ -152,10 +152,7 @@ class AAICausalEstimator:
                     mc_iters = 10
                 if cv == "auto":
                     cv = 10
-                hyperparameters = {
-                    "LR": {},
-                    PolynomialLinearPredictor: [{"degree": 2}],
-                }
+                hyperparameters = {"LR": {}, PolynomialLinearPredictor: [{"degree": 2}]}
             else:
                 hyperparameters = autogluon_hyperparameters()
 
@@ -177,15 +174,12 @@ class AAICausalEstimator:
             if self.has_categorical_treatment
             else "regression",
         )
-        model_t = SKLearnWrapper(
+        model_t = SKLearnTabularWrapper(
             model_t,
             xw_col,
             hyperparameters=hyperparameters,
             presets=presets,
-            ag_args_fit={
-                "num_gpus": num_gpus,
-                "drop_unique": drop_unique,
-            },
+            ag_args_fit={"num_gpus": num_gpus, "drop_unique": drop_unique},
             feature_generator=AutoMLPipelineFeatureGenerator(
                 **automl_pipeline_feature_parameters
             ),
@@ -195,15 +189,12 @@ class AAICausalEstimator:
             label=label_y,
             problem_type="binary" if self.has_binary_outcome else "regression",
         )
-        model_y = SKLearnWrapper(
+        model_y = SKLearnTabularWrapper(
             model_y,
             xw_col,
             hyperparameters=hyperparameters,
             presets=presets,
-            ag_args_fit={
-                "num_gpus": num_gpus,
-                "drop_unique": drop_unique,
-            },
+            ag_args_fit={"num_gpus": num_gpus, "drop_unique": drop_unique},
             feature_generator=AutoMLPipelineFeatureGenerator(
                 **automl_pipeline_feature_parameters
             ),
@@ -299,8 +290,7 @@ class AAICausalEstimator:
         """
         # fit different causal estimators with train data
         id_train, id_val = train_test_split(
-            np.arange(Y.shape[0]),
-            test_size=validation_ratio,
+            np.arange(Y.shape[0]), test_size=validation_ratio
         )
         if X is not None:
             X_train, X_val = X[id_train], X[id_val]
@@ -311,9 +301,9 @@ class AAICausalEstimator:
         else:
             W_train, W_val = None, None
         if Z is not None:
-            Z_train, Z_val = Z[id_train], Z[id_val]
+            Z_train, _ = Z[id_train], Z[id_val]
         else:
-            Z_train, Z_val = None, None
+            Z_train, _ = None, None
         Y_train, Y_val = Y[id_train], Y[id_val]
         T_train, T_val = T[id_train], T[id_val]
 
@@ -423,7 +413,7 @@ class AAICausalEstimator:
                     raise UnsupportedTargetUnitsMultipleTreatments()
                 self.estimator.fit(Y, T, X=X, W=W)
 
-            model_t_R2 = self.estimator.models_t
+            _ = self.estimator.models_t
 
         self.total_trial_time = time.time() - start + time_total_s
 

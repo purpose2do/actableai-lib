@@ -1,11 +1,10 @@
 from io import StringIO
 import time
 from typing import List, Dict, Optional
+import numpy as np
 import pandas as pd
-from sklearn.impute import SimpleImputer
 from sklearn.metrics import r2_score
 from actableai.data_validation.base import CheckLevels
-
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 from actableai.utils import memory_efficient_hyperparameters
@@ -18,7 +17,9 @@ class AAIInterventionTask(AAITask):
         df: pd.DataFrame,
         target: str,
         current_intervention_column: str,
-        new_intervention_column: str,
+        new_intervention_column: Optional[str] = None,
+        expected_target: Optional[str] = None,
+        target_proba: Optional[pd.DataFrame] = None,
         common_causes: Optional[List[str]] = None,
         causal_cv: Optional[int] = None,
         causal_hyperparameters: Optional[Dict] = None,
@@ -26,7 +27,7 @@ class AAIInterventionTask(AAITask):
         presets: Optional[str] = None,
         model_directory: Optional[str] = None,
         num_gpus: Optional[int] = 0,
-        feature_importance: Optional[bool] = True,
+        feature_importance: bool = True,
         drop_unique: bool = True,
         drop_useless_features: bool = True,
         only_fit: bool = False,
@@ -38,11 +39,16 @@ class AAIInterventionTask(AAITask):
             target: Column name of target variable
             current_intervention_column: Column name of the current intervention
             new_intervention_column: Column name of the new intervention
+            target_proba: DataFrame containing the probabilities for the target,
+                when set the df[target] column is ignored. If target is set, df[target]
+                is categorical and target_proba is None. Then target_proba becomes the
+                one hot encoded target.
             common_causes: List of common causes to be used for the intervention
             causal_cv: Number of folds for causal cross validation
             causal_hyperparameters: Hyperparameters for AutoGluon
                 See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
-            cate_alpha: Alpha for intervention effect
+            cate_alpha: Alpha for intervention effect. Ignored if df[target] is
+                categorical or if target_proba is not None
             presets: Presets for AutoGluon.
                 See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
             model_directory: Model directory
@@ -78,17 +84,12 @@ class AAIInterventionTask(AAITask):
                 - runtime: Runtime of the task
         """
         from tempfile import mkdtemp
-        from econml.dml import LinearDML, NonParamDML
-        from autogluon.tabular import TabularPredictor
-        from autogluon.features.generators import AutoMLPipelineFeatureGenerator
         from dowhy import CausalModel
-        import numpy as np
         import networkx as nx
 
         from actableai.data_validation.params import InterventionDataValidator
-        from actableai.causal.predictors import SKLearnWrapper
-        from actableai.utils.preprocessors.autogluon_preproc import DMLFeaturizer
         from actableai.utils import get_type_special_no_ag
+        from actableai.intervention.model import AAIInterventionEffectPredictor
 
         start = time.time()
         # Handle default parameters
@@ -104,22 +105,17 @@ class AAIInterventionTask(AAITask):
             causal_hyperparameters = memory_efficient_hyperparameters()
         causal_cv = 1 if causal_cv is None else causal_cv
 
-        automl_pipeline_feature_parameters = {}
-        if not drop_useless_features:
-            automl_pipeline_feature_parameters["pre_drop_useless"] = False
-            automl_pipeline_feature_parameters["post_generators"] = []
-
         df = df.copy()
 
         # Validate parameters
         data_validation_results = InterventionDataValidator().validate(
-            df,
-            target,
-            current_intervention_column,
-            new_intervention_column,
-            common_causes,
-            causal_cv,
-            drop_unique,
+            df=df,
+            target=target,
+            current_intervention_column=current_intervention_column,
+            new_intervention_column=new_intervention_column,
+            common_causes=common_causes,
+            causal_cv=causal_cv,
+            drop_unique=drop_unique,
         )
         failed_checks = [
             check for check in data_validation_results if check is not None
@@ -136,122 +132,27 @@ class AAIInterventionTask(AAITask):
                 "runtime": time.time() - start,
             }
 
-        # Preprocess data
-        type_special = df.apply(get_type_special_no_ag)
-        num_cols = (type_special == "numeric") | (type_special == "integer")
-        num_cols = list(df.loc[:, num_cols].columns)
-        cat_cols = type_special == "category"
-        cat_cols = list(df.loc[:, cat_cols].columns)
-        df = df.replace(to_replace=[None], value=np.nan)
-        if len(num_cols):
-            df.loc[:, num_cols] = SimpleImputer(strategy="median").fit_transform(
-                df.loc[:, num_cols]
-            )
-        if len(cat_cols):
-            df.loc[:, cat_cols] = SimpleImputer(strategy="most_frequent").fit_transform(
-                df.loc[:, cat_cols]
-            )
-
-        X = df[common_causes] if len(common_causes) > 0 else None
-
-        model_t_problem_type = (
-            "regression" if current_intervention_column in num_cols else "multiclass"
-        )
-
-        model_t_holdout_frac = None
-        if model_t_problem_type == "multiclass" and len(df) > 0:
-            model_t_holdout_frac = len(df[current_intervention_column].unique()) / len(
-                df
-            )
-
-        model_t = TabularPredictor(
-            path=mkdtemp(prefix=str(model_directory)),
-            label="t",
-            problem_type=model_t_problem_type,
-        )
-
-        xw_col = []
-        if X is not None:
-            xw_col += list(X.columns)
-
-        model_t = SKLearnWrapper(
-            model_t,
-            x_w_columns=xw_col,
-            hyperparameters=causal_hyperparameters,
+        model = AAIInterventionEffectPredictor(
+            target=target,
+            current_intervention_column=current_intervention_column,
+            new_intervention_column=new_intervention_column,
+            expected_target=expected_target,
+            common_causes=common_causes,
+            causal_cv=causal_cv,
+            causal_hyperparameters=causal_hyperparameters,
+            cate_alpha=cate_alpha,
             presets=presets,
-            ag_args_fit={"num_gpus": num_gpus, "drop_unique": drop_unique},
-            feature_generator=AutoMLPipelineFeatureGenerator(
-                **automl_pipeline_feature_parameters
-            ),
-            holdout_frac=model_t_holdout_frac,
+            model_directory=model_directory,
+            num_gpus=num_gpus,
+            drop_unique=drop_unique,
+            drop_useless_features=drop_useless_features,
         )
 
-        model_y = TabularPredictor(
-            path=mkdtemp(prefix=str(model_directory)),
-            label="y",
-            problem_type="regression",
-        )
-        model_y = SKLearnWrapper(
-            model_y,
-            x_w_columns=xw_col,
-            hyperparameters=causal_hyperparameters,
-            presets=presets,
-            ag_args_fit={"num_gpus": num_gpus, "drop_unique": drop_unique},
-            feature_generator=AutoMLPipelineFeatureGenerator(
-                **automl_pipeline_feature_parameters
-            ),
-        )
+        model._check_params(df, target_proba)
 
-        if (
-            X is None
-            or cate_alpha is not None
-            or (
-                current_intervention_column in cat_cols
-                and len(df[current_intervention_column].unique()) > 2
-            )
-        ):
-            # Multiclass treatment
-            causal_model = LinearDML(
-                model_t=model_t,
-                model_y=model_y,
-                featurizer=None if X is None else DMLFeaturizer(),
-                cv=causal_cv,
-                linear_first_stages=False,
-                discrete_treatment=current_intervention_column in cat_cols,
-            )
-        else:
-            model_final = TabularPredictor(
-                path=mkdtemp(prefix=str(model_directory)),
-                label="y_res",
-                problem_type="regression",
-            )
-            model_final = SKLearnWrapper(
-                model_final,
-                hyperparameters=causal_hyperparameters,
-                presets=presets,
-                ag_args_fit={
-                    "num_gpus": num_gpus,
-                    "drop_unique": drop_unique,
-                },
-                feature_generator=AutoMLPipelineFeatureGenerator(
-                    **automl_pipeline_feature_parameters
-                ),
-            )
-            causal_model = NonParamDML(
-                model_t=model_t,
-                model_y=model_y,
-                model_final=model_final,
-                featurizer=None if X is None else DMLFeaturizer(),
-                cv=causal_cv,
-                discrete_treatment=current_intervention_column in cat_cols,
-            )
+        df = model._preprocess_data(df)
 
-        causal_model.fit(
-            df[[target]].values,
-            df[[current_intervention_column]].values,
-            X=X.values if X is not None else None,
-            cache_values=True,
-        )
+        model.fit(df, target_proba)
 
         if only_fit:
             return {
@@ -263,29 +164,15 @@ class AAIInterventionTask(AAITask):
                 ],
                 "data": {},
                 "runtime": time.time() - start,
-                "model": causal_model,
-                "discrete_treatment": current_intervention_column in cat_cols,
+                "model": model,
             }
 
-        effects = causal_model.effect(
-            X.values if X is not None else None,
-            T0=df[[current_intervention_column]],  # type: ignore
-            T1=df[[new_intervention_column]],  # type: ignore
-        )
+        new_outcome = model.predict(df, target_proba)
 
-        df[target + "_intervened"] = df[target] + effects.flatten()  # type: ignore
-        df["intervention_effect"] = effects.flatten()  # type: ignore
-        if cate_alpha is not None:
-            lb, ub = causal_model.effect_interval(
-                X.values if X is not None else None,
-                T0=df[[current_intervention_column]],  # type: ignore
-                T1=df[[new_intervention_column]],  # type: ignore
-                alpha=cate_alpha,
-            )  # type: ignore
-            df[target + "_intervened_low"] = df[target] + lb.flatten()
-            df[target + "_intervened_high"] = df[target] + ub.flatten()
-            df["intervention_effect_low"] = lb.flatten()
-            df["intervention_effect_high"] = ub.flatten()
+        for col in new_outcome.columns:
+            df[col] = new_outcome[col]
+
+        causal_model = model.causal_model
 
         # Construct Causal Graph
         buffer = StringIO()
@@ -295,7 +182,7 @@ class AAIInterventionTask(AAITask):
             outcome=target,
             common_causes=common_causes,
         )
-        nx.drawing.nx_pydot.write_dot(causal_model_do_why._graph._graph, buffer)  # type: ignore # noqa
+        nx.drawing.nx_pydot.write_dot(causal_model_do_why._graph._graph, buffer)
         causal_graph_dot = buffer.getvalue()
 
         Y_res, T_res, X_, W_ = causal_model.residuals_
@@ -343,7 +230,19 @@ class AAIInterventionTask(AAITask):
             "metric": "r2",
         }
 
-        if feature_importance and X is not None:
+        type_special = df.apply(get_type_special_no_ag)
+        num_cols = (type_special == "numeric") | (type_special == "integer")
+        num_cols = list(df.loc[:, num_cols].columns)
+        cat_cols = type_special == "category"
+        cat_cols = list(df.loc[:, cat_cols].columns)
+
+        if (
+            feature_importance
+            and common_causes is not None
+            and len(common_causes) != 0
+            and target not in cat_cols
+            and target_proba is None
+        ):
             importances = []
             # Only run feature importance for first mc_iter to speed it up
             for _, m in enumerate(causal_model.models_t[0]):
@@ -374,47 +273,48 @@ class AAIInterventionTask(AAITask):
             ] = model_y_feature_importances
 
         # Display plot in front end
-        intervention_names = None
-        intervention_diff = None
-        pair_dict = None
-        if current_intervention_column in num_cols:
-            intervention_diff = (
-                df[new_intervention_column] - df[current_intervention_column]
-            )
-        else:
-            intervention_names = (
-                df[current_intervention_column] + " -> " + df[new_intervention_column]
-            )
-            pair_dict = {}
-            for _, val in df.iterrows():
-                intervention_name = (
-                    val[current_intervention_column]
+        if target in num_cols:
+            intervention_names = None
+            intervention_diff = None
+            pair_dict = None
+            if not causal_model.discrete_treatment:
+                intervention_diff = (
+                    df[new_intervention_column] - df[current_intervention_column]
+                )
+            else:
+                intervention_names = (
+                    df[current_intervention_column]
                     + " -> "
-                    + val[new_intervention_column]
+                    + df[new_intervention_column]
                 )
-                if intervention_name not in pair_dict:
-                    pair_dict[intervention_name] = {
-                        "original_target": [],
-                        "target_intervened": [],
-                        "intervention_effect": [],
-                    }
-                pair_dict[intervention_name]["original_target"].append(val[target])
-                pair_dict[intervention_name]["target_intervened"].append(
-                    val[target + "_intervened"]
-                )
-                pair_dict[intervention_name]["intervention_effect"].append(
-                    val["intervention_effect"]
-                )
-        estimation_results["intervention_plot"] = {
-            "type": "category"
-            if current_intervention_column in cat_cols
-            else "numeric",
-            "intervention_diff": intervention_diff,
-            "intervention_names": intervention_names,
-            "min_target": df[target].min(),
-            "max_target": df[target].max(),
-            "pair_dict": pair_dict,
-        }
+                pair_dict = {}
+                for _, val in df.iterrows():
+                    intervention_name = (
+                        val[current_intervention_column]
+                        + " -> "
+                        + val[new_intervention_column]
+                    )
+                    if intervention_name not in pair_dict:
+                        pair_dict[intervention_name] = {
+                            "original_target": [],
+                            "target_intervened": [],
+                            "intervention_effect": [],
+                        }
+                    pair_dict[intervention_name]["original_target"].append(val[target])
+                    pair_dict[intervention_name]["target_intervened"].append(
+                        val[target + "_intervened"]
+                    )
+                    pair_dict[intervention_name]["intervention_effect"].append(
+                        val["intervention_effect"]
+                    )
+            estimation_results["intervention_plot"] = {
+                "type": "category" if causal_model.discrete_treatment else "numeric",
+                "intervention_diff": intervention_diff,
+                "intervention_names": intervention_names,
+                "min_target": df[target].min(),
+                "max_target": df[target].max(),
+                "pair_dict": pair_dict,
+            }
 
         return {
             "status": "SUCCESS",
@@ -425,6 +325,5 @@ class AAIInterventionTask(AAITask):
             ],
             "data": estimation_results,
             "runtime": time.time() - start,
-            "model": causal_model,
-            "discrete_treatment": current_intervention_column in cat_cols,
+            "model": model,
         }

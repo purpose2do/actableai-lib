@@ -94,7 +94,7 @@ class ResourcesPredictorsActor:
             If True will not load the models from AWS or filesystem, it will create new models
         """
         import json
-        import pickle
+        import dill as pickle
         import boto3
         from queue import Queue
         import numpy as np
@@ -531,7 +531,7 @@ class ResourcesPredictorsActor:
         Backup the resources predictors data in either AWS S3 or the filesystem
         """
         import json
-        import pickle
+        import dill as pickle
 
         for resource_predicted, resource_models_data in self.models_data.items():
             for task, model_data in resource_models_data.items():

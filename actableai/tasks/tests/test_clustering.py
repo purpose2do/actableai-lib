@@ -25,6 +25,21 @@ class TestRemoteSegmentation:
         assert "data" in r
         assert "explanation" in r["data"][0]
 
+    def test_segment_bool_col(self, clustering_task):
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, None, None, 8, 9, 10] * 2,
+                "y": [True, True, False, True, False, False, True, True, False, False]
+                * 2,
+            }
+        )
+
+        r = clustering_task.run(df, num_clusters=3)
+
+        assert r["status"] == "SUCCESS"
+        assert "data" in r
+        assert "explanation" in r["data"][0]
+
     def test_auto_cluster(self, clustering_task):
         df = pd.DataFrame(
             {

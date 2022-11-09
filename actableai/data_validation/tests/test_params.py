@@ -488,8 +488,8 @@ class TestInterventionDataValidator:
         validation_results = InterventionDataValidator().validate(
             df=df,
             target="x",
-            current_intervention_column="y",
-            new_intervention_column="b",
+            current_intervention_column="b",
+            new_intervention_column="z",
             common_causes=["t"],
             causal_cv=1,
             drop_unique=False,
@@ -547,8 +547,7 @@ class TestInterventionDataValidator:
         validations_dict = {
             val.name: val.level for val in validation_results if val is not None
         }
-        assert "IsNumericalChecker" in validations_dict
-        assert validations_dict["IsNumericalChecker"] == CheckLevels.CRITICAL
+        assert "IsNumericalChecker" not in validations_dict
 
     def test_validate_causal_cv(self):
         df = pd.DataFrame(
