@@ -19,20 +19,21 @@ def _get_xgboost_feature_links(xgboost_model):
     feature_links = {}
 
     # Add cat cols
-    for (feature, categories), infrequent_indices in zip(
-        ohe_generator.labels.items(), ohe_generator.ohe_encs.infrequent_indices_
-    ):
-        feature_links[feature] = []
+    if ohe_generator.cat_cols:
+        for (feature, categories), infrequent_indices in zip(
+            ohe_generator.labels.items(), ohe_generator.ohe_encs.infrequent_indices_
+        ):
+            feature_links[feature] = []
 
-        if len(infrequent_indices) > 0:
-            feature_links[feature].append(f"{feature}_infrequent")
-            _categories = categories[: -len(infrequent_indices)]
-        else:
-            _categories = categories
-        # TODO handle drop? Should not be needed at the moment
+            if len(infrequent_indices) > 0:
+                feature_links[feature].append(f"{feature}_infrequent")
+                _categories = categories[: -len(infrequent_indices)]
+            else:
+                _categories = categories
+            # TODO handle drop? Should not be needed at the moment
 
-        for category in _categories:
-            feature_links[feature].append(f"{feature}_{category}")
+            for category in _categories:
+                feature_links[feature].append(f"{feature}_{category}")
 
     # Add other cols
     for feature in ohe_generator.other_cols:
