@@ -1,100 +1,153 @@
-from typing import Tuple, Union, Dict, Any
+from functools import lru_cache
+from typing import Dict, Any
 
 from gluonts.model.deepar import DeepAREstimator
 from gluonts.mx.distribution import DistributionOutput
 from gluonts.mx.trainer import Trainer
 from mxnet.context import Context
 
+from actableai.parameters.boolean import BooleanSpace
+from actableai.parameters.numeric import IntegerRangeSpace, FloatRangeSpace
+from actableai.parameters.parameters import Parameters
 from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
-from actableai.timeseries.models.params.base import BaseParams
+from actableai.timeseries.models.params.base import BaseParams, Model
 
 
 class DeepARParams(BaseParams):
     """Parameter class for Deep AR Model."""
 
+    @staticmethod
+    @lru_cache(maxsize=None)
+    def get_hyperparameters() -> Parameters:
+        """Returns the hyperparameters space of the model.
+
+        Returns:
+            The hyperparameters space.
+        """
+
+        parameters = [
+            IntegerRangeSpace(
+                name="epochs",
+                display_name="Epochs",
+                description="Number of epochs used during training.",
+                default=(1, 20),
+                min=1,
+                # TODO check constraints
+            ),
+            IntegerRangeSpace(
+                name="num_cells",
+                display_name="Number of Cells",
+                description="Number of RNN cells for each layer.",
+                default=(1, 10),
+                min=1,
+                # TODO check constraints
+            ),
+            IntegerRangeSpace(
+                name="num_layers",
+                display_name="Number of Layers",
+                description="Number of RNN layers.",
+                default=(1, 3),
+                min=1,
+                # TODO check constraints
+            ),
+            FloatRangeSpace(
+                name="dropout_rate",
+                display_name="Dropout Rate",
+                description="Dropout regularization rate used during training.",
+                default=(0, 0.5),
+                min=0,
+                max=1,
+                # TODO check constraints
+            ),
+            FloatRangeSpace(
+                name="learning_rate",
+                display_name="Learning Rate",
+                description="Learning rate used during training.",
+                default=(0.0001, 0.01),
+                min=0.0001,
+                # TODO check constraints
+            ),
+            FloatRangeSpace(
+                name="context_length_ratio",
+                display_name="Context Length Ratio",
+                description="Number of steps to unroll the RNN for before computing predictions. The Context Length is computed by multiplying this ratio with the Prediction Length.",
+                default=(1, 2),
+                min=1,
+                # TODO check constraints
+            ),
+            FloatRangeSpace(
+                name="l2",
+                display_name="L2 Regularization",
+                description="L2 regularization used during training.",
+                default=(1e-8, 0.01),
+                min=0,
+                # TODO check constraints
+            ),
+            BooleanSpace(
+                name="scaling",
+                display_name="Scaling",
+                description="Whether to automatically scale the target values.",
+                default="true",
+                hidden=True,
+            ),
+            BooleanSpace(
+                name="impute_missing_values",
+                display_name="Impute Missing Values",
+                description="Whether to impute the missing values during training\
+                by using the current model parameters. Recommended if the dataset\
+                contains many missing values. However, this is a lot slower than the\
+                default mode.",
+                default="true",
+                hidden=True,
+            ),
+        ]
+
+        return Parameters(
+            name=Model.deep_ar,
+            display_name="Deep AR Estimator",
+            parameters=parameters,
+        )
+
     def __init__(
-        self,
-        epochs: Union[Tuple[int, int], int] = (1, 100),
-        num_cells: Union[Tuple[int, int], int] = (1, 40),
-        num_layers: Union[Tuple[int, int], int] = (1, 16),
-        dropout_rate: Union[Tuple[float, float], float] = (0, 0.5),
-        learning_rate: Union[Tuple[float, float], float] = (0.0001, 0.01),
-        context_length: Union[Tuple[int, int], int] = (1, 100),
-        l2: Union[Tuple[float, float], float] = (1e-8, 0.01),
-        scaling: bool = True,
-        use_feat_dynamic_real: bool = False,
-        use_feat_static_real: bool = False,
-        impute_missing_values: bool = True,
+        self, hyperparameters: Dict = None, process_hyperparameters: bool = True
     ):
         """DeepARParams Constructor.
 
         Args:
-            epochs: Number of epochs, if tuple it represents the minimum and maximum
-                (excluded) value.
-            num_cells: Number of RNN cells for each layer, if tuple it represents the
-                minimum and maximum (excluded) value.
-            num_layers: Number of RNN layers, if tuple it represents the minimum and
-                maximum (excluded) value.
-            dropout_rate: Dropout regularization parameter, if tuple it represents the
-                minimum and maximum (excluded) value.
-            learning_rate: Learning rate parameter, if tuple it represents the minimum
-                and maximum (excluded) value.
-            context_length: Number of steps to unroll the RNN for before computing
-                predictions, if tuple it represents the minimum and maximum (excluded)
-                value.
-            l2: L2 regularization parameter, if tuple it represents the minimum and
-                maximum (excluded) value.
-            scaling: Whether to automatically scale the target values.
-            use_feat_dynamic_real: Whether to use the `feat_dynamic_real` field from
-                the data.
-            use_feat_static_real: Whether to use the `feat_static_real` field from the
-                data.
-            impute_missing_values: Whether to impute the missing values during training
-                by using the current model parameters. Recommended if the dataset
-                contains many missing values. However, this is a lot slower than the
-                default mode.
+            hyperparameters: Dictionary representing the hyperparameters space.
+            process_hyperparameters: If True the hyperparameters will be validated and
+                processed (deactivate if they have already been validated).
         """
         super().__init__(
             model_name="DeepAR",
             is_multivariate_model=False,
             has_estimator=True,
-            handle_feat_static_real=use_feat_static_real,
+            handle_feat_static_real=True,
             handle_feat_static_cat=False,
-            handle_feat_dynamic_real=use_feat_dynamic_real,
+            handle_feat_dynamic_real=True,
             handle_feat_dynamic_cat=False,
+            hyperparameters=hyperparameters,
+            process_hyperparameters=process_hyperparameters,
         )
 
-        self.context_length = context_length
-        self.epochs = epochs
-        self.num_cells = num_cells
-        self.num_layers = num_layers
-        self.dropout_rate = dropout_rate
-        self.learning_rate = learning_rate
-        self.use_feat_dynamic_real = use_feat_dynamic_real
-        self.use_feat_static_real = use_feat_static_real
-        # DeepAR does not handle cat static features properly
-        # (even if it is advertised otherwise)
-        self.use_feat_static_cat = False
-        self.cardinality = None
-        self.cell_type = "lstm"
-        self.scaling = scaling
-        self.l2 = l2
-        self.impute_missing_value = impute_missing_values
-
-    def tune_config(self) -> Dict[str, Any]:
+    def tune_config(self, prediction_length) -> Dict[str, Any]:
         """Select parameters in the pre-defined hyperparameter space.
 
         Returns:
             Selected parameters.
         """
+        context_length = self._get_context_length(prediction_length)
+
         return {
-            "context_length": self._randint("context_length", self.context_length),
-            "epochs": self._randint("epochs", self.epochs),
-            "num_cells": self._randint("num_cells", self.num_cells),
-            "num_layers": self._randint("num_layers", self.num_layers),
-            "dropout_rate": self._uniform("dropout_rate", self.dropout_rate),
-            "learning_rate": self._uniform("learning_rate", self.learning_rate),
-            "l2": self._uniform("l2", self.l2),
+            "epochs": self._auto_select("epochs"),
+            "num_cells": self._auto_select("num_cells"),
+            "num_layers": self._auto_select("num_layers"),
+            "dropout_rate": self._auto_select("dropout_rate"),
+            "learning_rate": self._auto_select("learning_rate"),
+            "context_length": self._randint("context_length", context_length),
+            "l2": self._auto_select("l2"),
+            "scaling": self._auto_select("scaling"),
+            "impute_missing_values": self._auto_select("impute_missing_values"),
         }
 
     def build_estimator(
@@ -124,24 +177,24 @@ class DeepARParams(BaseParams):
             DeepAREstimator(
                 freq=freq,
                 prediction_length=prediction_length,
-                cell_type=self.cell_type,
+                cell_type="lstm",
                 use_feat_dynamic_real=self.use_feat_dynamic_real,
                 use_feat_static_cat=self.use_feat_static_cat,
                 use_feat_static_real=self.use_feat_static_real,
-                cardinality=self.cardinality,
-                scaling=self.scaling,
-                dropout_rate=params.get("dropout_rate", self.dropout_rate),
-                num_layers=params.get("num_layers", self.num_layers),
-                num_cells=params.get("num_cells", self.num_cells),
+                cardinality=None,
+                scaling=params["scaling"],
+                dropout_rate=params["dropout_rate"],
+                num_layers=params["num_layers"],
+                num_cells=params["num_cells"],
                 context_length=params.get("context_length", prediction_length),
                 distr_output=distr_output,
-                impute_missing_values=self.impute_missing_value,
+                impute_missing_values=params["impute_missing_values"],
                 trainer=Trainer(
                     ctx=ctx,
-                    epochs=params.get("epochs", self.epochs),
-                    learning_rate=params.get("learning_rate", self.learning_rate),
+                    epochs=params["epochs"],
+                    learning_rate=params["learning_rate"],
                     hybridize=False,
-                    weight_decay=params.get("l2", self.l2),
+                    weight_decay=params["l2"],
                 ),
             )
         )

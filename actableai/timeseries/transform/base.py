@@ -142,6 +142,7 @@ class Chain(Transformation):
                 self.transformations.extend(transformation.transformations)
             elif transformation is not None:
                 self.transformations.append(transformation)
+            # TODO remove identity if possible
 
     def _setup(
         self,
