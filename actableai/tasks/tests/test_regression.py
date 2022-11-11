@@ -1005,8 +1005,14 @@ class TestRemoteRegressionCrossValidation:
             refit_full=True,
         )
 
-        assert r["status"] == "FAILURE"
-        assert "No causal feature" in r["messenger"]
+        assert r["status"] == "SUCCESS"
+        assert "validation_table" in r["data"]
+        assert "prediction_table" in r["data"]
+        assert "predict_shaps" in r["data"]
+        assert "evaluate" in r["data"]
+        assert "validation_shaps" in r["data"]
+        assert "importantFeatures" in r["data"]
+
 
     def test_causal_feature_selection(self, regression_task, tmp_path):
         df = pd.DataFrame(
