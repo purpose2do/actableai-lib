@@ -354,6 +354,7 @@ class AAIRegressionTask(AAITask):
         causal_feature_selection: bool = False,
         causal_feature_selection_max_concurrent_tasks: int = 20,
         ci_for_causal_feature_selection_task_params: Optional[dict] = None,
+        ci_for_causal_feature_selection_run_params: Optional[dict] = None,
     ):
         """Run this regression task and return results.
 
@@ -418,6 +419,7 @@ class AAIRegressionTask(AAITask):
             causal_feature_selection_max_concurrent_tasks: maximum number of concurrent
                 tasks for selecting causal features
             ci_for_causal_feature_selection_task_params: Parameters for AAIDirectCausalFeatureSelectionTask
+            ci_for_causal_feature_selection_run_params: Kwargs for AAIDirectCausalFeatureSelectionTask's run
 
         Examples:
             >>> import pandas as pd
@@ -578,11 +580,13 @@ class AAIRegressionTask(AAITask):
                 features,
                 max_concurrent_ci_tasks=causal_feature_selection_max_concurrent_tasks,
                 causal_inference_task_params=ci_for_causal_feature_selection_task_params,
+                causal_inference_run_params=ci_for_causal_feature_selection_run_params,
             )
 
             if causal_feature_selection["status"] == "FAILURE":
                 return causal_feature_selection
-            validations = validations + causal_feature_selection["validations"]
+
+            validations.extend(causal_feature_selection["validations"])
 
             causal_features = set()
             for f, v in causal_feature_selection["data"].items():
@@ -590,6 +594,15 @@ class AAIRegressionTask(AAITask):
                     causal_features.add(f.split(":::")[0])
             features = [f for f in features if f in causal_features]
             debiased_features = [f for f in debiased_features if f in causal_features]
+
+            if len(features) == 0:
+                return {
+                    "status": "FAILURE",
+                    "messenger": "No causal feature is found",
+                    "data": {},
+                    "validations": validations,
+                    "runtime": time.time() - start,
+                }
 
         # Train
         regression_train_task = _AAIRegressionTrainTask(**train_task_params)

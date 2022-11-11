@@ -24,6 +24,7 @@ class AAIDirectCausalFeatureSelection(AAITask):
         dummy_prefix_sep=":::",
         positive_outcome_value=None,
         causal_inference_task_params=None,
+        causal_inference_run_params=None,
     ):
         validation_checks = CausalFeatureSelectionDataValidator().validate(
             target, features, df
@@ -60,6 +61,7 @@ class AAIDirectCausalFeatureSelection(AAITask):
                         other_features,
                         positive_outcome_value,
                         causal_inference_task_params or {},
+                        causal_inference_run_params or {},
                     )
                 ] = feature
 
@@ -79,6 +81,7 @@ class AAIDirectCausalFeatureSelection(AAITask):
         common_causes,
         positive_outcome_value,
         causal_inference_task_params,
+        causal_inference_run_params,
     ):
         task = AAICausalInferenceTask(**causal_inference_task_params)
         re = task.run(
@@ -87,6 +90,7 @@ class AAIDirectCausalFeatureSelection(AAITask):
             [target],
             common_causes=common_causes,
             positive_outcome_value=positive_outcome_value,
+            **causal_inference_run_params,
         )
         if re["status"] != "SUCCESS":
             return {
