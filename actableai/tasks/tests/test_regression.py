@@ -1005,24 +1005,67 @@ class TestRemoteRegressionCrossValidation:
             refit_full=True,
         )
 
-        evaluate = r["data"]["evaluate"]
         assert r["status"] == "SUCCESS"
-        assert len(r["data"]["prediction_table"]) > 0
-        assert "RMSE" in evaluate
-        assert "RMSE_std_err" in evaluate
-        assert "R2" in evaluate
-        assert "R2_std_err" in evaluate
-        assert "MAE" in evaluate
-        assert "MAE_std_err" in evaluate
+        assert "validation_table" in r["data"]
+        assert "prediction_table" in r["data"]
+        assert "predict_shaps" in r["data"]
+        assert "evaluate" in r["data"]
+        assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
-        for feat in r["data"]["importantFeatures"]:
-            assert feat["feature"] in ["y", "z"]
-            assert "importance" in feat
-            assert "importance_std_err" in feat
-            assert "p_value" in feat
-            assert "p_value_std_err" in feat
-        assert "leaderboard" in r["data"]
-        assert r["model"] is not None
+
+
+    def test_causal_feature_selection(self, regression_task, tmp_path):
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 5,
+                "y": [1, 2, 1, 2, 1, None, 1, 2, 1, 2] * 5,
+                "t": [1, 2, 3, 4, 5, None, None, 8, 9, 10] * 5,
+            }
+        )
+        target = "t"
+        features = ["x", "y"]
+
+        r = run_regression_task(
+            regression_task,
+            tmp_path,
+            df,
+            target,
+            features,
+            causal_feature_selection=True,
+        )
+
+        assert r["status"] == "SUCCESS"
+        assert "validation_table" in r["data"]
+        assert "prediction_table" in r["data"]
+        assert "predict_shaps" in r["data"]
+        assert "evaluate" in r["data"]
+        assert "validation_shaps" in r["data"]
+        assert "importantFeatures" in r["data"]
+
+    def test_causal_feature_selection_no_causal_feature(
+        self, regression_task, tmp_path
+    ):
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 5,
+                "y": [1, 2, 1, 2, 1, None, 1, 2, 1, 2] * 5,
+                "t": [3, 2, 1, 1, 5, None, None, 2, 1, 3] * 5,
+            }
+        )
+        target = "t"
+        features = ["x", "y"]
+
+        r = run_regression_task(
+            regression_task,
+            tmp_path,
+            df,
+            target,
+            features,
+            causal_feature_selection=True,
+        )
+
+        assert r["status"] == "FAILURE"
+        assert "No causal feature" in r["messenger"]
 
 
 class TestDebiasing:
