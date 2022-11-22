@@ -1,9 +1,8 @@
 import pytest
 
-from actableai.parameters.base import BaseParameter
 from actableai.parameters.parameters import Parameters
-from actableai.parameters.type import ParameterType
 from actableai.parameters.validation import ParameterTypeError, InvalidKeyError
+from actableai.parameters.value import ValueParameter
 
 
 class TestParameters:
@@ -11,18 +10,16 @@ class TestParameters:
     def _create_parameters(parameters=None):
         if parameters is None:
             parameters = [
-                {
-                    "name": "param_1",
-                    "display_name": "Param 1",
-                    "parameter_type": ParameterType.BOOL,
-                    "default": True,
-                },
-                {
-                    "name": "param_2",
-                    "display_name": "Param 2",
-                    "parameter_type": ParameterType.BOOL,
-                    "default": True,
-                },
+                ValueParameter[bool](
+                    name="param_1",
+                    display_name="Param 1",
+                    default=True,
+                ),
+                ValueParameter[bool](
+                    name="param_2",
+                    display_name="Param 2",
+                    default=True,
+                ),
             ]
 
         return Parameters(
@@ -35,32 +32,28 @@ class TestParameters:
         "available_parameters",
         [
             [
-                {
-                    "name": "param_1",
-                    "display_name": "Param 1",
-                    "parameter_type": ParameterType.BOOL,
-                    "default": True,
-                },
-                {
-                    "name": "param_2",
-                    "display_name": "Param 2",
-                    "parameter_type": ParameterType.BOOL,
-                    "default": True,
-                },
+                ValueParameter[bool](
+                    name="param_1",
+                    display_name="Param 1",
+                    default=True,
+                ),
+                ValueParameter[bool](
+                    name="param_2",
+                    display_name="Param 2",
+                    default=True,
+                ),
             ],
             {
-                "param_1": {
-                    "name": "param_1",
-                    "display_name": "Param 1",
-                    "parameter_type": ParameterType.BOOL,
-                    "default": True,
-                },
-                "param_2": {
-                    "name": "param_2",
-                    "display_name": "Param 2",
-                    "parameter_type": ParameterType.BOOL,
-                    "default": True,
-                },
+                "param_1": ValueParameter[bool](
+                    name="param_1",
+                    display_name="Param 1",
+                    default=True,
+                ),
+                "param_2": ValueParameter[bool](
+                    name="param_2",
+                    display_name="Param 2",
+                    default=True,
+                ),
             },
         ],
     )
@@ -163,9 +156,8 @@ class TestParameters:
         ],
     )
     def test_process(self, selected_parameters):
-        class MockParameter(BaseParameter):
-            parameter_type: ParameterType = ParameterType.INT
-            default: int = 1
+        class MockParameter(ValueParameter[int]):
+            default: int = 0
 
             def process_parameter(self, v: int) -> int:
                 return v + 1

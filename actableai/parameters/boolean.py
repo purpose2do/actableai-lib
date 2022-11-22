@@ -1,15 +1,11 @@
 from typing import Dict
 
-from actableai.parameters.base import BaseParameter
+from actableai.parameters.list import ListParameter
 from actableai.parameters.options import OptionsSpace, Option
-from actableai.parameters.type import ParameterType
+from actableai.parameters.value import ValueParameter
 
-
-class BooleanParameter(BaseParameter):
-    """Simple Boolean parameter."""
-
-    parameter_type: ParameterType = ParameterType.BOOL
-    default: bool
+BooleanParameter = ValueParameter[bool]
+BooleanListParameter = ListParameter[bool]
 
 
 class BooleanSpace(OptionsSpace[bool]):

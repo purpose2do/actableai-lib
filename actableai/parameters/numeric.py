@@ -1,24 +1,38 @@
-from typing import TypeVar, Generic, Optional, Any, Union, Tuple, Dict
+from typing import TypeVar, Generic, Optional, Any, Union, Tuple, Dict, List
 
 from pydantic import root_validator
 from pydantic.generics import GenericModel
 
-from actableai.parameters.base import BaseParameter
-from actableai.parameters.type import ParameterType
+from actableai.parameters.list import ListParameter
 from actableai.parameters.validation import OutOfRangeError, ParameterValidationErrors
+from actableai.parameters.value import ValueParameter
 
 NumericT = TypeVar("NumericT", float, int)
 
 
-class NumericParameter(BaseParameter, GenericModel, Generic[NumericT]):
-    """Simple Numeric parameter (either integer or float)."""
+class _NumericParameter(ValueParameter[NumericT], GenericModel, Generic[NumericT]):
+    """
+    TODO write documentation
+    """
 
-    default: NumericT
     min: Optional[NumericT]
     max: Optional[NumericT]
 
-    @root_validator
-    def check_default(clf, values: Dict[str, Any]) -> Dict[str, Any]:
+    @root_validator(skip_on_failure=True)
+    def check_min_max(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        TODO write documentation
+        """
+        if (
+            values["min"] is not None
+            and values["max"] is not None
+            and values["max"] <= values["min"]
+        ):
+            raise ValueError("`max` must be strictly greater than `min`.")
+        return values
+
+    @root_validator(skip_on_failure=True)
+    def check_default(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         """Check default value using the current parameter.
 
         Args:
@@ -40,7 +54,7 @@ class NumericParameter(BaseParameter, GenericModel, Generic[NumericT]):
         return values
 
     def validate_parameter(self, value: Any) -> ParameterValidationErrors:
-        """ "Validate value using the current parameter.
+        """Validate value using the current parameter.
 
         Args:
             value: Value to validate.
@@ -57,22 +71,39 @@ class NumericParameter(BaseParameter, GenericModel, Generic[NumericT]):
         ):
             errors.add_error(
                 OutOfRangeError(
-                    parameter_name=self.name, min=self.min, max=self.max, given=value
+                    parameter_name=self.name,
+                    min=self.min,
+                    max=self.max,
+                    given=value,
                 )
             )
 
         return errors
 
 
-class NumericRangeSpace(BaseParameter, GenericModel, Generic[NumericT]):
-    """Simple Numeric range space (either integer or float)."""
+class _NumericListParameter(ListParameter[NumericT], GenericModel, Generic[NumericT]):
+    """
+    TODO write documentation
+    """
 
-    default: Union[NumericT, Tuple[NumericT, NumericT]]
     min: Optional[NumericT]
     max: Optional[NumericT]
 
-    @root_validator
-    def check_default(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+    @root_validator(skip_on_failure=True)
+    def check_min_max(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        TODO write documentation
+        """
+        if (
+            values["min"] is not None
+            and values["max"] is not None
+            and values["max"] <= values["min"]
+        ):
+            raise ValueError("`max` must be strictly greater than `min`.")
+        return values
+
+    @root_validator(skip_on_failure=True)
+    def check_default_val(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         """Check default value using the current parameter.
 
         Args:
@@ -128,6 +159,16 @@ class NumericRangeSpace(BaseParameter, GenericModel, Generic[NumericT]):
 
         return errors
 
+
+class _NumericRangeSpace(
+    _NumericListParameter[NumericT], GenericModel, Generic[NumericT]
+):
+    """Simple Numeric range space (either integer or float)."""
+
+    default: Union[NumericT, Tuple[NumericT, NumericT], List[NumericT]]
+    min_len: int = 1
+    max_len: int = 3
+
     def process_parameter(self, value: Any) -> Any:
         """Process a value using the current parameter.
 
@@ -146,25 +187,11 @@ class NumericRangeSpace(BaseParameter, GenericModel, Generic[NumericT]):
         return value
 
 
-class FloatParameter(NumericParameter[float]):
-    """Simple Float parameter."""
+FloatParameter = _NumericParameter[float]
+IntegerParameter = _NumericParameter[int]
 
-    parameter_type: ParameterType = ParameterType.FLOAT
+FloatRangeSpace = _NumericRangeSpace[float]
+IntegerRangeSpace = _NumericRangeSpace[int]
 
-
-class IntegerParameter(NumericParameter[int]):
-    """Simple Integer parameter."""
-
-    parameter_type: ParameterType = ParameterType.INT
-
-
-class FloatRangeSpace(NumericRangeSpace[float]):
-    """Simple Float range space parameter."""
-
-    parameter_type: ParameterType = ParameterType.FLOAT_RANGE
-
-
-class IntegerRangeSpace(NumericRangeSpace[int]):
-    """Simple Int range space parameter."""
-
-    parameter_type: ParameterType = ParameterType.INT_RANGE
+FloatListParameter = _NumericListParameter[float]
+IntegerListParameter = _NumericListParameter[int]

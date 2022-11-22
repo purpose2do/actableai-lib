@@ -3,7 +3,7 @@ from typing import Optional, Union, List, Dict, Any, Type
 from pydantic import BaseModel, root_validator
 
 from actableai.data_validation.base import CheckResult, CheckLevels
-from actableai.parameters.type import ParameterType
+from actableai.parameters.type import ParameterType, ValueType
 
 
 class ParameterValidationError(BaseModel):
@@ -132,7 +132,7 @@ class ParameterValidationErrors(BaseModel):
 class ParameterTypeError(ParameterValidationError):
     """Class representing a parameter type error."""
 
-    expected_type: Union[ParameterType, str]
+    expected_type: Union[ParameterType, ValueType, str]
     given_type: str
 
     @root_validator
