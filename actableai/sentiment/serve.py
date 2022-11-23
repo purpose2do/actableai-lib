@@ -13,7 +13,7 @@ class AAISentimentExtractor:
     @classmethod
     def deploy(
         cls,
-        num_replicas,
+        ray_autoscaling_configs,
         ray_options,
         pyabsa_checkpoint,
         device,
@@ -28,7 +28,7 @@ class AAISentimentExtractor:
         return serve.deployment(
             cls,
             name=cls.__name__,
-            num_replicas=num_replicas,
+            autoscaling_config=ray_autoscaling_configs,
             ray_actor_options=ray_options,
             init_args=(
                 pyabsa_checkpoint,

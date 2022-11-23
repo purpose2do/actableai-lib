@@ -6,7 +6,7 @@ class AAISentimentExtractor:
     @classmethod
     def deploy(
         cls,
-        num_replicas,
+        ray_autoscaling_configs,
         ray_options,
         device,
         BERT_DIR,
@@ -21,7 +21,7 @@ class AAISentimentExtractor:
         return serve.deployment(
             cls,
             name=cls.__name__,
-            num_replicas=num_replicas,
+            autoscaling_config=ray_autoscaling_configs,
             ray_actor_options=ray_options,
             init_args=(device, BERT_DIR, EXTRACT_MODEL_DIR, CLASSIFICATION_MODEL_DIR),
         ).deploy()
