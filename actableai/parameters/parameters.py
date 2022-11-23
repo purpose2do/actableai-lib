@@ -4,9 +4,8 @@ from pydantic import validator
 
 from actableai.parameters.base import (
     BaseParameter,
-    ProcessableParameter,
-    NamedParameter,
 )
+from actableai.parameters.type import ParameterType
 from actableai.parameters.validation import (
     InvalidKeyError,
     ParameterValidationErrors,
@@ -14,12 +13,13 @@ from actableai.parameters.validation import (
 )
 
 
-class Parameters(NamedParameter, ProcessableParameter):
+class Parameters(BaseParameter):
     """Class containing multiple parameters."""
 
+    parameter_type: ParameterType = ParameterType.PARAMETERS
     parameters: Union[Dict[str, BaseParameter], List[BaseParameter]]
 
-    @validator("parameters", always=True)
+    @validator("parameters")
     def set_parameters(
         cls, value: Union[Dict[str, BaseParameter], List[BaseParameter]]
     ) -> Dict[str, BaseParameter]:

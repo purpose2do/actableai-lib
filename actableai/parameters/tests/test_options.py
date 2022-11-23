@@ -2,15 +2,14 @@ from typing import Any, Dict
 
 import pytest
 
-from actableai.parameters.base import BaseParameter
 from actableai.parameters.boolean import BooleanParameter
 from actableai.parameters.options import OptionsParameter
-from actableai.parameters.type import ParameterType
 from actableai.parameters.validation import (
     ParameterTypeError,
     ParameterValidationError,
     InvalidKeyError,
 )
+from actableai.parameters.value import ValueParameter
 
 
 class TestOptionsParameter:
@@ -344,8 +343,7 @@ class TestOptionsParameter:
         ],
     )
     def test_process_complex(self, is_multi: bool, value: Dict[str, int]):
-        class MockParameter(BaseParameter):
-            parameter_type: ParameterType = ParameterType.INT
+        class MockParameter(ValueParameter[int]):
             default: int = 0
 
             def process_parameter(self, v: int) -> int:

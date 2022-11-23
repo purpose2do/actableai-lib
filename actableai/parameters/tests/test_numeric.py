@@ -1,27 +1,24 @@
 import pytest
 
-from actableai.parameters.numeric import NumericParameter, NumericRangeSpace
-from actableai.parameters.type import ParameterType
+from actableai.parameters.numeric import (
+    _NumericParameter,
+    _NumericRangeSpace,
+    _NumericListParameter,
+)
 from actableai.parameters.validation import OutOfRangeError
 
 
 class TestNumericParameter:
     @staticmethod
     def _create_parameter(numeric_type, default, min_value, max_value):
-        parameter_type = (
-            ParameterType.INT if numeric_type == int else ParameterType.FLOAT
-        )
-
-        return NumericParameter[numeric_type](
+        return _NumericParameter[numeric_type](
             name="numeric_parameter",
             display_name="Numeric Parameter",
-            parameter_type=parameter_type,
             default=default,
             min=min_value,
             max=max_value,
         )
 
-    @pytest.mark.parametrize("numeric_type", [int, float])
     @pytest.mark.parametrize(
         "min_value,max_value",
         [
@@ -31,15 +28,40 @@ class TestNumericParameter:
             [-5, 5],
         ],
     )
-    def test_check_default_valid(self, numeric_type, min_value, max_value):
+    def test_min_max_valid(self, min_value, max_value):
         self._create_parameter(
-            numeric_type=numeric_type,
+            numeric_type=int,
             default=0,
             min_value=min_value,
             max_value=max_value,
         )
 
-    @pytest.mark.parametrize("numeric_type", [int, float])
+    def test_min_max_invalid(self):
+        with pytest.raises(ValueError):
+            self._create_parameter(
+                numeric_type=int,
+                default=0,
+                min_value=10,
+                max_value=0,
+            )
+
+    @pytest.mark.parametrize(
+        "min_value,max_value",
+        [
+            [None, None],
+            [-5, None],
+            [None, 5],
+            [-5, 5],
+        ],
+    )
+    def test_check_default_valid(self, min_value, max_value):
+        self._create_parameter(
+            numeric_type=int,
+            default=0,
+            min_value=min_value,
+            max_value=max_value,
+        )
+
     @pytest.mark.parametrize(
         "min_value,max_value,value",
         [
@@ -49,16 +71,15 @@ class TestNumericParameter:
             [-5, 5, 10],
         ],
     )
-    def test_check_default_invalid(self, numeric_type, min_value, max_value, value):
+    def test_check_default_invalid(self, min_value, max_value, value):
         with pytest.raises(ValueError):
             self._create_parameter(
-                numeric_type=numeric_type,
+                numeric_type=int,
                 default=value,
                 min_value=min_value,
                 max_value=max_value,
             )
 
-    @pytest.mark.parametrize("numeric_type", [int, float])
     @pytest.mark.parametrize(
         "min_value,max_value",
         [
@@ -68,9 +89,9 @@ class TestNumericParameter:
             [-5, 5],
         ],
     )
-    def test_validate_valid(self, numeric_type, min_value, max_value):
+    def test_validate_valid(self, min_value, max_value):
         numeric_parameter = self._create_parameter(
-            numeric_type=numeric_type,
+            numeric_type=int,
             default=0,
             min_value=min_value,
             max_value=max_value,
@@ -79,7 +100,6 @@ class TestNumericParameter:
 
         assert len(validation_errors) == 0
 
-    @pytest.mark.parametrize("numeric_type", [int, float])
     @pytest.mark.parametrize(
         "min_value,max_value,value",
         [
@@ -89,9 +109,9 @@ class TestNumericParameter:
             [-5, 5, 10],
         ],
     )
-    def test_validate_invalid(self, numeric_type, min_value, max_value, value):
+    def test_validate_invalid(self, min_value, max_value, value):
         numeric_parameter = self._create_parameter(
-            numeric_type=numeric_type,
+            numeric_type=int,
             default=0,
             min_value=min_value,
             max_value=max_value,
@@ -102,25 +122,19 @@ class TestNumericParameter:
         assert validation_errors.has_error(OutOfRangeError)
 
 
-class TestNumericRangeSpace:
+class TestNumericListParameter:
     @staticmethod
     def _create_parameter(numeric_type, default, min_value, max_value):
-        parameter_type = (
-            ParameterType.INT_RANGE
-            if numeric_type == int
-            else ParameterType.FLOAT_RANGE
-        )
-
-        return NumericRangeSpace[numeric_type](
+        return _NumericListParameter[numeric_type](
             name="numeric_range_space",
             display_name="Numeric Range Space",
-            parameter_type=parameter_type,
             default=default,
             min=min_value,
             max=max_value,
+            min_len=0,
+            max_len=10,
         )
 
-    @pytest.mark.parametrize("numeric_type", [int, float])
     @pytest.mark.parametrize(
         "min_value,max_value",
         [
@@ -137,15 +151,14 @@ class TestNumericRangeSpace:
             (-5, 5),
         ],
     )
-    def test_check_default_valid(self, numeric_type, min_value, max_value, value):
+    def test_check_default_valid(self, min_value, max_value, value):
         self._create_parameter(
-            numeric_type=numeric_type,
+            numeric_type=int,
             default=value,
             min_value=min_value,
             max_value=max_value,
         )
 
-    @pytest.mark.parametrize("numeric_type", [int, float])
     @pytest.mark.parametrize(
         "value",
         [
@@ -153,16 +166,15 @@ class TestNumericRangeSpace:
             (-10, 10),
         ],
     )
-    def test_check_default_lower_limit_invalid(self, numeric_type, value):
+    def test_check_default_lower_limit_invalid(self, value):
         with pytest.raises(ValueError):
             self._create_parameter(
-                numeric_type=numeric_type,
+                numeric_type=int,
                 default=value,
                 min_value=-5,
                 max_value=None,
             )
 
-    @pytest.mark.parametrize("numeric_type", [int, float])
     @pytest.mark.parametrize(
         "value",
         [
@@ -170,16 +182,15 @@ class TestNumericRangeSpace:
             (-10, 10),
         ],
     )
-    def test_check_default_upper_limit_invalid(self, numeric_type, value):
+    def test_check_default_upper_limit_invalid(self, value):
         with pytest.raises(ValueError):
             self._create_parameter(
-                numeric_type=numeric_type,
+                numeric_type=int,
                 default=value,
                 min_value=None,
                 max_value=5,
             )
 
-    @pytest.mark.parametrize("numeric_type", [int, float])
     @pytest.mark.parametrize(
         "value",
         [
@@ -190,16 +201,15 @@ class TestNumericRangeSpace:
             (0, 10),
         ],
     )
-    def test_check_default_lower_upper_limit_invalid(self, numeric_type, value):
+    def test_check_default_lower_upper_limit_invalid(self, value):
         with pytest.raises(ValueError):
             self._create_parameter(
-                numeric_type=numeric_type,
+                numeric_type=int,
                 default=value,
                 min_value=-5,
                 max_value=5,
             )
 
-    @pytest.mark.parametrize("numeric_type", [int, float])
     @pytest.mark.parametrize(
         "min_value,max_value",
         [
@@ -219,9 +229,9 @@ class TestNumericRangeSpace:
             (-5, 5),
         ],
     )
-    def test_validate_valid(self, numeric_type, min_value, max_value, value):
+    def test_validate_valid(self, min_value, max_value, value):
         numeric_parameter = self._create_parameter(
-            numeric_type=numeric_type,
+            numeric_type=int,
             default=(-1, 1),
             min_value=min_value,
             max_value=max_value,
@@ -230,7 +240,6 @@ class TestNumericRangeSpace:
 
         assert len(validation_errors) == 0
 
-    @pytest.mark.parametrize("numeric_type", [int, float])
     @pytest.mark.parametrize(
         "value",
         [
@@ -241,9 +250,9 @@ class TestNumericRangeSpace:
             (-10, 10),
         ],
     )
-    def test_validate_lower_limit_invalid(self, numeric_type, value):
+    def test_validate_lower_limit_invalid(self, value):
         numeric_parameter = self._create_parameter(
-            numeric_type=numeric_type,
+            numeric_type=int,
             default=(-1, 1),
             min_value=-5,
             max_value=None,
@@ -253,7 +262,6 @@ class TestNumericRangeSpace:
         assert len(validation_errors) == 1
         assert validation_errors.has_error(OutOfRangeError)
 
-    @pytest.mark.parametrize("numeric_type", [int, float])
     @pytest.mark.parametrize(
         "value",
         [
@@ -264,9 +272,9 @@ class TestNumericRangeSpace:
             (-10, 10),
         ],
     )
-    def test_validate_upper_limit_invalid(self, numeric_type, value):
+    def test_validate_upper_limit_invalid(self, value):
         numeric_parameter = self._create_parameter(
-            numeric_type=numeric_type,
+            numeric_type=int,
             default=(-1, 1),
             min_value=None,
             max_value=5,
@@ -276,7 +284,6 @@ class TestNumericRangeSpace:
         assert len(validation_errors) == 1
         assert validation_errors.has_error(OutOfRangeError)
 
-    @pytest.mark.parametrize("numeric_type", [int, float])
     @pytest.mark.parametrize(
         "value",
         [
@@ -294,9 +301,9 @@ class TestNumericRangeSpace:
             (0, 10),
         ],
     )
-    def test_validate_lower_upper_limit_invalid(self, numeric_type, value):
+    def test_validate_lower_upper_limit_invalid(self, value):
         numeric_parameter = self._create_parameter(
-            numeric_type=numeric_type,
+            numeric_type=int,
             default=(-1, 1),
             min_value=-5,
             max_value=5,
@@ -306,7 +313,18 @@ class TestNumericRangeSpace:
         assert len(validation_errors) >= 1
         assert validation_errors.has_error(OutOfRangeError)
 
-    @pytest.mark.parametrize("numeric_type", [int, float])
+
+class TestNumericRangeSpace:
+    @staticmethod
+    def _create_parameter(numeric_type, default, min_value, max_value):
+        return _NumericRangeSpace[numeric_type](
+            name="numeric_range_space",
+            display_name="Numeric Range Space",
+            default=default,
+            min=min_value,
+            max=max_value,
+        )
+
     @pytest.mark.parametrize(
         "min_value,max_value",
         [
@@ -326,9 +344,9 @@ class TestNumericRangeSpace:
             (-5, 5),
         ],
     )
-    def test_process(self, numeric_type, min_value, max_value, value):
+    def test_process(self, min_value, max_value, value):
         numeric_parameter = self._create_parameter(
-            numeric_type=numeric_type,
+            numeric_type=int,
             default=(-1, 1),
             min_value=min_value,
             max_value=max_value,

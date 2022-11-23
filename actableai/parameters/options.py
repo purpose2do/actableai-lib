@@ -70,7 +70,7 @@ class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
 
         return value
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def check_default(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         """Check default value using the current parameter.
 

@@ -8,8 +8,9 @@ from gluonts.mx.distribution import DistributionOutput
 from hyperopt import hp
 from mxnet.context import Context
 
+from actableai.parameters.numeric import FloatRangeSpace, IntegerRangeSpace
 from actableai.parameters.parameters import Parameters
-from actableai.parameters.type import ParameterType
+from actableai.parameters.type import ParameterType, ValueType
 from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
 from actableai.timeseries.transform.base import Transformation
@@ -111,19 +112,22 @@ class BaseParams:
 
         options = self.hyperparameters[param_name]
 
-        if parameter_type == ParameterType.BOOL:
-            return options
-        if (
-            parameter_type == ParameterType.INT
-            or parameter_type == ParameterType.INT_RANGE
+        if parameter_type == ParameterType.VALUE or (
+            parameter_type == ParameterType.LIST
+            and isinstance(parameter, (FloatRangeSpace, IntegerRangeSpace))
         ):
-            return self._randint(param_name, options)
+            value_type = parameter.value_type
+            if value_type == ValueType.INT:
+                return self._randint(param_name, options)
+            if value_type == ValueType.FLOAT:
+                return self._uniform(param_name, options)
+            if value_type == ValueType.BOOL:
+                return options
         if (
-            parameter_type == ParameterType.FLOAT
-            or parameter_type == ParameterType.FLOAT_RANGE
+            parameter_type == ParameterType.OPTIONS
+            or parameter_type == ParameterType.PARAMETERS
+            or parameter_type == ParameterType.LIST
         ):
-            return self._uniform(param_name, options)
-        if parameter_type == ParameterType.OPTIONS:
             return self._choice(param_name, options)
 
         raise ValueError("Invalid parameter type")
