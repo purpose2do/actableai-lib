@@ -473,30 +473,32 @@ class AAIInterventionEffectPredictor:
                     positive_label=None,
                     presets="medium_quality_faster_train",
                     hyperparameters=memory_efficient_hyperparameters(),
-                    model_directory=None,
+                    model_directory=mkdtemp(prefix="autogluon_model"),
                     target=self.target,
-                    features=None,
+                    features=list(
+                        df.drop(axis="columns", columns=[self.target]).columns
+                    ),
                     # TODO Determine which features to use
                     # All features are used for now
                     run_model=False,
                     df_train=df,
                     df_test=None,
                     kfolds=5,
-                    cross_validation_max_concurrency=2,
+                    cross_validation_max_concurrency=1,
                     drop_duplicates=False,
                     run_debiasing=False,
-                    biased_groups=None,
-                    debiased_features=None,
+                    biased_groups=[],
+                    debiased_features=[],
                     residuals_hyperparameters=None,
-                    num_gpus=self.num_gpus,
-                    eval_metric=None,
+                    num_gpus=self.num_gpus if self.num_gpus is not None else 0,
+                    eval_metric="accuracy",
                     time_limit=None,
-                    drop_unique=None,
+                    drop_unique=False,
                     drop_useless_features=False,
                     feature_pruning=False,
                 )
                 self.outcome_predictor = predictor
-                Y = df_val_cross_val_pred_prob
+                Y = pd.concat(df_val_cross_val_pred_prob).sort_index()
             else:
                 if self.outcome_predictor is None:
                     raise NotFittedError
