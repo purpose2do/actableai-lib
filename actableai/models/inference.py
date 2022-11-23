@@ -1,5 +1,5 @@
 from typing import Dict
-import numpy as np
+
 import pandas as pd
 
 from actableai.exceptions.models import UnknownModelClassError
@@ -287,6 +287,9 @@ class AAIModelInference:
         task_model = self._get_model(task_id)
         if isinstance(task_model, AAITabularModel):
             metadata = self._get_metadata(task_model.predictor)
+
+            if hasattr(task_model, "feature_parameters"):
+                metadata["feature_parameters"] = task_model.feature_parameters.json()
 
             if isinstance(task_model, AAITabularModelInterventional):
                 if task_model.model_version <= 1:

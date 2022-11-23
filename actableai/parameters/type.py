@@ -18,3 +18,4 @@ class ValueType(str, Enum):
     BOOL = "bool"
     INT = "int"
     FLOAT = "float"
+    STR = "str"

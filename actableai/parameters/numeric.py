@@ -165,7 +165,7 @@ class _NumericRangeSpace(
 ):
     """Simple Numeric range space (either integer or float)."""
 
-    default: Union[NumericT, Tuple[NumericT, NumericT], List[NumericT]]
+    default: Optional[Union[NumericT, Tuple[NumericT, NumericT], List[NumericT]]] = None
     min_len: int = 1
     max_len: int = 3
 

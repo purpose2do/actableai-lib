@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import pytest
 
@@ -344,7 +344,7 @@ class TestOptionsParameter:
     )
     def test_process_complex(self, is_multi: bool, value: Dict[str, int]):
         class MockParameter(ValueParameter[int]):
-            default: int = 0
+            default: Optional[int] = 0
 
             def process_parameter(self, v: int) -> int:
                 return v + 1

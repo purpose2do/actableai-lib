@@ -18,6 +18,7 @@ class TestValueParameter:
             (int, ValueType.INT, 1),
             (float, ValueType.FLOAT, 1.5),
             (bool, ValueType.BOOL, True),
+            (str, ValueType.STR, "value"),
         ],
     )
     def test_set_value_type(self, parameter_type, expected_value_type, default):
@@ -35,6 +36,7 @@ class TestValueParameter:
             (float, 1.5, 1.5),
             (float, 1.5, 1),
             (bool, True, True),
+            (str, "default", "value"),
         ],
     )
     def test_validate_parameter_valid(self, parameter_type, default, value):
@@ -52,6 +54,7 @@ class TestValueParameter:
             (int, 1, "invalid"),
             (float, 1.5, "invalid"),
             (bool, True, "invalid"),
+            (str, "default", 0),
         ],
     )
     def test_validate_parameter_invalid(self, parameter_type, default, value):

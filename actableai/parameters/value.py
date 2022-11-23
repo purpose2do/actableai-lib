@@ -1,7 +1,8 @@
-from typing import Any, Generic, TypeVar, get_type_hints, Type
+from typing import Any, Generic, TypeVar, get_type_hints, Type, Optional
 
 from pydantic import validator
 from pydantic.generics import GenericModel
+from pydantic.typing import get_args
 
 from actableai.parameters.base import BaseParameter
 from actableai.parameters.type import ValueType, ParameterType
@@ -10,7 +11,7 @@ from actableai.parameters.validation import (
     ParameterTypeError,
 )
 
-ValueT = TypeVar("ValueT", bool, int, float)
+ValueT = TypeVar("ValueT", bool, int, float, str)
 
 
 class ValueParameter(BaseParameter, GenericModel, Generic[ValueT]):
@@ -19,7 +20,7 @@ class ValueParameter(BaseParameter, GenericModel, Generic[ValueT]):
     """
 
     parameter_type: ParameterType = ParameterType.VALUE
-    default: ValueT
+    default: Optional[ValueT] = None
     # Automatic dynamic field
     value_type: ValueType = None
 
@@ -35,6 +36,8 @@ class ValueParameter(BaseParameter, GenericModel, Generic[ValueT]):
             return ValueType.INT
         if val_type == float:
             return ValueType.FLOAT
+        if val_type == str:
+            return ValueType.STR
 
         raise ValueError("Invalid generic type.")
 
@@ -47,7 +50,7 @@ class ValueParameter(BaseParameter, GenericModel, Generic[ValueT]):
         """
         # Trick to get the generic type, impossible to use traditional method, see:
         # https://github.com/pydantic/pydantic/issues/3559
-        return get_type_hints(cls)["default"]
+        return get_args(get_type_hints(cls)["default"])[0]
 
     def validate_parameter(self, value: Any) -> ParameterValidationErrors:
         """Validate value using the current parameter.
@@ -70,6 +73,8 @@ class ValueParameter(BaseParameter, GenericModel, Generic[ValueT]):
             type_valid = isinstance(value, int)
         elif self.value_type == ValueType.FLOAT:
             type_valid = isinstance(value, (int, float))
+        elif self.value_type == ValueType.STR:
+            type_valid = isinstance(value, str)
 
         if not type_valid:
             errors.add_error(

@@ -72,7 +72,7 @@ class BaseParameter(NamedParameter, ProcessableParameter):
     """Base class representing a parameter."""
 
     parameter_type: ParameterType
-    default: Any = None
+    default: Optional[Any] = None
     hidden: bool = False
 
     def validate_parameter(self, value: Any) -> ParameterValidationErrors:

@@ -869,10 +869,12 @@ class AAIClassificationTask(AAITask):
 
         model = None
         if (kfolds <= 1 or refit_full) and predictor:
-            model = AAITabularModel(predictor=predictor)
+            model = AAITabularModel(predictor=predictor, df_training=df_train)
             if aai_intervention_model is not None:
                 model = AAITabularModelInterventional(
-                    predictor=predictor, intervention_model=aai_intervention_model
+                    predictor=predictor,
+                    intervention_model=aai_intervention_model,
+                    df_training=df_train,
                 )
 
         runtime = time.time() - start

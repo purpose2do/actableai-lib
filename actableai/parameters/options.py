@@ -37,7 +37,7 @@ class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
     """Parameter representing options of type `OptionT`"""
 
     parameter_type: ParameterType = ParameterType.OPTIONS
-    default: Union[str, List[str]]
+    default: Union[str, List[str]] = []
     # Automatic dynamic field
     dict_parameter: bool = False
     is_multi: bool
@@ -55,7 +55,7 @@ class OptionsParameter(BaseParameter, GenericModel, Generic[OptionT]):
         """
         return hasattr(cls._get_option_type(), "validate_parameter")
 
-    @validator("default", always=True)
+    @validator("default")
     def set_default(cls, value: Union[str, List[str]]) -> List[str]:
         """Set `default` value.
 
