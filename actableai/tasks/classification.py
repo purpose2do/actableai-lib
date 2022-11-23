@@ -41,6 +41,7 @@ class _AAIClassificationTrainTask(AAITask):
         drop_unique: bool,
         drop_useless_features: bool,
         feature_pruning: bool,
+        feature_prune_time_limit: Optional[float],
     ) -> Tuple[
         Any,
         Any,
@@ -92,6 +93,7 @@ class _AAIClassificationTrainTask(AAITask):
                 This option improves results but extend the training time.
                 If there is no time left to do feature_pruning after training
                 this step is skipped.
+            feature_prune_time_limit: Time limit for feature_pruning (in seconds)
 
         Returns:
             Tuple[
@@ -173,8 +175,10 @@ class _AAIClassificationTrainTask(AAITask):
         feature_prune_kwargs = None
         if feature_pruning:
             feature_prune_kwargs = {}
-            if time_limit is not None:
-                feature_prune_kwargs["feature_prune_time_limit"] = time_limit * 0.5
+            if feature_prune_time_limit is not None:
+                feature_prune_kwargs[
+                    "feature_prune_time_limit"
+                ] = feature_prune_time_limit
 
         holdout_frac = max(
             len(df_train[target].unique()) / len(df_train),
@@ -392,6 +396,7 @@ class AAIClassificationTask(AAITask):
         ag_automm_enabled=False,
         refit_full=False,
         feature_pruning=True,
+        feature_prune_time_limit: Optional[float] = None,
         intervention_run_params: Optional[Dict] = None,
     ) -> Dict:
         """Run this classification task and return results.
@@ -665,6 +670,7 @@ class AAIClassificationTask(AAITask):
                 drop_unique=drop_unique,
                 drop_useless_features=drop_useless_features,
                 feature_pruning=feature_pruning,
+                feature_prune_time_limit=feature_prune_time_limit,
             )
         else:
             (
@@ -699,6 +705,7 @@ class AAIClassificationTask(AAITask):
                 drop_unique=drop_unique,
                 drop_useless_features=drop_useless_features,
                 feature_pruning=feature_pruning,
+                feature_prune_time_limit=feature_prune_time_limit,
             )
 
         if not use_cross_validation:
@@ -863,6 +870,7 @@ class AAIClassificationTask(AAITask):
                 problem_type=problem_type,
                 positive_label=positive_label,
                 feature_pruning=feature_pruning,
+                feature_prune_time_limit=feature_prune_time_limit,
             )
             predictor.refit_full(model="best", set_best_to_refit_full=True)
 

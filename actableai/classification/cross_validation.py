@@ -101,6 +101,7 @@ def run_cross_validation(
     drop_unique: bool,
     drop_useless_features: bool,
     feature_pruning: bool,
+    feature_prune_time_limit: Optional[float],
 ) -> Tuple[
     AverageEnsembleClassifier,
     list,
@@ -141,6 +142,7 @@ def run_cross_validation(
         residuals_hyperparameters: The hyperparameters to use for the debiasing model.
         num_gpus (int): The number of GPUs to use.
         eval_metric: Metric to be optimized for.
+        feature_prune_time_limit: The time limit for feature pruning. (in seconds)
 
     Returns:
         Tuple: Result of the cross validation.
@@ -193,6 +195,7 @@ def run_cross_validation(
                 "drop_unique": drop_unique,
                 "drop_useless_features": drop_useless_features,
                 "feature_pruning": feature_pruning,
+                "feature_prune_time_limit": feature_prune_time_limit,
             },
         )
         for kfold_index, (train_index, val_index) in enumerate(kfolds_index_list)
