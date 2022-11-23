@@ -105,7 +105,7 @@ def run_cross_validation(
     AverageEnsembleClassifier,
     list,
     dict,
-    list,
+    List[pd.DataFrame],
     pd.DataFrame,
     pd.DataFrame,
     pd.DataFrame,
@@ -128,7 +128,7 @@ def run_cross_validation(
         model_directory: The directory to store the models.
         target: The target column.
         features: The features columns used for training/prediction.
-        run_model: If True, regressions models run predictions on unseen values.
+        run_model: If True, classification models run predictions on unseen values.
         df_train: The input dataframe.
         df_test: Testing data.
         kfolds: The number of folds to use for cross validation.
@@ -153,7 +153,6 @@ def run_cross_validation(
     """
     import os
     import math
-    import json
     import numpy as np
     from multiprocessing.pool import ThreadPool
     from sklearn.model_selection import StratifiedKFold
@@ -266,9 +265,7 @@ def run_cross_validation(
                     precision_recall_curve[metric]
                 )
 
-        df_val_cross_val_pred_prob.append(
-            json.loads(df_val_pred_prob.to_json(orient="table"))["data"]
-        )
+        df_val_cross_val_pred_prob.append(df_val_pred_prob)
 
         if run_model and explain_samples:
             cross_val_predict_shap_values.append(predict_shap_values)

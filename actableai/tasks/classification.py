@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 import logging
 from actableai.classification.config import MINIMUM_CLASSIFICATION_VALIDATION
 
@@ -14,6 +14,8 @@ class _AAIClassificationTrainTask(AAITask):
     Args:
         AAITask: Base Class for every tasks
     """
+
+    from autogluon.tabular import TabularPredictor
 
     @AAITask.run_with_ray_remote(TaskType.CLASSIFICATION_TRAIN)
     def run(
@@ -42,12 +44,12 @@ class _AAIClassificationTrainTask(AAITask):
         drop_useless_features: bool,
         feature_pruning: bool,
     ) -> Tuple[
-        Any,
+        TabularPredictor,
         Any,
         Optional[List],
-        Optional[dict],
+        Optional[Dict],
         Optional[np.ndarray],
-        Union[np.ndarray, List],
+        Optional[pd.DataFrame],
         pd.DataFrame,
     ]:
         """Runs a sub Classification Task for cross-validation.
@@ -127,7 +129,7 @@ class _AAIClassificationTrainTask(AAITask):
         from actableai.utils import debiasing_feature_generator_args
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
 
-        ag_args_fit = {"drop_unique": drop_unique}
+        ag_args_fit: Dict[str, Any] = {"drop_unique": drop_unique}
         feature_generator_args = {}
 
         if "AG_AUTOMM" in hyperparameters:
@@ -181,7 +183,7 @@ class _AAIClassificationTrainTask(AAITask):
             MINIMUM_CLASSIFICATION_VALIDATION,
         )
 
-        predictor = predictor.fit(
+        predictor.fit(
             train_data=df_train,
             hyperparameters=hyperparameters,
             presets=presets,
@@ -340,7 +342,7 @@ class _AAIClassificationTrainTask(AAITask):
                         }
                     )
 
-        predict_shap_values = []
+        predict_shap_values = None
 
         if run_model and explainer is not None and df_test is not None:
             predict_shap_values = explainer.shap_values(df_test)
@@ -818,7 +820,6 @@ class AAIClassificationTask(AAITask):
 
         aai_intervention_model = None
         if intervention_run_params is not None:
-            intervention_run_params["target_proba"] = predictor.predict_proba(df)
             intervention_task_result = AAIInterventionTask(
                 return_model=True, upload_model=False
             ).run(**intervention_run_params)
