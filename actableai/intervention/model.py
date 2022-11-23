@@ -478,8 +478,6 @@ class AAIInterventionEffectPredictor:
                     features=list(
                         df.drop(axis="columns", columns=[self.target]).columns
                     ),
-                    # TODO Determine which features to use
-                    # All features are used for now
                     run_model=False,
                     df_train=df,
                     df_test=None,

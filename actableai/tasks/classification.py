@@ -15,8 +15,6 @@ class _AAIClassificationTrainTask(AAITask):
         AAITask: Base Class for every tasks
     """
 
-    from autogluon.tabular import TabularPredictor
-
     @AAITask.run_with_ray_remote(TaskType.CLASSIFICATION_TRAIN)
     def run(
         self,
@@ -44,7 +42,7 @@ class _AAIClassificationTrainTask(AAITask):
         drop_useless_features: bool,
         feature_pruning: bool,
     ) -> Tuple[
-        TabularPredictor,
+        Any,
         Any,
         Optional[List],
         Optional[Dict],
