@@ -12,7 +12,7 @@ class AAIModelInference:
     """
 
     @classmethod
-    def deploy(cls, num_replicas, ray_options, s3_bucket, s3_prefix=""):
+    def deploy(cls, ray_autoscaling_configs, ray_options, s3_bucket, s3_prefix=""):
         """
         TODO write documentation
         """
@@ -21,7 +21,7 @@ class AAIModelInference:
         return serve.deployment(
             cls,
             name=cls.__name__,
-            num_replicas=num_replicas,
+            autoscaling_config=ray_autoscaling_configs,
             ray_actor_options=ray_options,
             init_args=(s3_bucket, s3_prefix),
         ).deploy()
