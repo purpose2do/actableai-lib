@@ -121,7 +121,7 @@ class BaseParams:
                 return self._randint(param_name, options)
             if value_type == ValueType.FLOAT:
                 return self._uniform(param_name, options)
-            if value_type == ValueType.BOOL:
+            if value_type == ValueType.BOOL or value_type == ValueType.STR:
                 return options
         if (
             parameter_type == ParameterType.OPTIONS

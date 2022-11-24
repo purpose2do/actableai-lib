@@ -12,7 +12,7 @@ from actableai.parameters.validation import (
     OutOfRangeError,
 )
 
-ListT = TypeVar("ListT", bool, int, float)
+ListT = TypeVar("ListT", bool, int, float, str)
 
 
 class ListParameter(BaseParameter, GenericModel, Generic[ListT]):
@@ -21,7 +21,7 @@ class ListParameter(BaseParameter, GenericModel, Generic[ListT]):
     """
 
     parameter_type: ParameterType = ParameterType.LIST
-    default: Union[ListT, Tuple[ListT, ...], List[ListT]]
+    default: Union[ListT, Tuple[ListT, ...], List[ListT]] = []
     # Automatic dynamic field
     value_type: ValueType = None
     min_len: int
@@ -56,6 +56,8 @@ class ListParameter(BaseParameter, GenericModel, Generic[ListT]):
             return ValueType.INT
         if val_type == float:
             return ValueType.FLOAT
+        if val_type == str:
+            return ValueType.STR
 
         raise ValueError("Invalid generic type.")
 
@@ -149,6 +151,8 @@ class ListParameter(BaseParameter, GenericModel, Generic[ListT]):
                 type_valid = isinstance(val, int)
             elif self.value_type == ValueType.FLOAT:
                 type_valid = isinstance(val, (int, float))
+            elif self.value_type == ValueType.STR:
+                type_valid = isinstance(val, str)
 
             if not type_valid:
                 errors.add_error(

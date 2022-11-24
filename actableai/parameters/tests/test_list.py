@@ -39,6 +39,7 @@ class TestListParameter:
             (int, ValueType.INT, [1, 2]),
             (float, ValueType.FLOAT, [1.5, 2.5]),
             (bool, ValueType.BOOL, [True, False]),
+            (str, ValueType.STR, ["value1", "value2"]),
         ],
     )
     def test_set_value_type(self, parameter_type, expected_value_type, default):
@@ -122,6 +123,9 @@ class TestListParameter:
             (bool, [True, False], [True, False]),
             (bool, [True, False], (True, False)),
             (bool, [True, False], True),
+            (str, ["default1", "default2"], ["value1", "value2"]),
+            (str, ["default1", "default2"], ("value1", "value2")),
+            (str, ["default1", "default2"], "value"),
         ],
     )
     def test_validate_parameter_valid(self, parameter_type, default, value):
@@ -163,6 +167,8 @@ class TestListParameter:
             (float, [1.5, 2.5], [1.5, "invalid"]),
             (bool, [True, False], ["invalid", "invalid_too"]),
             (bool, [True, False], [True, "invalid_too"]),
+            (str, ["default1", "default2"], [1, 2]),
+            (str, ["default1", "default2"], [0, "value"]),
         ],
     )
     def test_validate_parameter_invalid_type(self, parameter_type, default, value):
