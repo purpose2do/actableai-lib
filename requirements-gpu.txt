@@ -6,13 +6,16 @@
 #
 --find-links https://download.pytorch.org/whl/torch_stable.html
 
-absl-py==1.1.0
+absl-py==1.3.0
     # via
     #   tensorboard
     #   tensorflow-gpu
-aiohttp==3.8.1
+accelerate==0.13.2
+    # via autogluon-multimodal
+aiohttp==3.8.3
     # via
     #   aiohttp-cors
+    #   datasets
     #   fsspec
     #   ray
 aiohttp-cors==0.7.0
@@ -21,13 +24,15 @@ aioredis==1.3.1
     # via -r requirements.in
 aiorwlock==1.3.0
     # via ray
-aiosignal==1.2.0
+aiosignal==1.3.1
     # via
     #   aiohttp
     #   ray
+albumentations==1.1.0
+    # via autogluon-multimodal
 antlr4-python3-runtime==4.8
     # via omegaconf
-anyio==3.6.1
+anyio==3.6.2
     # via starlette
 arabic-stopwords==0.3
     # via multi-rake
@@ -41,35 +46,33 @@ async-timeout==4.0.2
     #   aioredis
 asynctest==0.13.0
     # via aiohttp
-attrs==21.4.0
+attrs==22.1.0
     # via
     #   aiohttp
     #   jsonschema
     #   pytest
     #   ray
     #   visions
-autocuda==0.11
+autocuda==0.12
     # via pyabsa
-autogluon-common==0.5.0
+autogluon-common==0.6.0
     # via
     #   autogluon-core
     #   autogluon-features
     #   autogluon-multimodal
-autogluon-contrib-nlp==0.0.1b20220208
-    # via autogluon-multimodal
-autogluon-core[ray_tune]==0.5.0
+autogluon-core[raytune]==0.6.0
     # via
     #   autogluon-multimodal
     #   autogluon-tabular
-autogluon-features==0.5.0
+autogluon-features==0.6.0
     # via
     #   autogluon-multimodal
     #   autogluon-tabular
-autogluon-multimodal==0.5.0
+autogluon-multimodal==0.6.0
     # via autogluon-text
-autogluon-tabular[all]==0.5.0
+autogluon-tabular[all]==0.6.0
     # via -r requirements.in
-autogluon-text==0.5.0
+autogluon-text==0.6.0
     # via -r requirements.in
 backcall==0.2.0
     # via ipython
@@ -77,92 +80,100 @@ beautifulsoup4==4.11.1
     # via gdown
 blessed==1.19.1
     # via gpustat
-blis==0.7.8
-    # via
-    #   spacy
-    #   thinc
-boto3==1.24.22
+blis==0.7.9
+    # via thinc
+boto3==1.26.16
     # via
     #   autogluon-common
     #   autogluon-core
     #   autogluon-multimodal
-botocore==1.27.22
+botocore==1.29.16
     # via
     #   boto3
     #   s3transfer
 bottleneck==1.3.5
     # via visions
-bpemb==0.3.3
+bpemb==0.3.4
     # via flair
 cachetools==5.2.0
     # via google-auth
-catalogue==2.0.7
+catalogue==2.0.8
     # via
     #   spacy
     #   srsly
     #   thinc
-catboost==1.0.6
+catboost==1.1.1
     # via autogluon-tabular
-certifi==2022.6.15
+certifi==2022.9.24
     # via
     #   minio
     #   requests
-charset-normalizer==2.1.0
+charset-normalizer==2.1.1
     # via
     #   aiohttp
     #   requests
 click==8.0.4
     # via
     #   distributed
+    #   metric-visualizer
+    #   model-index
     #   nltk
+    #   openmim
     #   ray
-    #   sacremoses
     #   typer
     #   uvicorn
-cloudpickle==2.1.0
+cloudpickle==2.2.0
     # via
     #   dask
     #   distributed
     #   hyperopt
     #   shap
-cmdstanpy==1.0.4
+cmdstanpy==1.0.8
     # via prophet
-colorama==0.4.5
-    # via sacrebleu
+colorama==0.4.6
+    # via openmim
 colorful==0.5.4
     # via ray
+commonmark==0.9.1
+    # via rich
+confection==0.0.3
+    # via thinc
 configspace==0.6.0
     # via tabpfn
-conllu==4.4.2
+conllu==4.5.2
     # via flair
-contextvars==2.4
-    # via autogluon-contrib-nlp
 convertdate==2.4.0
     # via
     #   holidays
     #   prophet
 cycler==0.11.0
     # via matplotlib
-cymem==2.0.6
+cymem==2.0.7
     # via
     #   preshed
     #   spacy
     #   thinc
-cython==0.29.30
-    # via
-    #   configspace
-    #   prophet
+cython==0.29.32
+    # via configspace
 dask==2021.11.2
     # via
     #   autogluon-core
     #   distributed
+datasets==2.7.1
+    # via evaluate
 decorator==5.1.1
     # via ipython
+defusedxml==0.7.1
+    # via autogluon-multimodal
 deprecated==1.2.13
     # via flair
 dill==0.3.6
-    # via -r requirements.in
-distlib==0.3.4
+    # via
+    #   -r requirements.in
+    #   datasets
+    #   evaluate
+    #   multiprocess
+distlib==0.3.6
     # via virtualenv
 distributed==2021.11.2
     # via autogluon-core
@@ -172,53 +183,55 @@ econml==0.13.0
     # via -r requirements.in
 ephem==4.1.3
     # via lunarcalendar
+evaluate==0.2.2
+    # via autogluon-multimodal
 execnet==1.9.0
     # via pytest-xdist
 fairscale==0.4.6
     # via autogluon-multimodal
-fastai==2.5.6
+fastai==2.7.10
     # via autogluon-tabular
-fastapi==0.78.0
+fastapi==0.87.0
     # via ray
-fastcore==1.4.5
+fastcore==1.5.27
     # via
     #   fastai
     #   fastdownload
-fastdownload==0.0.6
+fastdownload==0.0.7
     # via fastai
-fastprogress==1.0.2
+fastprogress==1.0.3
     # via
     #   fastai
     #   fastdownload
-filelock==3.7.1
+filelock==3.8.0
     # via
     #   gdown
     #   huggingface-hub
     #   ray
     #   transformers
     #   virtualenv
-findfile==1.7.9.5
+findfile==1.7.10
     # via
     #   metric-visualizer
     #   pyabsa
 flair==0.11.3
     # via -r requirements.in
 flake8==3.9.2
-    # via
-    #   -r requirements.in
-    #   autogluon-contrib-nlp
+    # via -r requirements.in
 flatbuffers==1.12
     # via tensorflow-gpu
-fonttools==4.33.3
+fonttools==4.38.0
     # via matplotlib
-frozenlist==1.3.0
+frozenlist==1.3.3
     # via
     #   aiohttp
     #   aiosignal
     #   ray
-fsspec[http]==2022.5.0
+fsspec[http]==2022.11.0
     # via
     #   dask
+    #   datasets
+    #   evaluate
     #   pytorch-lightning
 ftfy==6.1.1
     # via flair
@@ -234,15 +247,15 @@ gensim==4.2.0
     # via
     #   bpemb
     #   flair
-gitdb==4.0.9
+gitdb==4.0.10
     # via gitpython
-gitpython==3.1.27
+gitpython==3.1.29
     # via pyabsa
 gluonts[Prophet,R,prophet,r]==0.10.3
     # via -r requirements.in
-google-api-core==2.8.2
+google-api-core==2.10.2
     # via opencensus
-google-auth==2.9.0
+google-auth==2.14.1
     # via
     #   google-api-core
     #   google-auth-oauthlib
@@ -251,9 +264,9 @@ google-auth-oauthlib==0.4.6
     # via tensorboard
 google-pasta==0.2.0
     # via tensorflow-gpu
-googleapis-common-protos==1.56.3
+googleapis-common-protos==1.57.0
     # via google-api-core
-gpustat==1.0.0b1
+gpustat==1.0.0
     # via ray
 gpytorch==1.8.1
     # via tabpfn
@@ -261,14 +274,14 @@ graphviz==0.8.4
     # via
     #   catboost
     #   mxnet-cu110
-greenlet==1.1.2
+greenlet==2.0.1
     # via sqlalchemy
 grpcio==1.43.0
     # via
     #   ray
     #   tensorboard
     #   tensorflow-gpu
-h11==0.13.0
+h11==0.14.0
     # via uvicorn
 h5py==3.7.0
     # via tensorflow-gpu
@@ -278,13 +291,16 @@ hijri-converter==2.2.4
     # via holidays
 hiredis==2.0.0
     # via aioredis
-holidays==0.14.2
+holidays==0.17.2
     # via
     #   gluonts
     #   prophet
-huggingface-hub==0.8.1
+huggingface-hub==0.11.0
     # via
+    #   datasets
+    #   evaluate
     #   flair
+    #   timm
     #   transformers
 hyperopt==0.2.7
     # via
@@ -292,28 +308,30 @@ hyperopt==0.2.7
     #   autogluon-core
     #   flair
     #   tabpfn
-idna==3.3
+idna==3.4
     # via
     #   anyio
     #   requests
     #   yarl
-imageio==2.19.3
+imageio==2.22.4
     # via scikit-image
-immutables==0.18
-    # via contextvars
-importlib-metadata==4.12.0
+importlib-metadata==3.10.1
     # via
     #   click
+    #   datasets
+    #   evaluate
     #   flake8
     #   huggingface-hub
     #   jsonschema
+    #   konoha
     #   markdown
+    #   numba
     #   pluggy
     #   pytest
     #   sqlalchemy
     #   transformers
     #   virtualenv
-importlib-resources==5.8.0
+importlib-resources==5.10.0
     # via jsonschema
 iniconfig==1.1.1
     # via pytest
@@ -321,7 +339,7 @@ ipython==7.32.0
     # via -r requirements.in
 janome==0.4.2
     # via flair
-jedi==0.18.1
+jedi==0.18.2
     # via ipython
 jinja2==3.1.2
     # via
@@ -332,24 +350,25 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joblib==1.1.0
+joblib==1.2.0
     # via
     #   econml
     #   mlxtend
     #   nltk
-    #   sacremoses
     #   scikit-learn
-jsonschema==4.6.1
-    # via ray
+jsonschema==4.8.0
+    # via
+    #   autogluon-multimodal
+    #   ray
 keras==2.9.0
     # via tensorflow-gpu
 keras-preprocessing==1.1.2
     # via tensorflow-gpu
-kiwisolver==1.4.3
+kiwisolver==1.4.4
     # via matplotlib
-konoha==4.6.3
+konoha==4.6.5
     # via flair
-korean-lunar-calendar==0.2.1
+korean-lunar-calendar==0.3.1
     # via holidays
 langcodes==3.3.0
     # via spacy
@@ -357,13 +376,13 @@ langdetect==1.0.9
     # via flair
 liac-arff==2.5.0
     # via openml
-libclang==14.0.1
+libclang==14.0.6
     # via tensorflow-gpu
-lightgbm==3.3.2
+lightgbm==3.3.3
     # via
     #   autogluon-tabular
     #   econml
-llvmlite==0.38.1
+llvmlite==0.39.1
     # via numba
 locket==1.0.0
     # via partd
@@ -371,11 +390,15 @@ lunarcalendar==0.0.9
     # via prophet
 lxml==4.9.1
     # via flair
-markdown==3.3.7
-    # via tensorboard
+markdown==3.3.4
+    # via
+    #   model-index
+    #   tensorboard
 markupsafe==2.1.1
-    # via jinja2
-matplotlib==3.5.2
+    # via
+    #   jinja2
+    #   werkzeug
+matplotlib==3.5.3
     # via
     #   autogluon-core
     #   catboost
@@ -385,19 +408,22 @@ matplotlib==3.5.2
     #   metric-visualizer
     #   mlxtend
     #   prophet
+    #   pycocotools
     #   seaborn
     #   tikzplotlib
-matplotlib-inline==0.1.3
+matplotlib-inline==0.1.6
     # via ipython
 mccabe==0.6.1
     # via flake8
-metric-visualizer==0.4.23
+metric-visualizer==0.6.6
     # via pyabsa
 minio==7.1.12
     # via openml
 mlxtend==0.20.0
     # via -r requirements.in
-more-itertools==8.13.0
+model-index==0.1.11
+    # via openmim
+more-itertools==9.0.0
     # via flair
 mpld3==0.3
     # via flair
@@ -415,13 +441,19 @@ multidict==6.0.2
     #   yarl
 multimethod==1.4
     # via visions
-murmurhash==1.0.7
+multiprocess==0.70.14
+    # via
+    #   datasets
+    #   evaluate
+murmurhash==1.0.9
     # via
     #   preshed
     #   spacy
     #   thinc
 mxnet-cu110==1.8.0.post0
     # via -r requirements-gpu.in
+natsort==8.2.0
+    # via metric-visualizer
 networkx==2.6.3
     # via
     #   autogluon-tabular
@@ -438,14 +470,15 @@ nltk==3.7
     #   autogluon-multimodal
 nptyping==1.4.4
     # via autogluon-multimodal
-numba==0.55.2
+numba==0.56.4
     # via
     #   shap
     #   sparse
 numpy==1.21.6
     # via
+    #   accelerate
+    #   albumentations
     #   autogluon-common
-    #   autogluon-contrib-nlp
     #   autogluon-core
     #   autogluon-features
     #   autogluon-multimodal
@@ -456,8 +489,10 @@ numpy==1.21.6
     #   catboost
     #   cmdstanpy
     #   configspace
+    #   datasets
     #   dowhy
     #   econml
+    #   evaluate
     #   gensim
     #   gluonts
     #   gpytorch
@@ -467,12 +502,14 @@ numpy==1.21.6
     #   keras-preprocessing
     #   lightgbm
     #   matplotlib
+    #   metric-visualizer
     #   mlxtend
     #   multi-rake
     #   mxnet-cu110
     #   nlpaug
     #   nptyping
     #   numba
+    #   opencv-python-headless
     #   openml
     #   opt-einsum
     #   pandas
@@ -480,12 +517,13 @@ numpy==1.21.6
     #   patsy
     #   prophet
     #   pyarrow
+    #   pycocotools
     #   pytorch-lightning
     #   pytorch-metric-learning
     #   pywavelets
+    #   qudida
     #   ray
     #   river
-    #   sacrebleu
     #   scikit-image
     #   scikit-learn
     #   scipy
@@ -503,29 +541,41 @@ numpy==1.21.6
     #   tifffile
     #   tikzplotlib
     #   torchmetrics
+    #   torchtext
     #   torchvision
     #   transformers
     #   visions
     #   xgboost
-nvidia-ml-py3==7.352.0
+nvidia-ml-py==11.495.46
     # via gpustat
-oauthlib==3.2.0
+oauthlib==3.2.2
     # via requests-oauthlib
 omegaconf==2.1.2
     # via autogluon-multimodal
-opencensus==0.9.0
+opencensus==0.11.0
     # via ray
-opencensus-context==0.1.2
+opencensus-context==0.1.3
     # via opencensus
+opencv-python-headless==4.6.0.66
+    # via
+    #   albumentations
+    #   qudida
+openmim==0.2.1
+    # via autogluon-multimodal
 openml==0.12.2
     # via tabpfn
 opt-einsum==3.3.0
     # via tensorflow-gpu
+ordered-set==4.1.0
+    # via model-index
 overrides==3.1.0
     # via konoha
 packaging==21.3
     # via
+    #   accelerate
     #   dask
+    #   datasets
+    #   evaluate
     #   fastai
     #   fastcore
     #   huggingface-hub
@@ -541,19 +591,21 @@ packaging==21.3
 pandas==1.3.5
     # via
     #   autogluon-common
-    #   autogluon-contrib-nlp
     #   autogluon-core
     #   autogluon-features
     #   autogluon-multimodal
     #   autogluon-tabular
     #   catboost
     #   cmdstanpy
+    #   datasets
     #   dowhy
     #   econml
+    #   evaluate
     #   fastai
     #   gluonts
     #   mlxtend
     #   nlpaug
+    #   openmim
     #   openml
     #   pandasql
     #   prophet
@@ -567,11 +619,11 @@ pandasql==0.7.3
     # via -r requirements.in
 parso==0.8.3
     # via jedi
-partd==1.2.0
+partd==1.3.0
     # via dask
-pathy==0.6.2
+pathy==0.10.0
     # via spacy
-patsy==0.5.2
+patsy==0.5.3
     # via statsmodels
 pexpect==4.8.0
     # via ipython
@@ -586,39 +638,35 @@ pillow==9.0.1
     #   scikit-image
     #   tikzplotlib
     #   torchvision
-platformdirs==2.5.2
+platformdirs==2.5.4
     # via virtualenv
-plotly==5.9.0
+plotly==5.11.0
     # via catboost
 pluggy==1.0.0
     # via pytest
-portalocker==2.4.0
-    # via sacrebleu
 pptree==3.1
     # via flair
-preshed==3.0.6
+preshed==3.0.8
     # via
     #   spacy
     #   thinc
 prometheus-client==0.13.1
     # via ray
-prompt-toolkit==3.0.30
+prompt-toolkit==3.0.33
     # via ipython
-prophet==1.1
+prophet==1.1.1
     # via gluonts
-protobuf==3.18.1
+protobuf==3.19.6
     # via
-    #   autogluon-contrib-nlp
-    #   autogluon-multimodal
     #   google-api-core
     #   googleapis-common-protos
-    #   pytorch-lightning
     #   ray
     #   tensorboard
     #   tensorboardx
     #   tensorflow-gpu
-psutil==5.9.1
+psutil==5.9.4
     # via
+    #   accelerate
     #   autogluon-features
     #   autogluon-tabular
     #   distributed
@@ -629,17 +677,17 @@ py==1.11.0
     # via
     #   pytest
     #   pytest-forked
-py-spy==0.3.12
+py-spy==0.3.14
     # via ray
-py4j==0.10.9.5
+py4j==0.10.9.7
     # via hyperopt
 pyabsa==1.14.7
     # via -r requirements.in
 pyarabic==0.6.15
     # via arabic-stopwords
-pyarrow==8.0.0
+pyarrow==10.0.1
     # via
-    #   autogluon-contrib-nlp
+    #   datasets
     #   openml
 pyasn1==0.4.8
     # via
@@ -649,12 +697,16 @@ pyasn1-modules==0.2.8
     # via google-auth
 pycld2==0.41
     # via multi-rake
+pycocotools==2.0.6
+    # via autogluon-multimodal
 pycodestyle==2.7.0
     # via flake8
-pydantic==1.8.2
+pydantic==1.10.2
     # via
+    #   confection
     #   fastapi
     #   gluonts
+    #   ray
     #   spacy
     #   thinc
 pydeprecate==0.3.2
@@ -665,8 +717,10 @@ pydot==1.4.2
     # via dowhy
 pyflakes==2.3.1
     # via flake8
-pygments==2.12.0
-    # via ipython
+pygments==2.13.0
+    # via
+    #   ipython
+    #   rich
 pymeeus==0.5.11
     # via convertdate
 pyparsing==3.0.9
@@ -675,7 +729,7 @@ pyparsing==3.0.9
     #   matplotlib
     #   packaging
     #   pydot
-pyrsistent==0.18.1
+pyrsistent==0.19.2
     # via
     #   jsonschema
     #   multi-rake
@@ -702,13 +756,13 @@ python-dateutil==2.8.2
     #   prophet
 python-rapidjson==1.4
     # via -r requirements.in
-pytorch-lightning==1.6.4
+pytorch-lightning==1.7.7
     # via autogluon-multimodal
 pytorch-metric-learning==1.3.2
     # via autogluon-multimodal
-pytorch-warmup==0.1.0
+pytorch-warmup==0.1.1
     # via pyabsa
-pytz==2022.1
+pytz==2022.6
     # via
     #   lunarcalendar
     #   pandas
@@ -716,67 +770,81 @@ pywavelets==1.3.0
     # via scikit-image
 pyyaml==6.0
     # via
+    #   accelerate
+    #   albumentations
     #   dask
+    #   datasets
     #   distributed
     #   fastai
     #   huggingface-hub
+    #   model-index
     #   omegaconf
     #   pytorch-lightning
     #   ray
     #   tabpfn
+    #   timm
     #   transformers
-    #   yacs
-ray[default,serve,tune]==1.13.0
+qudida==0.0.4
+    # via albumentations
+ray[default,serve,tune]==2.0.0
     # via
     #   -r requirements.in
     #   autogluon-core
 redis==3.5.3
     # via -r requirements.in
-regex==2022.6.2
+regex==2022.10.31
     # via
-    #   autogluon-contrib-nlp
     #   flair
     #   multi-rake
     #   nltk
-    #   sacrebleu
-    #   sacremoses
     #   segtok
     #   transformers
 requests[socks]==2.28.1
     # via
     #   autogluon-core
+    #   autogluon-multimodal
     #   bpemb
+    #   datasets
+    #   evaluate
     #   fastai
     #   fsspec
     #   gdown
     #   google-api-core
     #   huggingface-hub
+    #   konoha
     #   mxnet-cu110
     #   nlpaug
+    #   openmim
     #   openml
     #   ray
     #   requests-oauthlib
+    #   responses
     #   spacy
     #   tensorboard
+    #   torchtext
     #   transformers
     #   update-checker
     #   wikipedia-api
 requests-oauthlib==1.3.1
     # via google-auth-oauthlib
+responses==0.18.0
+    # via
+    #   datasets
+    #   evaluate
+rich==12.6.0
+    # via openmim
 river==0.8.0
     # via -r requirements.in
 rpy2==2.9.6b0
     # via gluonts
-rsa==4.8
+rsa==4.9
     # via google-auth
 s3transfer==0.6.0
     # via boto3
-sacrebleu==2.1.0
-    # via autogluon-contrib-nlp
-sacremoses==0.0.53
-    # via autogluon-contrib-nlp
 scikit-image==0.19.3
-    # via autogluon-multimodal
+    # via
+    #   albumentations
+    #   autogluon-multimodal
 scikit-learn==1.0.2
     # via
     #   -r requirements.in
@@ -793,11 +861,13 @@ scikit-learn==1.0.2
     #   mlxtend
     #   openml
     #   pytorch-metric-learning
+    #   qudida
     #   seqeval
     #   shap
     #   tabpfn
 scipy==1.7.3
     # via
+    #   albumentations
     #   autogluon-core
     #   autogluon-multimodal
     #   autogluon-tabular
@@ -826,13 +896,14 @@ segtok==1.5.11
     # via flair
 sentencepiece==0.1.95
     # via
-    #   autogluon-contrib-nlp
     #   autogluon-multimodal
     #   bpemb
     #   flair
     #   pyabsa
 seqeval==1.2.2
-    # via pyabsa
+    # via
+    #   autogluon-multimodal
+    #   pyabsa
 setuptools-git==1.2
     # via prophet
 shap==0.39.0
@@ -856,9 +927,7 @@ six==1.16.0
     #   pyarabic
     #   python-dateutil
     #   rpy2
-    #   sacremoses
     #   tensorflow-gpu
-    #   virtualenv
 slicer==0.0.7
     # via shap
 smart-open==5.2.1
@@ -869,35 +938,36 @@ smart-open==5.2.1
     #   ray
 smmap==5.0.0
     # via gitdb
-sniffio==1.2.0
+sniffio==1.3.0
     # via anyio
 sortedcontainers==2.4.0
     # via distributed
 soupsieve==2.3.2.post1
     # via beautifulsoup4
-spacy==3.3.1
+spacy==3.4.3
     # via
     #   fastai
     #   pyabsa
-spacy-legacy==3.0.9
+spacy-legacy==3.0.10
     # via spacy
-spacy-loggers==1.0.2
+spacy-loggers==1.0.3
     # via spacy
 sparse==0.13.0
     # via econml
-sqlalchemy==1.4.39
+sqlalchemy==1.4.44
     # via pandasql
 sqlitedict==2.0.0
     # via flair
-srsly==2.4.3
+srsly==2.4.5
     # via
+    #   confection
     #   spacy
     #   thinc
-starlette==0.19.1
+starlette==0.21.0
     # via
     #   fastapi
     #   ray
-statsmodels==0.13.2
+statsmodels==0.13.5
     # via
     #   dowhy
     #   econml
@@ -905,17 +975,17 @@ sympy==1.10.1
     # via dowhy
 tabpfn==0.1.5
     # via -r requirements.in
-tabulate==0.8.10
+tabulate==0.9.0
     # via
     #   flair
     #   metric-visualizer
+    #   openmim
     #   ray
-    #   sacrebleu
 tangled-up-in-unicode==0.2.0
     # via visions
 tblib==1.7.0
     # via distributed
-tenacity==8.0.1
+tenacity==8.1.0
     # via plotly
 tensorboard==2.9.1
     # via
@@ -931,13 +1001,16 @@ tensorflow-estimator==2.9.0
     # via tensorflow-gpu
 tensorflow-gpu==2.9.1
     # via -r requirements-gpu.in
-tensorflow-io-gcs-filesystem==0.26.0
+tensorflow-io-gcs-filesystem==0.28.0
     # via tensorflow-gpu
-termcolor==1.1.0
+termcolor==2.1.1
     # via
+    #   findfile
     #   pyabsa
     #   tensorflow-gpu
-thinc==8.0.17
+text-unidecode==1.3
+    # via autogluon-multimodal
+thinc==8.1.5
     # via spacy
 threadpoolctl==3.1.0
     # via scikit-learn
@@ -945,15 +1018,13 @@ tifffile==2021.11.2
     # via scikit-image
 tikzplotlib==0.10.1
     # via metric-visualizer
-timm==0.5.4
+timm==0.6.12
     # via autogluon-multimodal
-tokenizers==0.12.1
-    # via
-    #   autogluon-contrib-nlp
-    #   transformers
+tokenizers==0.13.2
+    # via transformers
 tomli==2.0.1
     # via pytest
-toolz==0.11.2
+toolz==0.12.0
     # via
     #   dask
     #   distributed
@@ -962,6 +1033,7 @@ toolz==0.11.2
 torch==1.10.1+cu111
     # via
     #   -r requirements-gpu.in
+    #   accelerate
     #   autogluon-multimodal
     #   autogluon-tabular
     #   fairscale
@@ -976,27 +1048,33 @@ torch==1.10.1+cu111
     #   timm
     #   torchaudio
     #   torchmetrics
+    #   torchtext
     #   torchvision
 torchaudio==0.10.1+rocm4.1
     # via -r requirements-gpu.in
-torchmetrics==0.7.3
+torchmetrics==0.8.2
     # via
     #   autogluon-multimodal
     #   pytorch-lightning
+torchtext==0.11.1
+    # via autogluon-multimodal
 torchvision==0.11.2+cu111
     # via
     #   -r requirements-gpu.in
+    #   autogluon-multimodal
     #   fastai
     #   pytorch-metric-learning
     #   timm
 tornado==6.2
     # via distributed
-tqdm==4.64.0
+tqdm==4.64.1
     # via
     #   autogluon-core
     #   autogluon-multimodal
     #   bpemb
     #   cmdstanpy
+    #   datasets
+    #   evaluate
     #   flair
     #   gdown
     #   gluonts
@@ -1007,21 +1085,21 @@ tqdm==4.64.0
     #   pyabsa
     #   pytorch-lightning
     #   pytorch-metric-learning
-    #   sacremoses
     #   shap
     #   spacy
     #   tabpfn
+    #   torchtext
     #   transformers
-traitlets==5.3.0
+traitlets==5.5.0
     # via
     #   ipython
     #   matplotlib-inline
-transformers==4.20.1
+transformers==4.23.1
     # via
     #   autogluon-multimodal
     #   flair
     #   pyabsa
-typer==0.4.2
+typer==0.7.0
     # via
     #   pathy
     #   spacy
@@ -1032,18 +1110,21 @@ typing-extensions==4.1.1
     #   asgiref
     #   async-timeout
     #   catalogue
+    #   confection
     #   configspace
     #   gitpython
     #   gluonts
     #   h11
     #   huggingface-hub
-    #   immutables
     #   importlib-metadata
     #   jsonschema
     #   kiwisolver
     #   pyabsa
     #   pydantic
     #   pytorch-lightning
+    #   qudida
+    #   ray
+    #   rich
     #   seaborn
     #   spacy
     #   starlette
@@ -1055,23 +1136,24 @@ typing-extensions==4.1.1
 typish==1.9.3
     # via nptyping
 ujson==4.0.2
-    # via
-    #   -r requirements.in
-    #   cmdstanpy
+    # via -r requirements.in
 update-checker==0.18.0
-    # via pyabsa
-urllib3==1.26.9
+    # via
+    #   metric-visualizer
+    #   pyabsa
+urllib3==1.26.13
     # via
     #   botocore
     #   minio
     #   requests
+    #   responses
 uvicorn==0.16.0
     # via ray
-virtualenv==20.15.1
+virtualenv==20.16.2
     # via ray
 visions==0.7.1
     # via -r requirements.in
-wasabi==0.9.1
+wasabi==0.10.1
     # via
     #   spacy
     #   spacy-loggers
@@ -1083,9 +1165,9 @@ wcwidth==0.2.5
     #   prompt-toolkit
 webcolors==1.12
     # via tikzplotlib
-werkzeug==2.1.2
+werkzeug==2.2.2
     # via tensorboard
-wheel==0.37.1
+wheel==0.38.4
     # via
     #   astunparse
     #   lightgbm
@@ -1097,17 +1179,19 @@ wrapt==1.14.1
     # via
     #   deprecated
     #   tensorflow-gpu
-xgboost==1.4.2
+xgboost==1.6.2
     # via autogluon-tabular
 xmltodict==0.13.0
     # via openml
-yacs==0.1.8
-    # via autogluon-contrib-nlp
-yarl==1.7.2
+xxhash==3.1.0
+    # via
+    #   datasets
+    #   evaluate
+yarl==1.8.1
     # via aiohttp
 zict==2.2.0
     # via distributed
-zipp==3.8.0
+zipp==3.10.0
     # via
     #   catalogue
     #   importlib-metadata
