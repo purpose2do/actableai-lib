@@ -229,7 +229,7 @@ class _AAIRegressionTrainTask(AAITask):
 
             if quantile_levels is not None:
                 metrics["pinball_loss"] = pinball_loss(
-                    df_val[target], y_pred, quantile_levels
+                    df_val[target], y_pred, quantile_levels=quantile_levels
                 )
 
                 for quantile_level in quantile_levels:
@@ -355,7 +355,7 @@ class AAIRegressionTask(AAITask):
         causal_feature_selection_max_concurrent_tasks: int = 20,
         ci_for_causal_feature_selection_task_params: Optional[dict] = None,
         ci_for_causal_feature_selection_run_params: Optional[dict] = None,
-    ):
+    ) -> Dict[str, Any]:
         """Run this regression task and return results.
 
         Args:
