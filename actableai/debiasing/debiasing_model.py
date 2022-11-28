@@ -98,7 +98,7 @@ class DebiasingModel(AbstractModel):
 
         return default_auxiliary_params
 
-    def _fit_residuals(self, train_data):
+    def _fit_residuals(self, train_data, num_cpus="auto", num_gpus="auto"):
         """
         TODO write documentation
         """
@@ -112,9 +112,13 @@ class DebiasingModel(AbstractModel):
             hyperparameters=self.hyperparameters_residuals,
             presets=self.presets_residuals,
             ag_args_fit=self.params_aux,
+            num_cpus=num_cpus,
+            num_gpus=num_gpus,
         )
 
-    def _fit_non_residuals(self, train_data, tuning_data=None):
+    def _fit_non_residuals(
+        self, train_data, tuning_data=None, num_cpus="auto", num_gpus="auto"
+    ):
         """
         TODO write documentation
         """
@@ -137,12 +141,17 @@ class DebiasingModel(AbstractModel):
             hyperparameters=self.hyperparameters_non_residuals,
             presets=self.presets_non_residuals,
             ag_args_fit=self.params_aux,
+            num_cpus=num_cpus,
+            num_gpus=num_gpus,
         )
 
     def _fit(self, X, y, X_val=None, y_val=None, **kwargs):
         """
         TODO write documentation
         """
+        num_cpus = kwargs.get("num_cpus", "auto")
+        num_gpus = kwargs.get("num_gpus", "auto")
+
         # Set up train_data
         train_data = X.copy()
         train_data[self.label] = y
@@ -154,8 +163,17 @@ class DebiasingModel(AbstractModel):
             tuning_data[self.label] = y_val
 
         # Train sub models (can be done simulateneously)
-        self._fit_residuals(train_data)
-        self._fit_non_residuals(train_data, tuning_data)
+        self._fit_residuals(
+            train_data,
+            num_cpus=num_cpus,
+            num_gpus=num_gpus,
+        )
+        self._fit_non_residuals(
+            train_data,
+            tuning_data,
+            num_cpus=num_cpus,
+            num_gpus=num_gpus,
+        )
 
         self._persist_residuals_model()
         self._persist_non_residuals_model()
@@ -215,6 +233,8 @@ class DebiasingModel(AbstractModel):
             feature_generator=AutoMLPipelineFeatureGenerator(
                 **automl_pipeline_feature_parameters
             ),
+            num_cpus=num_cpus,
+            num_gpus=num_gpus,
         )
 
         self.models_fit = True

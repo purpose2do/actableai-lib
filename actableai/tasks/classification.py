@@ -156,9 +156,6 @@ class _AAIClassificationTrainTask(AAITask):
 
             hyperparameters = {DebiasingModel: {}}
 
-        ag_args_fit["num_cpus"] = 1
-        ag_args_fit["num_gpus"] = num_gpus
-
         df_train = df_train[features + biased_groups + [target]]
         if df_val is not None:
             df_val = df_val[features + biased_groups + [target]]
@@ -194,6 +191,8 @@ class _AAIClassificationTrainTask(AAITask):
             ag_args_ensemble={"fold_fitting_strategy": "sequential_local"},
             feature_prune_kwargs=feature_prune_kwargs,
             holdout_frac=holdout_frac,
+            num_cpus=1,
+            num_gpus=num_gpus,
         )
 
         explainer = None

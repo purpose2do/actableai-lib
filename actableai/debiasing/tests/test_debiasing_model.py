@@ -34,7 +34,6 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
-            "num_cpus": 1,
             "drop_unique": False,
             "drop_useless_features": False,
         }
@@ -51,6 +50,7 @@ class TestDebiasingModel:
             feature_generator=AutoMLPipelineFeatureGenerator(
                 **debiasing_feature_generator_args()
             ),
+            num_cpus=1,
         )
 
         assert predictor._learner.is_fit
@@ -79,7 +79,6 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
-            "num_cpus": 1,
             "drop_unique": False,
             "drop_useless_features": False,
         }
@@ -94,6 +93,7 @@ class TestDebiasingModel:
             feature_generator=AutoMLPipelineFeatureGenerator(
                 **debiasing_feature_generator_args()
             ),
+            num_cpus=1,
         )
 
         assert predictor._learner.is_fit
@@ -122,7 +122,6 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
-            "num_cpus": 1,
             "drop_unique": False,
             "drop_useless_features": False,
         }
@@ -139,6 +138,7 @@ class TestDebiasingModel:
             feature_generator=AutoMLPipelineFeatureGenerator(
                 **debiasing_feature_generator_args()
             ),
+            num_cpus=1,
         )
 
         assert predictor._learner.is_fit
@@ -167,7 +167,6 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
-            "num_cpus": 1,
             "drop_unique": False,
             "drop_useless_features": False,
         }
@@ -182,6 +181,7 @@ class TestDebiasingModel:
             feature_generator=AutoMLPipelineFeatureGenerator(
                 **debiasing_feature_generator_args()
             ),
+            num_cpus=1,
         )
 
         assert predictor._learner.is_fit
@@ -210,7 +210,6 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
-            "num_cpus": 1,
             "drop_unique": False,
             "drop_useless_features": False,
         }
@@ -227,6 +226,7 @@ class TestDebiasingModel:
             feature_generator=AutoMLPipelineFeatureGenerator(
                 **debiasing_feature_generator_args()
             ),
+            num_cpus=1,
         )
 
         assert predictor._learner.is_fit
@@ -255,7 +255,6 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
-            "num_cpus": 1,
             "drop_unique": False,
             "drop_useless_features": False,
         }
@@ -270,6 +269,7 @@ class TestDebiasingModel:
             feature_generator=AutoMLPipelineFeatureGenerator(
                 **debiasing_feature_generator_args()
             ),
+            num_cpus=1,
         )
 
         assert predictor._learner.is_fit
@@ -298,7 +298,6 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
-            "num_cpus": 1,
             "drop_unique": False,
             "drop_useless_features": False,
         }
@@ -315,6 +314,7 @@ class TestDebiasingModel:
             feature_generator=AutoMLPipelineFeatureGenerator(
                 **debiasing_feature_generator_args()
             ),
+            num_cpus=1,
         )
         predictor.persist_models()
 
@@ -347,7 +347,6 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
-            "num_cpus": 1,
             "drop_unique": False,
             "drop_useless_features": False,
         }
@@ -364,6 +363,7 @@ class TestDebiasingModel:
             feature_generator=AutoMLPipelineFeatureGenerator(
                 **debiasing_feature_generator_args()
             ),
+            num_cpus=1,
         )
         predictor.unpersist_models()
 
@@ -396,7 +396,6 @@ class TestDebiasingModel:
             "hyperparameters_non_residuals": unittest_hyperparameters(),
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
-            "num_cpus": 1,
             "drop_unique": False,
             "drop_useless_features": False,
         }
@@ -413,6 +412,7 @@ class TestDebiasingModel:
             feature_generator=AutoMLPipelineFeatureGenerator(
                 **debiasing_feature_generator_args()
             ),
+            num_cpus=1,
         )
 
         predictor.save()
