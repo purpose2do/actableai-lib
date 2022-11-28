@@ -49,7 +49,7 @@ class _AAIRegressionTrainTask(AAITask):
         Any,
         Any,
         Any,
-        Optional[np.ndarray],
+        Optional[pd.DataFrame],
         pd.DataFrame,
     ]:
         """Sub class for running a regression without cross validation
@@ -879,6 +879,7 @@ class AAIRegressionTask(AAITask):
                 drop_unique=drop_unique,
                 drop_useless_features=drop_useless_features,
                 feature_pruning=feature_pruning,
+                feature_prune_time_limit=feature_prune_time_limit,
             )
             predictor.refit_full(model="best", set_best_to_refit_full=True)
 

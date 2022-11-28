@@ -55,6 +55,7 @@ def test_cross_validation():
         drop_unique=False,
         drop_useless_features=False,
         feature_pruning=True,
+        feature_prune_time_limit=None,
     )
 
     assert important_features is not None
