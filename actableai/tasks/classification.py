@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from typing import Any, Dict, List, Optional, Tuple
 import logging
 from actableai.classification.config import MINIMUM_CLASSIFICATION_VALIDATION
@@ -46,7 +45,7 @@ class _AAIClassificationTrainTask(AAITask):
         Any,
         Optional[List],
         Optional[Dict],
-        Optional[np.ndarray],
+        Optional[Any],
         Optional[pd.DataFrame],
         pd.DataFrame,
     ]:
@@ -94,15 +93,7 @@ class _AAIClassificationTrainTask(AAITask):
                 this step is skipped.
 
         Returns:
-            Tuple[
-                Any,
-                Any,
-                Optional[List],
-                Optional[dict],
-                Optional[np.ndarray],
-                Union[np.ndarray, List],
-                pd.DataFrame
-            ]: Return results for classification :
+            Return dictionnary of results for classification :
                 - AutoGluon's predictor
                 - Explainer for SHAP values
                 - List of important features
@@ -340,7 +331,7 @@ class _AAIClassificationTrainTask(AAITask):
                         }
                     )
 
-        predict_shap_values = None
+        predict_shap_values = []
 
         if run_model and explainer is not None and df_test is not None:
             predict_shap_values = explainer.shap_values(df_test)
@@ -717,7 +708,7 @@ class AAIClassificationTask(AAITask):
 
         # Validation
         eval_shap_values = []
-        if kfolds <= 1 and explain_samples:
+        if kfolds <= 1 and explain_samples and explainer is not None:
             eval_shap_values = explainer.shap_values(df_val[features + biased_groups])
 
         debiasing_charts = []
