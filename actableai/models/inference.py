@@ -289,7 +289,7 @@ class AAIModelInference:
             metadata = self._get_metadata(task_model.predictor)
 
             if hasattr(task_model, "feature_parameters"):
-                metadata["feature_parameters"] = task_model.feature_parameters.json()
+                metadata["feature_parameters"] = task_model.feature_parameters
 
             if isinstance(task_model, AAITabularModelInterventional):
                 if task_model.model_version <= 1:
