@@ -48,7 +48,7 @@ def test_run_cross_validation():
         time_limit=None,
         drop_unique=False,
         drop_useless_features=False,
-        feature_pruning=True,
+        feature_prune=True,
         feature_prune_time_limit=None,
     )
 

@@ -40,7 +40,7 @@ class _AAIClassificationTrainTask(AAITask):
         time_limit: Optional[int],
         drop_unique: bool,
         drop_useless_features: bool,
-        feature_pruning: bool,
+        feature_prune: bool,
         feature_prune_time_limit: Optional[float],
     ) -> Tuple[
         Any,
@@ -89,10 +89,10 @@ class _AAIClassificationTrainTask(AAITask):
                 only have a unique value accross all rows at fit time
             drop_useless_features: Whether the classification algorithm drops columns that
                 only have a unique value accross all rows as preprocessing
-            feature_pruning: Wether the feature_pruning is enabled or not.
+            feature_prune: Wether the feature_pruning is enabled or not.
                 This option improves results but extend the training time.
-                If there is no time left to do feature_pruning after training
-                this step is skipped.
+                If there is no time specified to do feature_pruning the remaining
+                training time is used.
             feature_prune_time_limit: Time limit for feature_pruning (in seconds)
 
         Returns:
@@ -173,7 +173,7 @@ class _AAIClassificationTrainTask(AAITask):
         )
 
         feature_prune_kwargs = None
-        if feature_pruning:
+        if feature_prune:
             feature_prune_kwargs = {}
             if feature_prune_time_limit is not None:
                 feature_prune_kwargs[
@@ -395,7 +395,7 @@ class AAIClassificationTask(AAITask):
         datetime_column: Optional[str] = None,
         ag_automm_enabled=False,
         refit_full=False,
-        feature_pruning=True,
+        feature_prune=True,
         feature_prune_time_limit: Optional[float] = None,
         intervention_run_params: Optional[Dict] = None,
     ) -> Dict:
@@ -450,7 +450,7 @@ class AAIClassificationTask(AAITask):
             refit_full: Whether at the end of classification, a second task is launched to
                 refit a new model on the whole dataset. This makes accuracy much better but divides
                 the training time in half. (half for first task, other half for refitting)
-            feature_pruning: Wether the feature_pruning is enabled or not.
+            feature_prune: Wether the feature_pruning is enabled or not.
                 This option improves results but extend the training time.
                 If there is no time left to do feature_pruning after training
                 this step is skipped.
@@ -669,7 +669,7 @@ class AAIClassificationTask(AAITask):
                 time_limit=time_limit,
                 drop_unique=drop_unique,
                 drop_useless_features=drop_useless_features,
-                feature_pruning=feature_pruning,
+                feature_prune=feature_prune,
                 feature_prune_time_limit=feature_prune_time_limit,
             )
         else:
@@ -704,7 +704,7 @@ class AAIClassificationTask(AAITask):
                 time_limit=time_limit,
                 drop_unique=drop_unique,
                 drop_useless_features=drop_useless_features,
-                feature_pruning=feature_pruning,
+                feature_prune=feature_prune,
                 feature_prune_time_limit=feature_prune_time_limit,
             )
 
@@ -869,7 +869,7 @@ class AAIClassificationTask(AAITask):
                 drop_useless_features=drop_useless_features,
                 problem_type=problem_type,
                 positive_label=positive_label,
-                feature_pruning=feature_pruning,
+                feature_prune=feature_prune,
                 feature_prune_time_limit=feature_prune_time_limit,
             )
             predictor.refit_full(model="best", set_best_to_refit_full=True)

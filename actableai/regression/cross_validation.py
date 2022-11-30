@@ -30,7 +30,7 @@ def run_cross_validation(
     time_limit: Optional[int],
     drop_unique: bool,
     drop_useless_features: bool,
-    feature_pruning: bool,
+    feature_prune: bool,
     feature_prune_time_limit: Optional[float],
 ) -> Tuple[Dict, Dict, List, float, float, List, List, List]:
     """Run cross validation on Regression Task. Data is divided in kfold groups and each
@@ -59,7 +59,9 @@ def run_cross_validation(
         residuals_hyperparameters (Dict[str, Dict]): HyperParameters for debiasing models
         num_gpus (int): Number of GPUs for the model
         time_limit: Time limit of training (in seconds)
+        feature_prune: If True, features are pruned
         feature_prune_time_limit: Time limit for feature pruning (in seconds)
+            If None, the remaining training time is used
 
     Returns:
         Tuple[Dict, Dict, List, float, float, List, List, List]:
@@ -113,7 +115,7 @@ def run_cross_validation(
                 "time_limit": time_limit,
                 "drop_unique": drop_unique,
                 "drop_useless_features": drop_useless_features,
-                "feature_pruning": feature_pruning,
+                "feature_prune": feature_prune,
                 "feature_prune_time_limit": feature_prune_time_limit,
             },
         )
@@ -167,10 +169,10 @@ def run_cross_validation(
             if feature["feature"] not in cross_val_important_p_value_features:
                 cross_val_important_p_value_features[feature["feature"]] = []
             cross_val_important_features[feature["feature"]].append(
-                feature["importance"],
+                feature["importance"]
             )
             cross_val_important_p_value_features[feature["feature"]].append(
-                feature["p_value"],
+                feature["p_value"]
             )
 
         for metric in evaluate:
@@ -258,20 +260,14 @@ def run_cross_validation(
     else:
         # Legacy (TODO: to be removed)
         evaluate = {
-            "PINBALL_LOSS": np.mean(cross_val_evaluates["PINBALL_LOSS"]) / sqrt_k,
+            "PINBALL_LOSS": np.mean(cross_val_evaluates["PINBALL_LOSS"]) / sqrt_k
         }
 
         evaluate["metrics"] = pd.DataFrame(
             {
-                "metric": [
-                    "Pinball Loss",
-                ],
-                "value": [
-                    np.mean(cross_val_evaluates["PINBALL_LOSS"]),
-                ],
-                "stderr": [
-                    np.std(cross_val_evaluates["PINBALL_LOSS"]) / sqrt_k,
-                ],
+                "metric": ["Pinball Loss"],
+                "value": [np.mean(cross_val_evaluates["PINBALL_LOSS"])],
+                "stderr": [np.std(cross_val_evaluates["PINBALL_LOSS"]) / sqrt_k],
             }
         )
 
