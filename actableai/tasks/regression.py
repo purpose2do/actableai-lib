@@ -135,9 +135,6 @@ class _AAIRegressionTrainTask(AAITask):
 
             hyperparameters = {DebiasingModel: {}}
 
-        ag_args_fit["num_cpus"] = 1
-        ag_args_fit["num_gpus"] = num_gpus
-
         df_train = df_train[features + biased_groups + [target]]
         if df_val is not None:
             df_val = df_val[features + biased_groups + [target]]
@@ -176,6 +173,8 @@ class _AAIRegressionTrainTask(AAITask):
             time_limit=time_limit,
             ag_args_ensemble={"fold_fitting_strategy": "sequential_local"},
             feature_prune_kwargs=feature_prune_kwargs,
+            num_cpus=1,
+            num_gpus=num_gpus,
         )
 
         explainer = None
@@ -229,7 +228,7 @@ class _AAIRegressionTrainTask(AAITask):
 
             if quantile_levels is not None:
                 metrics["pinball_loss"] = pinball_loss(
-                    df_val[target], y_pred, quantile_levels
+                    df_val[target], y_pred, quantile_levels=quantile_levels
                 )
 
                 for quantile_level in quantile_levels:
@@ -355,7 +354,7 @@ class AAIRegressionTask(AAITask):
         causal_feature_selection_max_concurrent_tasks: int = 20,
         ci_for_causal_feature_selection_task_params: Optional[dict] = None,
         ci_for_causal_feature_selection_run_params: Optional[dict] = None,
-    ):
+    ) -> Dict[str, Any]:
         """Run this regression task and return results.
 
         Args:

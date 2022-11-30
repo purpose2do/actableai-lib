@@ -1,3 +1,4 @@
+from typing import Any, Dict
 import numpy as np
 import pandas as pd
 import pytest
@@ -25,7 +26,9 @@ def data():
     )
 
 
-def run_regression_task(regression_task: AAIRegressionTask, tmp_path, *args, **kwargs):
+def run_regression_task(
+    regression_task: AAIRegressionTask, tmp_path, *args, **kwargs
+) -> Dict[str, Any]:
     if "hyperparameters" not in kwargs:
         kwargs["hyperparameters"] = unittest_hyperparameters()
 
@@ -1012,7 +1015,6 @@ class TestRemoteRegressionCrossValidation:
         assert "evaluate" in r["data"]
         assert "validation_shaps" in r["data"]
         assert "importantFeatures" in r["data"]
-
 
     def test_causal_feature_selection(self, regression_task, tmp_path):
         df = pd.DataFrame(

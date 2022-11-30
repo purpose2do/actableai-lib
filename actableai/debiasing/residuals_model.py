@@ -71,7 +71,15 @@ class ResidualsModel:
 
         return X_clean
 
-    def fit(self, X, hyperparameters=None, presets=None, ag_args_fit=None):
+    def fit(
+        self,
+        X,
+        hyperparameters=None,
+        presets=None,
+        ag_args_fit=None,
+        num_cpus="auto",
+        num_gpus="auto",
+    ):
         """
         TODO write documentation
         """
@@ -85,6 +93,8 @@ class ResidualsModel:
             refit_full="all",
             keep_only_best=True,
             ag_args_fit=ag_args_fit,
+            num_cpus=num_cpus,
+            num_gpus=num_gpus,
         )
         pd.set_option("chained_assignment", "warn")
 
