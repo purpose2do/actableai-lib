@@ -572,7 +572,7 @@ class AAIInterventionEffectPredictor:
         if self.causal_model is None:
             raise NotFittedError()
 
-        T0, T1, Y, X = self._generate_TYX(df, None, False)
+        T0, T1, Y, X = self._generate_TYX(df, False)
 
         cme = self.causal_model.const_marginal_effect(X)
 
