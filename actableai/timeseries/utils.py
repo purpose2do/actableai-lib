@@ -2,6 +2,8 @@ import re
 from typing import Optional, Tuple, List
 
 import pandas as pd
+import numpy as np
+from pandas.tseries.frequencies import to_offset
 
 
 def interpolate(df: pd.DataFrame, freq: str) -> pd.DataFrame:
@@ -62,8 +64,13 @@ def find_freq(pd_date: pd.Series, period: int = 10) -> Optional[str]:
             if freq not in infer_list:
                 infer_list[str(freq)] = 0
             infer_list[str(freq)] += 1
+
     if len(infer_list) == 0:
-        return None
+        # Trick to find the freq when infer_freq is failing
+        # https://stackoverflow.com/questions/68931854/pandas-infer-freq-returns-none
+        # https://stackoverflow.com/questions/70771611/is-there-a-way-to-convert-timedelta-to-pandas-freq-string
+        return to_offset(pd.to_timedelta(np.diff(pd_date).min())).freqstr
+
     most_freq = max(infer_list, key=lambda freq: infer_list[freq])
     return most_freq
 
