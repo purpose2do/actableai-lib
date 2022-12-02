@@ -15,7 +15,11 @@ from econml.dml import LinearDML, NonParamDML
 
 from actableai.classification.config import MINIMUM_CLASSIFICATION_VALIDATION
 from actableai.classification.cross_validation import run_cross_validation
-from actableai.intervention.config import KFOLD_CATEGORICAL_OUTCOME, LOGIT_MAX_VALUE, LOGIT_MIN_VALUE
+from actableai.intervention.config import (
+    KFOLD_CATEGORICAL_OUTCOME,
+    LOGIT_MAX_VALUE,
+    LOGIT_MIN_VALUE,
+)
 from actableai.tasks.classification import _AAIClassificationTrainTask
 from actableai.utils import get_type_special_no_ag, memory_efficient_hyperparameters
 from actableai.utils.multilabel_predictor import MultilabelPredictor
@@ -468,7 +472,9 @@ class AAIInterventionEffectPredictor:
                     _,
                 ) = run_cross_validation(
                     classification_train_task=_AAIClassificationTrainTask(),
-                    problem_type="multiclass",
+                    problem_type="binary"
+                    if df[self.target].nunique() == 2
+                    else "multiclass",
                     explain_samples=False,
                     positive_label=None,
                     presets="medium_quality_faster_train",

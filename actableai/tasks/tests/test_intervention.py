@@ -286,7 +286,7 @@ class TestIntervention:
         df = pd.DataFrame(
             {
                 "x": [2, 2, 2, 2, 2, None, 3, 3, 4, 4] * 2,
-                "y": ["a", "a", "a", "a", "b", "b", "b", "b", "9", "10"] * 2,
+                "y": ["a", "a", "a", "b", "b", "b", "c", "c", "c", "c"] * 2,
                 "current_intervention": [2, 2, 2, 2, None, 3, None, 3, 4, 4] * 2,
             }
         )
