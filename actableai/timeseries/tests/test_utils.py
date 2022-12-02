@@ -34,10 +34,6 @@ def test_find_freq_not_enough_values(np_rng):
     assert find_freq(pd_date) is None
 
 
-def test_find_freq_non_sense():
-    assert find_freq(pd.Series(["01/02/2012", "03/03/2037", "01/01/1997"])) is None
-
-
 @pytest.mark.parametrize(
     "start_date",
     ["2021-02-06", "2015-09-08", "18:00", "18:30:25", "2020-01-02 05:00:00+02:00"],
