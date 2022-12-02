@@ -254,13 +254,39 @@ class TestIntervention:
         assert "df" in r["data"]
         assert r["data"]["df"].shape == (20, 12)
 
-    def test_intervention_numeric_treatment_categorical_outcome(
+    def test_intervention_numeric_treatment_categorical_outcome_not_enough_classes(
         self, intervention_task: AAIInterventionTask, tmp_path
     ):
         df = pd.DataFrame(
             {
                 "x": [2, 2, 2, 2, 2, None, 3, 3, 4, 4] * 2,
                 "y": ["1", "2", "3", "a", "5", "b", "7", "8", "9", "10"] * 2,
+                "current_intervention": [2, 2, 2, 2, None, 3, None, 3, 4, 4] * 2,
+            }
+        )
+        df["new_intervention"] = df["current_intervention"] * 2
+
+        result = intervention_task.run(
+            df,
+            "y",
+            "current_intervention",
+            "new_intervention",
+            model_directory=tmp_path,
+            causal_hyperparameters=unittest_hyperparameters(),
+            drop_unique=False,
+            drop_useless_features=False,
+        )
+
+        assert result["status"] == "FAILURE"
+        assert "StratifiedKFoldChecker" in [x["name"] for x in result["validations"]]
+
+    def test_intervention_numeric_treatment_categorical_outcome(
+        self, intervention_task: AAIInterventionTask, tmp_path
+    ):
+        df = pd.DataFrame(
+            {
+                "x": [2, 2, 2, 2, 2, None, 3, 3, 4, 4] * 2,
+                "y": ["a", "a", "a", "a", "b", "b", "b", "b", "9", "10"] * 2,
                 "current_intervention": [2, 2, 2, 2, None, 3, None, 3, 4, 4] * 2,
             }
         )

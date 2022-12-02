@@ -57,6 +57,7 @@ from actableai.data_validation.checkers import (
     UniqueDateTimeChecker,
     TimeSeriesTuningMetricChecker,
 )
+from actableai.intervention.config import KFOLD_CATEGORICAL_OUTCOME
 from actableai.timeseries.utils import find_freq
 from actableai.utils import get_type_special_no_ag
 
@@ -829,6 +830,12 @@ class InterventionDataValidator:
         ]
         if len([x for x in validations if x is not None]) > 0:
             return validations
+        if get_type_special_no_ag(df[target]) == "category":
+            validations.append(
+                StratifiedKFoldChecker(level=CheckLevels.CRITICAL).check(
+                    df, intervention=target, causal_cv=KFOLD_CATEGORICAL_OUTCOME
+                )
+            )
         # Columns are sane now we treat
         if new_intervention_column and new_intervention_column in df:
             validations += [
