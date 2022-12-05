@@ -1048,7 +1048,7 @@ class StratifiedKFoldChecker(IChecker):
             return CheckResult(
                 name=self.name,
                 level=self.level,
-                message=f"The count of each unique values in the intervention column ({intervention}) must be greater than or equal to causal_cv : {causal_cv}.",
+                message=f"The count of each unique values in the column ({intervention}) must be greater than or equal to kfolds number : {causal_cv}.",
             )
 
 

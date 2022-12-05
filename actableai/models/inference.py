@@ -167,7 +167,7 @@ class AAIModelInference:
                     pred["intervention"] = new_outcome
                 else:
                     new_outcome = task_model.intervention_model.predict(
-                        df, target_proba
+                        df
                     )
                     pred["intervention"] = pd.DataFrame(
                         {

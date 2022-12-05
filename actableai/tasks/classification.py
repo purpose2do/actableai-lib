@@ -1,6 +1,5 @@
 import pandas as pd
-import numpy as np
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 import logging
 from actableai.classification.config import MINIMUM_CLASSIFICATION_VALIDATION
 
@@ -45,9 +44,9 @@ class _AAIClassificationTrainTask(AAITask):
         Any,
         Any,
         Optional[List],
-        Optional[dict],
-        Optional[np.ndarray],
-        Union[np.ndarray, List],
+        Optional[Dict],
+        Optional[Any],
+        Optional[pd.DataFrame],
         pd.DataFrame,
     ]:
         """Runs a sub Classification Task for cross-validation.
@@ -94,15 +93,7 @@ class _AAIClassificationTrainTask(AAITask):
                 this step is skipped.
 
         Returns:
-            Tuple[
-                Any,
-                Any,
-                Optional[List],
-                Optional[dict],
-                Optional[np.ndarray],
-                Union[np.ndarray, List],
-                pd.DataFrame
-            ]: Return results for classification :
+            Return dictionnary of results for classification :
                 - AutoGluon's predictor
                 - Explainer for SHAP values
                 - List of important features
@@ -127,7 +118,7 @@ class _AAIClassificationTrainTask(AAITask):
         from actableai.utils import debiasing_feature_generator_args
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
 
-        ag_args_fit = {"drop_unique": drop_unique}
+        ag_args_fit: Dict[str, Any] = {"drop_unique": drop_unique}
         feature_generator_args = {}
 
         if "AG_AUTOMM" in hyperparameters:
@@ -181,7 +172,7 @@ class _AAIClassificationTrainTask(AAITask):
             MINIMUM_CLASSIFICATION_VALIDATION,
         )
 
-        predictor = predictor.fit(
+        predictor.fit(
             train_data=df_train,
             hyperparameters=hyperparameters,
             presets=presets,
@@ -717,7 +708,7 @@ class AAIClassificationTask(AAITask):
 
         # Validation
         eval_shap_values = []
-        if kfolds <= 1 and explain_samples:
+        if kfolds <= 1 and explain_samples and explainer is not None:
             eval_shap_values = explainer.shap_values(df_val[features + biased_groups])
 
         debiasing_charts = []
@@ -818,7 +809,6 @@ class AAIClassificationTask(AAITask):
 
         aai_intervention_model = None
         if intervention_run_params is not None:
-            intervention_run_params["target_proba"] = predictor.predict_proba(df)
             intervention_task_result = AAIInterventionTask(
                 return_model=True, upload_model=False
             ).run(**intervention_run_params)

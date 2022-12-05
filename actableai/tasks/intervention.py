@@ -19,7 +19,6 @@ class AAIInterventionTask(AAITask):
         current_intervention_column: str,
         new_intervention_column: Optional[str] = None,
         expected_target: Optional[str] = None,
-        target_proba: Optional[pd.DataFrame] = None,
         common_causes: Optional[List[str]] = None,
         causal_cv: Optional[int] = None,
         causal_hyperparameters: Optional[Dict] = None,
@@ -39,16 +38,12 @@ class AAIInterventionTask(AAITask):
             target: Column name of target variable
             current_intervention_column: Column name of the current intervention
             new_intervention_column: Column name of the new intervention
-            target_proba: DataFrame containing the probabilities for the target,
-                when set the df[target] column is ignored. If target is set, df[target]
-                is categorical and target_proba is None. Then target_proba becomes the
-                one hot encoded target.
             common_causes: List of common causes to be used for the intervention
             causal_cv: Number of folds for causal cross validation
             causal_hyperparameters: Hyperparameters for AutoGluon
                 See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
             cate_alpha: Alpha for intervention effect. Ignored if df[target] is
-                categorical or if target_proba is not None
+                categorical
             presets: Presets for AutoGluon.
                 See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
             model_directory: Model directory
@@ -135,8 +130,8 @@ class AAIInterventionTask(AAITask):
         model = AAIInterventionEffectPredictor(
             target=target,
             current_intervention_column=current_intervention_column,
-            new_intervention_column=new_intervention_column,
             expected_target=expected_target,
+            new_intervention_column=new_intervention_column,
             common_causes=common_causes,
             causal_cv=causal_cv,
             causal_hyperparameters=causal_hyperparameters,
@@ -148,11 +143,11 @@ class AAIInterventionTask(AAITask):
             drop_useless_features=drop_useless_features,
         )
 
-        model._check_params(df, target_proba)
+        model._check_params(df)
 
         df = model._preprocess_data(df)
 
-        model.fit(df, target_proba)
+        model.fit(df)
 
         if only_fit:
             return {
@@ -167,7 +162,7 @@ class AAIInterventionTask(AAITask):
                 "model": model,
             }
 
-        new_outcome = model.predict(df, target_proba)
+        new_outcome = model.predict(df)
 
         for col in new_outcome.columns:
             df[col] = new_outcome[col]
@@ -241,7 +236,6 @@ class AAIInterventionTask(AAITask):
             and common_causes is not None
             and len(common_causes) != 0
             and target not in cat_cols
-            and target_proba is None
         ):
             importances = []
             # Only run feature importance for first mc_iter to speed it up

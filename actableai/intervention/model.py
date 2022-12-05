@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from tempfile import mkdtemp
-from typing import Any, Optional, List, Dict, Tuple, Union
+from typing import Optional, List, Dict, Tuple, Union
 import numpy as np
 import pandas as pd
 from sklearn.exceptions import NotFittedError
@@ -14,8 +14,14 @@ from autogluon.features import AutoMLPipelineFeatureGenerator
 from econml.dml import LinearDML, NonParamDML
 
 from actableai.classification.config import MINIMUM_CLASSIFICATION_VALIDATION
-from actableai.intervention.config import LOGIT_MAX_VALUE, LOGIT_MIN_VALUE
-from actableai.utils import get_type_special_no_ag
+from actableai.classification.cross_validation import run_cross_validation
+from actableai.intervention.config import (
+    KFOLD_CATEGORICAL_OUTCOME,
+    LOGIT_MAX_VALUE,
+    LOGIT_MIN_VALUE,
+)
+from actableai.tasks.classification import _AAIClassificationTrainTask
+from actableai.utils import get_type_special_no_ag, memory_efficient_hyperparameters
 from actableai.utils.multilabel_predictor import MultilabelPredictor
 from actableai.utils.preprocessors.autogluon_preproc import DMLFeaturizer
 
@@ -51,7 +57,7 @@ class AAIInterventionEffectPredictor:
             causal_hyperparameters: Hyperparameters for AutoGluon predictor
                 See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
             cate_alpha: Alpha for intervention effect. Ignored if df[target] is
-                categorical or if target_proba is not None
+                categorical
             presets: Presets for AutoGluon.
                 See https://auto.gluon.ai/stable/api/autogluon.task.html?highlight=tabularpredictor#autogluon.tabular.TabularPredictor
             model_directory: Model directory
@@ -288,17 +294,12 @@ class AAIInterventionEffectPredictor:
             )
         return causal_model
 
-    def fit(
-        self, df: pd.DataFrame, target_proba: Optional[pd.DataFrame] = None
-    ) -> AAIInterventionEffectPredictor:
+    def fit(self, df: pd.DataFrame) -> AAIInterventionEffectPredictor:
         """Generate each appropriate models (treatment, outcome and residuals)
             then fit the final DML causal model
 
         Args:
             df: DataFrame containing the values to fit on
-            target_proba: If the target is a multiclass, Optional DataFrame containing
-                the class probabilities, this DataFrame is used for Y instead of
-                df[self.target]
 
         Returns:
             AAIInterventionEffectPredictor: Self fitted predictor
@@ -309,7 +310,7 @@ class AAIInterventionEffectPredictor:
         cat_cols = type_special == "category"
         cat_cols = list(df.loc[:, cat_cols].columns)
 
-        T0, _, Y, X = self._generate_TYX(df, target_proba, fit=True)
+        T0, _, Y, X = self._generate_TYX(df, fit=True)
 
         model_t = self._generate_model_t(X, T0)
         model_y = self._generate_model_y(X, Y)
@@ -326,16 +327,11 @@ class AAIInterventionEffectPredictor:
 
         return self
 
-    def predict(
-        self, df: pd.DataFrame, target_proba: Optional[pd.DataFrame]
-    ) -> pd.DataFrame:
+    def predict(self, df: pd.DataFrame) -> pd.DataFrame:
         """Predict the effect of the treatment on the outcome
 
         Args:
             df: DataFrame containing the values to predict on
-            target_proba: If the target is a multiclass, Optional DataFrame containing
-                the class probabilities, this DataFrame is used for Y instead of
-                df[self.target]
 
         Raises:
             NotFittedError: If this method is called before fit
@@ -348,7 +344,7 @@ class AAIInterventionEffectPredictor:
 
         if self.causal_model is None:
             raise NotFittedError()
-        T0, T1, Y, X = self._generate_TYX(df, target_proba, fit=False)
+        T0, T1, Y, X = self._generate_TYX(df, fit=False)
 
         t1_indices_non_na = T1.dropna(how="all", axis=0).index
 
@@ -411,7 +407,7 @@ class AAIInterventionEffectPredictor:
         return result
 
     def _generate_TYX(
-        self, df: pd.DataFrame, target_proba: pd.DataFrame, fit: bool
+        self, df: pd.DataFrame, fit: bool
     ) -> Tuple[
         pd.DataFrame, Optional[pd.DataFrame], pd.DataFrame, Optional[pd.DataFrame]
     ]:
@@ -420,9 +416,6 @@ class AAIInterventionEffectPredictor:
 
         Args:
             df: DataFrame to get the data from
-            target_proba: If the target is a multiclass, Optional DataFrame containing
-                the class probabilities, this DataFrame is used for Y instead of
-                df[self.target]
             fit: Wether this function is used during fit time or not
 
         Returns:
@@ -443,7 +436,25 @@ class AAIInterventionEffectPredictor:
             if self.common_causes and len(self.common_causes) > 0
             else None
         )
-        if self.target in num_cols and target_proba is None:
+        Y = self._generate_Y(df, fit)
+        T0 = df[[self.current_intervention_column]]
+        T1 = None
+        if not fit:
+            T1 = df[[self.new_intervention_column]]
+        return T0, T1, Y, X
+
+    def _generate_Y(self, df: pd.DataFrame, fit: bool) -> pd.DataFrame:
+        """Helper function to generate the correct outcome
+
+        Returns:
+            pd.DataFrame: Outcome
+        """
+        type_special = df.apply(get_type_special_no_ag)
+        num_cols = (type_special == "numeric") | (type_special == "integer")
+        num_cols = list(df.loc[:, num_cols].columns)
+        cat_cols = (type_special == "category") | (type_special == "boolean")
+        cat_cols = list(df.loc[:, cat_cols].columns)
+        if self.target in num_cols:
             Y = df[[self.target]]
         else:
             if fit:
@@ -451,19 +462,53 @@ class AAIInterventionEffectPredictor:
                     sparse=False, handle_unknown="ignore"
                 )
                 self.outcome_featurizer.fit(df[[self.target]])
-            if target_proba is not None:
-                Y = target_proba
-            else:
-                Y = pd.DataFrame(
-                    self.outcome_featurizer.transform(df[[self.target]]),
-                    columns=self.outcome_featurizer.get_feature_names_out(),
+                (
+                    predictor,
+                    _,
+                    _,
+                    df_val_cross_val_pred_prob,
+                    _,
+                    _,
+                    _,
+                ) = run_cross_validation(
+                    classification_train_task=_AAIClassificationTrainTask(),
+                    problem_type="binary"
+                    if df[self.target].nunique() == 2
+                    else "multiclass",
+                    explain_samples=False,
+                    positive_label=None,
+                    presets="medium_quality_faster_train",
+                    hyperparameters=memory_efficient_hyperparameters(),
+                    model_directory=mkdtemp(prefix="autogluon_model"),
+                    target=self.target,
+                    features=list(
+                        df.drop(axis="columns", columns=[self.target]).columns
+                    ),
+                    run_model=False,
+                    df_train=df,
+                    df_test=None,
+                    kfolds=KFOLD_CATEGORICAL_OUTCOME,
+                    cross_validation_max_concurrency=1,
+                    drop_duplicates=False,
+                    run_debiasing=False,
+                    biased_groups=[],
+                    debiased_features=[],
+                    residuals_hyperparameters=None,
+                    num_gpus=self.num_gpus if self.num_gpus is not None else 0,
+                    eval_metric="accuracy",
+                    time_limit=None,
+                    drop_unique=False,
+                    drop_useless_features=False,
+                    feature_pruning=False,
                 )
+                self.outcome_predictor = predictor
+                Y = pd.concat(df_val_cross_val_pred_prob).sort_index()
+            else:
+                if self.outcome_predictor is None:
+                    raise NotFittedError
+                Y = self.outcome_predictor.predict_proba(df)
             Y = pd.DataFrame(logit(Y)).clip(LOGIT_MIN_VALUE, LOGIT_MAX_VALUE)
-        T0 = df[[self.current_intervention_column]]
-        T1 = None
-        if not fit:
-            T1 = df[[self.new_intervention_column]]
-        return T0, T1, Y, X
+        return Y
 
     def _preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Data Imputation
@@ -492,7 +537,7 @@ class AAIInterventionEffectPredictor:
             )
         return df
 
-    def _check_params(self, df: pd.DataFrame, target_proba: Optional[pd.DataFrame]):
+    def _check_params(self, df: pd.DataFrame):
         """Warning on parameters if conflict in params
 
         Args:
@@ -504,10 +549,6 @@ class AAIInterventionEffectPredictor:
         type_special = df.apply(get_type_special_no_ag)
         num_cols = (type_special == "numeric") | (type_special == "integer")
         num_cols = list(df.loc[:, num_cols].columns)
-        if self.target in num_cols and target_proba is not None:
-            logging.warning(
-                "`df[target]` is a numerical column and `target_proba` is not None: `target_proba` will be ignored"
-            )
         if self.target not in num_cols and self.cate_alpha is not None:
             logging.warning(
                 "`df[target]` is a categorical column and `cate_alpha` is not None: `cate_alpha` will be ignored"
@@ -537,7 +578,7 @@ class AAIInterventionEffectPredictor:
         if self.causal_model is None:
             raise NotFittedError()
 
-        T0, T1, Y, X = self._generate_TYX(df, None, False)
+        T0, T1, Y, X = self._generate_TYX(df, False)
 
         cme = self.causal_model.const_marginal_effect(X)
 
