@@ -89,7 +89,7 @@ class _AAIClassificationTrainTask(AAITask):
                 only have a unique value accross all rows at fit time
             drop_useless_features: Whether the classification algorithm drops columns that
                 only have a unique value accross all rows as preprocessing
-            feature_prune: Wether the feature_pruning is enabled or not.
+            feature_prune: Whether the feature_pruning is enabled or not.
                 This option improves results but extend the training time.
                 If there is no time specified to do feature_pruning the remaining
                 training time is used.
