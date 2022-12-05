@@ -38,7 +38,8 @@ class _AAIRegressionTrainTask(AAITask):
         time_limit: Optional[int],
         drop_unique: bool,
         drop_useless_features: bool,
-        feature_pruning: bool,
+        feature_prune: bool,
+        feature_prune_time_limit: Optional[float],
     ) -> Tuple[
         Any,
         List,
@@ -48,7 +49,7 @@ class _AAIRegressionTrainTask(AAITask):
         Any,
         Any,
         Any,
-        Optional[np.ndarray],
+        Optional[pd.DataFrame],
         pd.DataFrame,
     ]:
         """Sub class for running a regression without cross validation
@@ -77,6 +78,8 @@ class _AAIRegressionTrainTask(AAITask):
             num_gpus: Number of GPUs used by AutoGluon
             eval_metric: Evaluation metric for validation
             time_limit: Time limit of training
+            feature_prune_time_limit: Time limit for feature pruning (in seconds)
+                if feature_prune is True
 
         Returns:
             Tuple:
@@ -159,10 +162,12 @@ class _AAIRegressionTrainTask(AAITask):
         )
 
         feature_prune_kwargs = None
-        if feature_pruning:
+        if feature_prune:
             feature_prune_kwargs = {}
-            if time_limit is not None:
-                feature_prune_kwargs["feature_prune_time_limit"] = time_limit * 0.5
+            if feature_prune_time_limit is not None:
+                feature_prune_kwargs[
+                    "feature_prune_time_limit"
+                ] = feature_prune_time_limit
 
         predictor = predictor.fit(
             train_data=df_train,
@@ -348,7 +353,8 @@ class AAIRegressionTask(AAITask):
         datetime_column: Optional[str] = None,
         ag_automm_enabled: bool = False,
         refit_full: bool = False,
-        feature_pruning: bool = True,
+        feature_prune: bool = True,
+        feature_prune_time_limit: Optional[float] = None,
         intervention_run_params: Optional[Dict] = None,
         causal_feature_selection: bool = False,
         causal_feature_selection_max_concurrent_tasks: int = 20,
@@ -410,9 +416,10 @@ class AAIRegressionTask(AAITask):
             refit_full: Wether the model is completely refitted on validation at
                 the end of the task. Training time is divided by 2 to allow reffiting
                 for the other half of the time
-            feature_pruning: Wether feature pruning is enabled. Can increase accuracy
+            feature_prune: Wether feature pruning is enabled. Can increase accuracy
                 by removing hurtfull features for the model. If no training time left this step
                 is skipped
+            feature_prune_time_limit: Time limit for feature pruning.
             causal_feature_selection: if True, it will search for direct causal
                 features and use only these features for the prediction
             causal_feature_selection_max_concurrent_tasks: maximum number of concurrent
@@ -645,7 +652,8 @@ class AAIRegressionTask(AAITask):
                 time_limit=time_limit,
                 drop_unique=drop_unique,
                 drop_useless_features=drop_useless_features,
-                feature_pruning=feature_pruning,
+                feature_prune=feature_prune,
+                feature_prune_time_limit=feature_prune_time_limit,
             )
         else:
             (
@@ -682,7 +690,8 @@ class AAIRegressionTask(AAITask):
                 time_limit=time_limit,
                 drop_unique=drop_unique,
                 drop_useless_features=drop_useless_features,
-                feature_pruning=feature_pruning,
+                feature_prune=feature_prune,
+                feature_prune_time_limit=feature_prune_time_limit,
             )
 
         # Validation
@@ -869,7 +878,8 @@ class AAIRegressionTask(AAITask):
                 time_limit=time_limit,
                 drop_unique=drop_unique,
                 drop_useless_features=drop_useless_features,
-                feature_pruning=feature_pruning,
+                feature_prune=feature_prune,
+                feature_prune_time_limit=feature_prune_time_limit,
             )
             predictor.refit_full(model="best", set_best_to_refit_full=True)
 

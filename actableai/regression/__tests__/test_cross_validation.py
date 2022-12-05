@@ -9,16 +9,10 @@ from actableai.utils.testing import unittest_hyperparameters
 def test_cross_validation():
     task = _AAIRegressionTrainTask()
     df_train = pd.DataFrame(
-        {
-            "x": [x for x in range(0, 100)],
-            "y": [y for y in range(100, 200)],
-        }
+        {"x": [x for x in range(0, 100)], "y": [y for y in range(100, 200)]}
     )
     df_test = pd.DataFrame(
-        {
-            "x": [x for x in range(0, 100)],
-            "y": [y for y in range(100, 200)],
-        }
+        {"x": [x for x in range(0, 100)], "y": [y for y in range(100, 200)]}
     )
     (
         important_features,
@@ -54,7 +48,8 @@ def test_cross_validation():
         time_limit=None,
         drop_unique=False,
         drop_useless_features=False,
-        feature_pruning=True,
+        feature_prune=True,
+        feature_prune_time_limit=None,
     )
 
     assert important_features is not None

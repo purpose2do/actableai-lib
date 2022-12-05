@@ -2,9 +2,7 @@ import numpy as np
 import pandas as pd
 from typing import List, Optional, Tuple
 
-from actableai.classification.roc_curve_cross_validation import (
-    cross_validation_curve,
-)
+from actableai.classification.roc_curve_cross_validation import cross_validation_curve
 from actableai.classification.utils import leaderboard_cross_val
 from actableai.tasks.classification import _AAIClassificationTrainTask
 
@@ -100,7 +98,8 @@ def run_cross_validation(
     time_limit: Optional[int],
     drop_unique: bool,
     drop_useless_features: bool,
-    feature_pruning: bool,
+    feature_prune: bool,
+    feature_prune_time_limit: Optional[float],
 ) -> Tuple[
     AverageEnsembleClassifier,
     list,
@@ -141,6 +140,8 @@ def run_cross_validation(
         residuals_hyperparameters: The hyperparameters to use for the debiasing model.
         num_gpus (int): The number of GPUs to use.
         eval_metric: Metric to be optimized for.
+        feature_prune: Whether to prune features.
+        feature_prune_time_limit: The time limit for feature pruning. (in seconds)
 
     Returns:
         Tuple: Result of the cross validation.
@@ -191,7 +192,8 @@ def run_cross_validation(
                 "time_limit": time_limit,
                 "drop_unique": drop_unique,
                 "drop_useless_features": drop_useless_features,
-                "feature_pruning": feature_pruning,
+                "feature_prune": feature_prune,
+                "feature_prune_time_limit": feature_prune_time_limit,
             },
         )
         for kfold_index, (train_index, val_index) in enumerate(kfolds_index_list)
@@ -214,14 +216,17 @@ def run_cross_validation(
 
     df_val = pd.DataFrame()
 
-    for kfold_index, (
-        predictor,
-        explainer,
-        important_features,
-        evaluate,
-        df_val_pred_prob,
-        predict_shap_values,
-        leaderboard,
+    for (
+        kfold_index,
+        (
+            predictor,
+            explainer,
+            important_features,
+            evaluate,
+            df_val_pred_prob,
+            predict_shap_values,
+            leaderboard,
+        ),
     ) in enumerate(cross_val_results):
         _, val_index = kfolds_index_list[kfold_index]
 
@@ -238,10 +243,10 @@ def run_cross_validation(
             if feature["feature"] not in cross_val_important_p_value_features:
                 cross_val_important_p_value_features[feature["feature"]] = []
             cross_val_important_features[feature["feature"]].append(
-                feature["importance"],
+                feature["importance"]
             )
             cross_val_important_p_value_features[feature["feature"]].append(
-                feature["p_value"],
+                feature["p_value"]
             )
 
         for metric in evaluate:
