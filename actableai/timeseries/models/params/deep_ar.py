@@ -1,16 +1,15 @@
+from __future__ import annotations
+
 from functools import lru_cache
-from typing import Dict, Any
+from typing import Dict, Any, TYPE_CHECKING
 
-from gluonts.model.deepar import DeepAREstimator
-from gluonts.mx.distribution import DistributionOutput
-from gluonts.mx.trainer import Trainer
-from mxnet.context import Context
+if TYPE_CHECKING:
+    from gluonts.mx.distribution import DistributionOutput
+    from mxnet.context import Context
+    from actableai.parameters.parameters import Parameters
+    from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 
-from actableai.parameters.boolean import BooleanSpace
-from actableai.parameters.numeric import IntegerRangeSpace, FloatRangeSpace
-from actableai.parameters.parameters import Parameters
-from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
-from actableai.timeseries.models.params.base import BaseParams, Model
+from actableai.timeseries.models.params.base import BaseParams
 
 
 class DeepARParams(BaseParams):
@@ -24,6 +23,10 @@ class DeepARParams(BaseParams):
         Returns:
             The hyperparameters space.
         """
+        from actableai.parameters.boolean import BooleanSpace
+        from actableai.parameters.numeric import IntegerRangeSpace, FloatRangeSpace
+        from actableai.parameters.parameters import Parameters
+        from actableai.timeseries.models.params.base import Model
 
         parameters = [
             IntegerRangeSpace(
@@ -173,6 +176,9 @@ class DeepARParams(BaseParams):
         Returns:
             Built estimator.
         """
+        from gluonts.model.deepar import DeepAREstimator
+        from gluonts.mx.trainer import Trainer
+
         return self._create_estimator(
             DeepAREstimator(
                 freq=freq,

@@ -1,12 +1,13 @@
+from __future__ import annotations
+
 from functools import lru_cache
-from typing import Dict, Any
+from typing import Dict, Any, TYPE_CHECKING
 
-from gluonts.model.prophet import ProphetPredictor
+if TYPE_CHECKING:
+    from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
+    from actableai.parameters.parameters import Parameters
 
-from actableai.parameters.options import OptionsSpace
-from actableai.parameters.parameters import Parameters
-from actableai.timeseries.models.params.base import BaseParams, Model
-from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
+from actableai.timeseries.models.params.base import BaseParams
 
 
 class ProphetParams(BaseParams):
@@ -20,6 +21,9 @@ class ProphetParams(BaseParams):
         Returns:
             The hyperparameters space.
         """
+        from actableai.parameters.options import OptionsSpace
+        from actableai.parameters.parameters import Parameters
+        from actableai.timeseries.models.params.base import Model
 
         parameters = [
             OptionsSpace[str](
@@ -102,6 +106,8 @@ class ProphetParams(BaseParams):
         Returns:
             Built predictor.
         """
+        from gluonts.model.prophet import ProphetPredictor
+
         return self._create_predictor(
             ProphetPredictor(
                 prediction_length=prediction_length,

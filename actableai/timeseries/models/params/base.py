@@ -1,21 +1,18 @@
+from __future__ import annotations
+
 from enum import Enum, unique
 from functools import lru_cache
-from typing import Callable, Any, Dict, Union, Tuple, Optional
+from typing import Callable, Any, Dict, Union, Tuple, Optional, TYPE_CHECKING
 
-from gluonts.model.estimator import Estimator
-from gluonts.model.predictor import Predictor
-from gluonts.mx.distribution import DistributionOutput
-from hyperopt import hp
-from mxnet.context import Context
-
-from actableai.parameters.numeric import FloatRangeSpace, IntegerRangeSpace
-from actableai.parameters.parameters import Parameters
-from actableai.parameters.type import ParameterType, ValueType
-from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
-from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
-from actableai.timeseries.transform.base import Transformation
-from actableai.timeseries.transform.clean_features import CleanFeatures
-from actableai.timeseries.transform.identity import Identity
+if TYPE_CHECKING:
+    from mxnet.context import Context
+    from gluonts.model.estimator import Estimator
+    from gluonts.model.predictor import Predictor
+    from gluonts.mx.distribution import DistributionOutput
+    from actableai.parameters.parameters import Parameters
+    from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
+    from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
+    from actableai.timeseries.transform.base import Transformation
 
 
 class BaseParams:
@@ -53,6 +50,8 @@ class BaseParams:
             process_hyperparameters: If True the hyperparameters will be validated and
                 processed (deactivate if they have already been validated).
         """
+        from actableai.timeseries.transform.identity import Identity
+
         self.hyperparameters = hyperparameters
         if self.hyperparameters is None:
             self.hyperparameters = {}
@@ -107,6 +106,9 @@ class BaseParams:
         Returns:
             Choose parameter value.
         """
+        from actableai.parameters.numeric import FloatRangeSpace, IntegerRangeSpace
+        from actableai.parameters.type import ParameterType, ValueType
+
         parameter = self.get_hyperparameters().parameters[param_name]
         parameter_type = parameter.parameter_type
 
@@ -142,6 +144,8 @@ class BaseParams:
         Returns:
             Choose parameter value.
         """
+        from hyperopt import hp
+
         if not isinstance(options, (list, tuple)):
             return options
         return self._hp_param(hp.choice, param_name, options)
@@ -156,6 +160,8 @@ class BaseParams:
         Returns:
             Choose parameter value.
         """
+        from hyperopt import hp
+
         if not isinstance(options, (list, tuple)):
             return options
         return self._hp_param(hp.randint, param_name, *options)
@@ -172,6 +178,8 @@ class BaseParams:
         Returns:
             Choose parameter value.
         """
+        from hyperopt import hp
+
         if not isinstance(options, (list, tuple)):
             return options
         return self._hp_param(hp.uniform, param_name, *options)
@@ -215,6 +223,8 @@ class BaseParams:
             use_feat_dynamic_cat: True if the data contains categorical dynamic
                 features.
         """
+        from actableai.timeseries.transform.clean_features import CleanFeatures
+
         self.use_feat_static_real = (
             self.handle_feat_static_real and use_feat_static_real
         )
@@ -305,6 +315,8 @@ class BaseParams:
         Returns:
             The wrapped estimator.
         """
+        from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
+
         return AAITimeSeriesEstimator(
             estimator=estimator,
             transformation=(self._transformation + additional_transformation),
@@ -325,6 +337,8 @@ class BaseParams:
         Returns:
             The wrapped predictor.
         """
+        from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
+
         return AAITimeSeriesPredictor(
             predictor=predictor,
             transformation=(self._transformation + additional_transformation),
