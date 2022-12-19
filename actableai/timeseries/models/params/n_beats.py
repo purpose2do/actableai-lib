@@ -1,14 +1,14 @@
+from __future__ import annotations
+
 from functools import lru_cache
-from typing import Dict, Any
+from typing import Dict, Any, TYPE_CHECKING
 
-from gluonts.model.n_beats import NBEATSEnsembleEstimator
-from gluonts.mx import Trainer
-from mxnet import Context
+if TYPE_CHECKING:
+    from mxnet import Context
+    from actableai.parameters.parameters import Parameters
+    from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 
-from actableai.parameters.numeric import FloatRangeSpace, IntegerRangeSpace
-from actableai.parameters.parameters import Parameters
-from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
-from actableai.timeseries.models.params.base import BaseParams, Model
+from actableai.timeseries.models.params.base import BaseParams
 
 
 class NBEATSParams(BaseParams):
@@ -22,6 +22,9 @@ class NBEATSParams(BaseParams):
         Returns:
             The hyperparameters space.
         """
+        from actableai.parameters.numeric import FloatRangeSpace, IntegerRangeSpace
+        from actableai.parameters.parameters import Parameters
+        from actableai.timeseries.models.params.base import Model
 
         parameters = [
             FloatRangeSpace(
@@ -118,7 +121,7 @@ class NBEATSParams(BaseParams):
         freq: str,
         prediction_length: int,
         params: Dict[str, Any],
-        **kwargs
+        **kwargs,
     ) -> AAITimeSeriesEstimator:
         """Build an estimator from the underlying model using selected parameters.
 
@@ -132,6 +135,9 @@ class NBEATSParams(BaseParams):
         Returns:
             Built estimator.
         """
+        from gluonts.model.n_beats import NBEATSEnsembleEstimator
+        from gluonts.mx import Trainer
+
         return self._create_estimator(
             NBEATSEnsembleEstimator(
                 freq=freq,

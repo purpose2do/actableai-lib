@@ -11,16 +11,16 @@ class AAIForecastTask(AAITunableTask):
     """Forecast (time series) Task"""
 
     @staticmethod
-    def get_hyperparameters_space(dataset_shape: Tuple[int, int]) -> ModelSpace:
+    def get_hyperparameters_space(dataset_len: int) -> ModelSpace:
         """Return the hyperparameters space oof the task.
 
         Args:
-            dataset_shape: Shape of the dataset.
+            dataset_len: Len of the dataset (shape[0]).
 
         Returns:
             Hyperparameters space represented as a ModelSpace.
         """
-        from actableai.timeseries.models.params import Model
+        from actableai.timeseries.models.params.base import Model
         from actableai.timeseries.models.params import model_hyperparameters_dict
 
         available_models = [
@@ -42,9 +42,9 @@ class AAIForecastTask(AAITunableTask):
             Model.tree_predictor,
             Model.deep_var,
         ]
-        if dataset_shape[0] >= 1000:
+        if dataset_len >= 1000:
             default_models.append(Model.deep_ar)
-        if dataset_shape[0] >= 10000:
+        if dataset_len >= 10000:
             default_models.append(Model.n_beats)
 
         return ModelSpace(
@@ -349,7 +349,7 @@ class AAIForecastTask(AAITunableTask):
         import time
         import mxnet as mx
         import numpy as np
-        from actableai.timeseries.models import AAITimeSeriesForecaster
+        from actableai.timeseries.models.forecaster import AAITimeSeriesForecaster
         from actableai.data_validation.params import (
             TimeSeriesDataValidator,
             TimeSeriesPredictionDataValidator,
@@ -387,7 +387,7 @@ class AAIForecastTask(AAITunableTask):
         df = sanitize_timezone(df)
 
         hyperparameters_validation = None
-        hyperparameters_space = self.get_hyperparameters_space(dataset_shape=df.shape)
+        hyperparameters_space = self.get_hyperparameters_space(dataset_len=df.shape[0])
         if hyperparameters is None or len(hyperparameters) <= 0:
             hyperparameters = hyperparameters_space.get_default()
         else:

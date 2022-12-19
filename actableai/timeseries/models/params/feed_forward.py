@@ -1,16 +1,15 @@
+from __future__ import annotations
+
 from functools import lru_cache
-from typing import Dict, Any
+from typing import Dict, Any, TYPE_CHECKING
 
-from gluonts.model.simple_feedforward import SimpleFeedForwardEstimator
-from gluonts.mx.distribution import DistributionOutput
-from gluonts.mx.trainer import Trainer
-from mxnet.context import Context
+if TYPE_CHECKING:
+    from gluonts.mx.distribution import DistributionOutput
+    from mxnet.context import Context
+    from actableai.parameters.parameters import Parameters
+    from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
 
-from actableai.parameters.boolean import BooleanSpace
-from actableai.parameters.numeric import IntegerRangeSpace, FloatRangeSpace
-from actableai.parameters.parameters import Parameters
-from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
-from actableai.timeseries.models.params.base import BaseParams, Model
+from actableai.timeseries.models.params.base import BaseParams
 
 
 class FeedForwardParams(BaseParams):
@@ -24,6 +23,10 @@ class FeedForwardParams(BaseParams):
         Returns:
             The hyperparameters space.
         """
+        from actableai.parameters.boolean import BooleanSpace
+        from actableai.parameters.numeric import IntegerRangeSpace, FloatRangeSpace
+        from actableai.parameters.parameters import Parameters
+        from actableai.timeseries.models.params.base import Model
 
         parameters = [
             IntegerRangeSpace(
@@ -161,6 +164,9 @@ class FeedForwardParams(BaseParams):
         Returns:
             Built estimator.
         """
+        from gluonts.model.simple_feedforward import SimpleFeedForwardEstimator
+        from gluonts.mx.trainer import Trainer
+
         hidden_layer_1_size = params["hidden_layer_1_size"]
         hidden_layer_2_size = params["hidden_layer_2_size"]
         hidden_layer_3_size = params["hidden_layer_3_size"]

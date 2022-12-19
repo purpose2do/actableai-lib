@@ -1,11 +1,13 @@
-from functools import lru_cache
-from typing import Dict, Any
+from __future__ import annotations
 
-from actableai.parameters.numeric import FloatRangeSpace
-from actableai.parameters.parameters import Parameters
-from actableai.timeseries.models.custom.constant import ConstantValuePredictor
-from actableai.timeseries.models.params.base import BaseParams, Model
-from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
+from functools import lru_cache
+from typing import Dict, Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from actableai.parameters.parameters import Parameters
+    from actableai.timeseries.models.predictor import AAITimeSeriesPredictor
+
+from actableai.timeseries.models.params.base import BaseParams
 
 
 class ConstantValueParams(BaseParams):
@@ -19,6 +21,9 @@ class ConstantValueParams(BaseParams):
         Returns:
             The hyperparameters space.
         """
+        from actableai.parameters.numeric import FloatRangeSpace
+        from actableai.parameters.parameters import Parameters
+        from actableai.timeseries.models.params.base import Model
 
         parameters = [
             FloatRangeSpace(
@@ -76,7 +81,7 @@ class ConstantValueParams(BaseParams):
         prediction_length: int,
         target_dim: int,
         params: Dict[str, Any],
-        **kwargs
+        **kwargs,
     ) -> AAITimeSeriesPredictor:
         """Build a predictor from the underlying model using selected parameters.
 
@@ -89,6 +94,7 @@ class ConstantValueParams(BaseParams):
         Returns:
             Built predictor.
         """
+        from actableai.timeseries.models.custom.constant import ConstantValuePredictor
 
         return self._create_predictor(
             ConstantValuePredictor(
@@ -110,6 +116,7 @@ class MultivariateConstantValueParams(ConstantValueParams):
         Returns:
             The hyperparameters space.
         """
+        from actableai.timeseries.models.params.base import Model
 
         hyperparameters = ConstantValueParams.get_hyperparameters()
         hyperparameters.name = Model.multivariate_constant_value

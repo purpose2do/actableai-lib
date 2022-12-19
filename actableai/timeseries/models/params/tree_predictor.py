@@ -1,16 +1,13 @@
+from __future__ import annotations
+
 from functools import lru_cache
-from typing import Dict, Any
+from typing import Dict, Any, TYPE_CHECKING
 
-from gluonts.model.rotbaum import TreeEstimator
+if TYPE_CHECKING:
+    from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
+    from actableai.parameters.parameters import Parameters
 
-from actableai.parameters.numeric import FloatRangeSpace
-from actableai.parameters.options import OptionsSpace
-from actableai.parameters.parameters import Parameters
-from actableai.timeseries.models.estimator import AAITimeSeriesEstimator
-from actableai.timeseries.models.params.base import BaseParams, Model
-from actableai.timeseries.transform.deseasonalizing import MultiDeseasonalizing
-from actableai.timeseries.transform.detrend import Detrend
-from actableai.timeseries.transform.power_transformation import PowerTransformation
+from actableai.timeseries.models.params.base import BaseParams
 
 
 class TreePredictorParams(BaseParams):
@@ -24,6 +21,10 @@ class TreePredictorParams(BaseParams):
         Returns:
             The hyperparameters space.
         """
+        from actableai.parameters.numeric import FloatRangeSpace
+        from actableai.parameters.options import OptionsSpace
+        from actableai.parameters.parameters import Parameters
+        from actableai.timeseries.models.params.base import Model
 
         parameters = [
             OptionsSpace[str](
@@ -69,6 +70,11 @@ class TreePredictorParams(BaseParams):
             process_hyperparameters: If True the hyperparameters will be validated and
                 processed (deactivate if they have already been validated).
         """
+        from actableai.timeseries.transform.detrend import Detrend
+        from actableai.timeseries.transform.power_transformation import (
+            PowerTransformation,
+        )
+
         super().__init__(
             model_name="TreePredictor",
             is_multivariate_model=False,
@@ -111,6 +117,9 @@ class TreePredictorParams(BaseParams):
         Returns:
             Built estimator.
         """
+        from gluonts.model.rotbaum import TreeEstimator
+        from actableai.timeseries.transform.deseasonalizing import MultiDeseasonalizing
+
         return self._create_estimator(
             estimator=TreeEstimator(
                 freq=freq,
