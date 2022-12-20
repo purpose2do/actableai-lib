@@ -67,7 +67,7 @@ class AAITabularModel(AAIModel):
                 )
                 for feature_name, feature_type in features_map.items()
             ],
-        ).json()
+        ).dict()
 
 
 class AAIInterventionalModel(AAIModel):
