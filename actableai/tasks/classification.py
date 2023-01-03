@@ -599,10 +599,6 @@ class AAIClassificationTask(AAITask):
                     datetime_column=datetime_column,
                     validation_ratio=validation_ratio,
                 )
-                sorted_df = df_train.sort_values(by=datetime_column, ascending=True)
-                split_datetime_index = int((1 - validation_ratio) * len(sorted_df))
-                df_train = sorted_df.iloc[:split_datetime_index].sample(frac=1)
-                df_val = sorted_df.iloc[split_datetime_index:]
             else:
                 df_train, df_val = train_test_split(
                     df_train, test_size=validation_ratio, stratify=df_train[target]
