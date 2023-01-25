@@ -6,12 +6,21 @@ from autogluon.common.savers import save_pkl
 from autogluon.common.loaders import load_pkl
 
 
+class _TabPFNClassifierWrapper(TabPFNClassifier):
+    def fit(self, X, y):
+        return super().fit(
+            X=X,
+            y=y,
+            overwrite_warning=True,
+        )
+
+
 class TabPFNModel(AbstractModel):
     """TabPFN classification Model"""
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.model = TabPFNClassifier(N_ensemble_configurations=20)
+        self.model = _TabPFNClassifierWrapper(N_ensemble_configurations=20)
 
     def save(self, path: str = None, verbose=True) -> str:
         if path is None:
