@@ -127,7 +127,7 @@ class _AAIClassificationTrainTask(AAITask):
         if "AG_AUTOMM" in hyperparameters:
             feature_generator_args["enable_raw_text_features"] = True
 
-        if df_train.shape[0] <= 1024 and TabPFNModel in hyperparameters:
+        if df_train.shape[0] > 1024 and TabPFNModel in hyperparameters:
             del hyperparameters[TabPFNModel]
 
         if not drop_useless_features:
