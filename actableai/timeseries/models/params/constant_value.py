@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from copy import deepcopy
 from typing import Dict, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -108,8 +109,8 @@ class ConstantValueParams(BaseParams):
 class MultivariateConstantValueParams(ConstantValueParams):
     """Parameters class for the Multivariate Constant Value Model."""
 
-    # TODO cache this
     @staticmethod
+    @lru_cache(maxsize=None)
     def get_hyperparameters() -> Parameters:
         """Returns the hyperparameters space of the model.
 
@@ -119,6 +120,7 @@ class MultivariateConstantValueParams(ConstantValueParams):
         from actableai.timeseries.models.params.base import Model
 
         hyperparameters = ConstantValueParams.get_hyperparameters()
+        hyperparameters = deepcopy(hyperparameters)
         hyperparameters.name = Model.multivariate_constant_value
         hyperparameters.display_name = "Multivariate Constant Value Predictor"
 
