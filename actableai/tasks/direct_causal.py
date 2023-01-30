@@ -1,14 +1,12 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
-import pandas as pd
 from scipy.stats import norm
 
 from actableai.tasks.base import AAITask
 from actableai.tasks import TaskType
 from actableai.tasks.causal_inference import AAICausalInferenceTask
 from actableai.data_validation.params import CausalFeatureSelectionDataValidator
-from actableai.data_validation.base import CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE
 
 
 class AAIDirectCausalFeatureSelection(AAITask):
