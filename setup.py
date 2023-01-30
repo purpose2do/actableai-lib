@@ -79,22 +79,22 @@ setup(
         "cpu": [
             "mxnet>=1.8.0.post0",
             "tensorflow>=2.9.1",
-            "torch>=1.10.1+cpu",
-            "torchvision>=0.11.2+cpu",
+            "torch==1.10.1+cpu",
+            "torchvision==0.11.2+cpu",
             "torchaudio>=0.10.1",
         ],
         "gpu": [
             "mxnet-cu110>=1.8.0.post0",
             "tensorflow-gpu>=2.9.1",
-            "torch>=1.10.1+cu111",
-            "torchvision>=0.11.2+cu111",
+            "torch==1.10.1+cu111",
+            "torchvision==0.11.2+cu111",
             "torchaudio>=0.10.1",
         ],
         "dev": [
             "flake8==3.9.2",
             "pytest==7.1.1",
             "pytest-xdist==2.5.0",
-            "black==22.8.0"
+            "black==22.8.0",
         ],
     },
     include_package_data=True,
