@@ -55,7 +55,7 @@ class AAIDirectCausalFeatureSelection(AAITask):
         str_columns = df[features].select_dtypes(include="object").columns
         for c in str_columns:
             vc = df[c].value_counts()
-            median_key = vc[vc == vc.median()].index[0]
+            median_key = vc[vc <= vc.median()].idxmax()
             df.loc[df[c] != median_key, c] = 0
             df.loc[df[c] == median_key, c] = 1
             df = df.astype({c: "int32"})

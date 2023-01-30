@@ -907,10 +907,4 @@ class CausalFeatureSelectionDataValidator:
         pass
 
     def validate(self, target: str, features: List[str], df: pd.DataFrame):
-        return [
-            CheckNUnique(level=CheckLevels.WARNING).check(
-                df[features],
-                CAUSAL_FEATURE_SELECTION_CATEGORICAL_MAX_UNIQUES,
-                "Causal feature selection",
-            )
-        ]
+        return []
