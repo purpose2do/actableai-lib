@@ -41,6 +41,7 @@ class ProphetParams(BaseParams):
             OptionsSpace[str](
                 name="seasonality_mode",
                 display_name="Seasonality Mode",
+                description="Specify seasonality mode.",
                 default=["additive", "multiplicative"],
                 options={
                     "additive": {"display_name": "Additive", "value": "additive"},
