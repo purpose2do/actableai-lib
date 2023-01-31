@@ -883,17 +883,18 @@ class AAIClassificationTask(AAITask):
 
         pdp_ice = dict()
         if run_pdp or run_ice:
-          pdp_ice = get_pdp_and_ice(model,
-                                    'classifier', 
-                                    df_train, 
-                                    features='all', 
-                                    PDP=run_pdp, 
-                                    ICE=run_ice, 
-                                    return_type='raw',
-                                    grid_resolution=pdp_ice_grid_resolution,
-                                    verbosity=0,
-                                    drop_invalid=True)
-        
+            pdp_ice = get_pdp_and_ice(
+                model,
+                df_train,
+                features="all",
+                PDP=run_pdp,
+                ICE=run_ice,
+                return_type="raw",
+                grid_resolution=pdp_ice_grid_resolution,
+                verbosity=0,
+                drop_invalid=True,
+            )
+
         return {
             "messenger": "",
             "status": "SUCCESS",

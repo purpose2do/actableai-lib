@@ -903,18 +903,19 @@ class AAIRegressionTask(AAITask):
 
         runtime = time.time() - start
 
-        data['pdp_ice'] = dict()
+        data["pdp_ice"] = dict()
         if run_pdp or run_ice:
-          data['pdp_ice'] = get_pdp_and_ice(model,
-                                            'regressor', 
-                                            df_train, 
-                                            features='all', 
-                                            PDP=run_pdp, 
-                                            ICE=run_ice, 
-                                            return_type='raw',
-                                            grid_resolution=pdp_ice_grid_resolution,
-                                            verbosity=0,
-                                            drop_invalid=True)
+            data["pdp_ice"] = get_pdp_and_ice(
+                model,
+                df_train,
+                features="all",
+                PDP=run_pdp,
+                ICE=run_ice,
+                return_type="raw",
+                grid_resolution=pdp_ice_grid_resolution,
+                verbosity=0,
+                drop_invalid=True,
+            )
 
         return {
             "status": "SUCCESS",
