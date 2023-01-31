@@ -199,9 +199,18 @@ class BaseParams:
 
         context_length = self.hyperparameters["context_length_ratio"]
         if isinstance(context_length, (tuple, list)):
-            context_length = tuple(
-                [round(e * prediction_length) for e in context_length]
+            if len(context_length) != 2:
+                raise ValueError(
+                    "Invalid context length len, the list should contain 2 elements"
+                )
+
+            context_length = (
+                round(context_length[0] * prediction_length),
+                round(context_length[1] * prediction_length),
             )
+
+            if context_length[0] == context_length[1]:
+                context_length = context_length[0]
         else:
             context_length = round(context_length * prediction_length)
 
