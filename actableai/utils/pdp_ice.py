@@ -50,7 +50,7 @@ def compute_pdp_ice(model_sk,
   Note: Categorical features only partially supported; when using return_type='plot', 
   categorical features are converted to numerical - however, the model should 
   also have been trained using the numerical features. 
-  Note: Categorical fetaures used for two-way PDP may not fully function.
+  Note: Categorical features used for two-way PDP may not fully function.
   It is recommended to use scikit-learn >= 1.2 for better support of categorical features.
 
   Parameters:
