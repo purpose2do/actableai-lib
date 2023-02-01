@@ -1,6 +1,10 @@
+from unittest.mock import patch
+
 import pandas as pd
 import pytest
+from autogluon.tabular import TabularPredictor
 
+from actableai.classification.models import TabPFNModel
 from actableai.data_validation.checkers import CheckLevels
 from actableai.tasks.classification import (
     AAIClassificationTask,
@@ -21,12 +25,14 @@ def run_classification_task(
     drop_duplicates=False,
     **kwargs,
 ):
+    if "hyperparameters" not in kwargs:
+        kwargs["hyperparameters"] = unittest_hyperparameters()
+
     return classification_task.run(
         *args,
         **kwargs,
         presets="medium_quality_faster_train",
         model_directory=tmp_path,
-        hyperparameters=unittest_hyperparameters(),
         residuals_hyperparameters=unittest_hyperparameters(),
         drop_duplicates=drop_duplicates,
         drop_unique=False,
@@ -432,7 +438,10 @@ class TestRemoteClassification:
 
         assert r["status"] == "FAILURE"
         assert len(r["validations"]) >= 1
-        assert r["validations"][0]["name"] == "IsSufficientDataClassificationStratification"
+        assert (
+            r["validations"][0]["name"]
+            == "IsSufficientDataClassificationStratification"
+        )
 
     def test_insufficient_class(self, classification_task, tmp_path):
         df = pd.DataFrame(
@@ -814,6 +823,70 @@ class TestRemoteClassification:
         assert len(r["data"]["validation_shaps"]) == 0
         assert len(r["data"]["predict_shaps"]) == 0
         assert r["model"] is not None
+
+    def test_tabpfn_activated(self, classification_task, tmp_path):
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 50,
+                "y": [1, 2, 1, 2, 1, None, 1, 2, 1, 2] * 50,
+            }
+        )
+
+        original_fit = TabularPredictor.fit
+
+        with patch.object(TabularPredictor, "fit", autospec=True) as mock_function:
+
+            def side_effect_tabular_predictor_fit(self_, *args, **kwargs):
+                kwargs["hyperparameters"] = unittest_hyperparameters()
+
+                return original_fit(self_, *args, **kwargs)
+
+            mock_function.side_effect = side_effect_tabular_predictor_fit
+
+            r = run_classification_task(
+                classification_task,
+                tmp_path,
+                df,
+                "y",
+                ["x"],
+                validation_ratio=0.2,
+                hyperparameters={TabPFNModel: {}},
+            )
+
+        _, function_kwargs = mock_function.call_args
+        assert TabPFNModel in function_kwargs.get("hyperparameters", {})
+
+    def test_tabpfn_not_activated(self, classification_task, tmp_path):
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 200,
+                "y": [1, 2, 1, 2, 1, None, 1, 2, 1, 2] * 200,
+            }
+        )
+
+        original_fit = TabularPredictor.fit
+
+        with patch.object(TabularPredictor, "fit", autospec=True) as mock_function:
+
+            def side_effect_tabular_predictor_fit(self_, *args, **kwargs):
+                kwargs["hyperparameters"] = unittest_hyperparameters()
+
+                return original_fit(self_, *args, **kwargs)
+
+            mock_function.side_effect = side_effect_tabular_predictor_fit
+
+            r = run_classification_task(
+                classification_task,
+                tmp_path,
+                df,
+                "y",
+                ["x"],
+                validation_ratio=0.2,
+                hyperparameters={TabPFNModel: {}},
+            )
+
+        _, function_kwargs = mock_function.call_args
+        assert TabPFNModel not in function_kwargs.get("hyperparameters", {})
 
 
 class TestRemoteClassificationCrossValidation:

@@ -1,9 +1,13 @@
 from typing import Any, Dict
+from unittest.mock import patch
+
 import numpy as np
 import pandas as pd
 import pytest
-from actableai.data_validation.base import CheckLevels
+from autogluon.tabular import TabularPredictor
 
+from actableai.classification.models import TabPFNModel
+from actableai.data_validation.base import CheckLevels
 from actableai.tasks.regression import (
     AAIRegressionTask,
 )
@@ -755,6 +759,70 @@ class TestRemoteRegression:
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
         assert r["model"] is not None
+
+    def test_tabpfn_activated(self, regression_task, tmp_path):
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 50,
+                "y": [1, 2, 1, 2, 1, None, 1, 2, 1, 2] * 50,
+            }
+        )
+
+        original_fit = TabularPredictor.fit
+
+        with patch.object(TabularPredictor, "fit", autospec=True) as mock_function:
+
+            def side_effect_tabular_predictor_fit(self_, *args, **kwargs):
+                kwargs["hyperparameters"] = unittest_hyperparameters()
+
+                return original_fit(self_, *args, **kwargs)
+
+            mock_function.side_effect = side_effect_tabular_predictor_fit
+
+            r = run_regression_task(
+                regression_task,
+                tmp_path,
+                df,
+                "y",
+                ["x"],
+                validation_ratio=0.2,
+                hyperparameters={TabPFNModel: {}},
+            )
+
+        _, function_kwargs = mock_function.call_args
+        assert TabPFNModel in function_kwargs.get("hyperparameters", {})
+
+    def test_tabpfn_not_activated(self, regression_task, tmp_path):
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 200,
+                "y": [1, 2, 1, 2, 1, None, 1, 2, 1, 2] * 200,
+            }
+        )
+
+        original_fit = TabularPredictor.fit
+
+        with patch.object(TabularPredictor, "fit", autospec=True) as mock_function:
+
+            def side_effect_tabular_predictor_fit(self_, *args, **kwargs):
+                kwargs["hyperparameters"] = unittest_hyperparameters()
+
+                return original_fit(self_, *args, **kwargs)
+
+            mock_function.side_effect = side_effect_tabular_predictor_fit
+
+            r = run_regression_task(
+                regression_task,
+                tmp_path,
+                df,
+                "y",
+                ["x"],
+                validation_ratio=0.2,
+                hyperparameters={TabPFNModel: {}},
+            )
+
+        _, function_kwargs = mock_function.call_args
+        assert TabPFNModel not in function_kwargs.get("hyperparameters", {})
 
 
 class TestRemoteRegressionCrossValidation:
