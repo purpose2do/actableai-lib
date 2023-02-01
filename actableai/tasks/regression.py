@@ -109,11 +109,15 @@ class _AAIRegressionTrainTask(AAITask):
         from actableai.utils import debiasing_feature_generator_args
         from actableai.debiasing.debiasing_model import DebiasingModel
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
+        from actableai.classification.models import TabPFNModel
 
         ag_args_fit = {"drop_unique": drop_unique}
         feature_generator_args = {}
         if "AG_AUTOMM" in hyperparameters:
             feature_generator_args["enable_raw_text_features"] = True
+
+        if df_train.shape[0] > 1024 and TabPFNModel in hyperparameters:
+            del hyperparameters[TabPFNModel]
 
         if not drop_useless_features:
             feature_generator_args["pre_drop_useless"] = False
