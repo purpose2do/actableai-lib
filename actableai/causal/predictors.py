@@ -285,7 +285,7 @@ class SKLearnTabularWrapper(SKLearnWrapper):
         # Bypass error that estimator.classes_[0] does not exist
         self.classes_ = [0]
 
-        model_type = ag_predictor._learner.problem_type
+        model_type = ag_predictor.problem_type
         # Type of model ('regressor' or 'classifier')
         # is_regressor check: https://github.com/scikit-learn/scikit-learn/blob/f3f51f9b611bf873bd5836748647221480071a87/sklearn/base.py#L1017
         # is_classifier check: https://github.com/scikit-learn/scikit-learn/blob/f3f51f9b611bf873bd5836748647221480071a87/sklearn/base.py#L1001

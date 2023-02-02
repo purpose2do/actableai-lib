@@ -67,6 +67,7 @@ def test_pdp_ice_regression(regression_task, tmp_path):
         grid_resolution=grid_resolution,
         verbosity=0,
         drop_invalid=False,
+        n_samples=None,
     )
 
     for feat_name in feats:
@@ -88,6 +89,7 @@ def test_pdp_ice_regression(regression_task, tmp_path):
         grid_resolution=grid_resolution,
         verbosity=0,
         drop_invalid=False,
+        n_samples=None,
     )
 
     for feat_name in feats:
@@ -118,6 +120,7 @@ def test_pdp_ice_regression(regression_task, tmp_path):
         grid_resolution=grid_resolution,
         verbosity=0,
         drop_invalid=False,
+        n_samples=None,
     )
 
     for feat_name in feats:
@@ -143,6 +146,7 @@ def test_pdp_ice_regression(regression_task, tmp_path):
         grid_resolution=grid_resolution,
         verbosity=0,
         drop_invalid=False,
+        n_samples=None,
     )
 
     for feat_name in feats:
@@ -204,6 +208,7 @@ def test_pdp_ice_classification(classification_task, tmp_path):
         grid_resolution=grid_resolution,
         verbosity=0,
         drop_invalid=False,
+        n_samples=None,
     )
 
     n_unique_target = len(df_train["t"].unique())
@@ -230,6 +235,7 @@ def test_pdp_ice_classification(classification_task, tmp_path):
         grid_resolution=grid_resolution,
         verbosity=0,
         drop_invalid=False,
+        n_samples=None,
     )
 
     for feat_name in feats:
@@ -264,6 +270,7 @@ def test_pdp_ice_classification(classification_task, tmp_path):
         grid_resolution=grid_resolution,
         verbosity=0,
         drop_invalid=False,
+        n_samples=None,
     )
 
     for feat_name in feats:
@@ -292,6 +299,7 @@ def test_pdp_ice_classification(classification_task, tmp_path):
         grid_resolution=grid_resolution,
         verbosity=0,
         drop_invalid=False,
+        n_samples=None,
     )
 
     for feat_name in feats:

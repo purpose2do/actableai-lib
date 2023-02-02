@@ -80,6 +80,7 @@ def get_pdp_and_ice(
     plot_convert_to_num=True,
     drop_invalid=True,
     inplace=False,
+    n_samples=None,
 ):
     """
     Get Partial Dependence Plot (PDP) and/or Individual Conditional Expectation
@@ -108,7 +109,8 @@ def get_pdp_and_ice(
     drop_invalid (bool, optional): Whether to drop rows containing NaNs or Inf
         values in any of the columns
     inplace (bool, optional): Whether to perform modifications to df_train in-place
-
+    n_samples (int, optional): The number of rows to sample in df_train. If 'None,
+        no sampling is performed.
 
     Returns:
     A dictionary with keys as feature names and values as the computed PDP/ICE
@@ -129,8 +131,6 @@ def get_pdp_and_ice(
             doing classification), or 'binary' (when doing binary classification)"
         )
 
-    if verbosity > 1:
-        print("Applying wrapper")
     model_sk = SKLearnTabularWrapper(model.predictor)
     if verbosity > 1:
         print("Model wrapped with sklearn wrapper")
@@ -138,8 +138,34 @@ def get_pdp_and_ice(
     if features == "all":  # Use all columns
         features = df_train.columns
 
+    if n_samples is not None:
+        # Only sample if there are more rows than the requested numebr of samples
+        if len(df_train)>n_samples:
+            df_train = df_train.sample(n=n_samples, axis=0, replace=True, random_state=1)
+            if verbosity > 1:
+                print(f"Sampled {n_samples} rows from the dataset")
+
+    # Convert categorical features to numerical if using 'plot'
+    # NOTE: Model should have been trained with the converted features to
+    # ensure correct computation of the PDP/ICE!
+    if (return_type == "plot") and (plot_convert_to_num):
+        df_train, uniques_all = convert_categorical_to_num(df_train, inplace=inplace)
+        if verbosity > 1:
+            print(
+                "Categorical features converted to numerical. Ensure that \
+          the model was also trained with numerical values!"
+            )
+
     res_all = dict()
     for feature in features:
+        if verbosity > 0:
+            if type(feature) == int:
+                feature_name = df_train.columns[feature]
+                print(f"Feature: {feature} ({feature_name})")
+            else:
+                print(f"Feature: {feature}")
+
+        # Check if attempting to use 'plot' with 2-way ICE
         ice_feat = ice
         if (return_type == "plot") and (type(feature) == tuple):
             if verbosity > 0:
@@ -164,21 +190,7 @@ def get_pdp_and_ice(
 
         if verbosity > 1:
             print("Parameter 'kind' set to:", kind)
-
-        if verbosity > 0:
-            if type(feature) == int:
-                feature_name = df_train.columns[feature]
-                print(f"Performing {kind_str} for feature {feature} ({feature_name})")
-            else:
-                print(f"Performing {kind_str} for {feature}")
-
-        # Convert categorical features to numerical if using 'plot'
-        # NOTE: Model should have been trained with the converted features to
-        # ensure correct computation of the PDP/ICE!
-        if (return_type == "plot") and (plot_convert_to_num):
-            df_train, uniques_all = convert_categorical_to_num(
-                df_train, inplace=inplace
-            )
+            print(f"Performing {kind_str}")
 
         res_all[feature] = _compute_pdp_ice(
             model_sk,
