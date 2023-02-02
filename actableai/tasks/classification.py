@@ -389,8 +389,8 @@ class AAIClassificationTask(AAITask):
         feature_prune=True,
         feature_prune_time_limit: Optional[float] = None,
         intervention_run_params: Optional[Dict] = None,
-        run_pdp: bool = True,
-        run_ice: bool = True,
+        run_pdp: bool = False,
+        run_ice: bool = False,
         pdp_ice_grid_resolution: Optional[int] = 100,
         pdp_ice_n_samples: Optional[int] = 100,
     ) -> Dict:
@@ -449,13 +449,13 @@ class AAIClassificationTask(AAITask):
                 This option improves results but extend the training time.
                 If there is no time left to do feature_pruning after training
                 this step is skipped.
-            intervention_run_params: Parameters for running an intervention task. \
+            intervention_run_params: Parameters for running an intervention task.
                 Check actableai/tasks/intervention.py for more details.
             run_pdp: Run Partial Dependency to get Partial Dependency Plot (PDP)
             run_ice: Run Independent Conditional Expectation (ICE)
-            pdp_ice_grid_resolution: Maximum resolution of the grid to use for \
+            pdp_ice_grid_resolution: Maximum resolution of the grid to use for
                 computation of the PDP and/or ICE
-            pdp_ice_n_samples: The number of rows to sample in df_train. If 'None, \
+            pdp_ice_n_samples: The number of rows to sample in df_train. If 'None,
                 no sampling is performed.
 
         Raises:

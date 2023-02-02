@@ -359,8 +359,8 @@ class AAIRegressionTask(AAITask):
         causal_feature_selection_max_concurrent_tasks: int = 20,
         ci_for_causal_feature_selection_task_params: Optional[dict] = None,
         ci_for_causal_feature_selection_run_params: Optional[dict] = None,
-        run_pdp: bool = True,
-        run_ice: bool = True,
+        run_pdp: bool = False,
+        run_ice: bool = False,
         pdp_ice_grid_resolution: Optional[int] = 100,
         pdp_ice_n_samples: Optional[int] = 100,
     ) -> Dict[str, Any]:
@@ -423,7 +423,7 @@ class AAIRegressionTask(AAITask):
                 by removing hurtfull features for the model. If no training time left this step
                 is skipped
             feature_prune_time_limit: Time limit for feature pruning.
-            intervention_run_params: Parameters for running an intervention task. \
+            intervention_run_params: Parameters for running an intervention task.
                 Check actableai/tasks/intervention.py for more details.
             causal_feature_selection: if True, it will search for direct causal
                 features and use only these features for the prediction
@@ -433,9 +433,9 @@ class AAIRegressionTask(AAITask):
             ci_for_causal_feature_selection_run_params: Kwargs for AAIDirectCausalFeatureSelectionTask's run
             run_pdp: Run Partial Dependency to get Partial Dependency Plot (PDP)
             run_ice: Run Independent Conditional Expectation (ICE)
-            pdp_ice_grid_resolution: Maximum resolution of the grid to use for \
+            pdp_ice_grid_resolution: Maximum resolution of the grid to use for
                 computation of the PDP and/or ICE
-            pdp_ice_n_samples: The number of rows to sample in df_train. If 'None, \
+            pdp_ice_n_samples: The number of rows to sample in df_train. If 'None,
                 no sampling is performed.
 
         Examples:
