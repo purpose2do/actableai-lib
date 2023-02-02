@@ -21,10 +21,10 @@ def _compute_pdp_ice(
     model_sk (scikit-learn model): trained sklearn model on which to compute
         PDP/ICE
     df_train (pandas DataFrame): dataset on which to compute the PDP/ICE
-    return_type (str): 'raw' to return the raw PDP/ICE data, 'plot' to return
+    return_type (str): 'raw' to return the raw pdp/ICE data, 'plot' to return
         a plot of the data
     feature (str): name of the feature (column) on which to compute PDP/ICE
-    kind (str): 'average' (PDP), 'individual' (ICE), or 'both' (PDP and ICE)
+    kind (str): 'average' (PDP), 'individual' (ICE), or 'both' (pdp and ICE)
     grid_resolution (int): number of points to sample in the grid and plot
         (x-axis values)
     drop_invalid (bool, optional): Whether to drop rows containing NaNs or
@@ -72,13 +72,14 @@ def get_pdp_and_ice(
     model,
     df_train,
     features="all",
-    PDP=True,
-    ICE=True,
+    pdp=True,
+    ice=True,
     return_type="raw",
     grid_resolution=100,
     verbosity=0,
     plot_convert_to_num=True,
     drop_invalid=True,
+    inplace=False,
 ):
     """
     Get Partial Dependence Plot (PDP) and/or Individual Conditional Expectation
@@ -90,7 +91,7 @@ def get_pdp_and_ice(
     features (list or str, optional): list of feature names/column numbers on
         which to compute PDP/ICE, or 'all' to use all columns. If only one
         fetaure is required, its name or column number should be in a list.
-    PDP (bool, optional): set to True to compute PDP
+    pdp (bool, optional): set to True to compute PDP
     ICE (bool, optional): set to True to compute ICE
     return_type (str, optional): 'raw' to return the raw PDP/ICE data, 'plot'
         to return a plot of the data
@@ -106,6 +107,8 @@ def get_pdp_and_ice(
             results are correct.
     drop_invalid (bool, optional): Whether to drop rows containing NaNs or Inf
         values in any of the columns
+    inplace (bool, optional): Whether to perform modifications to df_train in-place
+
 
     Returns:
     A dictionary with keys as feature names and values as the computed PDP/ICE
@@ -118,12 +121,12 @@ def get_pdp_and_ice(
     sklearn.inspection.PartialDependenceDisplay object containing the plot
     """
 
-    model_type = model.predictor._learner.problem_type
-    if model_type not in ["regression", "multiclass", "binary"]:
+    model_type = model.predictor.problem_type
+    if model_type not in ["regression", "quantile", "multiclass", "binary"]:
         raise ValueError(
             "'model_type' must be either 'regression' (when doing regression), \
-            'classifier' (when doing classification), or 'binary' (when doing \
-            binary classification)"
+            'quantile' (when doing quantiel regression)), 'classifier' (when \
+            doing classification), or 'binary' (when doing binary classification)"
         )
 
     if verbosity > 1:
@@ -137,26 +140,26 @@ def get_pdp_and_ice(
 
     res_all = dict()
     for feature in features:
-        ICE_feat = ICE
+        ice_feat = ice
         if (return_type == "plot") and (type(feature) == tuple):
             if verbosity > 0:
                 "Two-way ICE cannot be performed when return_type=='plot'; setting ICE to False"
-            ICE_feat = False
+            ice_feat = False
 
         # Determine 'kind' (plot both PDP and ICE, or only one of them)
-        if PDP and ICE_feat:
+        if pdp and ice_feat:
             kind = "both"
             kind_str = "PDP and ICE"
-        elif PDP:
+        elif pdp:
             kind = "average"
             kind_str = "PDP"
-        elif ICE_feat:
+        elif ice_feat:
             kind = "individual"
             kind_str = "ICE"
         else:
             raise ValueError(
-                "Both 'PDP' and 'ICE' are set to 'False'; at least one of 'PDP' or \
-                'ICE' must be 'True'!"
+                "Both 'pdp' and 'ice' are set to 'False'; at least one of 'pdp' or \
+                'ice' must be 'True'!"
             )
 
         if verbosity > 1:
@@ -173,9 +176,8 @@ def get_pdp_and_ice(
         # NOTE: Model should have been trained with the converted features to
         # ensure correct computation of the PDP/ICE!
         if (return_type == "plot") and (plot_convert_to_num):
-            df_train_copy = df_train.copy()
             df_train, uniques_all = convert_categorical_to_num(
-                df_train_copy, inplace=True
+                df_train, inplace=inplace
             )
 
         res_all[feature] = _compute_pdp_ice(

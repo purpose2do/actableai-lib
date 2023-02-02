@@ -278,23 +278,22 @@ class SKLearnTabularWrapper(SKLearnWrapper):
             feature_generator,
             holdout_frac,
         )
-        
+
         # Bypass error by sklearn that model is not yet fitted
         self.ag_predictor_ = self.ag_predictor
-        
+
         # Bypass error that estimator.classes_[0] does not exist
         self.classes_ = [0]
-        
-        model_type = ag_predictor._learner.problem_type        
+
+        model_type = ag_predictor._learner.problem_type
         # Type of model ('regressor' or 'classifier')
         # is_regressor check: https://github.com/scikit-learn/scikit-learn/blob/f3f51f9b611bf873bd5836748647221480071a87/sklearn/base.py#L1017
         # is_classifier check: https://github.com/scikit-learn/scikit-learn/blob/f3f51f9b611bf873bd5836748647221480071a87/sklearn/base.py#L1001
-        if model_type == "regression":
+        if model_type in ["regression", "quantile"]:
             self._estimator_type = "regressor"
         elif model_type in ["multiclass", "binary"]:
             self._estimator_type = "classifier"
-        
-        
+
     def set_sample_weight(self, sample_weight=None) -> None:
         self.ag_predictor.sample_weight = sample_weight
 

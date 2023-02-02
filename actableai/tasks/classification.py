@@ -887,12 +887,13 @@ class AAIClassificationTask(AAITask):
                 model,
                 df_train,
                 features="all",
-                PDP=run_pdp,
-                ICE=run_ice,
+                pdp=run_pdp,
+                ice=run_ice,
                 return_type="raw",
                 grid_resolution=pdp_ice_grid_resolution,
                 verbosity=0,
                 drop_invalid=True,
+                inplace=True,
             )
 
         return {
