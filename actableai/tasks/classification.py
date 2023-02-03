@@ -389,8 +389,8 @@ class AAIClassificationTask(AAITask):
         feature_prune=True,
         feature_prune_time_limit: Optional[float] = None,
         intervention_run_params: Optional[Dict] = None,
-        run_pdp: bool = False,
-        run_ice: bool = False,
+        run_pdp: bool = True,
+        run_ice: bool = True,
         pdp_ice_grid_resolution: Optional[int] = 100,
         pdp_ice_n_samples: Optional[int] = 100,
     ) -> Dict:

@@ -359,8 +359,8 @@ class AAIRegressionTask(AAITask):
         causal_feature_selection_max_concurrent_tasks: int = 20,
         ci_for_causal_feature_selection_task_params: Optional[dict] = None,
         ci_for_causal_feature_selection_run_params: Optional[dict] = None,
-        run_pdp: bool = False,
-        run_ice: bool = False,
+        run_pdp: bool = True,
+        run_ice: bool = True,
         pdp_ice_grid_resolution: Optional[int] = 100,
         pdp_ice_n_samples: Optional[int] = 100,
     ) -> Dict[str, Any]:
