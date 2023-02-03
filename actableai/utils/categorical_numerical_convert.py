@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 
+from collections import defaultdict
+from sklearn.preprocessing import LabelEncoder
+
 from actableai.utils import get_type_special
 
 
@@ -25,7 +28,7 @@ def convert_categorical_to_num(df, inplace=False):
 
     Returns:
     df (pandas DataFrame): The modified DataFrame with categorical features converted to numerical values.
-    uniques_all (dict): A dictionary containing the unique values for each converted column (the categorical features).
+    d (dict): A dictionary containing the fitted LabelEncoder object for each converted column (the categorical features).
     """
 
     if not inplace:
@@ -34,15 +37,14 @@ def convert_categorical_to_num(df, inplace=False):
     # Get categorical columns/features
     cols = get_categorical_columns(df)
 
-    # Convert features to enumerated types
-    uniques_all = dict()
-    for c in cols:
-        df[c], uniques_all[c] = pd.factorize(df[c])
+    # Fit encoder and convert columns to enumerated types
+    d = defaultdict(LabelEncoder)
+    df[cols] = df[cols].apply(lambda x: d[x.name].fit_transform(x))
 
-    return df, uniques_all
+    return df, d
 
 
-def inverse_convert_categorical_to_num(df_new, uniques, feat_name=None):
+def inverse_convert_categorical_to_num(df_new, d, feat_name=None):
     """
     Convert numerical values back to their original categorical values.
 
@@ -50,7 +52,7 @@ def inverse_convert_categorical_to_num(df_new, uniques, feat_name=None):
 
     Parameters:
     df (pandas DataFrame): The DataFrame containing the numerical values to be converted back to categorical.
-    uniques (dict): A dictionary containing the unique values for each column.
+    d (dict): A dictionary containing the fitted LabelEncoder object for each column.
     feat_name (str, optional): The name of a specific feature to be converted. If None, all features in the DataFrame will be converted.
 
     Returns:
@@ -60,28 +62,16 @@ def inverse_convert_categorical_to_num(df_new, uniques, feat_name=None):
     ValueError: If the feature name (column) is not in the DataFrame.
     """
 
-    df = df_new.copy()
-
     if feat_name == None:  # Iterate over ALL features
-        for c in uniques.keys():
-            df[c] = uniques[c].take(df_new[c])
-            df.loc[
-                df_new[c] == -1, c
-            ] = (
-                np.nan
-            )  # NaN values are indicated with the -1 sentinel; replace them with NaN
+        cols = list(d.keys())
 
     else:  # Only one feature
-        c = feat_name
-        if c in df.columns:
-            df[c] = uniques[c].take(df_new[c])
-            df[
-                df_new[c] == -1
-            ] = (
-                np.nan
-            )  # NaN values are indicated with the -1 sentinel; replace them with NaN
+        if feat_name in df_new.columns:
+            cols = [feat_name]
 
         else:
             raise ValueError("Feature (column) not in dataframe!")
 
-    return df
+    df_new[cols] = df_new[cols].apply(lambda x: d[x.name].inverse_transform(x))
+
+    return df_new
