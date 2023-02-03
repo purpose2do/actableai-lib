@@ -1,7 +1,7 @@
 import numpy as np
 from actableai.utils.categorical_numerical_convert import convert_categorical_to_num
 from actableai.causal.predictors import SKLearnTabularWrapper
-
+from actableai.utils import get_type_special
 
 def _compute_pdp_ice(
     model_sk, df_train, return_type, feature, kind, grid_resolution, drop_invalid=True
@@ -43,6 +43,11 @@ def _compute_pdp_ice(
     # Drop any rows containing NaNs or Infs
     if drop_invalid:
         df_train = df_train.replace([np.inf, -np.inf], np.nan).dropna(axis=0)
+    
+    # Check feature type; if 'mixed', convert to string
+    feat_type = get_type_special(df_train[feature])
+    if feat_type=='mixed':
+        df_train[feature] = df_train[feature].astype(str)
 
     if return_type == "raw":
         from sklearn.inspection import partial_dependence
@@ -164,6 +169,12 @@ def get_pdp_and_ice(
                 print(f"Feature: {feature} ({feature_name})")
             else:
                 print(f"Feature: {feature}")
+
+        # Check if column only contains empty values
+        if df_train[feature].isnull().all():
+            if verbosity>1:
+                print(f'All rows in the column are null; skipping feature')
+            continue
 
         # Check if attempting to use 'plot' with 2-way ICE
         ice_feat = ice

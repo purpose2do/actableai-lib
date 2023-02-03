@@ -887,7 +887,7 @@ class AAIClassificationTask(AAITask):
         runtime = time.time() - start
 
         pdp_ice = dict()
-        if run_pdp or run_ice:
+        if ((run_pdp or run_ice) and (model is not None)):
             pdp_ice = get_pdp_and_ice(
                 model,
                 df_train,
