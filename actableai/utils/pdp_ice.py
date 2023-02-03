@@ -1,10 +1,12 @@
 import numpy as np
+from sklearn.inspection import partial_dependence
+
 from actableai.utils.categorical_numerical_convert import convert_categorical_to_num
 from actableai.causal.predictors import SKLearnTabularWrapper
 from actableai.utils import get_type_special
 
 def _compute_pdp_ice(
-    model_sk, df_train, return_type, feature, kind, grid_resolution, drop_invalid=True
+    model_sk, df_train, feature, kind, grid_resolution, drop_invalid=True
 ):
     """
     Compute Partial Dependence Plot (PDP) and Individual Conditional Expectation
@@ -21,8 +23,6 @@ def _compute_pdp_ice(
     model_sk (scikit-learn model): trained sklearn model on which to compute
         PDP/ICE
     df_train (pandas DataFrame): dataset on which to compute the PDP/ICE
-    return_type (str): 'raw' to return the raw pdp/ICE data, 'plot' to return
-        a plot of the data
     feature (str): name of the feature (column) on which to compute PDP/ICE
     kind (str): 'average' (PDP), 'individual' (ICE), or 'both' (pdp and ICE)
     grid_resolution (int): number of points to sample in the grid and plot
@@ -49,27 +49,15 @@ def _compute_pdp_ice(
     if feat_type=='mixed':
         df_train[feature] = df_train[feature].astype(str)
 
-    if return_type == "raw":
-        from sklearn.inspection import partial_dependence
+    return partial_dependence(
+        model_sk,
+        df_train,
+        features=feature,
+        kind=kind,
+        grid_resolution=grid_resolution,
+    )
 
-        return partial_dependence(
-            model_sk,
-            df_train,
-            features=feature,
-            kind=kind,
-            grid_resolution=grid_resolution,
-        )
 
-    elif return_type == "plot":
-        from sklearn.inspection import PartialDependenceDisplay
-
-        return PartialDependenceDisplay.from_estimator(
-            model_sk,
-            df_train,
-            features=[feature],
-            kind=kind,
-            grid_resolution=grid_resolution,
-        )
 
 
 # MAIN function
@@ -79,7 +67,6 @@ def get_pdp_and_ice(
     features="all",
     pdp=True,
     ice=True,
-    return_type="raw",
     grid_resolution=100,
     verbosity=0,
     plot_convert_to_num=True,
@@ -99,8 +86,6 @@ def get_pdp_and_ice(
         fetaure is required, its name or column number should be in a list.
     pdp (bool, optional): set to True to compute PDP
     ICE (bool, optional): set to True to compute ICE
-    return_type (str, optional): 'raw' to return the raw PDP/ICE data, 'plot'
-        to return a plot of the data
     grid_resolution (int, optional): number of points to sample in the grid
         and plot (x-axis values)
     verbosity (int, optional): 0 for no output, 1 for summary output, 2 for
@@ -150,47 +135,31 @@ def get_pdp_and_ice(
             if verbosity > 1:
                 print(f"Sampled {n_samples} rows from the dataset")
 
-    # Convert categorical features to numerical if using 'plot'
-    # NOTE: Model should have been trained with the converted features to
-    # ensure correct computation of the PDP/ICE!
-    if (return_type == "plot") and (plot_convert_to_num):
-        df_train, uniques_all = convert_categorical_to_num(df_train, inplace=inplace)
-        if verbosity > 1:
-            print(
-                "Categorical features converted to numerical. Ensure that \
-          the model was also trained with numerical values!"
-            )
-
+    # Iterate over each column/feature
     res_all = dict()
     for feature in features:
         if verbosity > 0:
+            print('')
             if type(feature) == int:
                 feature_name = df_train.columns[feature]
                 print(f"Feature: {feature} ({feature_name})")
             else:
                 print(f"Feature: {feature}")
 
-        # Check if column only contains empty values
+        # Skip if column only contains empty values
         if df_train[feature].isnull().all():
             if verbosity>1:
                 print(f'All rows in the column are null; skipping feature')
             continue
 
-        # Check if attempting to use 'plot' with 2-way ICE
-        ice_feat = ice
-        if (return_type == "plot") and (type(feature) == tuple):
-            if verbosity > 0:
-                "Two-way ICE cannot be performed when return_type=='plot'; setting ICE to False"
-            ice_feat = False
-
         # Determine 'kind' (plot both PDP and ICE, or only one of them)
-        if pdp and ice_feat:
+        if pdp and ice:
             kind = "both"
             kind_str = "PDP and ICE"
         elif pdp:
             kind = "average"
             kind_str = "PDP"
-        elif ice_feat:
+        elif ice:
             kind = "individual"
             kind_str = "ICE"
         else:
@@ -206,7 +175,6 @@ def get_pdp_and_ice(
         res_all[feature] = _compute_pdp_ice(
             model_sk,
             df_train,
-            return_type,
             feature,
             kind,
             grid_resolution,

@@ -38,7 +38,6 @@ def test_pdp_ice_regression(regression_task, tmp_path):
     )
     n_samples = len(df_train)
 
-    ### Raw ###
     result = regression_task.run(
         df=df_train,
         target="t",
@@ -63,7 +62,6 @@ def test_pdp_ice_regression(regression_task, tmp_path):
         features=feats,
         pdp=True,
         ice=True,
-        return_type="raw",
         grid_resolution=grid_resolution,
         verbosity=0,
         drop_invalid=False,
@@ -77,91 +75,6 @@ def test_pdp_ice_regression(regression_task, tmp_path):
         assert pd_r2[feat_name]["average"].shape == (1, n_grid)
         assert pd_r2[feat_name]["values"][0].shape == (n_grid,)
 
-    # Check 2-way PDP
-    feats = [("y", "x")]
-    pd_r2 = get_pdp_and_ice(
-        result["model"],
-        df_train,
-        features=feats,
-        pdp=True,
-        ice=True,
-        return_type="raw",
-        grid_resolution=grid_resolution,
-        verbosity=0,
-        drop_invalid=False,
-        n_samples=None,
-    )
-
-    for feat_name in feats:
-        n_unique_0 = len(df_train[feat_name[0]].unique())
-        n_grid_0 = min(n_unique_0, grid_resolution)
-        n_unique_1 = len(df_train[feat_name[1]].unique())
-        n_grid_1 = min(n_unique_1, grid_resolution)
-        assert pd_r2[feat_name]["individual"].shape == (
-            1,
-            n_samples,
-            n_grid_0,
-            n_grid_1,
-        )
-        assert pd_r2[feat_name]["average"].shape == (1, n_grid_0, n_grid_1)
-        assert len(pd_r2[feat_name]["values"]) == 2
-        assert len(pd_r2[feat_name]["values"][0] == (n_grid_0))
-        assert len(pd_r2[feat_name]["values"][1] == (n_grid_1))
-
-    ### Plot ###
-    feats = ["y", "z"]
-    pd_p2 = get_pdp_and_ice(
-        result["model"],
-        df_train,
-        features=feats,
-        pdp=True,
-        ice=True,
-        return_type="plot",
-        grid_resolution=grid_resolution,
-        verbosity=0,
-        drop_invalid=False,
-        n_samples=None,
-    )
-
-    for feat_name in feats:
-        n_unique = len(df_train[feat_name].unique())
-        n_grid = min(n_unique, grid_resolution)
-        assert pd_p2[feat_name].pd_results[0]["individual"].shape == (
-            1,
-            n_samples,
-            n_grid,
-        )
-        assert pd_p2[feat_name].pd_results[0]["average"].shape == (1, n_grid)
-        assert pd_p2[feat_name].pd_results[0]["values"][0].shape == (n_grid,)
-
-    # Check 2-way PDP
-    feats = [("y", "x")]
-    pd_p2 = get_pdp_and_ice(
-        result["model"],
-        df_train,
-        features=feats,
-        pdp=True,
-        ice=False,
-        return_type="plot",
-        grid_resolution=grid_resolution,
-        verbosity=0,
-        drop_invalid=False,
-        n_samples=None,
-    )
-
-    for feat_name in feats:
-        n_unique_0 = len(df_train[feat_name[0]].unique())
-        n_grid_0 = min(n_unique_0, grid_resolution)
-        n_unique_1 = len(df_train[feat_name[1]].unique())
-        n_grid_1 = min(n_unique_1, grid_resolution)
-        assert pd_p2[feat_name].pd_results[0]["average"].shape == (
-            1,
-            n_grid_0,
-            n_grid_1,
-        )
-        assert len(pd_p2[feat_name].pd_results[0]["values"]) == 2
-        assert len(pd_p2[feat_name].pd_results[0]["values"][0] == (n_grid_0))
-        assert len(pd_p2[feat_name].pd_results[0]["values"][1] == (n_grid_1))
 
 
 def test_pdp_ice_classification(classification_task, tmp_path):
@@ -197,14 +110,12 @@ def test_pdp_ice_classification(classification_task, tmp_path):
     grid_resolution = 10
     feats = ["y", "z"]
 
-    ### Raw ###
     pd_r2 = get_pdp_and_ice(
         result["model"],
         df_train,
         features=feats,
         pdp=True,
         ice=True,
-        return_type="raw",
         grid_resolution=grid_resolution,
         verbosity=0,
         drop_invalid=False,
@@ -222,96 +133,3 @@ def test_pdp_ice_classification(classification_task, tmp_path):
         )
         assert pd_r2[feat_name]["average"].shape == (n_unique_target, n_grid)
         assert pd_r2[feat_name]["values"][0].shape == (n_grid,)
-
-    # Check 2-way PDP
-    feats = [("y", "x")]
-    pd_r2 = get_pdp_and_ice(
-        result["model"],
-        df_train,
-        features=feats,
-        pdp=True,
-        ice=True,
-        return_type="raw",
-        grid_resolution=grid_resolution,
-        verbosity=0,
-        drop_invalid=False,
-        n_samples=None,
-    )
-
-    for feat_name in feats:
-        n_unique_0 = len(df_train[feat_name[0]].unique())
-        n_grid_0 = min(n_unique_0, grid_resolution)
-        n_unique_1 = len(df_train[feat_name[1]].unique())
-        n_grid_1 = min(n_unique_1, grid_resolution)
-        assert pd_r2[feat_name]["individual"].shape == (
-            n_unique_target,
-            n_samples,
-            n_grid_0,
-            n_grid_1,
-        )
-        assert pd_r2[feat_name]["average"].shape == (
-            n_unique_target,
-            n_grid_0,
-            n_grid_1,
-        )
-        assert len(pd_r2[feat_name]["values"]) == 2
-        assert len(pd_r2[feat_name]["values"][0] == (n_grid_0))
-        assert len(pd_r2[feat_name]["values"][1] == (n_grid_1))
-
-    ### Plot ###
-    feats = ["y", "z"]
-    pd_p2 = get_pdp_and_ice(
-        result["model"],
-        df_train,
-        features=feats,
-        pdp=True,
-        ice=True,
-        return_type="plot",
-        grid_resolution=grid_resolution,
-        verbosity=0,
-        drop_invalid=False,
-        n_samples=None,
-    )
-
-    for feat_name in feats:
-        n_unique = len(df_train[feat_name].unique())
-        n_grid = min(n_unique, grid_resolution)
-        assert pd_p2[feat_name].pd_results[0]["individual"].shape == (
-            n_unique_target,
-            n_samples,
-            n_grid,
-        )
-        assert pd_p2[feat_name].pd_results[0]["average"].shape == (
-            n_unique_target,
-            n_grid,
-        )
-        assert pd_p2[feat_name].pd_results[0]["values"][0].shape == (n_grid,)
-
-    # Check 2-way PDP
-    feats = [("y", "x")]
-    pd_p2 = get_pdp_and_ice(
-        result["model"],
-        df_train,
-        features=feats,
-        pdp=True,
-        ice=False,
-        return_type="plot",
-        grid_resolution=grid_resolution,
-        verbosity=0,
-        drop_invalid=False,
-        n_samples=None,
-    )
-
-    for feat_name in feats:
-        n_unique_0 = len(df_train[feat_name[0]].unique())
-        n_grid_0 = min(n_unique_0, grid_resolution)
-        n_unique_1 = len(df_train[feat_name[1]].unique())
-        n_grid_1 = min(n_unique_1, grid_resolution)
-        assert pd_p2[feat_name].pd_results[0]["average"].shape == (
-            n_unique_target,
-            n_grid_0,
-            n_grid_1,
-        )
-        assert len(pd_p2[feat_name].pd_results[0]["values"]) == 2
-        assert len(pd_p2[feat_name].pd_results[0]["values"][0] == (n_grid_0))
-        assert len(pd_p2[feat_name].pd_results[0]["values"][1] == (n_grid_1))
