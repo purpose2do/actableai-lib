@@ -894,7 +894,6 @@ class AAIClassificationTask(AAITask):
                 features="all",
                 pdp=run_pdp,
                 ice=run_ice,
-                return_type="raw",
                 grid_resolution=pdp_ice_grid_resolution,
                 verbosity=0,
                 drop_invalid=True,
