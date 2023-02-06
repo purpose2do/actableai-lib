@@ -579,7 +579,8 @@ class AAIClassificationTask(AAITask):
             else:
                 any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
                 hyperparameters = memory_efficient_hyperparameters(
-                    ag_automm_enabled and any_text_cols
+                    ag_automm_enabled=ag_automm_enabled and any_text_cols,
+                    tabpfn_enabled=True,
                 )
 
         from actableai.utils import get_type_special
