@@ -49,13 +49,17 @@ def _compute_pdp_ice(
     if feat_type=='mixed':
         df_train[feature] = df_train[feature].astype(str)
 
-    return partial_dependence(
+    res = partial_dependence(
         model_sk,
         df_train,
         features=feature,
         kind=kind,
         grid_resolution=grid_resolution,
     )
+
+    res['feature_type'] = feat_type
+
+    return res
 
 
 
