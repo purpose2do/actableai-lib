@@ -28,7 +28,7 @@ def convert_categorical_to_num(df, inplace=False):
 
     Returns:
     df (pandas DataFrame): The modified DataFrame with categorical features converted to numerical values.
-    d (dict): A dictionary containing the fitted LabelEncoder object for each converted column (the categorical features).
+    dict_label_encoders (dict): A dictionary containing the fitted LabelEncoder object for each converted column (the categorical features).
     """
 
     if not inplace:
@@ -38,10 +38,10 @@ def convert_categorical_to_num(df, inplace=False):
     cols = get_categorical_columns(df)
 
     # Fit encoder and convert columns to enumerated types
-    d = defaultdict(LabelEncoder)
-    df[cols] = df[cols].apply(lambda x: d[x.name].fit_transform(x))
+    dict_label_encoders = defaultdict(LabelEncoder)
+    df[cols] = df[cols].apply(lambda x: dict_label_encoders[x.name].fit_transform(x))
 
-    return df, d
+    return df, dict_label_encoders
 
 
 def inverse_convert_categorical_to_num(df_new, d, feat_name=None):
