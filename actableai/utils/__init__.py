@@ -191,7 +191,9 @@ def check_if_integer_feature(X: pd.Series):
     return np.array_equal(clean_X.values, clean_X.values.astype(int))
 
 
-def memory_efficient_hyperparameters(ag_automm_enabled: bool = False):
+def memory_efficient_hyperparameters(
+    ag_automm_enabled: bool = False, tabpfn_enabled: bool = False
+):
     from autogluon.tabular.configs.hyperparameter_configs import (
         hyperparameter_config_dict,
     )
@@ -212,7 +214,8 @@ def memory_efficient_hyperparameters(ag_automm_enabled: bool = False):
     if ag_automm_enabled:
         hyperparameters["AG_AUTOMM"] = simple_presets["multilingual"]  # type: ignore
     # hyperparameters["AG_AUTOMM"]["env.per_gpu_batch_size"] = 4
-    hyperparameters[TabPFNModel] = {}
+    if tabpfn_enabled:
+        hyperparameters[TabPFNModel] = {}
 
     return hyperparameters
 
