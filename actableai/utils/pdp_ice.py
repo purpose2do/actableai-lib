@@ -135,6 +135,13 @@ def get_pdp_and_ice(
             if verbosity > 1:
                 print(f"Sampled {n_samples} rows from the dataset")
 
+    # Check if any column contains only empty values
+    for feature in df_train.columns:
+        if df_train[feature].isnull().all():
+            if verbosity > 0:
+                print(f'All rows in the column "{feature}" are null; replacing with 0')
+            df_train[feature] = df_train[feature].fillna(0, inplace=False)
+
     # Iterate over each column/feature
     res_all = dict()
     for feature in features:
@@ -145,12 +152,6 @@ def get_pdp_and_ice(
                 print(f"Feature: {feature} ({feature_name})")
             else:
                 print(f"Feature: {feature}")
-
-        # Skip if column only contains empty values
-        if df_train[feature].isnull().all():
-            if verbosity>1:
-                print(f'All rows in the column are null; skipping feature')
-            continue
 
         # Determine 'kind' (plot both PDP and ICE, or only one of them)
         if pdp and ice:
