@@ -1,9 +1,11 @@
 import numpy as np
 from sklearn.inspection import partial_dependence
+import logging
 
 from actableai.utils.categorical_numerical_convert import convert_categorical_to_num
 from actableai.causal.predictors import SKLearnTabularWrapper
 from actableai.utils import get_type_special
+
 
 def _compute_pdp_ice(
     model_sk, df_train, feature, kind, grid_resolution, drop_invalid=True
@@ -43,10 +45,10 @@ def _compute_pdp_ice(
     # Drop any rows containing NaNs or Infs
     if drop_invalid:
         df_train = df_train.replace([np.inf, -np.inf], np.nan).dropna(axis=0)
-    
+
     # Check feature type; if 'mixed', convert to string
     feat_type = get_type_special(df_train[feature])
-    if feat_type=='mixed':
+    if feat_type == "mixed":
         df_train[feature] = df_train[feature].astype(str)
 
     res = partial_dependence(
@@ -57,11 +59,9 @@ def _compute_pdp_ice(
         grid_resolution=grid_resolution,
     )
 
-    res['feature_type'] = feat_type
+    res["feature_type"] = feat_type
 
     return res
-
-
 
 
 # MAIN function
@@ -127,35 +127,39 @@ def get_pdp_and_ice(
 
     model_sk = SKLearnTabularWrapper(model.predictor)
     if verbosity > 1:
-        print("Model wrapped with sklearn wrapper")
+        logging.info("Model wrapped with sklearn wrapper")
 
     if features == "all":  # Use all columns
         features = df_train.columns
 
     if n_samples is not None:
         # Only sample if there are more rows than the requested numebr of samples
-        if len(df_train)>n_samples:
-            df_train = df_train.sample(n=n_samples, axis=0, replace=True, random_state=1)
+        if len(df_train) > n_samples:
+            df_train = df_train.sample(
+                n=n_samples, axis=0, replace=True, random_state=1
+            )
             if verbosity > 1:
-                print(f"Sampled {n_samples} rows from the dataset")
+                logging.info(f"Sampled {n_samples} rows from the dataset")
 
     # Check if any column contains only empty values
     for feature in df_train.columns:
         if df_train[feature].isnull().all():
             if verbosity > 0:
-                print(f'All rows in the column "{feature}" are null; replacing with 0')
+                logging.info(
+                    f'All rows in the column "{feature}" are null; replacing with 0'
+                )
             df_train[feature] = df_train[feature].fillna(0, inplace=False)
 
     # Iterate over each column/feature
     res_all = dict()
     for feature in features:
         if verbosity > 0:
-            print('')
+            logging.info("")
             if type(feature) == int:
                 feature_name = df_train.columns[feature]
-                print(f"Feature: {feature} ({feature_name})")
+                logging.info(f"Feature: {feature} ({feature_name})")
             else:
-                print(f"Feature: {feature}")
+                logging.info(f"Feature: {feature}")
 
         # Determine 'kind' (plot both PDP and ICE, or only one of them)
         if pdp and ice:
@@ -174,8 +178,8 @@ def get_pdp_and_ice(
             )
 
         if verbosity > 1:
-            print("Parameter 'kind' set to:", kind)
-            print(f"Performing {kind_str}")
+            logging.info("Parameter 'kind' set to:", kind)
+            logging.info(f"Performing {kind_str}")
 
         res_all[feature] = _compute_pdp_ice(
             model_sk,
