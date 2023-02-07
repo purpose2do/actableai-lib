@@ -41,6 +41,7 @@ class _AAIClassificationTrainTask(AAITask):
         drop_useless_features: bool,
         feature_prune: bool,
         feature_prune_time_limit: Optional[float],
+        tabpfn_model_directory: Optional[str],
     ) -> Tuple[
         Any,
         Any,
@@ -93,6 +94,7 @@ class _AAIClassificationTrainTask(AAITask):
                 If there is no time specified to do feature_pruning the remaining
                 training time is used.
             feature_prune_time_limit: Time limit for feature_pruning (in seconds)
+            tabpfn_model_directory: TabPFN Model Directory.
 
         Returns:
             Return dictionnary of results for classification :
@@ -121,7 +123,10 @@ class _AAIClassificationTrainTask(AAITask):
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
         from actableai.classification.models import TabPFNModel
 
-        ag_args_fit: Dict[str, Any] = {"drop_unique": drop_unique}
+        ag_args_fit: Dict[str, Any] = {
+            "drop_unique": drop_unique,
+            "tabpfn_model_directory": tabpfn_model_directory,
+        }
         feature_generator_args = {}
 
         if "AG_AUTOMM" in hyperparameters:
@@ -397,6 +402,7 @@ class AAIClassificationTask(AAITask):
         run_ice: bool = True,
         pdp_ice_grid_resolution: Optional[int] = 100,
         pdp_ice_n_samples: Optional[int] = 100,
+        tabpfn_model_directory: Optional[str] = None,
     ) -> Dict:
         """Run this classification task and return results.
 
@@ -461,6 +467,7 @@ class AAIClassificationTask(AAITask):
                 computation of the PDP and/or ICE
             pdp_ice_n_samples: The number of rows to sample in df_train. If 'None,
                 no sampling is performed.
+            tabpfn_model_directory: TabPFN Model Directory.
 
         Raises:
             Exception: If the target has less than 2 unique values.
@@ -677,6 +684,7 @@ class AAIClassificationTask(AAITask):
                 drop_useless_features=drop_useless_features,
                 feature_prune=feature_prune,
                 feature_prune_time_limit=feature_prune_time_limit,
+                tabpfn_model_directory=tabpfn_model_directory,
             )
         else:
             (
@@ -712,6 +720,7 @@ class AAIClassificationTask(AAITask):
                 drop_useless_features=drop_useless_features,
                 feature_prune=feature_prune,
                 feature_prune_time_limit=feature_prune_time_limit,
+                tabpfn_model_directory=tabpfn_model_directory,
             )
 
         if not use_cross_validation:
@@ -892,7 +901,7 @@ class AAIClassificationTask(AAITask):
         runtime = time.time() - start
 
         pdp_ice = dict()
-        if ((run_pdp or run_ice) and (model is not None)):
+        if (run_pdp or run_ice) and (model is not None):
             pdp_ice = get_pdp_and_ice(
                 model,
                 df_train,

@@ -11,7 +11,30 @@ class TabPFNModel(AbstractModel):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.model = TabPFNClassifier(N_ensemble_configurations=20)
+        self.initialize()
+        # Set to false so AutoGluon can re-initialize in the fit function
+        self._is_initialized = False
+
+        base_path = self.params_aux.get("tabpfn_model_directory")
+
+        tabpfn_params = {
+            "N_ensemble_configurations": 20,
+        }
+        if base_path is not None:
+            tabpfn_params["base_path"] = base_path
+
+        self.model = TabPFNClassifier(**tabpfn_params)
+
+    def _get_default_auxiliary_params(self):
+        default_auxiliary_params = super()._get_default_auxiliary_params()
+
+        extra_auxiliary_params = {
+            "tabpfn_model_directory": None,
+        }
+
+        default_auxiliary_params.update(extra_auxiliary_params)
+
+        return default_auxiliary_params
 
     def save(self, path: str = None, verbose=True) -> str:
         if path is None:
