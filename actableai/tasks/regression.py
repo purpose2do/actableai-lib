@@ -1,5 +1,4 @@
 import logging
-import numpy as np
 import pandas as pd
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -360,6 +359,10 @@ class AAIRegressionTask(AAITask):
         causal_feature_selection_max_concurrent_tasks: int = 20,
         ci_for_causal_feature_selection_task_params: Optional[dict] = None,
         ci_for_causal_feature_selection_run_params: Optional[dict] = None,
+        run_pdp: bool = True,
+        run_ice: bool = True,
+        pdp_ice_grid_resolution: Optional[int] = 100,
+        pdp_ice_n_samples: Optional[int] = 100,
     ) -> Dict[str, Any]:
         """Run this regression task and return results.
 
@@ -420,12 +423,20 @@ class AAIRegressionTask(AAITask):
                 by removing hurtfull features for the model. If no training time left this step
                 is skipped
             feature_prune_time_limit: Time limit for feature pruning.
+            intervention_run_params: Parameters for running an intervention task.
+                Check actableai/tasks/intervention.py for more details.
             causal_feature_selection: if True, it will search for direct causal
                 features and use only these features for the prediction
             causal_feature_selection_max_concurrent_tasks: maximum number of concurrent
                 tasks for selecting causal features
             ci_for_causal_feature_selection_task_params: Parameters for AAIDirectCausalFeatureSelectionTask
             ci_for_causal_feature_selection_run_params: Kwargs for AAIDirectCausalFeatureSelectionTask's run
+            run_pdp: Run Partial Dependency to get Partial Dependency Plot (PDP)
+            run_ice: Run Independent Conditional Expectation (ICE)
+            pdp_ice_grid_resolution: Maximum resolution of the grid to use for
+                computation of the PDP and/or ICE
+            pdp_ice_n_samples: The number of rows to sample in df_train. If 'None,
+                no sampling is performed.
 
         Examples:
             >>> import pandas as pd
@@ -480,6 +491,8 @@ class AAIRegressionTask(AAITask):
         from actableai.regression.cross_validation import run_cross_validation
         from actableai.utils.sanitize import sanitize_timezone
         from actableai.tasks.direct_causal import AAIDirectCausalFeatureSelection
+
+        from actableai.utils.pdp_ice import get_pdp_and_ice
 
         start = time.time()
         # To resolve any issues of acces rights make a copy
@@ -895,6 +908,22 @@ class AAIRegressionTask(AAITask):
                 )
 
         runtime = time.time() - start
+
+        data["pdp_ice"] = dict()
+        if ((run_pdp or run_ice) and (model is not None)):
+            data["pdp_ice"] = get_pdp_and_ice(
+                model,
+                df_train,
+                features="all",
+                pdp=run_pdp,
+                ice=run_ice,
+                grid_resolution=pdp_ice_grid_resolution,
+                verbosity=0,
+                drop_invalid=True,
+                inplace=True,
+                n_samples=pdp_ice_n_samples,
+            )
+
         return {
             "status": "SUCCESS",
             "messenger": "",

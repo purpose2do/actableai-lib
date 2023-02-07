@@ -393,6 +393,10 @@ class AAIClassificationTask(AAITask):
         feature_prune=True,
         feature_prune_time_limit: Optional[float] = None,
         intervention_run_params: Optional[Dict] = None,
+        run_pdp: bool = True,
+        run_ice: bool = True,
+        pdp_ice_grid_resolution: Optional[int] = 100,
+        pdp_ice_n_samples: Optional[int] = 100,
     ) -> Dict:
         """Run this classification task and return results.
 
@@ -449,6 +453,14 @@ class AAIClassificationTask(AAITask):
                 This option improves results but extend the training time.
                 If there is no time left to do feature_pruning after training
                 this step is skipped.
+            intervention_run_params: Parameters for running an intervention task.
+                Check actableai/tasks/intervention.py for more details.
+            run_pdp: Run Partial Dependency to get Partial Dependency Plot (PDP)
+            run_ice: Run Independent Conditional Expectation (ICE)
+            pdp_ice_grid_resolution: Maximum resolution of the grid to use for
+                computation of the PDP and/or ICE
+            pdp_ice_n_samples: The number of rows to sample in df_train. If 'None,
+                no sampling is performed.
 
         Raises:
             Exception: If the target has less than 2 unique values.
@@ -505,6 +517,8 @@ class AAIClassificationTask(AAITask):
         from actableai.classification.cross_validation import run_cross_validation
         from actableai.utils.sanitize import sanitize_timezone
         from actableai.classification.utils import split_validation_by_datetime
+
+        from actableai.utils.pdp_ice import get_pdp_and_ice
 
         pd.set_option("chained_assignment", "warn")
         start = time.time()
@@ -876,6 +890,22 @@ class AAIClassificationTask(AAITask):
                 )
 
         runtime = time.time() - start
+
+        pdp_ice = dict()
+        if ((run_pdp or run_ice) and (model is not None)):
+            pdp_ice = get_pdp_and_ice(
+                model,
+                df_train,
+                features="all",
+                pdp=run_pdp,
+                ice=run_ice,
+                grid_resolution=pdp_ice_grid_resolution,
+                verbosity=0,
+                drop_invalid=True,
+                inplace=True,
+                n_samples=pdp_ice_n_samples,
+            )
+
         return {
             "messenger": "",
             "status": "SUCCESS",
@@ -893,6 +923,7 @@ class AAIClassificationTask(AAITask):
                 "importantFeatures": important_features,
                 "debiasing_charts": debiasing_charts,
                 "leaderboard": leaderboard,
+                "pdp_ice": pdp_ice,
             },
             "model": model,
             # FIXME this predictor is not really usable as is for now
