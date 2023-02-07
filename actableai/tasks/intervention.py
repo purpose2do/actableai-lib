@@ -30,6 +30,7 @@ class AAIInterventionTask(AAITask):
         drop_unique: bool = True,
         drop_useless_features: bool = True,
         only_fit: bool = False,
+        tabpfn_model_directory: Optional[str] = None,
     ) -> Dict:
         """Run this intervention task and return the results.
 
@@ -52,6 +53,7 @@ class AAIInterventionTask(AAITask):
                 only have a unique value accross all rows at fit time
             drop_useless_features: Whether the classification algorithm drops columns that
                 only have a unique value accross all rows at preprocessing time
+            tabpfn_model_directory: TabPFN Model Directory.
 
         Examples:
             >>> import pandas as pd
@@ -141,6 +143,7 @@ class AAIInterventionTask(AAITask):
             num_gpus=num_gpus,
             drop_unique=drop_unique,
             drop_useless_features=drop_useless_features,
+            tabpfn_model_directory=tabpfn_model_directory,
         )
 
         model._check_params(df)

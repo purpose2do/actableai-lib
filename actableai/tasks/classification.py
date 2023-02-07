@@ -840,6 +840,8 @@ class AAIClassificationTask(AAITask):
 
         aai_intervention_model = None
         if intervention_run_params is not None:
+            intervention_run_params["tabpfn_model_directory"] = tabpfn_model_directory
+
             intervention_task_result = AAIInterventionTask(
                 return_model=True, upload_model=False
             ).run(**intervention_run_params)
