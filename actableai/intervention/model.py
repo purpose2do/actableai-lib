@@ -42,6 +42,7 @@ class AAIInterventionEffectPredictor:
         num_gpus: Optional[int] = 0,
         drop_unique: bool = True,
         drop_useless_features: bool = False,
+        tabpfn_model_directory: Optional[str] = None,
     ) -> None:
         """Predictor for intervention effect
 
@@ -66,9 +67,11 @@ class AAIInterventionEffectPredictor:
                 only have a unique value accross all rows at fit time
             drop_useless_features: Whether the classification algorithm drops columns
                 that only have a unique value accross all rows at preprocessing time
+            tabpfn_model_directory: TabPFN Model Directory.
         """
         self.target = target
         self.current_intervention_column = current_intervention_column
+        self.tabpfn_model_directory = tabpfn_model_directory
         self.new_intervention_column = new_intervention_column
         self.expected_target = expected_target
         self.common_causes = common_causes
@@ -501,6 +504,7 @@ class AAIInterventionEffectPredictor:
                     drop_useless_features=False,
                     feature_prune=False,
                     feature_prune_time_limit=None,
+                    tabpfn_model_directory=self.tabpfn_model_directory,
                 )
                 self.outcome_predictor = predictor
                 Y = pd.concat(df_val_cross_val_pred_prob).sort_index()

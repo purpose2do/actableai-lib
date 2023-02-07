@@ -100,6 +100,7 @@ def run_cross_validation(
     drop_useless_features: bool,
     feature_prune: bool,
     feature_prune_time_limit: Optional[float],
+    tabpfn_model_directory: Optional[str],
 ) -> Tuple[
     AverageEnsembleClassifier,
     list,
@@ -142,6 +143,7 @@ def run_cross_validation(
         eval_metric: Metric to be optimized for.
         feature_prune: Whether to prune features.
         feature_prune_time_limit: The time limit for feature pruning. (in seconds)
+        tabpfn_model_directory: TabPFN Model Directory.
 
     Returns:
         Tuple: Result of the cross validation.
@@ -194,6 +196,7 @@ def run_cross_validation(
                 "drop_useless_features": drop_useless_features,
                 "feature_prune": feature_prune,
                 "feature_prune_time_limit": feature_prune_time_limit,
+                "tabpfn_model_directory": tabpfn_model_directory,
             },
         )
         for kfold_index, (train_index, val_index) in enumerate(kfolds_index_list)

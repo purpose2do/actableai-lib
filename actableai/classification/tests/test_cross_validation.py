@@ -50,6 +50,7 @@ def test_run_cross_validation():
         drop_useless_features=False,
         feature_prune=True,
         feature_prune_time_limit=None,
+        tabpfn_model_directory=None,
     )
 
     assert important_features is not None
