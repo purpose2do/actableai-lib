@@ -887,6 +887,7 @@ class AAIClassificationTask(AAITask):
                 positive_label=positive_label,
                 feature_prune=feature_prune,
                 feature_prune_time_limit=feature_prune_time_limit,
+                tabpfn_model_directory=tabpfn_model_directory,
             )
             predictor.refit_full(model="best", set_best_to_refit_full=True)
 
