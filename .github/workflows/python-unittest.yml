@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - {runs-on: ubuntu-20.04, python-version: 3.7}
+          - {runs-on: ubuntu-20.04, python-version: 3.8}
 
     steps:
     - uses: webfactory/ssh-agent@v0.5.4
@@ -51,7 +51,7 @@ jobs:
         pip install -r requirements.txt
         pip install --no-deps -vvv -e .
       env:
-        LIBRARY_PATH: /home/ubuntu/actions-runner/_work/_tool/Python/3.7.10/x64/lib
+        LIBRARY_PATH: /home/ubuntu/actions-runner/_work/_tool/Python/3.8.10/x64/lib
 
     - name: Lint with flake8
       run: |

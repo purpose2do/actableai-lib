@@ -82,7 +82,7 @@ This project is started and maintained by [Actable AI](https://actable.ai).
 
 ### Prerequisites
 
-* You need to have [python 3.7](https://www.python.org/downloads/release/python-370) installed with [pip](https://pip.pypa.io/en/stable/)
+* You need to have [python 3.8](https://www.python.org/downloads/release/python-380) installed with [pip](https://pip.pypa.io/en/stable/)
 * You need to have [R](https://www.r-project.org/) installed
 * You need to have multi_rake installed in your python env :
 One way to do so is `pip install git+https://github.com/Actable-AI/multi_rake@master#egg=multi_rake`
