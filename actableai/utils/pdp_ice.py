@@ -7,9 +7,7 @@ from actableai.causal.predictors import SKLearnTabularWrapper
 from actableai.utils import get_type_special
 
 
-def _compute_pdp_ice(
-    model_sk, df_train, feature, kind, grid_resolution, drop_invalid=True
-):
+def _compute_pdp_ice(model_sk, df_train, feature, kind, grid_resolution):
     """
     Compute Partial Dependence Plot (PDP) and Individual Conditional Expectation
     (ICE) for a given sklearn model and feature (column).
@@ -29,8 +27,6 @@ def _compute_pdp_ice(
     kind (str): 'average' (PDP), 'individual' (ICE), or 'both' (pdp and ICE)
     grid_resolution (int): number of points to sample in the grid and plot
         (x-axis values)
-    drop_invalid (bool, optional): Whether to drop rows containing NaNs or
-        Inf values in any of the columns
 
     Returns:
     If return_type='raw':
@@ -80,9 +76,6 @@ def get_pdp_and_ice(
     ice=True,
     grid_resolution=100,
     verbosity=0,
-    plot_convert_to_num=True,
-    drop_invalid=True,
-    inplace=False,
     n_samples=None,
 ):
     """
@@ -101,15 +94,6 @@ def get_pdp_and_ice(
         and plot (x-axis values)
     verbosity (int, optional): 0 for no output, 1 for summary output, 2 for
         detailed output
-    plot_convert_to_num (bool, optional): Flag to determine if any categorical
-        features in the dataframe should be enumerated. This should be done if
-            using kind='plot' and the dataframe has not already been converted.
-            However, it should be noted that the trained model should have used
-            the converted dataframe, in order to ensure that the PDP/ICE
-            results are correct.
-    drop_invalid (bool, optional): Whether to drop rows containing NaNs or Inf
-        values in any of the columns
-    inplace (bool, optional): Whether to perform modifications to df_train in-place
     n_samples (int, optional): The number of rows to sample in df_train. If 'None,
         no sampling is performed.
 
@@ -194,7 +178,6 @@ def get_pdp_and_ice(
             feature,
             kind,
             grid_resolution,
-            drop_invalid=drop_invalid,
         )
 
     return res_all
