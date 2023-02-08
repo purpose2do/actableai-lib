@@ -2,7 +2,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 from autogluon.tabular import TabularPredictor
 from econml.dml import CausalForestDML, LinearDML, SparseLinearDML
-from econml.drlearner import DRLearner
+from econml.dr import DRLearner
 from econml.iv.nnet import DeepIV
 from econml.metalearners import DomainAdaptationLearner
 from econml.score import RScorer

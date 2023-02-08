@@ -135,6 +135,7 @@ class AAICausalInferenceTask(AAITask):
         from actableai.causal.tree_utils import make_pretty_tree
         from actableai.causal import has_categorical_column
         from actableai.causal import prepare_sanitize_data
+        from actableai.utils.dowhy import causal_model_to_dot
 
         from actableai.data_validation.base import CheckLevels
 
@@ -255,9 +256,8 @@ class AAICausalInferenceTask(AAITask):
             common_causes=effect_modifiers + common_causes,
             instruments=instrumental_variables,
         )
-        buffer = StringIO()
-        nx.drawing.nx_pydot.write_dot(causal_model._graph._graph, buffer)
-        causal_graph_dot = buffer.getvalue()
+
+        causal_graph_dot = causal_model_to_dot(causal_model)
 
         # initalize model_params depending on treatment and outcome numbers and types
         label_t = treatments[0] if is_single_treatment else treatments
