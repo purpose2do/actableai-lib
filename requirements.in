@@ -24,4 +24,5 @@ river==0.8.0
 tabpfn==0.1.5
 dill==0.3.6
 sqlalchemy==1.4.44
+pandas==1.3.5
 git+https://github.com/Actable-AI/multi_rake@master#egg=multi_rake
