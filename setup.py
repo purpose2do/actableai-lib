@@ -78,6 +78,7 @@ setup(
         "pandas>=1.3.5",
         "mmcv>=1.7.1",
         "mmdet>=2.28.1",
+        "networkx>=2.6.3",
     ],
     extras_require={
         "cpu": [
