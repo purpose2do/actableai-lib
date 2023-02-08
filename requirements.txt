@@ -6,7 +6,7 @@
 #
 --find-links https://download.pytorch.org/whl/torch_stable.html
 
-absl-py==1.3.0
+absl-py==1.4.0
     # via
     #   tensorboard
     #   tensorflow
@@ -36,7 +36,7 @@ anyio==3.6.2
     # via starlette
 arabic-stopwords==0.3
     # via multi-rake
-asgiref==3.5.2
+asgiref==3.6.0
     # via uvicorn
 astunparse==1.6.3
     # via tensorflow
@@ -46,14 +46,14 @@ async-timeout==4.0.2
     #   aioredis
 asynctest==0.13.0
     # via aiohttp
-attrs==22.1.0
+attrs==22.2.0
     # via
     #   aiohttp
     #   jsonschema
     #   pytest
     #   ray
     #   visions
-autocuda==0.12
+autocuda==0.16
     # via pyabsa
 autogluon-common==0.6.0
     # via
@@ -76,26 +76,26 @@ autogluon-text==0.6.0
     # via -r requirements.in
 backcall==0.2.0
     # via ipython
-beautifulsoup4==4.11.1
+beautifulsoup4==4.11.2
     # via gdown
-blessed==1.19.1
+blessed==1.20.0
     # via gpustat
 blis==0.7.9
     # via thinc
-boto3==1.26.16
+boto3==1.26.65
     # via
     #   autogluon-common
     #   autogluon-core
     #   autogluon-multimodal
-botocore==1.29.16
+botocore==1.29.65
     # via
     #   boto3
     #   s3transfer
-bottleneck==1.3.5
+bottleneck==1.3.6
     # via visions
 bpemb==0.3.4
     # via flair
-cachetools==5.2.0
+cachetools==5.3.0
     # via google-auth
 catalogue==2.0.8
     # via
@@ -104,7 +104,7 @@ catalogue==2.0.8
     #   thinc
 catboost==1.1.1
     # via autogluon-tabular
-certifi==2022.9.24
+certifi==2022.12.7
     # via
     #   minio
     #   requests
@@ -122,23 +122,21 @@ click==8.0.4
     #   ray
     #   typer
     #   uvicorn
-cloudpickle==2.2.0
+cloudpickle==2.2.1
     # via
     #   dask
     #   distributed
     #   hyperopt
     #   shap
-cmdstanpy==1.0.8
+cmdstanpy==1.1.0
     # via prophet
 colorama==0.4.6
     # via openmim
-colorful==0.5.4
+colorful==0.5.5
     # via ray
-commonmark==0.9.1
-    # via rich
-confection==0.0.3
+confection==0.0.4
     # via thinc
-configspace==0.6.0
+configspace==0.6.1
     # via tabpfn
 conllu==4.5.2
     # via flair
@@ -153,13 +151,11 @@ cymem==2.0.7
     #   preshed
     #   spacy
     #   thinc
-cython==0.29.32
-    # via configspace
 dask==2021.11.2
     # via
     #   autogluon-core
     #   distributed
-datasets==2.7.1
+datasets==2.9.0
     # via evaluate
 decorator==5.1.1
     # via ipython
@@ -177,12 +173,14 @@ distlib==0.3.6
     # via virtualenv
 distributed==2021.11.2
     # via autogluon-core
-dowhy==0.6
+dowhy==0.7.1
     # via econml
-econml==0.13.0
+econml==0.13.1
     # via -r requirements.in
-ephem==4.1.3
+ephem==4.1.4
     # via lunarcalendar
+et-xmlfile==1.1.0
+    # via openpyxl
 evaluate==0.2.2
     # via autogluon-multimodal
 execnet==1.9.0
@@ -191,9 +189,9 @@ fairscale==0.4.6
     # via autogluon-multimodal
 fastai==2.7.10
     # via autogluon-tabular
-fastapi==0.87.0
+fastapi==0.89.1
     # via ray
-fastcore==1.5.27
+fastcore==1.5.28
     # via
     #   fastai
     #   fastdownload
@@ -203,14 +201,14 @@ fastprogress==1.0.3
     # via
     #   fastai
     #   fastdownload
-filelock==3.8.0
+filelock==3.9.0
     # via
     #   gdown
     #   huggingface-hub
     #   ray
     #   transformers
     #   virtualenv
-findfile==1.7.10
+findfile==2.0.0
     # via
     #   metric-visualizer
     #   pyabsa
@@ -227,7 +225,7 @@ frozenlist==1.3.3
     #   aiohttp
     #   aiosignal
     #   ray
-fsspec[http]==2022.11.0
+fsspec[http]==2023.1.0
     # via
     #   dask
     #   datasets
@@ -235,7 +233,7 @@ fsspec[http]==2022.11.0
     #   pytorch-lightning
 ftfy==6.1.1
     # via flair
-future==0.18.2
+future==0.18.3
     # via hyperopt
 gast==0.4.0
     # via tensorflow
@@ -249,13 +247,13 @@ gensim==4.2.0
     #   flair
 gitdb==4.0.10
     # via gitpython
-gitpython==3.1.29
+gitpython==3.1.30
     # via pyabsa
 gluonts[Prophet,R,prophet,r]==0.10.3
     # via -r requirements.in
-google-api-core==2.10.2
+google-api-core==2.11.0
     # via opencensus
-google-auth==2.14.1
+google-auth==2.16.0
     # via
     #   google-api-core
     #   google-auth-oauthlib
@@ -264,7 +262,7 @@ google-auth-oauthlib==0.4.6
     # via tensorboard
 google-pasta==0.2.0
     # via tensorflow
-googleapis-common-protos==1.57.0
+googleapis-common-protos==1.58.0
     # via google-api-core
 gpustat==1.0.0
     # via ray
@@ -274,7 +272,7 @@ graphviz==0.8.4
     # via
     #   catboost
     #   mxnet
-greenlet==2.0.1
+greenlet==2.0.2
     # via sqlalchemy
 grpcio==1.43.0
     # via
@@ -283,19 +281,19 @@ grpcio==1.43.0
     #   tensorflow
 h11==0.14.0
     # via uvicorn
-h5py==3.7.0
+h5py==3.8.0
     # via tensorflow
 heapdict==1.0.1
     # via zict
 hijri-converter==2.2.4
     # via holidays
-hiredis==2.0.0
+hiredis==2.2.1
     # via aioredis
-holidays==0.17.2
+holidays==0.19
     # via
     #   gluonts
     #   prophet
-huggingface-hub==0.11.0
+huggingface-hub==0.12.0
     # via
     #   datasets
     #   evaluate
@@ -313,7 +311,7 @@ idna==3.4
     #   anyio
     #   requests
     #   yarl
-imageio==2.22.4
+imageio==2.25.0
     # via scikit-image
 importlib-metadata==3.10.1
     # via
@@ -331,9 +329,9 @@ importlib-metadata==3.10.1
     #   sqlalchemy
     #   transformers
     #   virtualenv
-importlib-resources==5.10.0
+importlib-resources==5.10.2
     # via jsonschema
-iniconfig==1.1.1
+iniconfig==2.0.0
     # via pytest
 ipython==7.32.0
     # via -r requirements.in
@@ -376,9 +374,9 @@ langdetect==1.0.9
     # via flair
 liac-arff==2.5.0
     # via openml
-libclang==14.0.6
+libclang==15.0.6.1
     # via tensorflow
-lightgbm==3.3.3
+lightgbm==3.3.5
     # via
     #   autogluon-tabular
     #   econml
@@ -388,13 +386,15 @@ locket==1.0.0
     # via partd
 lunarcalendar==0.0.9
     # via prophet
-lxml==4.9.1
+lxml==4.9.2
     # via flair
 markdown==3.3.4
     # via
     #   model-index
     #   tensorboard
-markupsafe==2.1.1
+markdown-it-py==2.1.0
+    # via rich
+markupsafe==2.1.2
     # via
     #   jinja2
     #   werkzeug
@@ -415,16 +415,20 @@ matplotlib-inline==0.1.6
     # via ipython
 mccabe==0.6.1
     # via flake8
-metric-visualizer==0.6.6
+mdurl==0.1.2
+    # via markdown-it-py
+metric-visualizer==0.8.7.4
     # via pyabsa
-minio==7.1.12
+minio==7.1.13
     # via openml
 mlxtend==0.20.0
     # via -r requirements.in
 model-index==0.1.11
     # via openmim
 more-itertools==9.0.0
-    # via flair
+    # via
+    #   configspace
+    #   flair
 mpld3==0.3
     # via flair
 mpmath==1.2.1
@@ -435,7 +439,7 @@ msgpack==1.0.4
     #   ray
 multi-rake @ git+https://github.com/Actable-AI/multi_rake@master
     # via -r requirements.in
-multidict==6.0.2
+multidict==6.0.4
     # via
     #   aiohttp
     #   yarl
@@ -552,25 +556,27 @@ oauthlib==3.2.2
     # via requests-oauthlib
 omegaconf==2.1.2
     # via autogluon-multimodal
-opencensus==0.11.0
+opencensus==0.11.1
     # via ray
 opencensus-context==0.1.3
     # via opencensus
-opencv-python-headless==4.6.0.66
+opencv-python-headless==4.7.0.68
     # via
     #   albumentations
     #   qudida
 openmim==0.2.1
     # via autogluon-multimodal
-openml==0.12.2
+openml==0.13.0
     # via tabpfn
+openpyxl==3.1.0
+    # via metric-visualizer
 opt-einsum==3.3.0
     # via tensorflow
 ordered-set==4.1.0
     # via model-index
 overrides==3.1.0
     # via konoha
-packaging==21.3
+packaging==23.0
     # via
     #   accelerate
     #   dask
@@ -583,9 +589,11 @@ packaging==21.3
     #   pytest
     #   pytorch-lightning
     #   scikit-image
+    #   shap
     #   spacy
     #   statsmodels
     #   tensorflow
+    #   thinc
     #   torchmetrics
     #   transformers
 pandas==1.3.5
@@ -603,6 +611,7 @@ pandas==1.3.5
     #   evaluate
     #   fastai
     #   gluonts
+    #   metric-visualizer
     #   mlxtend
     #   nlpaug
     #   openmim
@@ -621,7 +630,7 @@ parso==0.8.3
     # via jedi
 partd==1.3.0
     # via dask
-pathy==0.10.0
+pathy==0.10.1
     # via spacy
 patsy==0.5.3
     # via statsmodels
@@ -638,9 +647,9 @@ pillow==9.0.1
     #   scikit-image
     #   tikzplotlib
     #   torchvision
-platformdirs==2.5.4
+platformdirs==2.6.2
     # via virtualenv
-plotly==5.11.0
+plotly==5.13.0
     # via catboost
 pluggy==1.0.0
     # via pytest
@@ -652,9 +661,9 @@ preshed==3.0.8
     #   thinc
 prometheus-client==0.13.1
     # via ray
-prompt-toolkit==3.0.33
+prompt-toolkit==3.0.36
     # via ipython
-prophet==1.1.1
+prophet==1.1.2
     # via gluonts
 protobuf==3.19.6
     # via
@@ -685,7 +694,7 @@ pyabsa==1.14.7
     # via -r requirements.in
 pyarabic==0.6.15
     # via arabic-stopwords
-pyarrow==10.0.1
+pyarrow==11.0.0
     # via
     #   datasets
     #   openml
@@ -701,7 +710,7 @@ pycocotools==2.0.6
     # via autogluon-multimodal
 pycodestyle==2.7.0
     # via flake8
-pydantic==1.10.2
+pydantic==1.10.4
     # via
     #   confection
     #   fastapi
@@ -717,19 +726,20 @@ pydot==1.4.2
     # via dowhy
 pyflakes==2.3.1
     # via flake8
-pygments==2.13.0
+pygments==2.14.0
     # via
     #   ipython
     #   rich
-pymeeus==0.5.11
-    # via convertdate
+pymeeus==0.5.12
+    # via
+    #   convertdate
+    #   holidays
 pyparsing==3.0.9
     # via
     #   configspace
     #   matplotlib
-    #   packaging
     #   pydot
-pyrsistent==0.19.2
+pyrsistent==0.19.3
     # via
     #   jsonschema
     #   multi-rake
@@ -762,7 +772,7 @@ pytorch-metric-learning==1.3.2
     # via autogluon-multimodal
 pytorch-warmup==0.1.1
     # via pyabsa
-pytz==2022.6
+pytz==2022.7.1
     # via
     #   lunarcalendar
     #   pandas
@@ -799,7 +809,7 @@ regex==2022.10.31
     #   nltk
     #   segtok
     #   transformers
-requests[socks]==2.28.1
+requests[socks]==2.28.2
     # via
     #   autogluon-core
     #   autogluon-multimodal
@@ -831,7 +841,7 @@ responses==0.18.0
     # via
     #   datasets
     #   evaluate
-rich==12.6.0
+rich==13.3.1
     # via openmim
 river==0.8.0
     # via -r requirements.in
@@ -890,7 +900,7 @@ scipy==1.7.3
     #   sparse
     #   statsmodels
     #   xgboost
-seaborn==0.12.1
+seaborn==0.12.2
     # via tabpfn
 segtok==1.5.11
     # via flair
@@ -904,9 +914,7 @@ seqeval==1.2.2
     # via
     #   autogluon-multimodal
     #   pyabsa
-setuptools-git==1.2
-    # via prophet
-shap==0.39.0
+shap==0.40.0
     # via
     #   -r requirements.in
     #   econml
@@ -936,6 +944,7 @@ smart-open==5.2.1
     #   gensim
     #   pathy
     #   ray
+    #   spacy
 smmap==5.0.0
     # via gitdb
 sniffio==1.3.0
@@ -944,26 +953,28 @@ sortedcontainers==2.4.0
     # via distributed
 soupsieve==2.3.2.post1
     # via beautifulsoup4
-spacy==3.4.3
+spacy==3.5.0
     # via
     #   fastai
     #   pyabsa
-spacy-legacy==3.0.10
+spacy-legacy==3.0.12
     # via spacy
-spacy-loggers==1.0.3
+spacy-loggers==1.0.4
     # via spacy
 sparse==0.13.0
     # via econml
 sqlalchemy==1.4.44
-    # via pandasql
-sqlitedict==2.0.0
+    # via
+    #   -r requirements.in
+    #   pandasql
+sqlitedict==2.1.0
     # via flair
 srsly==2.4.5
     # via
     #   confection
     #   spacy
     #   thinc
-starlette==0.21.0
+starlette==0.22.0
     # via
     #   fastapi
     #   ray
@@ -985,7 +996,7 @@ tangled-up-in-unicode==0.2.0
     # via visions
 tblib==1.7.0
     # via distributed
-tenacity==8.1.0
+tenacity==8.2.0
     # via plotly
 tensorboard==2.9.1
     # via
@@ -1001,16 +1012,16 @@ tensorflow==2.9.1
     # via -r requirements-cpu.in
 tensorflow-estimator==2.9.0
     # via tensorflow
-tensorflow-io-gcs-filesystem==0.28.0
+tensorflow-io-gcs-filesystem==0.30.0
     # via tensorflow
-termcolor==2.1.1
+termcolor==2.2.0
     # via
     #   findfile
     #   pyabsa
     #   tensorflow
 text-unidecode==1.3
     # via autogluon-multimodal
-thinc==8.1.5
+thinc==8.1.7
     # via spacy
 threadpoolctl==3.1.0
     # via scikit-learn
@@ -1090,7 +1101,7 @@ tqdm==4.64.1
     #   tabpfn
     #   torchtext
     #   transformers
-traitlets==5.5.0
+traitlets==5.9.0
     # via
     #   ipython
     #   matplotlib-inline
@@ -1103,7 +1114,7 @@ typer==0.7.0
     # via
     #   pathy
     #   spacy
-typing-extensions==4.1.1
+typing-extensions==4.4.0
     # via
     #   aiohttp
     #   anyio
@@ -1119,6 +1130,8 @@ typing-extensions==4.1.1
     #   importlib-metadata
     #   jsonschema
     #   kiwisolver
+    #   markdown-it-py
+    #   platformdirs
     #   pyabsa
     #   pydantic
     #   pytorch-lightning
@@ -1132,6 +1145,7 @@ typing-extensions==4.1.1
     #   thinc
     #   torch
     #   uvicorn
+    #   wasabi
     #   yarl
 typish==1.9.3
     # via nptyping
@@ -1141,7 +1155,7 @@ update-checker==0.18.0
     # via
     #   metric-visualizer
     #   pyabsa
-urllib3==1.26.13
+urllib3==1.26.14
     # via
     #   botocore
     #   minio
@@ -1153,12 +1167,11 @@ virtualenv==20.16.2
     # via ray
 visions==0.7.1
     # via -r requirements.in
-wasabi==0.10.1
+wasabi==1.1.1
     # via
     #   spacy
-    #   spacy-loggers
     #   thinc
-wcwidth==0.2.5
+wcwidth==0.2.6
     # via
     #   blessed
     #   ftfy
@@ -1171,9 +1184,8 @@ wheel==0.38.4
     # via
     #   astunparse
     #   lightgbm
-    #   prophet
     #   tensorboard
-wikipedia-api==0.5.4
+wikipedia-api==0.5.8
     # via flair
 wrapt==1.14.1
     # via
@@ -1181,17 +1193,19 @@ wrapt==1.14.1
     #   tensorflow
 xgboost==1.6.2
     # via autogluon-tabular
+xlsxwriter==3.0.8
+    # via metric-visualizer
 xmltodict==0.13.0
     # via openml
-xxhash==3.1.0
+xxhash==3.2.0
     # via
     #   datasets
     #   evaluate
-yarl==1.8.1
+yarl==1.8.2
     # via aiohttp
 zict==2.2.0
     # via distributed
-zipp==3.10.0
+zipp==3.12.1
     # via
     #   catalogue
     #   importlib-metadata

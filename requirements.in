@@ -4,13 +4,13 @@ ray[tune,default,serve]==2.0.0
 autogluon.tabular[all]==0.6.0
 autogluon.text==0.6.0
 gluonts[Prophet,R]==0.10.3
-econml==0.13.0
+econml==0.13.1
 ipython==7.32.0
 hyperopt==0.2.7
 ujson==4.0.2
 python-rapidjson==1.4
 visions==0.7.1
-shap==0.39.0
+shap==0.40.0
 nltk==3.7
 flake8==3.9.2
 pytest==7.1.1
@@ -23,4 +23,5 @@ redis==3.5.3
 river==0.8.0
 tabpfn==0.1.5
 dill==0.3.6
+sqlalchemy==1.4.44
 git+https://github.com/Actable-AI/multi_rake@master#egg=multi_rake

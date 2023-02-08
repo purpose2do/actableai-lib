@@ -52,7 +52,7 @@ setup(
         "Website": "https://actable.ai",
     },
     packages=find_packages(where="."),
-    python_requires=">=3.7, <3.8",
+    python_requires=">=3.8, <3.9",
     install_requires=[
         "scikit-learn>=1.0.2",
         "pandasql>=0.7.3",
@@ -111,7 +111,7 @@ setup(
         "Environment :: MacOS X",
         "Topic :: System :: Operating System Kernels :: Linux",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Operating System :: Unix",
     ],
 )

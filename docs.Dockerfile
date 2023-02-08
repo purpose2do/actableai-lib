@@ -1,4 +1,4 @@
-FROM python:3.7 AS docs
+FROM python:3.8 AS docs
 
 WORKDIR /data
 
