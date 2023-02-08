@@ -42,21 +42,28 @@ def _compute_pdp_ice(
         Raw values can be accessed from the 'pd_results' attribute.
     """
 
-    # Drop any rows containing NaNs or Infs
-    if drop_invalid:
-        df_train = df_train.replace([np.inf, -np.inf], np.nan).dropna(axis=0)
-
     # Check feature type; if 'mixed', convert to string
     feat_type = get_type_special(df_train[feature])
     if feat_type == "mixed":
         df_train[feature] = df_train[feature].astype(str)
+
+    # If categorical, set grid resolution to the number of unique elements + 1
+    # Note: This might take a while if there is a large number of categories
+    # Otherwise (if numerical), keep the original resolution
+    if feat_type not in ["integer", "numeric"]:
+        grid_resolution_feature = len(df_train[feature].unique()) + 1
+    else:
+        grid_resolution_feature = grid_resolution
+
+    # Drop any rows where feature value is NaN/null
+    df_train = df_train.dropna(subset=[feature])
 
     res = partial_dependence(
         model_sk,
         df_train,
         features=feature,
         kind=kind,
-        grid_resolution=grid_resolution,
+        grid_resolution=grid_resolution_feature,
     )
 
     res["feature_type"] = feat_type
@@ -129,11 +136,11 @@ def get_pdp_and_ice(
     if verbosity > 1:
         logging.info("Model wrapped with sklearn wrapper")
 
-    if features == "all":  # Use all columns
-        features = df_train.columns
+    if features == "all":  # Use all columns on which the model was trained
+        features = model.predictor.features()
 
     if n_samples is not None:
-        # Only sample if there are more rows than the requested numebr of samples
+        # Only sample if there are more rows than the requested number of samples
         if len(df_train) > n_samples:
             df_train = df_train.sample(
                 n=n_samples, axis=0, replace=True, random_state=1
@@ -141,8 +148,8 @@ def get_pdp_and_ice(
             if verbosity > 1:
                 logging.info(f"Sampled {n_samples} rows from the dataset")
 
-    # Check if any column contains only empty values
     for feature in df_train.columns:
+        # Check if any column contains only empty values
         if df_train[feature].isnull().all():
             if verbosity > 0:
                 logging.info(
