@@ -76,6 +76,8 @@ setup(
         "river>=0.8.0",
         "sqlalchemy>=1.4.44",
         "pandas>=1.3.5",
+        "mmcv>=1.7.1",
+        "mmdet>=2.28.1",
     ],
     extras_require={
         "cpu": [

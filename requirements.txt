@@ -12,6 +12,8 @@ absl-py==1.4.0
     #   tensorflow
 accelerate==0.13.2
     # via autogluon-multimodal
+addict==2.4.0
+    # via mmcv
 aiohttp==3.8.3
     # via
     #   aiohttp-cors
@@ -399,6 +401,7 @@ matplotlib==3.6.3
     #   gluonts
     #   metric-visualizer
     #   mlxtend
+    #   mmdet
     #   prophet
     #   pycocotools
     #   seaborn
@@ -409,13 +412,17 @@ mccabe==0.6.1
     # via flake8
 mdurl==0.1.2
     # via markdown-it-py
-metric-visualizer==0.8.7.5
+metric-visualizer==0.8.7.6
     # via pyabsa
 miniful==0.0.6
     # via fst-pso
 minio==7.1.13
     # via openml
 mlxtend==0.20.0
+    # via -r requirements.in
+mmcv==1.7.1
+    # via -r requirements.in
+mmdet==2.28.1
     # via -r requirements.in
 model-index==0.1.11
     # via openmim
@@ -506,11 +513,14 @@ numpy==1.23.5
     #   metric-visualizer
     #   miniful
     #   mlxtend
+    #   mmcv
+    #   mmdet
     #   multi-rake
     #   mxnet
     #   nlpaug
     #   nptyping
     #   numba
+    #   opencv-python
     #   opencv-python-headless
     #   openml
     #   opt-einsum
@@ -560,6 +570,8 @@ opencensus==0.11.1
     # via ray
 opencensus-context==0.1.3
     # via opencensus
+opencv-python==4.7.0.68
+    # via mmcv
 opencv-python-headless==4.7.0.68
     # via
     #   albumentations
@@ -586,6 +598,7 @@ packaging==23.0
     #   fastcore
     #   huggingface-hub
     #   matplotlib
+    #   mmcv
     #   pytest
     #   pytorch-lightning
     #   scikit-image
@@ -646,6 +659,7 @@ pillow==9.0.1
     #   fastai
     #   imageio
     #   matplotlib
+    #   mmcv
     #   scikit-image
     #   tikzplotlib
     #   torchvision
@@ -709,7 +723,9 @@ pyasn1-modules==0.2.8
 pycld2==0.41
     # via multi-rake
 pycocotools==2.0.6
-    # via autogluon-multimodal
+    # via
+    #   autogluon-multimodal
+    #   mmdet
 pycodestyle==2.7.0
     # via flake8
 pydantic==1.10.4
@@ -791,6 +807,7 @@ pyyaml==6.0
     #   distributed
     #   fastai
     #   huggingface-hub
+    #   mmcv
     #   model-index
     #   omegaconf
     #   pytorch-lightning
@@ -899,6 +916,7 @@ scipy==1.9.3
     #   metric-visualizer
     #   miniful
     #   mlxtend
+    #   mmdet
     #   openml
     #   pyfume
     #   river
@@ -942,6 +960,7 @@ six==1.16.0
     #   hyperopt
     #   keras-preprocessing
     #   langdetect
+    #   mmdet
     #   patsy
     #   pyarabic
     #   python-dateutil
@@ -1030,6 +1049,8 @@ termcolor==2.2.0
     #   findfile
     #   pyabsa
     #   tensorflow
+terminaltables==3.1.10
+    # via mmdet
 text-unidecode==1.3
     # via autogluon-multimodal
 thinc==8.1.7
@@ -1192,6 +1213,8 @@ xxhash==3.2.0
     # via
     #   datasets
     #   evaluate
+yapf==0.32.0
+    # via mmcv
 yarl==1.8.2
     # via aiohttp
 zict==2.2.0
