@@ -135,11 +135,11 @@ class AAIDirectCausalFeatureSelection(AAITask):
             }
 
         y_res, t_res = re["data"]["Y_res"], re["data"]["T_res"]
-        prod = y_res * t_res
+        prod = -y_res * t_res
         khi = np.mean(prod)
         sigmatwo = np.mean(np.square((prod - khi)))
         pvalue = 2 * (1 - norm.cdf(abs(khi), 0, np.sqrt(sigmatwo) / np.sqrt(len(df))))
-        is_direct_cause = pvalue < 0.1 / (len(df.columns) - 1)
+        is_direct_cause = pvalue < 0.1 / (len(df.columns) + 1)
         return {
             "effect": re["data"]["effect"],
             "pvalue": pvalue,
