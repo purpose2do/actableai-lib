@@ -1,3 +1,4 @@
+from uuid import uuid4
 import logging
 from typing import Optional, Tuple
 
@@ -5,9 +6,11 @@ import numpy as np
 import pandas as pd
 import torch
 from causica.models.deci.deci import DECI
-from celery import uuid
 
-from actableai.causal.discover.model.interventions import InterventionResult, InterventionValueByColumn
+from actableai.causal.discover.model.interventions import (
+    InterventionResult,
+    InterventionValueByColumn,
+)
 
 
 class DeciInterventionModel:
@@ -19,7 +22,7 @@ class DeciInterventionModel:
         train_data: pd.DataFrame,
         intervention_model_id: Optional[str] = None,
     ):
-        self._id = intervention_model_id if intervention_model_id else uuid()
+        self._id = intervention_model_id if intervention_model_id else uuid4()
         self._deci_model = deci_model
         self._ate_matrix = ate_matrix
         self._adj_matrix = adj_matrix
@@ -53,7 +56,9 @@ class DeciInterventionModel:
             f"Filtering adjacency matrix based on confidence_threshold={confidence_threshold} and weight_threshold={weight_threshold}"
         )
 
-        adj_matrix = self._adj_matrix_with_edges_above_threshold(confidence_threshold, weight_threshold)
+        adj_matrix = self._adj_matrix_with_edges_above_threshold(
+            confidence_threshold, weight_threshold
+        )
 
         # if the edge weight is other than 0, then it is above the threshold
         # so set it to 1
@@ -67,7 +72,9 @@ class DeciInterventionModel:
             for var_name, idx in self._deci_model.variables.name_to_idx.items()
         }
 
-    def _map_interventions(self, interventions: InterventionValueByColumn) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _map_interventions(
+        self, interventions: InterventionValueByColumn
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         intervention_idxs = []
         intervention_values = []
 
@@ -78,15 +85,21 @@ class DeciInterventionModel:
             if idx is not None:
                 interventions_by_index[idx] = value
             else:
-                logging.warning(f"Intervention column {name} ignored: column name not found")
+                logging.warning(
+                    f"Intervention column {name} ignored: column name not found"
+                )
 
         # deci expects values to be sorted by index
         for index in sorted(interventions_by_index.keys()):
             intervention_idxs.append(index)
             intervention_values.append(interventions_by_index[index])
 
-        intervention_idxs = torch.tensor(intervention_idxs, device=self._deci_model.device)
-        intervention_values = torch.tensor(intervention_values, device=self._deci_model.device)
+        intervention_idxs = torch.tensor(
+            intervention_idxs, device=self._deci_model.device
+        )
+        intervention_values = torch.tensor(
+            intervention_values, device=self._deci_model.device
+        )
 
         return intervention_idxs, intervention_values
 
@@ -106,7 +119,9 @@ class DeciInterventionModel:
                     X=X,
                     W_adj=W_adj,
                     intervention_idxs=torch.tensor([], device=self._deci_model.device),
-                    intervention_values=torch.tensor([], device=self._deci_model.device),
+                    intervention_values=torch.tensor(
+                        [], device=self._deci_model.device
+                    ),
                 ).numpy()
             ),
             intervention=self._parse_raw_result(

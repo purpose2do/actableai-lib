@@ -7,11 +7,15 @@ import networkx as nx
 import pandas as pd
 from dowhy import CausalModel
 
-from actableai.causal.exposure.model.identify_estimand_models import IdentifyEstimandResult
+from actableai.causal.exposure.model.identify_estimand_models import (
+    IdentifyEstimandResult,
+)
 
 
 def identify_estimand(causal_graph, dataframe, treatment, outcome, controls):
-    causal_graph_nx = nx.cytoscape_graph({"data": [], "directed": True, "multigraph": False, **causal_graph})
+    causal_graph_nx = nx.cytoscape_graph(
+        {"data": [], "directed": True, "multigraph": False, **causal_graph}
+    )
     gml_graph = " ".join(nx.generate_gml(causal_graph_nx))
 
     if dataframe is not None:
@@ -31,7 +35,9 @@ def identify_estimand(causal_graph, dataframe, treatment, outcome, controls):
             graph=gml_graph,
         )
 
-    primary_estimand = causal_model.identify_effect(proceed_when_unidentifiable=True, optimize_backdoor=True)
+    primary_estimand = causal_model.identify_effect(
+        proceed_when_unidentifiable=True, optimize_backdoor=True
+    )
 
     return IdentifyEstimandResult(
         estimate_possibility=primary_estimand.estimands["backdoor"] is not None,

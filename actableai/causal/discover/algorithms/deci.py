@@ -13,9 +13,19 @@ from causica.models.deci.deci import DECI
 from causica.utils.torch_utils import get_torch_device
 from pydantic import BaseModel
 
-from actableai.causal.discover.algorithms.commons.base_runner import CausalDiscoveryRunner, CausalGraph, ProgressCallback
-from actableai.causal.discover.algorithms.interventions.deci import DeciInterventionModel
-from actableai.causal.discover.model.causal_discovery import ATEDetails, CausalDiscoveryPayload, map_to_causica_var_type
+from actableai.causal.discover.algorithms.commons.base_runner import (
+    CausalDiscoveryRunner,
+    CausalGraph,
+    ProgressCallback,
+)
+from actableai.causal.discover.algorithms.interventions.deci import (
+    DeciInterventionModel,
+)
+from actableai.causal.discover.model.causal_discovery import (
+    ATEDetails,
+    CausalDiscoveryPayload,
+    map_to_causica_var_type,
+)
 
 torch.set_default_dtype(torch.float32)
 
@@ -120,7 +130,9 @@ class DeciRunner(CausalDiscoveryRunner):
         return Dataset(train_data=numpy_data, train_mask=data_mask, variables=variables)
 
     def _build_model(self, causica_dataset: Dataset) -> DECI:
-        logging.info(f"Creating DECI model with '{self._model_options.base_distribution_type}' base distribution type")
+        logging.info(
+            f"Creating DECI model with '{self._model_options.base_distribution_type}' base distribution type"
+        )
 
         constraints = self._build_constraint_matrix(
             causica_dataset.variables.name_to_idx,
@@ -145,7 +157,9 @@ class DeciRunner(CausalDiscoveryRunner):
         return deci_model
 
     def _check_if_is_dag(self, deci_model: DECI, adj_matrix: np.ndarray) -> bool:
-        return (np.trace(scipy.linalg.expm(adj_matrix.round())) - deci_model.num_nodes) == 0
+        return (
+            np.trace(scipy.linalg.expm(adj_matrix.round())) - deci_model.num_nodes
+        ) == 0
 
     def _get_adj_matrix(self, deci_model: DECI) -> np.ndarray:
         adj_matrix = deci_model.get_adj_matrix(
@@ -158,7 +172,9 @@ class DeciRunner(CausalDiscoveryRunner):
 
         return adj_matrix
 
-    def _infer_intervention_reference_values(self, train_data: pd.DataFrame, var: Variable) -> Tuple[float, float]:
+    def _infer_intervention_reference_values(
+        self, train_data: pd.DataFrame, var: Variable
+    ) -> Tuple[float, float]:
         # TODO: perhaps allow the user to set the (intervention, reference) values per variable in the frontend
         if var.type_ == "binary":
             return (1, 0)
@@ -173,7 +189,9 @@ class DeciRunner(CausalDiscoveryRunner):
     def _get_or_infer_intervention_reference_values(
         self, train_data: pd.DataFrame, var: Variable
     ) -> Tuple[float, float]:
-        intervention, reference = self._infer_intervention_reference_values(train_data, var)
+        intervention, reference = self._infer_intervention_reference_values(
+            train_data, var
+        )
         provided_ate_details = self._ate_options.ate_details_by_name.get(var.name, None)
 
         if provided_ate_details is not None:
@@ -184,7 +202,9 @@ class DeciRunner(CausalDiscoveryRunner):
 
         return (intervention, reference)
 
-    def _apply_group_mask_to_ate_array(self, ate_array: np.ndarray, group_mask: np.ndarray):
+    def _apply_group_mask_to_ate_array(
+        self, ate_array: np.ndarray, group_mask: np.ndarray
+    ):
         # categorical columns are one-hot encoded, so we apply the mask to
         # go back to the same dimensionality in the original data
         return [ate_array[mask].mean() for mask in group_mask]
@@ -199,7 +219,9 @@ class DeciRunner(CausalDiscoveryRunner):
         used_ate_details_by_name = dict()
 
         if self._ate_options.most_likely_graph and self._ate_options.Ngraphs != 1:
-            logging.warning("Adjusting Ngraphs parameter to 1 because most_likely_graph is set to true")
+            logging.warning(
+                "Adjusting Ngraphs parameter to 1 because most_likely_graph is set to true"
+            )
             self._ate_options.Ngraphs = 1
 
         for variable_index in range(n_variables):
@@ -227,9 +249,16 @@ class DeciRunner(CausalDiscoveryRunner):
                 Nsamples_per_graph=self._ate_options.Nsamples_per_graph,
                 most_likely_graph=self._ate_options.most_likely_graph,
             )
-            ate_matrix.append(self._apply_group_mask_to_ate_array(ate_array, model.variables.group_mask))
+            ate_matrix.append(
+                self._apply_group_mask_to_ate_array(
+                    ate_array, model.variables.group_mask
+                )
+            )
 
-            self._report_progress((TRAINING_PROGRESS_PROPORTION + ((variable_index + 1) * progress_step)) * 100.0)
+            self._report_progress(
+                (TRAINING_PROGRESS_PROPORTION + ((variable_index + 1) * progress_step))
+                * 100.0
+            )
 
         return np.stack(ate_matrix), used_ate_details_by_name
 
@@ -239,8 +268,12 @@ class DeciRunner(CausalDiscoveryRunner):
         adj_matrix: np.ndarray,
         ate_matrix: np.ndarray,
     ) -> Any:
-        deci_graph = networkx.convert_matrix.from_numpy_matrix(adj_matrix, create_using=networkx.DiGraph)
-        deci_ate_graph = networkx.convert_matrix.from_numpy_matrix(ate_matrix, create_using=networkx.DiGraph)
+        deci_graph = networkx.convert_matrix.from_numpy_matrix(
+            adj_matrix, create_using=networkx.DiGraph
+        )
+        deci_ate_graph = networkx.convert_matrix.from_numpy_matrix(
+            ate_matrix, create_using=networkx.DiGraph
+        )
         labels = {idx: name for name, idx in name_to_idx.items()}
 
         for n1, n2, d in deci_graph.edges(data=True):
@@ -258,7 +291,9 @@ class DeciRunner(CausalDiscoveryRunner):
 
         causica_dataset = self._build_causica_dataset()
 
-        train_data = pd.DataFrame(causica_dataset._train_data, columns=self._prepared_data.columns)
+        train_data = pd.DataFrame(
+            causica_dataset._train_data, columns=self._prepared_data.columns
+        )
 
         deci_model = self._build_model(causica_dataset)
 
@@ -276,14 +311,20 @@ class DeciRunner(CausalDiscoveryRunner):
 
         adj_matrix = self._get_adj_matrix(deci_model)
 
-        ate_matrix, used_ate_details_by_name = self._compute_average_treatment_effect(deci_model, train_data)
+        ate_matrix, used_ate_details_by_name = self._compute_average_treatment_effect(
+            deci_model, train_data
+        )
 
         deci_model.eval()
 
-        self._intervention_model = DeciInterventionModel(deci_model, adj_matrix, ate_matrix, train_data)
+        self._intervention_model = DeciInterventionModel(
+            deci_model, adj_matrix, ate_matrix, train_data
+        )
 
         causal_graph = self._build_causal_graph(
-            labeled_graph=self._build_labeled_graph(deci_model.variables.name_to_idx, adj_matrix, ate_matrix),
+            labeled_graph=self._build_labeled_graph(
+                deci_model.variables.name_to_idx, adj_matrix, ate_matrix
+            ),
             has_weights=True,
             has_confidence_values=True,
             columns=self._get_column_names(),

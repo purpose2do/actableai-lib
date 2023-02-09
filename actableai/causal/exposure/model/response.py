@@ -7,11 +7,17 @@ from typing import List, Optional, Union
 
 from pydantic import BaseModel
 
-from actableai.causal.exposure.model.confidence_interval_models import ConfidenceIntervalResult
+from actableai.causal.exposure.model.confidence_interval_models import (
+    ConfidenceIntervalResult,
+)
 from actableai.causal.exposure.model.estimate_effect_models import EstimateResult
 from actableai.causal.exposure.model.refute_estimate_models import RefuterResult
-from actableai.causal.exposure.model.shap_interpreter_models import ListShapInterpreterResult
-from actableai.causal.exposure.model.significance_test_models import SignificanceTestResult
+from actableai.causal.exposure.model.shap_interpreter_models import (
+    ListShapInterpreterResult,
+)
+from actableai.causal.exposure.model.significance_test_models import (
+    SignificanceTestResult,
+)
 
 
 class StatusModel(BaseModel):

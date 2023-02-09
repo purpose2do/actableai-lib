@@ -73,7 +73,7 @@ class AAIBayesianRegressionTask(AAITask):
                     - "sigma": Sigmas of the re Regression model,
                     - "best_config": Best usable model,
                     - "evaluation": r2 and MSE metrics of the trained model
-                - "validations": List of validations on the data, 
+                - "validations": List of validations on the data,
                     non-empty if the data presents a problem for the task
                 - "runtime": Time taken to run the task
         """

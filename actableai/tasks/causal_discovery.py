@@ -10,23 +10,23 @@ from actableai.causal.discover.algorithms.notears import NotearsRunner
 from actableai.causal.discover.algorithms.direct_lingam import DirectLiNGAMRunner
 from actableai.causal.discover.algorithms.pc import PCRunner
 
-class AAICausalDiscoveryTask(AAITask):
 
+class AAICausalDiscoveryTask(AAITask):
     @AAITask.run_with_ray_remote(TaskType.CAUSAL_INFERENCE)
     def run(
-        self, 
+        self,
         algo: str,
         payload: CausalDiscoveryPayload,
         progress_callback: Union[Callable, None] = None,
     ) -> CausalGraph:
-        """ Run a causal discovery algorithm.
+        """Run a causal discovery algorithm.
 
         Args:
-            algo (str): The name of the algorithm to run. Must be either "deci", "notears", 
+            algo (str): The name of the algorithm to run. Must be either "deci", "notears",
                 "direct-lingamp" or "pc".
 
             payload (CausalDiscoveryPayload): The payload to use for the algorithm. Use
-                actableai.causal.discovery.algorithms.deci.DeciPayload for "deci", 
+                actableai.causal.discovery.algorithms.deci.DeciPayload for "deci",
                 actableai.causal.discovery.algorithms.notears.NotearsPayload for "notears",
                 actableai.causal.discovery.algorithms.direct_lingam.DirectLiNGAMPayload for
                 "direct-lingam" and actableai.causal.discovery.algorithms.pc.PCPayload for "pc".

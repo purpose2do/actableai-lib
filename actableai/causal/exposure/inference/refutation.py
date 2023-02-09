@@ -11,7 +11,10 @@ from dowhy.causal_estimator import CausalEstimate
 from dowhy.causal_identifier import IdentifiedEstimand
 from dowhy.causal_model import CausalModel
 
-from actableai.causal.exposure.model.refute_estimate_models import RefuterResult, RefuterSpec
+from actableai.causal.exposure.model.refute_estimate_models import (
+    RefuterResult,
+    RefuterSpec,
+)
 
 
 def get_tasks(num_simulations_map, estimate_effects_results, refuters):
@@ -21,7 +24,9 @@ def get_tasks(num_simulations_map, estimate_effects_results, refuters):
             method_name=method_name,
             estimate=estimate_result,
         )
-        for method_name, estimate_result in itertools.product(refuters, estimate_effects_results)
+        for method_name, estimate_result in itertools.product(
+            refuters, estimate_effects_results
+        )
     ]
 
 
@@ -163,7 +168,10 @@ def check_sign_change(new_effect, original_estimate) -> int:
     if not isinstance(new_effect, (list, tuple, np.ndarray)):
         return int(new_effect * original_estimate >= 0)
     else:
-        return int(new_effect[0] * original_estimate >= 0 and new_effect[1] * original_estimate >= 0)
+        return int(
+            new_effect[0] * original_estimate >= 0
+            and new_effect[1] * original_estimate >= 0
+        )
 
 
 def check_p_value(p_value: float, p_threshold: float = 0.05) -> int:
@@ -198,7 +206,9 @@ def refute_estimate(spec: RefuterSpec):
     identified_estimand = spec.estimate.identified_estimand
     estimate = spec.estimate.estimate
 
-    result = REFUTER_FUNC_MAPPING[spec.method_name](model, identified_estimand, estimate, spec.num_simulations)
+    result = REFUTER_FUNC_MAPPING[spec.method_name](
+        model, identified_estimand, estimate, spec.num_simulations
+    )
 
     return RefuterResult(
         refuter=spec.method_name.replace("_refuter", ""),

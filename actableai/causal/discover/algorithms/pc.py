@@ -5,7 +5,11 @@ import networkx as nx
 import numpy as np
 from castle.algorithms import PC
 
-from actableai.causal.discover.algorithms.commons.base_runner import CausalDiscoveryRunner, CausalGraph, ProgressCallback
+from actableai.causal.discover.algorithms.commons.base_runner import (
+    CausalDiscoveryRunner,
+    CausalGraph,
+    ProgressCallback,
+)
 from actableai.causal.discover.model.causal_discovery import CausalDiscoveryPayload
 
 
@@ -37,7 +41,9 @@ class PCRunner(CausalDiscoveryRunner):
 
         return causal_graph
 
-    def _apply_constraints_to_causal_matrix(self, causal_matrix: np.ndarray, constraints: np.ndarray) -> np.ndarray:
+    def _apply_constraints_to_causal_matrix(
+        self, causal_matrix: np.ndarray, constraints: np.ndarray
+    ) -> np.ndarray:
         constrained_matrix = causal_matrix.copy()
 
         constrained_matrix[constraints == 0] = 0
@@ -46,7 +52,9 @@ class PCRunner(CausalDiscoveryRunner):
         return constrained_matrix
 
     def _build_labeled_graph(self) -> Any:
-        logging.info(f"Running PC with variant={self._variant}, alpha={self._alpha} and ci_test={self._ci_test}")
+        logging.info(
+            f"Running PC with variant={self._variant}, alpha={self._alpha} and ci_test={self._ci_test}"
+        )
 
         pc = PC(variant=self._variant, alpha=self._alpha, ci_test=self._ci_test)
 

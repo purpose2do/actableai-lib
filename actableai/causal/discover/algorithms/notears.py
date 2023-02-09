@@ -2,7 +2,11 @@ import logging
 
 from causalnex.structure.notears import from_pandas
 
-from actableai.causal.discover.algorithms.commons.base_runner import CausalDiscoveryRunner, CausalGraph, ProgressCallback
+from actableai.causal.discover.algorithms.commons.base_runner import (
+    CausalDiscoveryRunner,
+    CausalGraph,
+    ProgressCallback,
+)
 from actableai.causal.discover.model.causal_discovery import CausalDiscoveryPayload
 
 
@@ -20,7 +24,9 @@ class NotearsRunner(CausalDiscoveryRunner):
     def do_causal_discovery(self) -> CausalGraph:
         self._encode_categorical_as_integers()
 
-        logging.info(f"Running NOTEARS with max_iter={self._max_iter}, h_tol=1e-8 and w_threshold=0.0")
+        logging.info(
+            f"Running NOTEARS with max_iter={self._max_iter}, h_tol=1e-8 and w_threshold=0.0"
+        )
 
         causal_graph = self._build_causal_graph(
             labeled_graph=from_pandas(

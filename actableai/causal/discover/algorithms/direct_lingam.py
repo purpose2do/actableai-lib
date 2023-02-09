@@ -6,7 +6,11 @@ import numpy as np
 from causalnex.structure.structuremodel import StructureModel
 from lingam import DirectLiNGAM
 
-from actableai.causal.discover.algorithms.commons.base_runner import CausalDiscoveryRunner, CausalGraph, ProgressCallback
+from actableai.causal.discover.algorithms.commons.base_runner import (
+    CausalDiscoveryRunner,
+    CausalGraph,
+    ProgressCallback,
+)
 from actableai.causal.discover.model.causal_discovery import CausalDiscoveryPayload
 
 
@@ -17,7 +21,9 @@ class DirectLiNGAMPayload(CausalDiscoveryPayload):
 class DirectLiNGAMRunner(CausalDiscoveryRunner):
     name = "DirectLiNGAM"
 
-    def __init__(self, p: DirectLiNGAMPayload, progress_callback: ProgressCallback = None):
+    def __init__(
+        self, p: DirectLiNGAMPayload, progress_callback: ProgressCallback = None
+    ):
         super().__init__(p, progress_callback)
 
     def do_causal_discovery(self) -> CausalGraph:

@@ -8,7 +8,12 @@ from typing import List
 
 import networkx as nx
 
-from actableai.causal.exposure.model.estimate_effect_models import CausalGraphModelSpec, ModelSpec, OutcomeSpec, TreatmentSpec
+from actableai.causal.exposure.model.estimate_effect_models import (
+    CausalGraphModelSpec,
+    ModelSpec,
+    OutcomeSpec,
+    TreatmentSpec,
+)
 
 
 def __create_gml_graph(
@@ -27,7 +32,12 @@ def __create_gml_graph(
         outcome = outcome.variable
         causal_graph = nx.DiGraph()
 
-        nodes = [treatment] + [outcome] + model_spec.confounders + model_spec.effect_modifiers
+        nodes = (
+            [treatment]
+            + [outcome]
+            + model_spec.confounders
+            + model_spec.effect_modifiers
+        )
         # add nodes
         for variable in nodes:
             causal_graph.add_node(variable)
