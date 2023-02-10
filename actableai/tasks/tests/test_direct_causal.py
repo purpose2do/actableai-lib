@@ -19,6 +19,5 @@ class TestCausalFeatureSelection:
         assert re is not None
         assert re["status"] == "SUCCESS"
         assert "data" in re
-        assert "w:::a" in re["data"]
-        assert "w:::b" in re["data"]
+        assert "w" in re["data"]
         assert "z" in re["data"]

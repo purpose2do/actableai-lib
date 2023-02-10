@@ -3,7 +3,6 @@ from typing import Any, List, Optional, Union
 import pandas as pd
 from actableai.causal import has_categorical_column, prepare_sanitize_data
 from actableai.data_validation.base import (
-    CAUSAL_FEATURE_SELECTION_CATEGORICAL_MAX_UNIQUES,
     CAUSAL_INFERENCE_CATEGORICAL_MINIMUM_TREATMENT,
     CLASSIFICATION_ANALYTIC,
     CORRELATION_MINIMUM_NUMBER_OF_SAMPLE,
@@ -907,10 +906,4 @@ class CausalFeatureSelectionDataValidator:
         pass
 
     def validate(self, target: str, features: List[str], df: pd.DataFrame):
-        return [
-            CheckNUnique(level=CheckLevels.WARNING).check(
-                df[features],
-                CAUSAL_FEATURE_SELECTION_CATEGORICAL_MAX_UNIQUES,
-                "Causal feature selection",
-            )
-        ]
+        return []
