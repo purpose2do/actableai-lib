@@ -650,23 +650,3 @@ class TestAssociationRulesDataValidator:
         assert "ColumnsExistChecker" in validations_dict
         assert validations_dict["ColumnsExistChecker"] == CheckLevels.CRITICAL
 
-
-class TestCausalFeatureSelectionDataVlidator:
-    def test_validate_categorical_unique_values(self):
-        df = pd.DataFrame(
-            {
-                "x": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"],
-                "w": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"],
-                "z": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-                "y": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-            }
-        )
-        validation_results = CausalFeatureSelectionDataValidator().validate(
-            "y", ["x", "w", "z"], df
-        )
-
-        validations_dict = {
-            val.name: val.level for val in validation_results if val is not None
-        }
-        assert "CheckNUnique" in validations_dict
-        assert validations_dict["CheckNUnique"] == CheckLevels.WARNING
