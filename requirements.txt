@@ -710,7 +710,7 @@ packaging==21.3
     #   thinc
     #   torchmetrics
     #   transformers
-pandas==1.4.3
+pandas==1.3.5
     # via
     #   -r requirements.in
     #   autogluon-common
