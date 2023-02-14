@@ -4,7 +4,7 @@ ray[tune,default,serve]==2.0.0
 autogluon.tabular[all]==0.6.0
 autogluon.text==0.6.0
 gluonts[Prophet,R]==0.10.3
-econml==0.14.0
+econml==0.13.1
 ipython==7.32.0
 hyperopt==0.2.7
 ujson==4.0.2
@@ -30,7 +30,7 @@ mmdet==2.28.1
 networkx==2.8.5
 boto3==1.26.66
 botocore==1.29.66
-dowhy==0.9.1
+dowhy==0.7.1
 jinja2==3.1.2
 joblib==1.2.0
 matplotlib==3.6.3
