@@ -166,9 +166,7 @@ class AAIModelInference:
                     new_outcome = task_model.intervention_model.predict_two_way(df)
                     pred["intervention"] = new_outcome
                 else:
-                    new_outcome = task_model.intervention_model.predict(
-                        df
-                    )
+                    new_outcome = task_model.intervention_model.predict(df)
                     pred["intervention"] = pd.DataFrame(
                         {
                             f"expected_{task_model.predictor.label}": new_outcome[
