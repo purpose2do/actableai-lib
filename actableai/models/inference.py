@@ -148,9 +148,6 @@ class AAIModelInference:
                 intervention_col = (
                     task_model.intervention_model.current_intervention_column
                 )
-                target_proba = None
-                if "df_proba" in pred:
-                    target_proba = pred["df_proba"]
                 df[task_model.predictor.label] = pred["prediction"]
                 df = empty_string_to_nan(
                     df,
@@ -166,9 +163,7 @@ class AAIModelInference:
                     new_outcome = task_model.intervention_model.predict_two_way(df)
                     pred["intervention"] = new_outcome
                 else:
-                    new_outcome = task_model.intervention_model.predict(
-                        df
-                    )
+                    new_outcome = task_model.intervention_model.predict(df)
                     pred["intervention"] = pd.DataFrame(
                         {
                             f"expected_{task_model.predictor.label}": new_outcome[
@@ -203,18 +198,36 @@ class AAIModelInference:
         """
         TODO write documentation
         """
+        from actableai.exceptions.models import MissingFeaturesError
         from actableai.exceptions.models import InvalidPositiveLabelError
 
         result = {}
 
-        df_proba = self._predict_proba(task_model, df)
+        # FIXME this considers that the model we have is an AutoGluon which will not
+        #  be the case in the future
+        feature_generator = task_model._learner.feature_generator
+        first_feature_links = feature_generator.get_feature_links()
 
-        class_labels = list(df_proba.columns)
+        missing_features = list(
+            set(first_feature_links.keys()).difference(set(df.columns))
+        )
+
+        if len(missing_features) > 0:
+            raise MissingFeaturesError(missing_features=missing_features)
 
         # Regression
-        if len(class_labels) <= 1:
-            result["prediction"] = df_proba
+        if task_model.problem_type == "regression":
+            preds = task_model.predict(df)
+            result["prediction"] = preds.to_frame(name=task_model.label)
             return result
+
+        if task_model.problem_type == "quantile":
+            preds = task_model.predict(df)
+            result["prediction"] = pd.DataFrame(preds)
+            return result
+
+        df_proba = self._predict_proba(task_model, df)
+        class_labels = list(df_proba.columns)
 
         # Multiclass
         if len(class_labels) > 2:
@@ -259,19 +272,6 @@ class AAIModelInference:
         TODO write documentation
         """
         import pandas as pd
-        from actableai.exceptions.models import MissingFeaturesError
-
-        # FIXME this considers that the model we have is an AutoGluon which will not
-        #  be the case in the future
-        feature_generator = task_model._learner.feature_generator
-        first_feature_links = feature_generator.get_feature_links()
-
-        missing_features = list(
-            set(first_feature_links.keys()).difference(set(df.columns))
-        )
-
-        if len(missing_features) > 0:
-            raise MissingFeaturesError(missing_features=missing_features)
 
         df_proba = task_model.predict_proba(df, as_multiclass=True)
         if isinstance(df_proba, pd.Series):
@@ -323,6 +323,7 @@ class AAIModelInference:
             "problem_type": problem_type,
             "class_labels": None,
             "prediction_target": task_model.label,
+            "quantile_levels": task_model.quantile_levels,
         }
 
         if problem_type == "multiclass" or problem_type == "binary":
