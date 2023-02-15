@@ -148,9 +148,6 @@ class AAIModelInference:
                 intervention_col = (
                     task_model.intervention_model.current_intervention_column
                 )
-                target_proba = None
-                if "df_proba" in pred:
-                    target_proba = pred["df_proba"]
                 df[task_model.predictor.label] = pred["prediction"]
                 df = empty_string_to_nan(
                     df,
