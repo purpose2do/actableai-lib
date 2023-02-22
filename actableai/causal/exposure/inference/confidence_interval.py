@@ -6,9 +6,9 @@
 import logging
 from typing import Dict, Tuple
 
+from actableai.causal.exposure.config import get_confidence_simulations
 from dowhy.causal_estimator import CausalEstimate
 
-from actableai.causal.exposure.config import get_confidence_simulations
 from actableai.causal.exposure.model.confidence_interval_models import (
     ConfidenceIntervalParams,
     ConfidenceIntervalResult,

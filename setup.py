@@ -68,7 +68,7 @@ setup(
         "visions>=0.7.1",
         "shap>=0.40.0",
         "nltk>=3.7",
-        "pyabsa>=1.16.27",
+        "pyabsa>=1.15.7",
         "flair>=0.11.3",
         "mlxtend>=0.20.0",
         "aioredis>=1.3.1",

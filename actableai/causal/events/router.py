@@ -3,10 +3,6 @@ import os
 
 import numpy as np
 import pandas as pd
-from fastapi import APIRouter
-from fastapi.staticfiles import StaticFiles
-from synthdid.model import SynthDID
-
 from backend.events.rpy import exec_estimator_R
 from backend.events.types import (
     Data,
@@ -14,6 +10,9 @@ from backend.events.types import (
     OutputResult,
     WeightedSynthdidControls,
 )
+from fastapi import APIRouter
+from fastapi.staticfiles import StaticFiles
+from synthdid.model import SynthDID
 
 events_router = APIRouter()
 

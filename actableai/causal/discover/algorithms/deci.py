@@ -1,5 +1,4 @@
 import logging
-import shutil
 from typing import Any, List, Literal, Optional, Tuple, Union, Dict
 
 import networkx
@@ -32,6 +31,7 @@ torch.set_default_dtype(torch.float32)
 TRAINING_PROGRESS_PROPORTION = 0.7
 
 ATE_CALC_PROGRESS_PROPORTION = 0.3
+
 
 # TODO: UPDATE DEFAULTS
 class DeciModelOptions(BaseModel):
