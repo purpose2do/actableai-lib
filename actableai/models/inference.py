@@ -1,10 +1,60 @@
 from functools import lru_cache
 from typing import Dict
 
+import ray
 import pandas as pd
 
 from actableai.exceptions.models import UnknownModelClassError
 from actableai.models.intervention import empty_string_to_nan
+
+
+class AAIModelInferenceHead:
+    @classmethod
+    def get_actor(cls, cache_maxsize: int = 100):
+        head_actor = None
+
+        try:
+            head_actor = ray.get_actor(name=cls.__name__)
+        except ValueError:
+            head_actor = (
+                ray.remote(cls)
+                .options(name=cls.__name__, lifetime="detached")
+                .remote(cache_maxsize=cache_maxsize)
+            )
+
+        return head_actor
+
+    def __init__(self, cache_maxsize: int = 100):
+        self._load_model_ref_cached = lru_cache(maxsize=cache_maxsize)(
+            self._load_model_ref
+        )
+
+    @staticmethod
+    def _load_model_ref(s3_bucket_name, path):
+        import dill as pickle
+        import boto3
+        from botocore.exceptions import ClientError
+
+        # Load from S3
+        s3 = boto3.resource("s3")
+        bucket = s3.Bucket(s3_bucket_name)
+
+        obj = bucket.Object(path)
+        try:
+            raw_model = obj.get()["Body"].read()
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "NoSuchKey":
+                return None
+            else:
+                raise
+
+        model = pickle.loads(raw_model)
+        model_ref = ray.put(model)
+
+        return model_ref
+
+    async def get_model_ref(self, s3_bucket_name, path):
+        return self._load_model_ref_cached(s3_bucket_name=s3_bucket_name, path=path)
 
 
 class AAIModelInference:
@@ -57,7 +107,7 @@ class AAIModelInference:
         self.s3_prefix = s3_prefix
         self.s3_bucket_name = s3_bucket
 
-        self._load_model_cached = lru_cache(maxsize=cache_maxsize)(self._load_model)
+        self.cache_maxsize = cache_maxsize
 
     def _get_model_path(self, task_id):
         """
@@ -67,43 +117,28 @@ class AAIModelInference:
 
         return os.path.join(self.s3_prefix, task_id, "model.p")
 
-    @staticmethod
-    def _load_model(s3_bucket_name, path):
-        import dill as pickle
-        import boto3
-        from botocore.exceptions import ClientError
-
-        s3 = boto3.resource("s3")
-        bucket = s3.Bucket(s3_bucket_name)
-
-        obj = bucket.Object(path)
-        try:
-            raw_model = obj.get()["Body"].read()
-        except ClientError as e:
-            if e.response["Error"]["Code"] == "NoSuchKey":
-                return None
-            else:
-                raise
-
-        return pickle.loads(raw_model)
-
     def _get_model(self, task_id, raise_error=True):
         """
         TODO write documentation
         """
         from actableai.exceptions.models import InvalidTaskIdError
 
-        model = self._load_model_cached(
-            s3_bucket_name=self.s3_bucket_name,
-            path=self._get_model_path(task_id),
+        head_actor = AAIModelInferenceHead.get_actor(cache_maxsize=self.cache_maxsize)
+
+        model_ref = ray.get(
+            head_actor.get_model_ref.remote(
+                s3_bucket_name=self.s3_bucket_name,
+                path=self._get_model_path(task_id),
+            )
         )
-        if model is None:
+
+        if model_ref is None:
             if raise_error:
                 raise InvalidTaskIdError()
             else:
                 return None
 
-        return model
+        return ray.get(model_ref)
 
     def predict(
         self,
