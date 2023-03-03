@@ -150,7 +150,7 @@ class AAIModelInference:
         from actableai.exceptions.models import InvalidTaskIdError
 
         model = self._load_model_cached(
-            cache_maxsize=self.head_cache_maxsize,
+            head_cache_maxsize=self.head_cache_maxsize,
             s3_bucket_name=self.s3_bucket_name,
             path=self._get_model_path(task_id),
         )
