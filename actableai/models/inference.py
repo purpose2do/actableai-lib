@@ -10,7 +10,7 @@ from actableai.models.intervention import empty_string_to_nan
 
 class AAIModelInferenceHead:
     @classmethod
-    def get_actor(cls, cache_maxsize: int = 100):
+    def get_actor(cls, cache_maxsize: int = 5):
         head_actor = None
 
         try:
@@ -24,7 +24,7 @@ class AAIModelInferenceHead:
 
         return head_actor
 
-    def __init__(self, cache_maxsize: int = 100):
+    def __init__(self, cache_maxsize: int = 5):
         self._load_model_ref_cached = lru_cache(maxsize=cache_maxsize)(
             self._load_model_ref
         )
@@ -69,7 +69,7 @@ class AAIModelInference:
         ray_options,
         s3_bucket,
         s3_prefix="",
-        cache_maxsize=100,
+        cache_maxsize=5,
     ):
         """
         TODO write documentation
@@ -100,7 +100,7 @@ class AAIModelInference:
 
         return serve.get_deployment(cls.__name__)
 
-    def __init__(self, s3_bucket, s3_prefix="", cache_maxsize=100):
+    def __init__(self, s3_bucket, s3_prefix="", cache_maxsize=5):
         """
         TODO write documentation
         """
