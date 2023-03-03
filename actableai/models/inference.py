@@ -10,7 +10,7 @@ from actableai.models.intervention import empty_string_to_nan
 
 class AAIModelInferenceHead:
     @classmethod
-    def get_actor(cls, cache_maxsize: int = 100):
+    def get_actor(cls, cache_maxsize: int = 20):
         head_actor = None
 
         try:
@@ -24,7 +24,7 @@ class AAIModelInferenceHead:
 
         return head_actor
 
-    def __init__(self, cache_maxsize: int = 100):
+    def __init__(self, cache_maxsize: int = 20):
         self._load_model_ref_cached = lru_cache(maxsize=cache_maxsize)(
             self._load_model_ref
         )
@@ -69,7 +69,8 @@ class AAIModelInference:
         ray_options,
         s3_bucket,
         s3_prefix="",
-        cache_maxsize=100,
+        cache_maxsize=5,
+        head_cache_maxsize=20,
     ):
         """
         TODO write documentation
@@ -81,7 +82,7 @@ class AAIModelInference:
             name=cls.__name__,
             autoscaling_config=ray_autoscaling_configs,
             ray_actor_options=ray_options,
-            init_args=(s3_bucket, s3_prefix, cache_maxsize),
+            init_args=(s3_bucket, s3_prefix, cache_maxsize, head_cache_maxsize),
         ).deploy()
 
     @classmethod
@@ -100,14 +101,24 @@ class AAIModelInference:
 
         return serve.get_deployment(cls.__name__)
 
-    def __init__(self, s3_bucket, s3_prefix="", cache_maxsize=100):
+    def __init__(
+        self,
+        s3_bucket,
+        s3_prefix="",
+        cache_maxsize=5,
+        head_cache_maxsize=20,
+    ):
         """
         TODO write documentation
         """
         self.s3_prefix = s3_prefix
         self.s3_bucket_name = s3_bucket
 
-        self.cache_maxsize = cache_maxsize
+        self.head_cache_maxsize = head_cache_maxsize
+        self._load_model_cached = lru_cache(maxsize=cache_maxsize)(self._load_model)
+
+        # This is done to start the actor if it did not start already
+        AAIModelInferenceHead.get_actor(cache_maxsize=self.head_cache_maxsize)
 
     def _get_model_path(self, task_id):
         """
@@ -117,28 +128,40 @@ class AAIModelInference:
 
         return os.path.join(self.s3_prefix, task_id, "model.p")
 
+    @staticmethod
+    def _load_model(head_cache_maxsize, s3_bucket_name, path):
+        head_actor = AAIModelInferenceHead.get_actor(cache_maxsize=head_cache_maxsize)
+
+        model_ref = ray.get(
+            head_actor.get_model_ref.remote(
+                s3_bucket_name=s3_bucket_name,
+                path=path,
+            )
+        )
+
+        if model_ref is None:
+            return None
+        return ray.get(model_ref)
+
     def _get_model(self, task_id, raise_error=True):
         """
         TODO write documentation
         """
         from actableai.exceptions.models import InvalidTaskIdError
 
-        head_actor = AAIModelInferenceHead.get_actor(cache_maxsize=self.cache_maxsize)
-
-        model_ref = ray.get(
-            head_actor.get_model_ref.remote(
-                s3_bucket_name=self.s3_bucket_name,
-                path=self._get_model_path(task_id),
-            )
+        model = self._load_model_cached(
+            cache_maxsize=self.head_cache_maxsize,
+            s3_bucket_name=self.s3_bucket_name,
+            path=self._get_model_path(task_id),
         )
 
-        if model_ref is None:
+        if model is None:
             if raise_error:
                 raise InvalidTaskIdError()
             else:
                 return None
 
-        return ray.get(model_ref)
+        return model
 
     def predict(
         self,
