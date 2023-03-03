@@ -108,6 +108,10 @@ class AAIModelInference:
         self.s3_bucket_name = s3_bucket
 
         self.cache_maxsize = cache_maxsize
+        self._load_model_cached = lru_cache(maxsize=cache_maxsize)(self._load_model)
+
+        # This is done to start the actor if it did not start already
+        AAIModelInferenceHead.get_actor(cache_maxsize=self.cache_maxsize)
 
     def _get_model_path(self, task_id):
         """
@@ -117,28 +121,40 @@ class AAIModelInference:
 
         return os.path.join(self.s3_prefix, task_id, "model.p")
 
+    @staticmethod
+    def _load_model(cache_maxsize, s3_bucket_name, path):
+        head_actor = AAIModelInferenceHead.get_actor(cache_maxsize=cache_maxsize)
+
+        model_ref = ray.get(
+            head_actor.get_model_ref.remote(
+                s3_bucket_name=s3_bucket_name,
+                path=path,
+            )
+        )
+
+        if model_ref is None:
+            return None
+        return ray.get(model_ref)
+
     def _get_model(self, task_id, raise_error=True):
         """
         TODO write documentation
         """
         from actableai.exceptions.models import InvalidTaskIdError
 
-        head_actor = AAIModelInferenceHead.get_actor(cache_maxsize=self.cache_maxsize)
-
-        model_ref = ray.get(
-            head_actor.get_model_ref.remote(
-                s3_bucket_name=self.s3_bucket_name,
-                path=self._get_model_path(task_id),
-            )
+        model = self._load_model_cached(
+            cache_maxsize=self.cache_maxsize,
+            s3_bucket_name=self.s3_bucket_name,
+            path=self._get_model_path(task_id),
         )
 
-        if model_ref is None:
+        if model is None:
             if raise_error:
                 raise InvalidTaskIdError()
             else:
                 return None
 
-        return ray.get(model_ref)
+        return model
 
     def predict(
         self,
