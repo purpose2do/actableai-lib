@@ -1,7 +1,8 @@
 from functools import lru_cache
-from typing import Dict
+from typing import Dict, List, Any
 
 import ray
+from ray import serve
 import pandas as pd
 
 from actableai.exceptions.models import UnknownModelClassError
@@ -163,7 +164,84 @@ class AAIModelInference:
 
         return model
 
-    def predict(
+    async def predict(
+        self,
+        task_id,
+        df,
+        return_probabilities=False,
+        probability_threshold=0.5,
+        positive_label=None,
+    ):
+        return await self._predict_batched(
+            {
+                "task_id": task_id,
+                "df": df,
+                "return_probabilities": return_probabilities,
+                "probability_threshold": probability_threshold,
+                "positive_label": positive_label,
+            }
+        )
+
+    @serve.batch(max_batch_size=64)
+    async def _predict_batched(self, data: List[Dict[str, Any]]):
+        task_data = {}
+        results_data_list = []
+
+        # Group data by (task_id, ...)
+        for e in data:
+            task_id = e["task_id"]
+            df = e["df"]
+            return_probabilities = e["return_probabilities"]
+            probability_threshold = e["probability_threshold"]
+            positive_label = e["positive_label"]
+
+            key = (task_id, return_probabilities, probability_threshold, positive_label)
+
+            if key in task_data:
+                start_index = len(task_data[key])
+
+                task_data[key] = pd.concat(
+                    [task_data[key], df],
+                    ignore_index=True,
+                )
+            else:
+                start_index = 0
+                task_data[key] = df
+
+            results_data_list.append(
+                {
+                    "key": key,
+                    "start_index": start_index,
+                    "end_index": start_index + len(df),
+                }
+            )
+
+        results_data = {}
+        for key, df in task_data.items():
+            task_id, return_probabilities, probability_threshold, positive_label = key
+            results_data[key] = self._predict_one(
+                task_id=task_id,
+                df=df,
+                return_probabilities=return_probabilities,
+                probability_threshold=probability_threshold,
+                positive_label=positive_label,
+            )
+
+        results = []
+
+        for result_data in results_data_list:
+            key = result_data["key"]
+            start_index = result_data["start_index"]
+            end_index = result_data["end_index"]
+
+            result = {}
+            for data_key, df in results_data[key].items():
+                result[data_key] = df.iloc[start_index:end_index]
+            results.append(result)
+
+        return results
+
+    def _predict_one(
         self,
         task_id,
         df,
@@ -324,13 +402,61 @@ class AAIModelInference:
         result["prediction"] = df_true_label
         return result
 
-    def predict_proba(self, task_id, df):
+    async def predict_proba(self, task_id, df):
+        return await self._predict_proba_batched({"task_id": task_id, "df": df})
+
+    @serve.batch(max_batch_size=64)
+    async def _predict_proba_batched(self, data: List[Dict[str, Any]]):
+        task_data = {}
+        results_data_list = []
+
+        # Group data by task id
+        for e in data:
+            task_id = e["task_id"]
+            df = e["df"]
+
+            if task_id in task_data:
+                start_index = len(task_data[task_id])
+
+                task_data[task_id] = pd.concat(
+                    [task_data[task_id], df],
+                    ignore_index=True,
+                )
+            else:
+                start_index = 0
+                task_data[task_id] = df
+
+            results_data_list.append(
+                {
+                    "task_id": task_id,
+                    "start_index": start_index,
+                    "end_index": start_index + len(df),
+                }
+            )
+
+        results_data = {
+            task_id: self._predict_proba(task_id, df)
+            for task_id, df in task_data.items()
+        }
+
+        results = []
+
+        for result_data in results_data_list:
+            task_id = result_data["task_id"]
+            start_index = result_data["start_index"]
+            end_index = result_data["end_index"]
+
+            results.append(results_data[task_id].iloc[start_index:end_index])
+
+        return results
+
+    def _predict_proba_one(self, task_id, df):
         from actableai.models.aai_predictor import AAITabularModel
 
         task_model = self._get_model(task_id)
-
         if isinstance(task_model, AAITabularModel):
-            return self._predict_proba(task_model.predictor, df)
+            task_model = task_model.predictor
+
         return self._predict_proba(task_model, df)
 
     def _predict_proba(self, task_model, df):
@@ -344,7 +470,7 @@ class AAIModelInference:
             df_proba = df_proba.to_frame(name=task_model.label)
         return df_proba
 
-    def get_metadata(self, task_id):
+    async def get_metadata(self, task_id):
         from actableai.models.aai_predictor import (
             AAITabularModel,
             AAITabularModelInterventional,
@@ -398,7 +524,7 @@ class AAIModelInference:
 
         return metadata
 
-    def is_model_available(self, task_id):
+    async def is_model_available(self, task_id):
         """
         TODO write documentation
         """
