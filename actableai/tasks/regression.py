@@ -919,8 +919,6 @@ class AAIRegressionTask(AAITask):
                 ice=run_ice,
                 grid_resolution=pdp_ice_grid_resolution,
                 verbosity=0,
-                drop_invalid=True,
-                inplace=True,
                 n_samples=pdp_ice_n_samples,
             )
 

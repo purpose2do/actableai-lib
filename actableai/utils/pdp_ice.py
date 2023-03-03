@@ -7,9 +7,7 @@ from actableai.causal.predictors import SKLearnTabularWrapper
 from actableai.utils import get_type_special
 
 
-def _compute_pdp_ice(
-    model_sk, df_train, feature, kind, grid_resolution, drop_invalid=True
-):
+def _compute_pdp_ice(model_sk, df_train, feature, kind, grid_resolution):
     """
     Compute Partial Dependence Plot (PDP) and Individual Conditional Expectation
     (ICE) for a given sklearn model and feature (column).
@@ -29,8 +27,6 @@ def _compute_pdp_ice(
     kind (str): 'average' (PDP), 'individual' (ICE), or 'both' (pdp and ICE)
     grid_resolution (int): number of points to sample in the grid and plot
         (x-axis values)
-    drop_invalid (bool, optional): Whether to drop rows containing NaNs or
-        Inf values in any of the columns
 
     Returns:
     If return_type='raw':
@@ -42,21 +38,28 @@ def _compute_pdp_ice(
         Raw values can be accessed from the 'pd_results' attribute.
     """
 
-    # Drop any rows containing NaNs or Infs
-    if drop_invalid:
-        df_train = df_train.replace([np.inf, -np.inf], np.nan).dropna(axis=0)
-
     # Check feature type; if 'mixed', convert to string
     feat_type = get_type_special(df_train[feature])
     if feat_type == "mixed":
         df_train[feature] = df_train[feature].astype(str)
+
+    # If categorical, set grid resolution to the number of unique elements + 1
+    # Note: This might take a while if there is a large number of categories
+    # Otherwise (if numerical), keep the original resolution
+    if feat_type not in ["integer", "numeric"]:
+        grid_resolution_feature = len(df_train[feature].unique()) + 1
+    else:
+        grid_resolution_feature = grid_resolution
+
+    # Drop any rows where feature value is NaN/null
+    df_train = df_train.dropna(subset=[feature])
 
     res = partial_dependence(
         model_sk,
         df_train,
         features=feature,
         kind=kind,
-        grid_resolution=grid_resolution,
+        grid_resolution=grid_resolution_feature,
     )
 
     res["feature_type"] = feat_type
@@ -73,9 +76,6 @@ def get_pdp_and_ice(
     ice=True,
     grid_resolution=100,
     verbosity=0,
-    plot_convert_to_num=True,
-    drop_invalid=True,
-    inplace=False,
     n_samples=None,
 ):
     """
@@ -94,15 +94,6 @@ def get_pdp_and_ice(
         and plot (x-axis values)
     verbosity (int, optional): 0 for no output, 1 for summary output, 2 for
         detailed output
-    plot_convert_to_num (bool, optional): Flag to determine if any categorical
-        features in the dataframe should be enumerated. This should be done if
-            using kind='plot' and the dataframe has not already been converted.
-            However, it should be noted that the trained model should have used
-            the converted dataframe, in order to ensure that the PDP/ICE
-            results are correct.
-    drop_invalid (bool, optional): Whether to drop rows containing NaNs or Inf
-        values in any of the columns
-    inplace (bool, optional): Whether to perform modifications to df_train in-place
     n_samples (int, optional): The number of rows to sample in df_train. If 'None,
         no sampling is performed.
 
@@ -129,11 +120,11 @@ def get_pdp_and_ice(
     if verbosity > 1:
         logging.info("Model wrapped with sklearn wrapper")
 
-    if features == "all":  # Use all columns
-        features = df_train.columns
+    if features == "all":  # Use all columns on which the model was trained
+        features = model.predictor.features()
 
     if n_samples is not None:
-        # Only sample if there are more rows than the requested numebr of samples
+        # Only sample if there are more rows than the requested number of samples
         if len(df_train) > n_samples:
             df_train = df_train.sample(
                 n=n_samples, axis=0, replace=True, random_state=1
@@ -141,8 +132,8 @@ def get_pdp_and_ice(
             if verbosity > 1:
                 logging.info(f"Sampled {n_samples} rows from the dataset")
 
-    # Check if any column contains only empty values
     for feature in df_train.columns:
+        # Check if any column contains only empty values
         if df_train[feature].isnull().all():
             if verbosity > 0:
                 logging.info(
@@ -187,7 +178,6 @@ def get_pdp_and_ice(
             feature,
             kind,
             grid_resolution,
-            drop_invalid=drop_invalid,
         )
 
     return res_all
