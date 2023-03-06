@@ -1,4 +1,5 @@
 import logging
+from tempfile import mkdtemp
 from typing import Any, List, Literal, Optional, Tuple, Union, Dict
 
 import networkx
@@ -87,7 +88,7 @@ class DeciPayload(CausalDiscoveryPayload):
     model_options: DeciModelOptions = DeciModelOptions()
     training_options: DeciTrainingOptions = DeciTrainingOptions()
     ate_options: DeciAteOptions = DeciAteOptions()
-    model_save_dir: str
+    model_save_dir: str = None
 
 
 class DeciRunner(CausalDiscoveryRunner):
@@ -102,6 +103,9 @@ class DeciRunner(CausalDiscoveryRunner):
         self._is_dag = None
         self._device = get_torch_device("gpu")
         self._deci_save_dir = p.model_save_dir
+
+        if self._deci_save_dir is None:
+            self._deci_save_dir = mkdtemp(prefix="actableai_model")
 
     def _build_causica_dataset(self) -> Dataset:
         self._encode_categorical_as_integers()

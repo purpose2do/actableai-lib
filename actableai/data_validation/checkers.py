@@ -1255,3 +1255,17 @@ class IsSufficientDataTreatmentStratification(IChecker):
                 message=f"The current intervention column ({current_intervention_column}) has too few values for each category to perform stratified sampling."
                 + "When the current intervention is categorical, the number of samples in each category must be greater than 1.",
             )
+
+
+class CausalDiscoveryAlgoChecker(IChecker):
+    def __init__(self, level, name="CausalDiscoveryAlgoChecker"):
+        super().__init__(name)
+        self.level = level
+
+    def check(self, algo: str) -> Optional[CheckResult]:
+        if algo not in ["deci", "notears", "direct-lingam", "pc"]:
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"Invalid algorithm: {algo}",
+            )

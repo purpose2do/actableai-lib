@@ -22,3 +22,4 @@ class TaskType(str, Enum):
     SENTIMENT_ANALYSIS = "sentiment_analysis"
     INTERVENTION = "intervention"
     ASSOCIATION_RULES = "association_rules"
+    CAUSAL_DISCOVERY = "causal_discovery"

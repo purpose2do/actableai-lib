@@ -1,24 +1,18 @@
-from typing import Union, Callable
-import pandas as pd
+from typing import Union, Callable, Dict, Type
 
 from actableai.tasks.base import AAITask
 from actableai.tasks import TaskType
-from actableai.causal.discover.algorithms.commons.base_runner import CausalGraph
 from actableai.causal.discover.model.causal_discovery import CausalDiscoveryPayload
-from actableai.causal.discover.algorithms.deci import DeciRunner
-from actableai.causal.discover.algorithms.notears import NotearsRunner
-from actableai.causal.discover.algorithms.direct_lingam import DirectLiNGAMRunner
-from actableai.causal.discover.algorithms.pc import PCRunner
 
 
 class AAICausalDiscoveryTask(AAITask):
-    @AAITask.run_with_ray_remote(TaskType.CAUSAL_INFERENCE)
+    @AAITask.run_with_ray_remote(TaskType.CAUSAL_DISCOVERY)
     def run(
         self,
         algo: str,
         payload: CausalDiscoveryPayload,
         progress_callback: Union[Callable, None] = None,
-    ) -> CausalGraph:
+    ) -> Dict:
         """Run a causal discovery algorithm.
 
         Args:
@@ -39,13 +33,50 @@ class AAICausalDiscoveryTask(AAITask):
         Raises:
             ValueError: If the algorithm is not supported.
         """
-        if algo == "deci":
-            return DeciRunner(payload, progress_callback).run()
-        elif algo == "notears":
-            return NotearsRunner(payload, progress_callback).run()
-        elif algo == "direct-lingam":
-            return DirectLiNGAMRunner(payload, progress_callback).run()
-        elif algo == "pc":
-            return PCRunner(payload, progress_callback).run()
-        else:
-            raise ValueError(f"Unknown algorithm: {algo}")
+        import time
+        from copy import deepcopy
+
+        from actableai.causal.discover import algorithms
+        from actableai.data_validation.base import CheckLevels
+        from actableai.data_validation.params import CausalDiscoveryDataValidator
+        from actableai.utils.dict import to_dict_recursive
+
+        start = time.time()
+
+        payload.dataset = deepcopy(payload.dataset)
+
+        data_validation_results = CausalDiscoveryDataValidator().validate(
+            algo=algo,
+        )
+        failed_checks = [
+            check for check in data_validation_results if check is not None
+        ]
+
+        if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
+            return {
+                "status": "FAILURE",
+                "data": {},
+                "validations": [
+                    {"name": check.name, "level": check.level, "message": check.message}
+                    for check in failed_checks
+                ],
+                "runtime": time.time() - start,
+            }
+
+        runner = algorithms.runners.get(algo)
+        graph = runner(p=payload, progress_callback=progress_callback).run()
+
+        data = {
+            "causal_graph": to_dict_recursive(graph),
+        }
+
+        return {
+            "status": "SUCCESS",
+            "messenger": "",
+            "validations": [
+                {"name": x.name, "level": x.level, "message": x.message}
+                for x in failed_checks
+            ],
+            "data": data,
+            "runtime": time.time() - start,
+        }
