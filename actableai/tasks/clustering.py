@@ -59,7 +59,7 @@ class AAIClusteringTask(AAITask):
         Examples:
             >>> df = pd.read_csv("path/to/dataframe")
             >>> result = AAIClusteringTask().run(
-            ...     df, 
+            ...     df,
             ...     ["feature1", "feature2", "feature3"]
             ... )
             >>> result
@@ -78,7 +78,7 @@ class AAIClusteringTask(AAITask):
                     - "clusters": Same dictionary as data
                     - "shap_values": Shapley values for clustering
                 - "runtime": Time taken to run the task
-                - "validations": List of validations on the data, 
+                - "validations": List of validations on the data,
                     non-empty if the data presents a problem for the task
         """
         import tensorflow as tf

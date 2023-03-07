@@ -55,6 +55,7 @@ from actableai.data_validation.checkers import (
     StratifiedKFoldChecker,
     UniqueDateTimeChecker,
     TimeSeriesTuningMetricChecker,
+    CausalDiscoveryAlgoChecker,
 )
 from actableai.intervention.config import KFOLD_CATEGORICAL_OUTCOME
 from actableai.timeseries.utils import find_freq
@@ -250,7 +251,6 @@ class BayesianRegressionDataValidator:
     def validate(
         self, target: str, features: List[str], df: pd.DataFrame, polynomial_degree: int
     ) -> List:
-
         validation_results = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(df, [target]),
             DoNotContainEmptyColumnsChecker(level=CheckLevels.WARNING).check(
@@ -907,3 +907,13 @@ class CausalFeatureSelectionDataValidator:
 
     def validate(self, target: str, features: List[str], df: pd.DataFrame):
         return []
+
+
+class CausalDiscoveryDataValidator:
+    def __init__(self):
+        pass
+
+    def validate(self, algo: str):
+        return [
+            CausalDiscoveryAlgoChecker(level=CheckLevels.CRITICAL).check(algo=algo),
+        ]

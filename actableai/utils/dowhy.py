@@ -9,7 +9,7 @@ def causal_model_to_dot(causal_model):
     node_map = {}
 
     for node in graph.nodes:
-        if ':' in node:
+        if ":" in node:
             node_map[node] = f'"{node}"'
 
     new_graph = relabel_nodes(graph, node_map)

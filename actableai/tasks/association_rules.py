@@ -58,7 +58,7 @@ class AAIAssociationRulesTask(AAITask):
                     - "association_metric": Association metric used for association
                         rules generation.
                     - "association_rules_chord": Association rules chord diagram.
-                - "validations": List of validations on the data, 
+                - "validations": List of validations on the data,
                     non-empty if the data presents a problem for the task
                 - "runtime": Time taken to run the task.
         """

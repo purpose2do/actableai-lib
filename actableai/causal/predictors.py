@@ -1,18 +1,20 @@
 from __future__ import annotations
+
+from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterable, List, Optional, Union
+
 import numpy as np
 import pandas as pd
-from autogluon.tabular import TabularDataset, TabularPredictor
 from autogluon.features.generators import (
     AutoMLPipelineFeatureGenerator,
     AbstractFeatureGenerator,
 )
+from autogluon.tabular import TabularDataset, TabularPredictor
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import r2_score
-from abc import ABC, abstractmethod
 
 from actableai.utils.multilabel_predictor import MultilabelPredictor
 

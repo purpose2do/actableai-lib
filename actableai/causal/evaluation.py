@@ -1,42 +1,18 @@
-import boto3
-import econml
-import json
-import matplotlib
-import matplotlib.pyplot as plt
-import numpy as np
 import os
-import pandas as pd
-import ray
-import shap
-import sys
 import time
 import warnings
-from dowhy import CausalModel
-from econml.dml import DML, CausalForestDML, LinearDML, SparseLinearDML
-from itertools import product
-from jinja2 import Environment, FileSystemLoader
-from ray import tune
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.linear_model import (
-    Lasso,
-    LassoCV,
-    LinearRegression,
-    LogisticRegression,
-    LogisticRegressionCV,
-    MultiTaskElasticNet,
-    MultiTaskElasticNetCV,
-)
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import PolynomialFeatures
 
-from actableai.causal.models import AAICausalEstimator
+import boto3
+import numpy as np
+import pandas as pd
+import ray
+from jinja2 import Environment, FileSystemLoader
+from sklearn.metrics import mean_squared_error
+
 from actableai.causal.params import (
     LinearDMLSingleBinaryTreatmentParams,
     SparseLinearDMLSingleBinaryTreatmentParams,
 )
-from actableai.data_validation.base import CheckLevels
-from actableai.data_validation.params import CausalDataValidator
 from actableai.tasks.causal_inference import remote_causal
 
 warnings.filterwarnings("ignore")
@@ -49,7 +25,6 @@ session = boto3.Session(
 )
 s3 = session.resource("s3")
 bucket = s3.Bucket("actable-ai-machine-learning")
-
 
 data_dir = "causal_test_data"
 if not os.path.exists(data_dir):
@@ -138,7 +113,7 @@ for parameter_num in range(1, 78):
                 run_time,
             )
             records.append(res)
-            print(f"res={res}, Elapsed = {time.time()-start:.2f} s")
+            print(f"res={res}, Elapsed = {time.time() - start:.2f} s")
         except Exception as e:
             print(e)
             continue
@@ -195,7 +170,6 @@ file.close()
 
 env = Environment(loader=FileSystemLoader("."))
 template = env.get_template(html_file)
-
 
 template_vars = {
     "title": "ReportMetric",
