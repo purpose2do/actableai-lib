@@ -39,7 +39,6 @@ class AAICausalDiscoveryTask(AAITask):
         from actableai.causal.discover import algorithms
         from actableai.data_validation.base import CheckLevels
         from actableai.data_validation.params import CausalDiscoveryDataValidator
-        from actableai.utils.dict import to_dict_recursive
 
         start = time.time()
 
@@ -67,7 +66,7 @@ class AAICausalDiscoveryTask(AAITask):
         graph = runner(p=payload, progress_callback=progress_callback).run()
 
         data = {
-            "causal_graph": to_dict_recursive(graph),
+            "causal_graph": graph,
         }
 
         return {
