@@ -341,7 +341,7 @@ class AAIBayesianRegressionTask(AAITask):
                     y_ = norm.pdf(
                         x_, loc=r_["m"].coef_[i], scale=np.sqrt(r_["m"].sigma_[i, i])
                     )
-                    pdfs.append([x_, y])
+                    pdfs.append([x_, y_])
                 univariate_results.append(
                     {
                         "name": c,
