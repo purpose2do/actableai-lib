@@ -31,16 +31,16 @@ class AAIBayesianRegressionTask(AAITask):
             target: Target column for the Bayesian Regression
             priors: Prior probabilty distribution of features.
             prediction_quantile_low: Quantile for lowest point on prediction.
-            prediction_quantile_high: Quantile for lowest point on prediction.
+            prediction_quantile_high: Quantile for highest point on prediction.
             trials: Number of trials for tuning, best model is used for prediction.
             polynomial_degree: Value for generating maximum polynomial features and
                 cross-intersection features, higher values means better results but
                 uses more memory.
             validation_split: Percentage of the data used for validation.
-            pdf_steps: Number of steps for probabilty density function.
+            pdf_steps: Number of steps for probability density function.
             predict_steps: Number of predicted values.
-            normalize: If the generated features should be normalized, usefull for
-                big polymonial degrees.
+            normalize: If the generated features should be normalized, useful for
+                big polynomial degrees.
 
         Examples:
             >>> df = pd.read_csv("path/to/dataframe")
@@ -57,10 +57,10 @@ class AAIBayesianRegressionTask(AAITask):
                 categorical feature.
 
         Returns:
-            Dict: Dictionnary containing the results of the task.
+            Dict: Dictionary containing the results of the task.
                 - "status": "SUCCESS" if the task successfully ran else "FAILURE"
                 - "messenger": Message returned with the task
-                - "data": Dictionnary containing the data of the task
+                - "data": Dictionary containing the data of the task
                     - "rules": List of association rules
                     - "frequent_itemset": Frequent itemsets
                     - "df_list": List of associated items for each group_by
@@ -94,7 +94,7 @@ class AAIBayesianRegressionTask(AAITask):
 
         start = time.time()
 
-        # To resolve any issues of acces rights make a copy
+        # To resolve any issues of access rights make a copy
         df = df.copy()
         df = sanitize_timezone(df)
 
@@ -341,7 +341,7 @@ class AAIBayesianRegressionTask(AAITask):
                     y_ = norm.pdf(
                         x_, loc=r_["m"].coef_[i], scale=np.sqrt(r_["m"].sigma_[i, i])
                     )
-                    pdfs.append([x_, y])
+                    pdfs.append([x_, y_])
                 univariate_results.append(
                     {
                         "name": c,
