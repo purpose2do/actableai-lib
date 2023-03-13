@@ -30,8 +30,7 @@ class AAIModelInferenceHead:
         )
 
     @staticmethod
-    def _load_model_ref(s3_bucket_name, path):
-        import dill as pickle
+    def load_raw_model(s3_bucket_name, path):
         import boto3
         from botocore.exceptions import ClientError
 
@@ -47,6 +46,16 @@ class AAIModelInferenceHead:
                 return None
             else:
                 raise
+
+        return raw_model
+
+    @classmethod
+    def _load_model_ref(cls, s3_bucket_name, path):
+        import dill as pickle
+
+        raw_model = cls.load_raw_model(s3_bucket_name, path)
+        if raw_model is None:
+            return None
 
         model = pickle.loads(raw_model)
         model_ref = ray.put(model)
@@ -120,13 +129,14 @@ class AAIModelInference:
         # This is done to start the actor if it did not start already
         AAIModelInferenceHead.get_actor(cache_maxsize=self.head_cache_maxsize)
 
-    def _get_model_path(self, task_id):
+    @staticmethod
+    def get_model_path(s3_prefix, task_id):
         """
         TODO write documentation
         """
         import os
 
-        return os.path.join(self.s3_prefix, task_id, "model.p")
+        return os.path.join(s3_prefix, task_id, "model.p")
 
     @staticmethod
     def _load_model(head_cache_maxsize, s3_bucket_name, path):
@@ -152,7 +162,7 @@ class AAIModelInference:
         model = self._load_model_cached(
             head_cache_maxsize=self.head_cache_maxsize,
             s3_bucket_name=self.s3_bucket_name,
-            path=self._get_model_path(task_id),
+            path=self.get_model_path(self.s3_prefix, task_id),
         )
 
         if model is None:
@@ -406,7 +416,8 @@ class AAIModelInference:
 
         s3_client = boto3.client("s3")
         object_list = s3_client.list_objects_v2(
-            Bucket=self.s3_bucket_name, Prefix=self._get_model_path(task_id)
+            Bucket=self.s3_bucket_name,
+            Prefix=self.get_model_path(self.s3_prefix, task_id),
         )
 
         return "Contents" in object_list and len(object_list["Contents"]) > 0
