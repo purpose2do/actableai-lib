@@ -25,8 +25,7 @@ class _AAIRegressionTrainTask(AAITask):
         df_train: pd.DataFrame,
         df_val: Optional[pd.DataFrame],
         df_test: Optional[pd.DataFrame],
-        prediction_quantile_low: Optional[int],
-        prediction_quantile_high: Optional[int],
+        prediction_quantiles: Optional[List[int]],
         drop_duplicates: bool,
         run_debiasing: bool,
         biased_groups: List[str],
@@ -43,8 +42,6 @@ class _AAIRegressionTrainTask(AAITask):
         Any,
         List,
         Optional[Dict],
-        Any,
-        Any,
         Any,
         Any,
         Any,
@@ -66,8 +63,7 @@ class _AAIRegressionTrainTask(AAITask):
             df_train: DataFrame for training
             df_val: DataFrame for validation
             df_test: DataFrame for testing
-            prediction_quantile_low: Low quantile for prediction and validation
-            prediction_quantile_high: High quantile for prediction and validation
+            prediction_quantiles: Prediction quantiles for prediction and validation
             drop_duplicates: Whether we should drop duplicated rows
             run_debiasing: Whether we should debias the data
             biased_groups: Features that creates a bias in prediction
@@ -87,9 +83,8 @@ class _AAIRegressionTrainTask(AAITask):
                 - Dictionary of evaluation metrics
                 - Predicted values for df_val
                 - Explainer for explaining the prediction and validation
-                - Predicted values for df_test if run_model is true
-                - Lowest prediction for df_test if prediction_quantile_low is not None
-                - Highest prediction for df_test if prediction_quantile_high is not None
+                - Predicted values for df_test if run_model is true, if quantiles then
+                    dataframe containing all the values for each quantile
                 - Predicted shap values if explain_samples is true
                 - Leaderboard of the best model ran by AutoGluon
         """
@@ -143,21 +138,13 @@ class _AAIRegressionTrainTask(AAITask):
         if df_test is not None:
             df_test = df_test[features + biased_groups]
 
-        quantile_levels = None
-        if prediction_quantile_low is not None and prediction_quantile_high is not None:
-            quantile_levels = [
-                prediction_quantile_low / 100,
-                0.5,
-                prediction_quantile_high / 100,
-            ]
-
         # Train
         predictor = TabularPredictor(
             label=target,
             path=model_directory,
-            problem_type="regression" if quantile_levels is None else "quantile",
+            problem_type="regression" if prediction_quantiles is None else "quantile",
             eval_metric=eval_metric,
-            quantile_levels=quantile_levels,
+            quantile_levels=prediction_quantiles,
         )
 
         feature_prune_kwargs = None
@@ -199,7 +186,7 @@ class _AAIRegressionTrainTask(AAITask):
 
         important_features = []
         metrics = None
-        if quantile_levels is None and df_val is not None:
+        if prediction_quantiles is None and df_val is not None:
             feature_importance = predictor.feature_importance(df_val)
             for i in range(len(feature_importance)):
                 if feature_importance.index[i] in biased_groups:
@@ -217,7 +204,7 @@ class _AAIRegressionTrainTask(AAITask):
             y_pred = predictor.predict(df_val)
 
             y_pred_metrics = y_pred
-            if quantile_levels is not None:
+            if prediction_quantiles is not None:
                 y_pred_metrics = y_pred_metrics[0.5]
 
             metrics = {
@@ -230,12 +217,12 @@ class _AAIRegressionTrainTask(AAITask):
                 "median_absolute_error": median_absolute_error(y_true, y_pred_metrics),
             }
 
-            if quantile_levels is not None:
+            if prediction_quantiles is not None:
                 metrics["pinball_loss"] = pinball_loss(
-                    df_val[target], y_pred, quantile_levels=quantile_levels
+                    df_val[target], y_pred, quantile_levels=prediction_quantiles
                 )
 
-                for quantile_level in quantile_levels:
+                for quantile_level in prediction_quantiles:
                     metrics[f"quantile_loss-{quantile_level}"] = quantile_loss(
                         y_true, y_pred[quantile_level], q=quantile_level
                     )
@@ -265,14 +252,14 @@ class _AAIRegressionTrainTask(AAITask):
                 abs(metrics["median_absolute_error"]),
             ]
 
-            if quantile_levels is not None:
+            if prediction_quantiles is not None:
                 # Legacy (TODO: to be removed)
                 evaluate["PINBALL_LOSS"] = abs(metrics["pinball_loss"])
 
                 metric_list.append("Pinball Loss")
                 metric_value_list.append(abs(metrics["pinball_loss"]))
 
-                for quantile_level in quantile_levels:
+                for quantile_level in prediction_quantiles:
                     # Legacy (TODO: to be removed)
                     evaluate[f"QUANTILE_LOSS-{quantile_level}"] = abs(
                         metrics[f"quantile_loss-{quantile_level}"]
@@ -288,21 +275,12 @@ class _AAIRegressionTrainTask(AAITask):
             )
 
         predictions = None
-        predictions_low = None
-        predictions_high = None
         predict_shap_values = None
         if run_model and df_test is not None:
             if explain_samples:
                 predict_shap_values = explainer.shap_values(df_test)
 
-            full_predictions = predictor.predict(df_test)
-
-            if quantile_levels is None:
-                predictions = full_predictions
-            else:
-                predictions = full_predictions[0.5]
-                predictions_low = full_predictions[prediction_quantile_low / 100]
-                predictions_high = full_predictions[prediction_quantile_high / 100]
+            predictions = predictor.predict(df_test)
 
         return (
             predictor,
@@ -311,8 +289,6 @@ class _AAIRegressionTrainTask(AAITask):
             y_pred,
             explainer,
             predictions,
-            predictions_low,
-            predictions_high,
             predict_shap_values,
             leaderboard,
         )
@@ -331,8 +307,7 @@ class AAIRegressionTask(AAITask):
         debiased_features: Optional[List[str]] = None,
         eval_metric: str = "r2",
         validation_ratio: float = 0.2,
-        prediction_quantile_low: Optional[int] = None,
-        prediction_quantile_high: Optional[int] = None,
+        prediction_quantiles: Optional[List[int]] = None,
         explain_samples: bool = False,
         model_directory: Optional[str] = None,
         presets: str = "medium_quality_faster_train",
@@ -381,10 +356,7 @@ class AAIRegressionTask(AAITask):
                 'median_absolute_error', 'r2'
             validation_ratio: The ratio to randomly split data for training and
                 validation
-            prediction_quantile_low: Lower quantile for quantile regression (in
-                percentage)
-            prediction_quantile_high: Higher quantile for quantile regression
-                (in percentage)
+            prediction_quantiles: List of quantiles. (in percentage)
             explain_samples: If true, explanations for predictions in test and
                 validation will be generated. It takes significantly longer time to run.
             model_directory: Destination to store trained model. If not set, a temporary
@@ -495,7 +467,7 @@ class AAIRegressionTask(AAITask):
         from actableai.utils.pdp_ice import get_pdp_and_ice
 
         start = time.time()
-        # To resolve any issues of acces rights make a copy
+        # To resolve any issues of access rights make a copy
         df = df.copy()
         df = sanitize_timezone(df)
 
@@ -513,6 +485,8 @@ class AAIRegressionTask(AAITask):
         if refit_full and time_limit is not None:
             # Half the time limit for train and half the time for refit
             time_limit = time_limit // 2
+        if prediction_quantiles is not None and len(prediction_quantiles) == 0:
+            prediction_quantiles = None
 
         run_debiasing = len(biased_groups) > 0 and len(debiased_features) > 0
 
@@ -525,6 +499,22 @@ class AAIRegressionTask(AAITask):
         # Pre process data
         df = df.fillna(np.nan)
 
+        # Pre-process prediction quantiles
+        if prediction_quantiles is not None:
+            processed_prediction_quantiles = []
+            add_median = True
+
+            # Use set to remove duplicates
+            for quantile in set(prediction_quantiles):
+                if quantile == 50:
+                    add_median = False
+                processed_prediction_quantiles.append(quantile / 100)
+
+            if add_median:
+                processed_prediction_quantiles.append(0.5)
+
+            prediction_quantiles = processed_prediction_quantiles
+
         # Validate parameters
         data_validation_results = RegressionDataValidator().validate(
             target,
@@ -533,8 +523,7 @@ class AAIRegressionTask(AAITask):
             biased_groups,
             debiased_features,
             eval_metric,
-            prediction_quantile_low,
-            prediction_quantile_high,
+            prediction_quantiles,
             presets,
             explain_samples,
             drop_duplicates,
@@ -557,7 +546,7 @@ class AAIRegressionTask(AAITask):
                 "runtime": time.time() - start,
             }
 
-        if prediction_quantile_low is not None and prediction_quantile_high is not None:
+        if prediction_quantiles is not None:
             eval_metric = "pinball_loss"
 
         if hyperparameters is None:
@@ -636,8 +625,6 @@ class AAIRegressionTask(AAITask):
                 important_features,
                 evaluate,
                 predictions,
-                prediction_low,
-                prediction_high,
                 predict_shap_values,
                 df_val,
                 leaderboard,
@@ -654,8 +641,7 @@ class AAIRegressionTask(AAITask):
                 run_model=run_model,
                 df_train=df_train,
                 df_test=df_test,
-                prediction_quantile_low=prediction_quantile_low,
-                prediction_quantile_high=prediction_quantile_high,
+                prediction_quantiles=prediction_quantiles,
                 drop_duplicates=drop_duplicates,
                 run_debiasing=run_debiasing,
                 biased_groups=biased_groups,
@@ -677,8 +663,6 @@ class AAIRegressionTask(AAITask):
                 y_pred,
                 explainer,
                 predictions,
-                prediction_low,
-                prediction_high,
                 predict_shap_values,
                 leaderboard,
             ) = regression_train_task.run(
@@ -692,8 +676,7 @@ class AAIRegressionTask(AAITask):
                 df_train=df_train,
                 df_val=df_val,
                 df_test=df_test,
-                prediction_quantile_low=prediction_quantile_low,
-                prediction_quantile_high=prediction_quantile_high,
+                prediction_quantiles=prediction_quantiles,
                 drop_duplicates=drop_duplicates,
                 run_debiasing=run_debiasing,
                 biased_groups=biased_groups,
@@ -711,12 +694,13 @@ class AAIRegressionTask(AAITask):
         # Validation
         eval_shap_values = []
         if kfolds <= 1:
-            if prediction_quantile_low is None or prediction_quantile_high is None:
+            if prediction_quantiles is None:
                 df_val[target + "_predicted"] = y_pred
             else:
-                df_val[target + "_predicted"] = y_pred[0.5]
-                df_val[target + "_low"] = y_pred[prediction_quantile_low / 100]
-                df_val[target + "_high"] = y_pred[prediction_quantile_high / 100]
+                for quantile in prediction_quantiles:
+                    df_val[f"{target}_predicted_{quantile}"] = y_pred[quantile]
+
+                df_val[target + "_predicted"] = df_val[f"{target}_predicted_0.5"]
 
             # FIXME this should not be done, but we need this for now so we can return the models
             predictor.persist_models()
@@ -729,11 +713,15 @@ class AAIRegressionTask(AAITask):
 
         # Prediction
         if run_model:
-            df_predict[target + "_predicted"] = predictions
-            if prediction_quantile_low is not None:
-                df_predict[target + "_low"] = prediction_low
-            if prediction_quantile_high is not None:
-                df_predict[target + "_high"] = prediction_high
+            if prediction_quantiles is None:
+                df_predict[target + "_predicted"] = predictions
+            else:
+                for quantile in prediction_quantiles:
+                    df_predict[f"{target}_predicted_{quantile}"] = predictions[quantile]
+
+                df_predict[target + "_predicted"] = df_predict[
+                    f"{target}_predicted_0.5"
+                ]
 
         debiasing_charts = []
         # Generate debiasing charts
@@ -867,7 +855,7 @@ class AAIRegressionTask(AAITask):
 
         if refit_full:
             df_only_full_training = df.loc[df[target].notnull()]
-            predictor, _, _, _, _, _, _, _, _, _ = _AAIRegressionTrainTask(
+            predictor, _, _, _, _, _, _, _ = _AAIRegressionTrainTask(
                 **train_task_params
             ).run(
                 explain_samples=False,
@@ -880,8 +868,7 @@ class AAIRegressionTask(AAITask):
                 df_train=df_only_full_training,
                 df_val=None,
                 df_test=None,
-                prediction_quantile_low=prediction_quantile_low,
-                prediction_quantile_high=prediction_quantile_high,
+                prediction_quantiles=prediction_quantiles,
                 drop_duplicates=drop_duplicates,
                 run_debiasing=run_debiasing,
                 biased_groups=biased_groups,

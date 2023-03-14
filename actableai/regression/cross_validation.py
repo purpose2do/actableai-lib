@@ -18,8 +18,7 @@ def run_cross_validation(
     run_model: bool,
     df_train: pd.DataFrame,
     df_test: pd.DataFrame,
-    prediction_quantile_low: Optional[float],
-    prediction_quantile_high: Optional[float],
+    prediction_quantiles: Optional[List[int]],
     drop_duplicates: bool,
     run_debiasing: bool,
     biased_groups: List[str],
@@ -32,7 +31,7 @@ def run_cross_validation(
     drop_useless_features: bool,
     feature_prune: bool,
     feature_prune_time_limit: Optional[float],
-) -> Tuple[Dict, Dict, List, float, float, List, List, List]:
+) -> Tuple[Dict, Dict, Union[List, Dict], List, List, List]:
     """Run cross validation on Regression Task. Data is divided in kfold groups and each
     run a regression. The returned values are means or lists of values from
     each sub regression task.
@@ -50,8 +49,7 @@ def run_cross_validation(
         run_model (bool): If True, regressions models run predictions on unseen values
         df_train (pd.DataFrame): Training data
         df_test (pd.DataFrame): Testing data
-        prediction_quantile_low (Optional[float]): Prediction quantile low for the regressions
-        prediction_quantile_high (Optional[float]): Prediction quantile high for the regressions
+        prediction_quantiles: Prediction quantiles for the regressions
         drop_duplicates (bool): If True, only the unique values are kept
         run_debiasing (bool): If True, features are debiased w.r.t to biased_groups and debiased_features
         biased_groups (List[str]): Biased features in the data
@@ -64,12 +62,10 @@ def run_cross_validation(
             If None, the remaining training time is used
 
     Returns:
-        Tuple[Dict, Dict, List, float, float, List, List, List]:
+        Tuple[Dict, Dict, List, List, List, List]:
             important_features
             evaluate
             predictions
-            prediction_low
-            prediction_high
             predict_shap_values
             df_val
             leaderboard
@@ -103,8 +99,7 @@ def run_cross_validation(
                 "df_train": df_train.iloc[train_index],
                 "df_val": df_train.iloc[val_index],
                 "df_test": df_test,
-                "prediction_quantile_low": prediction_quantile_low,
-                "prediction_quantile_high": prediction_quantile_high,
+                "prediction_quantiles": prediction_quantiles,
                 "drop_duplicates": drop_duplicates,
                 "run_debiasing": run_debiasing,
                 "biased_groups": biased_groups,
@@ -131,9 +126,7 @@ def run_cross_validation(
     cross_val_important_p_value_features = {}
     cross_val_evaluates = {}
     cross_val_predict_shap_values = []
-    cross_val_predictions = []
-    cross_val_prediction_low = None
-    cross_val_prediction_high = None
+    cross_val_predictions = None
     cross_val_leaderboard = []
 
     df_val = pd.DataFrame()
@@ -146,8 +139,6 @@ def run_cross_validation(
             y_pred,
             _,
             predictions,
-            prediction_low,
-            prediction_high,
             predict_shap_values,
             leaderboard,
         ) = cv_results
@@ -158,7 +149,7 @@ def run_cross_validation(
         cross_val_leaderboard.append(leaderboard)
 
         df_k_val = df_train.iloc[val_index].copy()
-        if prediction_quantile_low is not None and prediction_quantile_high is not None:
+        if prediction_quantiles is not None:
             y_pred = y_pred[0.5]
         df_k_val[f"{target}_predicted"] = y_pred
         df_val = df_val.append(df_k_val, ignore_index=True)
@@ -183,21 +174,19 @@ def run_cross_validation(
         if run_model:
             if explain_samples:
                 cross_val_predict_shap_values.append(predict_shap_values)
-            cross_val_predictions.append(predictions)
-            if prediction_quantile_low is not None:
-                if cross_val_prediction_low is None:
-                    cross_val_prediction_low = prediction_low
-                else:
-                    cross_val_prediction_low = pd.concat(
-                        [cross_val_prediction_low, prediction_low], axis=1
-                    )
-            if prediction_quantile_high is not None:
-                if cross_val_prediction_high is None:
-                    cross_val_prediction_high = prediction_high
-                else:
-                    cross_val_prediction_high = pd.concat(
-                        [cross_val_prediction_high, prediction_high], axis=1
-                    )
+
+            if prediction_quantiles is None:
+                if cross_val_predictions is None:
+                    cross_val_predictions = []
+                cross_val_predictions.append(predictions)
+            else:
+                if cross_val_predictions is None:
+                    cross_val_predictions = {
+                        quantile: [] for quantile in prediction_quantiles
+                    }
+
+                for quantile in prediction_quantiles:
+                    cross_val_predictions[quantile].append(predictions[quantile])
 
     # Evaluate
     sqrt_k = sqrt(kfolds)
@@ -217,7 +206,7 @@ def run_cross_validation(
         important_features, key=lambda k: k["importance"], reverse=True
     )
 
-    if prediction_quantile_low is None or prediction_quantile_high is None:
+    if prediction_quantiles is None:
         # Legacy (TODO: to be removed)
         evaluate = {
             "RMSE": np.mean(cross_val_evaluates["RMSE"]),
@@ -271,10 +260,8 @@ def run_cross_validation(
             }
         )
 
-    predictions = []
-    predict_shap_values = []
-    prediction_low = None
-    prediction_high = None
+    predictions = None
+    predict_shap_values = None
     if run_model:
         if explain_samples:
             predict_shap_values = (
@@ -284,11 +271,12 @@ def run_cross_validation(
                 .mean()
             )
 
-        predictions = np.mean(cross_val_predictions, axis=0).tolist()
-        if prediction_quantile_low is not None:
-            prediction_low = np.mean(cross_val_prediction_low, axis=1)
-        if prediction_quantile_high is not None:
-            prediction_high = np.mean(cross_val_prediction_high, axis=1)
+        if prediction_quantiles is None:
+            predictions = np.mean(cross_val_predictions, axis=0)
+        else:
+            predictions = {}
+            for quantile in prediction_quantiles:
+                predictions[quantile] = np.mean(cross_val_predictions[quantile], axis=0)
 
     leaderboard = leaderboard_cross_val(cross_val_leaderboard)
 
@@ -296,8 +284,6 @@ def run_cross_validation(
         important_features,
         evaluate,
         predictions,
-        prediction_low,
-        prediction_high,
         predict_shap_values,
         df_val,
         leaderboard,

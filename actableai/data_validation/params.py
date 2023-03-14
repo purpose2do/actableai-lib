@@ -71,8 +71,7 @@ class RegressionDataValidator:
         debiasing_features,
         debiased_features,
         eval_metric="r2",
-        prediction_quantile_low=None,
-        prediction_quantile_high=None,
+        prediction_quantiles=None,
         presets="medium_quality_faster_train",
         explain_samples=False,
         drop_duplicates=True,
@@ -81,9 +80,7 @@ class RegressionDataValidator:
         datetime_column=None,
         kfolds=1,
     ):
-        use_quantiles = (
-            prediction_quantile_low is not None and prediction_quantile_high is not None
-        )
+        use_quantiles = prediction_quantiles is not None
 
         validation_results = [
             RegressionEvalMetricChecker(
@@ -185,11 +182,8 @@ class RegressionDataValidator:
             )
 
         run_debiasing = len(debiasing_features) > 0 and len(debiased_features) > 0
-        prediction_intervals = (
-            prediction_quantile_low is not None or prediction_quantile_high is not None
-        )
         # Check prediction intervals
-        if run_debiasing and prediction_intervals:
+        if run_debiasing and use_quantiles:
             validation_results.append(
                 CheckResult(
                     name="PredictionIntervalChecker",
