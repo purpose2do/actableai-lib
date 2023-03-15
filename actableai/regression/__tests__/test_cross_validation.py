@@ -18,8 +18,6 @@ def test_cross_validation():
         important_features,
         evaluate,
         predictions,
-        prediction_low,
-        prediction_high,
         predict_shap_values,
         df_val,
         leaderboard,
@@ -36,8 +34,7 @@ def test_cross_validation():
         run_model=False,
         df_train=df_train,
         df_test=df_test,
-        prediction_quantile_low=None,
-        prediction_quantile_high=None,
+        prediction_quantiles=None,
         drop_duplicates=True,
         run_debiasing=False,
         biased_groups=[],
@@ -62,10 +59,5 @@ def test_cross_validation():
     assert "p_value" in important_features[0]
     assert "p_value_std_err" in important_features[0]
     assert evaluate is not None
-    assert predictions is not None
-    assert predict_shap_values is not None
     assert df_val is not None
     assert leaderboard is not None
-
-    assert prediction_low is None
-    assert prediction_high is None

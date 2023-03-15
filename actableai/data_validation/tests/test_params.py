@@ -248,8 +248,6 @@ class TestRegressionDataValidator:
             debiasing_features=[],
             debiased_features=[],
             eval_metric="r2",
-            prediction_quantile_low=None,
-            prediction_quantile_high=None,
             presets="medium_quality_faster_train",
             explain_samples=False,
             drop_duplicates=True,
@@ -278,8 +276,6 @@ class TestRegressionDataValidator:
             debiasing_features=[],
             debiased_features=[],
             eval_metric="r2",
-            prediction_quantile_low=None,
-            prediction_quantile_high=None,
             presets="medium_quality_faster_train",
             explain_samples=False,
             drop_duplicates=True,
@@ -310,8 +306,6 @@ class TestRegressionDataValidator:
             debiasing_features=[],
             debiased_features=[],
             eval_metric="r2",
-            prediction_quantile_low=None,
-            prediction_quantile_high=None,
             presets="medium_quality_faster_train",
             explain_samples=False,
             drop_duplicates=True,
@@ -447,8 +441,6 @@ class TestClassificationDataValidator:
             debiasing_features=[],
             debiased_features=[],
             eval_metric="r2",
-            prediction_quantile_low=None,
-            prediction_quantile_high=None,
             presets="medium_quality_faster_train",
             explain_samples=False,
             drop_duplicates=True,
@@ -649,4 +641,3 @@ class TestAssociationRulesDataValidator:
         }
         assert "ColumnsExistChecker" in validations_dict
         assert validations_dict["ColumnsExistChecker"] == CheckLevels.CRITICAL
-

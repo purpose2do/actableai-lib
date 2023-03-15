@@ -36,11 +36,6 @@ def run_regression_task(
     if "drop_duplicates" not in kwargs:
         kwargs["drop_duplicates"] = False
 
-    if "prediction_quantile_low" not in kwargs:
-        kwargs["prediction_quantile_low"] = None
-    if "prediction_quantile_high" not in kwargs:
-        kwargs["prediction_quantile_high"] = None
-
     return regression_task.run(
         *args,
         **kwargs,
@@ -277,8 +272,6 @@ class TestRemoteRegression:
             tmp_path,
             df,
             "x",
-            prediction_quantile_low=None,
-            prediction_quantile_high=None,
             validation_ratio=0.2,
         )
 
@@ -400,16 +393,17 @@ class TestRemoteRegression:
             tmp_path,
             df,
             "x",
-            prediction_quantile_low=5,
-            prediction_quantile_high=95,
+            prediction_quantiles=[5, 50, 95],
             validation_ratio=0.2,
         )
 
         assert r["status"] == "SUCCESS"
         assert "validation_table" in r["data"]
         assert "prediction_table" in r["data"]
-        assert "x_low" in r["data"]["validation_table"].columns
-        assert "x_high" in r["data"]["validation_table"].columns
+        assert "x_predicted" in r["data"]["validation_table"].columns
+        assert "x_predicted_0.05" in r["data"]["validation_table"].columns
+        assert "x_predicted_0.5" in r["data"]["validation_table"].columns
+        assert "x_predicted_0.95" in r["data"]["validation_table"].columns
         assert "leaderboard" in r["data"]
         assert "importantFeatures" in r["data"]
         for feat in r["data"]["importantFeatures"]:
@@ -569,8 +563,7 @@ class TestRemoteRegression:
             "x",
             validation_ratio=0.2,
             explain_samples=True,
-            prediction_quantile_high=95,
-            prediction_quantile_low=5,
+            prediction_quantiles=[5, 50, 95],
         )
 
         assert r["status"] == "FAILURE"
@@ -846,19 +839,20 @@ class TestRemoteRegressionCrossValidation:
             df,
             "x",
             kfolds=1,
-            prediction_quantile_high=95,
-            prediction_quantile_low=5,
+            prediction_quantiles=[5, 50, 95],
         )
 
         evaluate = r["data"]["evaluate"]
         assert r["status"] == "SUCCESS"
         assert len(r["data"]["prediction_table"]) > 0
         assert "x_predicted" in r["data"]["prediction_table"].columns
-        assert "x_low" in r["data"]["prediction_table"].columns
-        assert "x_high" in r["data"]["prediction_table"].columns
+        assert "x_predicted_0.05" in r["data"]["prediction_table"].columns
+        assert "x_predicted_0.5" in r["data"]["prediction_table"].columns
+        assert "x_predicted_0.95" in r["data"]["prediction_table"].columns
         assert "x_predicted" in r["data"]["validation_table"].columns
-        assert "x_low" in r["data"]["validation_table"].columns
-        assert "x_high" in r["data"]["validation_table"].columns
+        assert "x_predicted_0.05" in r["data"]["validation_table"].columns
+        assert "x_predicted_0.5" in r["data"]["validation_table"].columns
+        assert "x_predicted_0.95" in r["data"]["validation_table"].columns
         assert "PINBALL_LOSS" in evaluate
         assert "importantFeatures" in r["data"]
         for feat in r["data"]["importantFeatures"]:
@@ -885,16 +879,16 @@ class TestRemoteRegressionCrossValidation:
             df,
             "x",
             kfolds=4,
-            prediction_quantile_high=95,
-            prediction_quantile_low=5,
+            prediction_quantiles=[5, 50, 95],
         )
 
         evaluate = r["data"]["evaluate"]
         assert r["status"] == "SUCCESS"
         assert len(r["data"]["prediction_table"]) > 0
         assert "x_predicted" in r["data"]["prediction_table"].columns
-        assert "x_low" in r["data"]["prediction_table"].columns
-        assert "x_high" in r["data"]["prediction_table"].columns
+        assert "x_predicted_0.05" in r["data"]["prediction_table"].columns
+        assert "x_predicted_0.5" in r["data"]["prediction_table"].columns
+        assert "x_predicted_0.95" in r["data"]["prediction_table"].columns
         assert "PINBALL_LOSS" in evaluate
         assert "importantFeatures" in r["data"]
         for feat in r["data"]["importantFeatures"]:
@@ -930,8 +924,6 @@ class TestRemoteRegressionCrossValidation:
             debiased_features=debiased_features,
             validation_ratio=0.2,
             kfolds=2,
-            prediction_quantile_low=None,
-            prediction_quantile_high=None,
         )
 
         assert r["status"] == "SUCCESS"
@@ -1094,8 +1086,6 @@ class TestDebiasing:
             features,
             biased_groups=biased_groups,
             debiased_features=debiased_features,
-            prediction_quantile_low=None,
-            prediction_quantile_high=None,
         )
 
         assert r["status"] == "SUCCESS"
@@ -1176,8 +1166,6 @@ class TestDebiasing:
             features,
             biased_groups=biased_groups,
             debiased_features=debiased_features,
-            prediction_quantile_low=None,
-            prediction_quantile_high=None,
         )
 
         assert r["status"] == "FAILURE"
@@ -1209,8 +1197,6 @@ class TestDebiasing:
             features,
             biased_groups=biased_groups,
             debiased_features=debiased_features,
-            prediction_quantile_low=None,
-            prediction_quantile_high=None,
         )
 
         assert r["status"] == "SUCCESS"
@@ -1289,8 +1275,6 @@ class TestDebiasing:
             features,
             biased_groups=biased_groups,
             debiased_features=debiased_features,
-            prediction_quantile_low=None,
-            prediction_quantile_high=None,
         )
 
         assert r["status"] == "SUCCESS"
@@ -1386,8 +1370,6 @@ class TestDebiasing:
             features,
             biased_groups=biased_groups,
             debiased_features=debiased_features,
-            prediction_quantile_low=None,
-            prediction_quantile_high=None,
             refit_full=True,
         )
 
