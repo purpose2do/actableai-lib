@@ -25,7 +25,7 @@ class _AAIRegressionTrainTask(AAITask):
         df_train: pd.DataFrame,
         df_val: Optional[pd.DataFrame],
         df_test: Optional[pd.DataFrame],
-        prediction_quantiles: Optional[List[int]],
+        prediction_quantiles: Optional[List[float]],
         drop_duplicates: bool,
         run_debiasing: bool,
         biased_groups: List[str],
@@ -307,7 +307,7 @@ class AAIRegressionTask(AAITask):
         debiased_features: Optional[List[str]] = None,
         eval_metric: str = "r2",
         validation_ratio: float = 0.2,
-        prediction_quantiles: Optional[List[int]] = None,
+        prediction_quantiles: Optional[List[float]] = None,
         explain_samples: bool = False,
         model_directory: Optional[str] = None,
         presets: str = "medium_quality_faster_train",
@@ -438,6 +438,7 @@ class AAIRegressionTask(AAITask):
             - "model": AAIModel to redeploy the model
         """
         import time
+        from decimal import Decimal
         from tempfile import mkdtemp
         import numpy as np
         import pandas as pd
@@ -500,6 +501,7 @@ class AAIRegressionTask(AAITask):
         df = df.fillna(np.nan)
 
         # Pre-process prediction quantiles
+        quantile_original_values = {}
         if prediction_quantiles is not None:
             processed_prediction_quantiles = []
             add_median = True
@@ -508,7 +510,11 @@ class AAIRegressionTask(AAITask):
             for quantile in set(prediction_quantiles):
                 if quantile == 50:
                     add_median = False
-                processed_prediction_quantiles.append(quantile / 100)
+
+                quantile_value = float(Decimal(str(quantile)) / Decimal(100))
+                processed_prediction_quantiles.append(quantile_value)
+
+                quantile_original_values[quantile_value] = quantile
 
             if add_median:
                 processed_prediction_quantiles.append(0.5)
@@ -698,9 +704,10 @@ class AAIRegressionTask(AAITask):
                 df_val[target + "_predicted"] = y_pred
             else:
                 for quantile in prediction_quantiles:
-                    df_val[f"{target}_predicted_{quantile}"] = y_pred[quantile]
+                    str_quantile = str(quantile_original_values.get(quantile))
+                    df_val[f"{target}_predicted_{str_quantile}"] = y_pred[quantile]
 
-                df_val[target + "_predicted"] = df_val[f"{target}_predicted_0.5"]
+                df_val[target + "_predicted"] = df_val[f"{target}_predicted_50"]
 
             # FIXME this should not be done, but we need this for now so we can return the models
             predictor.persist_models()
@@ -717,11 +724,12 @@ class AAIRegressionTask(AAITask):
                 df_predict[target + "_predicted"] = predictions
             else:
                 for quantile in prediction_quantiles:
-                    df_predict[f"{target}_predicted_{quantile}"] = predictions[quantile]
+                    str_quantile = str(quantile_original_values.get(quantile))
+                    df_predict[f"{target}_predicted_{str_quantile}"] = predictions[
+                        quantile
+                    ]
 
-                df_predict[target + "_predicted"] = df_predict[
-                    f"{target}_predicted_0.5"
-                ]
+                df_predict[target + "_predicted"] = df_predict[f"{target}_predicted_50"]
 
         debiasing_charts = []
         # Generate debiasing charts

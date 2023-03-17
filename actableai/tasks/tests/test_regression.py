@@ -393,7 +393,7 @@ class TestRemoteRegression:
             tmp_path,
             df,
             "x",
-            prediction_quantiles=[5, 50, 95],
+            prediction_quantiles=[5, 50, 95, 99.9],
             validation_ratio=0.2,
         )
 
@@ -401,9 +401,10 @@ class TestRemoteRegression:
         assert "validation_table" in r["data"]
         assert "prediction_table" in r["data"]
         assert "x_predicted" in r["data"]["validation_table"].columns
-        assert "x_predicted_0.05" in r["data"]["validation_table"].columns
-        assert "x_predicted_0.5" in r["data"]["validation_table"].columns
-        assert "x_predicted_0.95" in r["data"]["validation_table"].columns
+        assert "x_predicted_5" in r["data"]["validation_table"].columns
+        assert "x_predicted_50" in r["data"]["validation_table"].columns
+        assert "x_predicted_95" in r["data"]["validation_table"].columns
+        assert "x_predicted_99.9" in r["data"]["validation_table"].columns
         assert "leaderboard" in r["data"]
         assert "importantFeatures" in r["data"]
         for feat in r["data"]["importantFeatures"]:
@@ -563,7 +564,7 @@ class TestRemoteRegression:
             "x",
             validation_ratio=0.2,
             explain_samples=True,
-            prediction_quantiles=[5, 50, 95],
+            prediction_quantiles=[5, 50, 95, 99.9],
         )
 
         assert r["status"] == "FAILURE"
@@ -839,20 +840,22 @@ class TestRemoteRegressionCrossValidation:
             df,
             "x",
             kfolds=1,
-            prediction_quantiles=[5, 50, 95],
+            prediction_quantiles=[5, 50, 95, 99.9],
         )
 
         evaluate = r["data"]["evaluate"]
         assert r["status"] == "SUCCESS"
         assert len(r["data"]["prediction_table"]) > 0
         assert "x_predicted" in r["data"]["prediction_table"].columns
-        assert "x_predicted_0.05" in r["data"]["prediction_table"].columns
-        assert "x_predicted_0.5" in r["data"]["prediction_table"].columns
-        assert "x_predicted_0.95" in r["data"]["prediction_table"].columns
+        assert "x_predicted_5" in r["data"]["prediction_table"].columns
+        assert "x_predicted_50" in r["data"]["prediction_table"].columns
+        assert "x_predicted_95" in r["data"]["prediction_table"].columns
+        assert "x_predicted_99.9" in r["data"]["prediction_table"].columns
         assert "x_predicted" in r["data"]["validation_table"].columns
-        assert "x_predicted_0.05" in r["data"]["validation_table"].columns
-        assert "x_predicted_0.5" in r["data"]["validation_table"].columns
-        assert "x_predicted_0.95" in r["data"]["validation_table"].columns
+        assert "x_predicted_5" in r["data"]["validation_table"].columns
+        assert "x_predicted_50" in r["data"]["validation_table"].columns
+        assert "x_predicted_95" in r["data"]["validation_table"].columns
+        assert "x_predicted_99.9" in r["data"]["validation_table"].columns
         assert "PINBALL_LOSS" in evaluate
         assert "importantFeatures" in r["data"]
         for feat in r["data"]["importantFeatures"]:
@@ -879,16 +882,17 @@ class TestRemoteRegressionCrossValidation:
             df,
             "x",
             kfolds=4,
-            prediction_quantiles=[5, 50, 95],
+            prediction_quantiles=[5, 50, 95, 99.9],
         )
 
         evaluate = r["data"]["evaluate"]
         assert r["status"] == "SUCCESS"
         assert len(r["data"]["prediction_table"]) > 0
         assert "x_predicted" in r["data"]["prediction_table"].columns
-        assert "x_predicted_0.05" in r["data"]["prediction_table"].columns
-        assert "x_predicted_0.5" in r["data"]["prediction_table"].columns
-        assert "x_predicted_0.95" in r["data"]["prediction_table"].columns
+        assert "x_predicted_5" in r["data"]["prediction_table"].columns
+        assert "x_predicted_50" in r["data"]["prediction_table"].columns
+        assert "x_predicted_95" in r["data"]["prediction_table"].columns
+        assert "x_predicted_99.9" in r["data"]["prediction_table"].columns
         assert "PINBALL_LOSS" in evaluate
         assert "importantFeatures" in r["data"]
         for feat in r["data"]["importantFeatures"]:
