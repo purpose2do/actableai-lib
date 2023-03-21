@@ -180,6 +180,7 @@ class AAIModelInference:
         return_probabilities=False,
         probability_threshold=0.5,
         positive_label=None,
+        explain_samples=False,
     ):
         from autogluon.tabular import TabularPredictor
 
@@ -202,6 +203,10 @@ class AAIModelInference:
                 probability_threshold=probability_threshold,
                 positive_label=positive_label,
             )
+
+            if explain_samples:
+                pred["predictions_shaps"] = task_model.explainer.shap_values(df)
+
             # Here for legacy, previously the causal model was directly in the AAITabularModel
             # Now intervention has its own custom model
             if task_model.model_version <= 1:
@@ -250,6 +255,7 @@ class AAIModelInference:
                             ],
                         }
                     )
+
             return pred
         elif isinstance(task_model, TabularPredictor):
             # Run legacy task_model directly
@@ -366,6 +372,10 @@ class AAIModelInference:
 
             if hasattr(task_model, "feature_parameters"):
                 metadata["feature_parameters"] = task_model.feature_parameters
+
+            metadata["is_explainer_available"] = (
+                hasattr(task_model, "explainer") and task_model.explainer is not None
+            )
 
             if isinstance(task_model, AAITabularModelInterventional):
                 if task_model.model_version <= 1:

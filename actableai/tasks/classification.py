@@ -893,7 +893,9 @@ class AAIClassificationTask(AAITask):
 
         model = None
         if (kfolds <= 1 or refit_full) and predictor:
-            model = AAITabularModel(predictor=predictor, df_training=df_train)
+            model = AAITabularModel(
+                predictor=predictor, df_training=df_train, explainer=explainer
+            )
             if aai_intervention_model is not None:
                 model = AAITabularModelInterventional(
                     predictor=predictor,
