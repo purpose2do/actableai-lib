@@ -51,7 +51,7 @@ class AAITabularModel(AAIModel):
             display_name=feature_name,
         )
 
-    def __init__(self, predictor, df_training) -> None:
+    def __init__(self, predictor, df_training, explainer=None):
         super().__init__()
         self.predictor = predictor
 
@@ -68,6 +68,8 @@ class AAITabularModel(AAIModel):
                 for feature_name, feature_type in features_map.items()
             ],
         ).dict()
+
+        self.explainer = explainer
 
 
 class AAIInterventionalModel(AAIModel):
