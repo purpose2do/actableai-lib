@@ -1,8 +1,8 @@
-from typing import Union, Callable, Dict, Type
+from typing import Union, Callable, Dict
 
+from actableai.causal.discover.algorithms.payloads import CausalDiscoveryPayload
 from actableai.tasks.base import AAITask
 from actableai.tasks import TaskType
-from actableai.causal.discover.model.causal_discovery import CausalDiscoveryPayload
 
 
 class AAICausalDiscoveryTask(AAITask):

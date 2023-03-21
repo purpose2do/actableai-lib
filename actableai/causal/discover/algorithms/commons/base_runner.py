@@ -8,8 +8,8 @@ import pandas as pd
 from networkx.readwrite import json_graph
 from sklearn.preprocessing import StandardScaler
 
+from actableai.causal.discover.algorithms.payloads import CausalDiscoveryPayload
 from actableai.causal.discover.model.causal_discovery import (
-    CausalDiscoveryPayload,
     CausalVariableNature,
     DatasetStatistics,
     NormalizedColumnMetadata,

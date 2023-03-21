@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Literal
+from typing import Any
 
 import networkx as nx
 import numpy as np
@@ -10,13 +10,7 @@ from actableai.causal.discover.algorithms.commons.base_runner import (
     CausalGraph,
     ProgressCallback,
 )
-from actableai.causal.discover.model.causal_discovery import CausalDiscoveryPayload
-
-
-class PCPayload(CausalDiscoveryPayload):
-    variant: Literal["original", "stable"] = "original"
-    alpha: float = 0.05
-    ci_test: Literal["gauss", "g2", "chi2"] = "gauss"
+from actableai.causal.discover.algorithms.payloads import PCPayload
 
 
 class PCRunner(CausalDiscoveryRunner):
