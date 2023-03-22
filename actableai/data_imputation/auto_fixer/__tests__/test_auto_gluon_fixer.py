@@ -76,7 +76,7 @@ def test__predict_missing_for_single_column(
     df_to_test = MagicMock()
     mock_predictor = MagicMock()
     mock_predictor_mod.return_value = mock_predictor
-    mock_time = "anything"
+    mock_time = 0
     mock_time_func.return_value = mock_time
 
     mock_get_df_without_error.return_value = df_without_error

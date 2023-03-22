@@ -11,11 +11,7 @@ from actableai.causal.discover.algorithms.commons.base_runner import (
     CausalGraph,
     ProgressCallback,
 )
-from actableai.causal.discover.model.causal_discovery import CausalDiscoveryPayload
-
-
-class DirectLiNGAMPayload(CausalDiscoveryPayload):
-    pass
+from actableai.causal.discover.algorithms.payloads import DirectLiNGAMPayload
 
 
 class DirectLiNGAMRunner(CausalDiscoveryRunner):

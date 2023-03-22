@@ -1,18 +1,14 @@
 import pytest
 import pandas as pd
 
-from actableai.causal.discover.algorithms.direct_lingam import DirectLiNGAMPayload
-from actableai.causal.discover.algorithms.notears import NotearsPayload
+from actableai.causal.discover.algorithms.payloads import (
+    DeciPayload,
+    NotearsPayload,
+    DirectLiNGAMPayload,
+    PCPayload,
+)
 from actableai.data_validation.base import CheckLevels
 from actableai.tasks.causal_discovery import AAICausalDiscoveryTask
-from actableai.causal.discover.model.causal_discovery import (
-    Dataset,
-    Constraints,
-    CausalVariable,
-)
-from actableai.causal.discover.algorithms.commons.base_runner import CausalGraph
-from actableai.causal.discover.algorithms.deci import DeciPayload
-from actableai.causal.discover.algorithms.pc import PCPayload
 
 
 @pytest.fixture(scope="function")
