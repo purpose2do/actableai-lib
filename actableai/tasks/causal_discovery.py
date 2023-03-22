@@ -36,7 +36,9 @@ class AAICausalDiscoveryTask(AAITask):
         import time
         from copy import deepcopy
 
-        from actableai.causal.discover import algorithms
+        from actableai.causal.discover.algorithms.runners import (
+            runners as causal_discovery_runners,
+        )
         from actableai.data_validation.base import CheckLevels
         from actableai.data_validation.params import CausalDiscoveryDataValidator
 
@@ -62,7 +64,7 @@ class AAICausalDiscoveryTask(AAITask):
                 "runtime": time.time() - start,
             }
 
-        runner = algorithms.runners.get(algo)
+        runner = causal_discovery_runners.get(algo)
         graph = runner(p=payload, progress_callback=progress_callback).run()
 
         data = {
