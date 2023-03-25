@@ -450,6 +450,7 @@ class AAIRegressionTask(AAITask):
         from actableai.utils import (
             memory_efficient_hyperparameters,
             explanation_hyperparameters,
+            quantile_regression_hyperparameters,
         )
         from actableai.data_validation.params import RegressionDataValidator
         from actableai.data_validation.base import (
@@ -556,7 +557,9 @@ class AAIRegressionTask(AAITask):
             eval_metric = "pinball_loss"
 
         if hyperparameters is None:
-            if explain_samples:
+            if prediction_quantiles is not None:
+                hyperparameters = quantile_regression_hyperparameters()
+            elif explain_samples:
                 hyperparameters = explanation_hyperparameters()
             else:
                 any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
