@@ -242,6 +242,13 @@ def debiasing_hyperparameters():
     return {"LR": {"proc.skew_threshold": np.inf}}
 
 
+def quantile_regression_hyperparameters():
+    return {
+        "FASTAI": {},
+        "NN_TORCH": {},
+    }
+
+
 def explanation_hyperparameters():
     from autogluon.tabular.configs.hyperparameter_configs import (
         hyperparameter_config_dict,
