@@ -72,6 +72,9 @@ def extract_dataset_features(df_dataset: pd.DataFrame, prefix: str = "") -> dict
     -------
     The features extracted
     """
+    if df_dataset is None:
+        df_dataset = pd.DataFrame()
+
     dataset_categorical_column_short_count = 0
     dataset_categorical_column_long_count = 0
     dataset_text_column_unique_short_count = 0
