@@ -23,28 +23,22 @@ class TestCausalDiscoveryTask:
             "dataset": {
                 "data": pd.DataFrame(
                     data=[
-                        [1, 2, 3, 4, 5],
-                        [6, 7, 8, 9, 10],
-                        [11, 12, 13, 14, 15],
-                        [16, 17, 18, 19, 20],
-                        [21, 22, 23, 24, 25],
-                        [26, 27, 28, 29, 30],
+                        [1, 2, 3, 4, 5, "test"],
+                        [6, 7, 8, 9, 10, "test2"],
+                        [11, 12, 13, 14, 15, "test"],
+                        [16, 17, 18, 19, 20, "test2"],
+                        [21, 22, 23, 24, 25, "test"],
+                        [26, 27, 28, 29, 30, "test2"],
                     ],
-                    columns=["A", "B", "C", "D", "E"],
+                    columns=["A", "B", "C", "D", "E", "F"],
                 ).to_dict(orient="list"),
             },
             "constraints": {
-                "causes": [],
-                "effects": [],
-                "forbiddenRelationships": [],
+                "causes": ["A"],
+                "effects": ["B"],
+                "forbiddenRelationships": [("C", "D")],
+                "potentialRelationships": [("C", "E")],
             },
-            "causal_variables": [
-                {"name": "A"},
-                {"name": "B"},
-                {"name": "C"},
-                {"name": "D"},
-                {"name": "E"},
-            ],
             "model_save_dir": str(model_path),
         }
 
