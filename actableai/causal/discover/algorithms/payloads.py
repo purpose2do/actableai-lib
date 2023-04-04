@@ -1,7 +1,10 @@
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union, Literal
 
-from pydantic import BaseModel
+import pandas as pd
+from pydantic import BaseModel, root_validator
+
+from actableai.utils import get_type_special_no_ag
 
 
 class Constraints(BaseModel):
@@ -9,6 +12,10 @@ class Constraints(BaseModel):
     effects: List[str]
     forbiddenRelationships: List[Tuple[str, str]]
     potentialRelationships: Optional[List[Tuple[str, str]]] = None
+
+
+class Dataset(BaseModel):
+    data: Dict[str, List[Any]]
 
 
 class CausalVariableNature(str, Enum):
@@ -24,9 +31,30 @@ class CausalVariable(BaseModel):
     name: str
     nature: Optional[CausalVariableNature] = None
 
+    @classmethod
+    def from_dataset(cls, column: str, dataset: Dataset) -> "CausalVariable":
+        column_data = pd.Series(dataset.data[column])
+        column_type = get_type_special_no_ag(column_data)
+        unique_values = column_data.nunique()
 
-class Dataset(BaseModel):
-    data: Dict[str, List[Any]]
+        nature = None
+        if column_type == "integer":
+            if unique_values <= 10:
+                nature = CausalVariableNature.Discrete
+            else:
+                nature = CausalVariableNature.Continuous
+        elif column_type == "numeric":
+            nature = CausalVariableNature.Continuous
+        else:
+            if unique_values == 2:
+                nature = CausalVariableNature.Binary
+            else:
+                nature = CausalVariableNature.CategoricalNominal
+
+        return cls(
+            name=column,
+            nature=nature,
+        )
 
 
 class NormalizationOptions(BaseModel):
@@ -38,10 +66,53 @@ class CausalDiscoveryPayload(BaseModel):
     dataset: Dataset
     normalization: NormalizationOptions = NormalizationOptions()
     constraints: Constraints
-    causal_variables: List[CausalVariable]
+    causal_variables: List[CausalVariable] = []
 
     class Config:
         arbitrary_types_allowed = True
+
+    @root_validator()
+    def set_causal_variables(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        causal_variables = values["causal_variables"]
+        set_variables = {causal_variable.name for causal_variable in causal_variables}
+
+        columns_to_add = set()
+
+        # Add causes
+        columns_to_add = columns_to_add.union(set(values["constraints"].causes))
+
+        # Add effects
+        columns_to_add = columns_to_add.union(set(values["constraints"].effects))
+
+        # Add forbidden relationships
+        for column_source, column_target in values[
+            "constraints"
+        ].forbiddenRelationships:
+            columns_to_add.add(column_source)
+            columns_to_add.add(column_target)
+
+        # Add potential relationships
+        potential_relationships = values["constraints"].potentialRelationships
+        if potential_relationships is not None:
+            for column_source, column_target in potential_relationships:
+                columns_to_add.add(column_source)
+                columns_to_add.add(column_target)
+
+        for column in columns_to_add.difference(set_variables):
+            causal_variables.append(
+                CausalVariable.from_dataset(
+                    column=column,
+                    dataset=values["dataset"],
+                )
+            )
+            set_variables.add(column)
+
+        # Add excluded columns
+        for column in set(values["dataset"].data.keys()).difference(set_variables):
+            del values["dataset"].data[column]
+
+        values["causal_variables"] = causal_variables
+        return values
 
 
 class ATEDetails(BaseModel):
