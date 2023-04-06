@@ -76,40 +76,13 @@ class CausalDiscoveryPayload(BaseModel):
         causal_variables = values["causal_variables"]
         set_variables = {causal_variable.name for causal_variable in causal_variables}
 
-        columns_to_add = set()
-
-        # Add causes
-        columns_to_add = columns_to_add.union(set(values["constraints"].causes))
-
-        # Add effects
-        columns_to_add = columns_to_add.union(set(values["constraints"].effects))
-
-        # Add forbidden relationships
-        for column_source, column_target in values[
-            "constraints"
-        ].forbiddenRelationships:
-            columns_to_add.add(column_source)
-            columns_to_add.add(column_target)
-
-        # Add potential relationships
-        potential_relationships = values["constraints"].potentialRelationships
-        if potential_relationships is not None:
-            for column_source, column_target in potential_relationships:
-                columns_to_add.add(column_source)
-                columns_to_add.add(column_target)
-
-        for column in columns_to_add.difference(set_variables):
+        for column in set(values["dataset"].data.keys()).difference(set_variables):
             causal_variables.append(
                 CausalVariable.from_dataset(
                     column=column,
                     dataset=values["dataset"],
                 )
             )
-            set_variables.add(column)
-
-        # Add excluded columns
-        for column in set(values["dataset"].data.keys()).difference(set_variables):
-            del values["dataset"].data[column]
 
         values["causal_variables"] = causal_variables
         return values
