@@ -1,8 +1,10 @@
 from collections import Counter
 from sklearn.preprocessing import PolynomialFeatures
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Union, Type
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 from actableai.classification.utils import split_validation_by_datetime
+from actableai.clustering.models import BaseClusteringModel
 
 from actableai.data_imputation.error_detector.rule_parser import RulesBuilder
 from actableai.data_validation.base import (
@@ -1269,3 +1271,27 @@ class CausalDiscoveryAlgoChecker(IChecker):
                 level=self.level,
                 message=f"Invalid algorithm: {algo}",
             )
+
+
+class IsClusteringModelCompatible(IChecker):
+    def __init__(self, level, name="IsClusteringAlgorithmCompatible"):
+        super().__init__(name)
+        self.level = level
+
+    def check(
+        self,
+        df: pd.DataFrame,
+        clustering_model_class: Type[BaseClusteringModel],
+    ) -> Optional[CheckResult]:
+        if clustering_model_class.handle_categorical:
+            return None
+
+        for column in df.columns:
+            if not is_numeric_dtype(df[column]):
+                return CheckResult(
+                    name=self.name,
+                    level=self.level,
+                    message=f"The current Clustering Model does not correctly support categorical columns, the result might not make sense.",
+                )
+
+        return None

@@ -6,6 +6,7 @@ from functools import wraps
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 from actableai.parameters.models import ModelSpace
+from actableai.parameters.parameters import Parameters
 from actableai.tasks import TaskType
 from actableai.utils.resources.predict import ResourcePredictorType
 from actableai.utils.resources.profile import ResourceProfilerType
@@ -519,6 +520,14 @@ class AAITask(ABC):
             return wrapper
 
         return decorator
+
+    @classmethod
+    def get_parameters(cls) -> Parameters:
+        return Parameters(
+            name="undefined",
+            display_name="Undefined",
+            parameters=[],
+        )
 
     @abstractmethod
     def run(self, *args, **kwargs):

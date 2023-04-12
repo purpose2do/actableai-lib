@@ -1,6 +1,8 @@
 import pandas as pd
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Any
 
+from actableai.parameters.options import OptionsParameter
+from actableai.parameters.parameters import Parameters
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
 
@@ -12,26 +14,92 @@ class AAIClusteringTask(AAITask):
         AAITask: Base class for every tasks
     """
 
+    @staticmethod
+    def _get_clustering_model_parameters() -> OptionsParameter[Parameters]:
+        from actableai.clustering.models.base import Model
+        from actableai.clustering.models import model_parameters_dict
+
+        available_models = [
+            Model.affinity_propagation,
+            Model.agglomerative_clustering,
+            Model.dbscan,
+            Model.dec,
+            Model.kmeans,
+            Model.spectral_clustering,
+        ]
+
+        default_model = Model.dec
+
+        return OptionsParameter[Parameters](
+            name="clustering_model",
+            display_name="Clustering Model",
+            description="Model used for clustering",
+            default=default_model,
+            is_multi=False,
+            options={
+                model: {
+                    "display_name": model_parameters_dict[model].display_name,
+                    "value": model_parameters_dict[model],
+                }
+                for model in available_models
+            },
+        )
+
+    @staticmethod
+    def _get_projection_model_parameters() -> OptionsParameter[Parameters]:
+        from actableai.embedding.models.base import Model
+        from actableai.embedding.models import model_parameters_dict
+
+        available_models = [
+            Model.linear_discriminant_analysis,
+            Model.tsne,
+            Model.umap,
+        ]
+
+        default_model = Model.linear_discriminant_analysis
+
+        return OptionsParameter[Parameters](
+            name="projection_model",
+            display_name="Projection Model",
+            description="Model used for projection",
+            default=default_model,
+            is_multi=False,
+            options={
+                model: {
+                    "display_name": model_parameters_dict[model].display_name,
+                    "value": model_parameters_dict[model],
+                }
+                for model in available_models
+            },
+        )
+
+    @classmethod
+    def get_parameters(cls) -> Parameters:
+        parameters = [
+            cls._get_clustering_model_parameters(),
+            cls._get_projection_model_parameters(),
+        ]
+
+        return Parameters(
+            name="clustering_parameters",
+            display_name="Clustering Parameters",
+            parameters=parameters,
+        )
+
     @AAITask.run_with_ray_remote(TaskType.CLUSTERING)
     def run(
         self,
         df: pd.DataFrame,
         features: Optional[List[str]] = None,
-        num_clusters: Union[int, str] = "auto",
+        num_clusters: int = 2,
         drop_low_info: bool = False,
         explain_samples: bool = False,
-        auto_num_clusters_min: int = 2,
-        auto_num_clusters_max: int = 20,
-        init: str = "glorot_uniform",
-        pretrain_optimizer: str = "adam",
-        update_interval: int = 30,
-        pretrain_epochs: int = 300,
-        alpha_k: float = 0.01,
         cluster_explain_max_depth=20,
         cluster_explain_min_impurity_decrease=0.001,
         cluster_explain_min_samples_leaf=0.001,
         cluster_explain_min_precision=0.8,
         max_train_samples: Optional[int] = None,
+        parameters: Dict[str, Any] = None,
     ) -> Dict:
         """Runs a clustering analysis on df
 
@@ -39,15 +107,10 @@ class AAIClusteringTask(AAITask):
             df: Input DataFrame
             features: Features used in Input DataFrame. Defaults to None.
             num_clusters: Number of different clusters assignable to each row.
-                "auto" automatically finds the optimal number of clusters.
             drop_low_info: Wether the algorithm drops columns with only one unique
                 value or only different categorical values accross all rows.
             explain_samples: If the result contains a human readable explanation of
                 the clustering.
-            auto_num_clusters_min: Minimum number of clusters when num_clusters is
-                _auto_.
-            auto_num_clusters_max: Maximum number of clusters when num_clusters is
-                _auto_.
             init: Initialization for weights of the DEC model.
             pretrain_optimizer: Optimizer for pretaining phase of autoencoder.
             update_interval: The interval to check the stopping criterion and update the
@@ -87,29 +150,29 @@ class AAIClusteringTask(AAITask):
         tf.compat.v1.disable_v2_behavior()
 
         import time
-        import shap
+        import logging
         import pandas as pd
         import numpy as np
         from collections import defaultdict
-        from tensorflow.keras.optimizers import SGD
         from sklearn.impute import SimpleImputer
-        from sklearn.manifold import TSNE
-        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
         from sklearn.tree import DecisionTreeClassifier
-        from actableai.clustering.dec_keras import DEC
         from actableai.data_validation.params import ClusteringDataValidator
         from actableai.data_validation.base import CheckLevels
         from actableai.utils.preprocessors.preprocessing import impute_df
         from actableai.utils import handle_boolean_features
-        from actableai.clustering import ClusteringDataTransformer
+        from actableai.clustering.transform import ClusteringDataTransformer
         from actableai.clustering.explain import generate_cluster_descriptions
+        from actableai.clustering.models import model_dict as clustering_model_dict
+        from actableai.clustering.models.base import Model as ClusteringModel
+        from actableai.embedding.models import model_dict as projection_model_dict
+        from actableai.embedding.models.base import Model as ProjectionModel
 
         from actableai.utils.sanitize import sanitize_timezone
 
         pd.set_option("chained_assignment", "warn")
         start = time.time()
 
-        # To resolve any issues of acces rights make a copy
+        # To resolve any issues of access rights make a copy
         df = df.copy()
         df = sanitize_timezone(df)
         df = handle_boolean_features(df)
@@ -121,13 +184,49 @@ class AAIClusteringTask(AAITask):
 
         df_train = df[features]
 
+        parameters_validation = None
+        parameters_definition = self.get_parameters()
+        if parameters is None or len(parameters) <= 0:
+            parameters = parameters_definition.get_default()
+        else:
+            (
+                parameters_validation,
+                parameters,
+            ) = parameters_definition.validate_process_parameter(parameters)
+
+        clustering_model_class = None
+        clustering_model_parameters = None
+        projection_model_class = None
+        projection_model_parameters = None
+        if parameters_validation is None or len(parameters_validation) == 0:
+            clustering_model_name, clustering_model_parameters = next(
+                iter(parameters["clustering_model"].items())
+            )
+            clustering_model_class = clustering_model_dict[
+                ClusteringModel[clustering_model_name]
+            ]
+
+            projection_model_name, projection_model_parameters = next(
+                iter(parameters["projection_model"].items())
+            )
+            projection_model_class = projection_model_dict[
+                ProjectionModel[projection_model_name]
+            ]
+
         data_validation_results = ClusteringDataValidator().validate(
             features,
             df_train,
             n_cluster=num_clusters,
             explain_samples=explain_samples,
             max_train_samples=max_train_samples,
+            clustering_model_class=clustering_model_class,
         )
+
+        if parameters_validation is not None:
+            data_validation_results += parameters_validation.to_check_results(
+                name="ParametersChecker",
+            )
+
         failed_checks = [x for x in data_validation_results if x is not None]
         if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
             return {
@@ -171,60 +270,32 @@ class AAIClusteringTask(AAITask):
                 "runtime": time.time() - start,
                 "data": {},
             }
-        if num_clusters == "auto" and max_train_samples is not None:
-            auto_num_clusters_max = min(auto_num_clusters_max, max_train_samples)
-        dec = DEC(
-            dims=[transformed_values.shape[-1], 500, 500, 2000, 10],
-            init=init,
-            n_clusters=num_clusters,
-            auto_num_clusters_min=auto_num_clusters_min,
-            auto_num_clusters_max=auto_num_clusters_max,
-            alpha_k=alpha_k,
-        )
+
         sampled_transformed_values = transformed_values
         if max_train_samples is not None:
             max_train_samples = min(max_train_samples, transformed_values.shape[0])
             sampled_transformed_values = (
                 pd.DataFrame(transformed_values).sample(max_train_samples).values
             )
-        dec.pretrain(
-            x=sampled_transformed_values,
-            optimizer=pretrain_optimizer,
-            epochs=pretrain_epochs,
-        )
-        dec.compile(optimizer=SGD(0.01, 0.9), loss="kld")
 
-        dec.fit(sampled_transformed_values, update_interval=update_interval)
-
-        probs = dec.predict_proba(transformed_values)
-        cluster_ids = probs.argmax(axis=1)
-        sample_ids_nearest_to_centroids = np.asarray(
-            [probs[:, c].argmax(axis=0) for c in range(dec.n_clusters)]
+        clustering_model = clustering_model_class(
+            input_size=transformed_values.shape[-1],
+            num_clusters=num_clusters,
+            parameters=clustering_model_parameters,
+            process_parameters=False,
+            verbosity=0,
         )
-        z = dec.project(transformed_values)
+
+        clustering_model.fit(sampled_transformed_values)
+        cluster_ids = clustering_model.predict(transformed_values)
+        projection = clustering_model.project(transformed_values)
 
         shap_values = []
-        if explain_samples:
-            background_samples = 100
-            if len(transformed_values) < 100:
-                background_samples = int(len(transformed_values) * 0.1)
+        if explain_samples and not clustering_model.has_explanations:
+            logging.warning("Model does not support explanations")
+        elif explain_samples:
+            shap_values = clustering_model.explain_samples(transformed_values)
 
-            background = transformed_values[
-                np.random.choice(
-                    transformed_values.shape[0],
-                    background_samples,
-                    replace=False,
-                )
-            ]
-
-            explainer = shap.DeepExplainer(dec.model, np.array(background))
-
-            shap_values = explainer.shap_values(
-                np.array(transformed_values), check_additivity=False
-            )
-
-            # Extract only the shap values for the predicted values
-            shap_values = np.array(shap_values)
             row_index, column_index = np.meshgrid(
                 np.arange(shap_values.shape[1]), np.arange(shap_values.shape[2])
             )
@@ -243,17 +314,14 @@ class AAIClusteringTask(AAITask):
 
             shap_values = df_final_shap_values
 
-        try:
-            lda = LinearDiscriminantAnalysis(n_components=2)
-            x_embedded = lda.fit_transform(z, cluster_ids)
-            projected_cluster_centers = lda.transform(dec.encoded_cluster_centers)
-        except Exception:
-            tsne = TSNE(n_components=2)
-            embedded = tsne.fit_transform(np.vstack([z, dec.encoded_cluster_centers]))
-            x_embedded, projected_cluster_centers = (
-                embedded[: z.shape[0], :],
-                embedded[z.shape[0] :, :],
-            )
+        projection_model = projection_model_class(
+            embedding_size=2,
+            parameters=projection_model_parameters,
+            process_parameters=False,
+            verbosity=0,
+        )
+
+        x_embedded = projection_model.fit_transform(projection, cluster_ids)
 
         # Return data
         data = []
@@ -297,11 +365,6 @@ class AAIClusteringTask(AAITask):
         for cluster in clusters:
             cid = cluster["cluster_id"]
             cluster["explanation"] = "\n".join(cluster_explanations[cid])
-            cluster["encoded_value"] = dec.encoded_cluster_centers[cid]
-            cluster["projected_value"] = projected_cluster_centers[cid]
-            cluster["projected_nearest_point"] = x_embedded[
-                sample_ids_nearest_to_centroids[cid]
-            ]
 
         runtime = time.time() - start
 

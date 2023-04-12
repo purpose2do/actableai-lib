@@ -1,4 +1,15 @@
-from typing import Any, Generic, TypeVar, Type, get_type_hints, Union, Tuple, List, Dict
+from typing import (
+    Any,
+    Generic,
+    TypeVar,
+    Type,
+    get_type_hints,
+    Union,
+    Tuple,
+    List,
+    Dict,
+    Optional,
+)
 
 from pydantic import validator, root_validator
 from pydantic.generics import GenericModel
@@ -24,8 +35,8 @@ class ListParameter(BaseParameter, GenericModel, Generic[ListT]):
     default: Union[ListT, Tuple[ListT, ...], List[ListT]] = []
     # Automatic dynamic field
     value_type: ValueType = None
-    min_len: int
-    max_len: int
+    min_len: int = 0
+    max_len: Optional[int]
 
     @validator("default")
     def set_default(
@@ -75,7 +86,7 @@ class ListParameter(BaseParameter, GenericModel, Generic[ListT]):
         """
         TODO write documentation
         """
-        if values["max_len"] <= values["min_len"]:
+        if values.get("max_len") is not None and values["max_len"] <= values["min_len"]:
             raise ValueError("`max_len` must be strictly greater than `min_len`.")
         return values
 
@@ -96,7 +107,9 @@ class ListParameter(BaseParameter, GenericModel, Generic[ListT]):
             default = [default]
 
         default_len = len(default)
-        if default_len < values["min_len"] or default_len >= values["max_len"]:
+        if default_len < values["min_len"] or (
+            values.get("max_len") is not None and default_len >= values["max_len"]
+        ):
             raise ValueError(f"Default len {default_len} is out of range.")
 
         return values
@@ -129,7 +142,9 @@ class ListParameter(BaseParameter, GenericModel, Generic[ListT]):
             value = [value]
 
         value_len = len(value)
-        if value_len < self.min_len or value_len >= self.max_len:
+        if value_len < self.min_len or (
+            self.max_len is not None and value_len >= self.max_len
+        ):
             errors.add_error(
                 OutOfRangeError(
                     parameter_name=self.name,

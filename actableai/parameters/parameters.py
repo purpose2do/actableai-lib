@@ -18,6 +18,7 @@ class Parameters(BaseParameter):
 
     parameter_type: ParameterType = ParameterType.PARAMETERS
     parameters: Union[Dict[str, BaseParameter], List[BaseParameter]]
+    default: Any = {}
 
     @validator("parameters")
     def set_parameters(

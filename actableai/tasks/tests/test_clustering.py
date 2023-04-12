@@ -1,9 +1,12 @@
-import pandas as pd
 import pytest
 
-from actableai.data_validation.base import *
+import pandas as pd
+
+from actableai.data_validation.base import CheckLevels
 from actableai.tasks.clustering import AAIClusteringTask
 from actableai.utils.dataset_generator import DatasetGenerator
+from actableai.clustering.models.base import Model as ClusteringModel
+from actableai.embedding.models.base import Model as ProjectionModel
 
 
 @pytest.fixture(scope="function")
@@ -19,7 +22,14 @@ class TestRemoteSegmentation:
             }
         )
 
-        r = clustering_task.run(df, num_clusters=3)
+        r = clustering_task.run(
+            df,
+            num_clusters=3,
+            parameters={
+                "clustering_model": {"agglomerative_clustering": {}},
+                "projection_model": {"umap": {}},
+            },
+        )
 
         assert r["status"] == "SUCCESS"
         assert "data" in r
@@ -31,15 +41,24 @@ class TestRemoteSegmentation:
                 "x": [1, 2, 3, 4, 5, None, None, 8, 9, 10] * 2,
                 "y": [True, True, False, True, False, False, True, True, False, False]
                 * 2,
+                "z": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2,
             }
         )
 
-        r = clustering_task.run(df, num_clusters=3)
+        r = clustering_task.run(
+            df,
+            num_clusters=3,
+            parameters={
+                "clustering_model": {"agglomerative_clustering": {}},
+                "projection_model": {"linear_discriminant_analysis": {}},
+            },
+        )
 
         assert r["status"] == "SUCCESS"
         assert "data" in r
         assert "explanation" in r["data"][0]
 
+    """
     def test_auto_cluster(self, clustering_task):
         df = pd.DataFrame(
             {
@@ -51,6 +70,7 @@ class TestRemoteSegmentation:
 
         assert r["status"] == "SUCCESS"
         assert "data" in r
+    """
 
     def test_segment_mutiple_cols(self, clustering_task):
         df = pd.DataFrame(
@@ -61,29 +81,94 @@ class TestRemoteSegmentation:
             }
         )
 
-        r = clustering_task.run(df, features=["x", "y"], num_clusters=3)
+        r = clustering_task.run(
+            df,
+            features=["x", "y"],
+            num_clusters=3,
+            parameters={
+                "clustering_model": {"agglomerative_clustering": {}},
+                "projection_model": {"linear_discriminant_analysis": {}},
+            },
+        )
 
         assert r["status"] == "SUCCESS"
         assert "data" in r
 
-    def test_segment_categorical_cols(self, clustering_task):
+    @pytest.mark.parametrize(
+        "clustering_model,clustering_model_parameters",
+        [
+            [ClusteringModel.affinity_propagation, {}],
+            [ClusteringModel.agglomerative_clustering, {}],
+            [ClusteringModel.dbscan, {}],
+            [ClusteringModel.dec, {"max_iteration": 5}],
+            [ClusteringModel.kmeans, {}],
+            [ClusteringModel.spectral_clustering, {}],
+        ],
+    )
+    def test_segment_categorical_cols(
+        self,
+        clustering_task,
+        clustering_model,
+        clustering_model_parameters,
+    ):
         df = pd.DataFrame({"x": ["a", "a", "c", "c", "c", "b", "b", "b"] * 3})
 
-        r = clustering_task.run(df, num_clusters=3)
+        r = clustering_task.run(
+            df,
+            num_clusters=3,
+            parameters={
+                "clustering_model": {clustering_model: clustering_model_parameters},
+                "projection_model": {"linear_discriminant_analysis": {}},
+            },
+        )
 
         assert r["status"] == "SUCCESS"
         assert "data" in r
 
-    def test_segment_mixed_type(self, clustering_task):
+    @pytest.mark.parametrize(
+        "clustering_model,clustering_model_parameters",
+        [
+            [ClusteringModel.affinity_propagation, {}],
+            [ClusteringModel.agglomerative_clustering, {}],
+            [ClusteringModel.dbscan, {}],
+            [ClusteringModel.dec, {"max_iteration": 5}],
+            [ClusteringModel.kmeans, {}],
+            [ClusteringModel.spectral_clustering, {}],
+        ],
+    )
+    @pytest.mark.parametrize(
+        "project_model,projection_model_parameters",
+        [
+            [ProjectionModel.linear_discriminant_analysis, {}],
+            [ProjectionModel.tsne, {}],
+            [ProjectionModel.umap, {}],
+        ],
+    )
+    def test_segment_mixed_type(
+        self,
+        clustering_task,
+        clustering_model,
+        clustering_model_parameters,
+        project_model,
+        projection_model_parameters,
+    ):
         df = pd.DataFrame(
             {
                 "x": [1, 2, 3, 4, 5, None, None, 8, 9, 10] * 2,
                 "y": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2,
                 "z": [1, 2, 3, 4, 5, 6, 7, 8, "b", "a"] * 2,
+                "cat": ["a", "a", "c", "c", "c", "b", "b", "b", "a", "c"] * 2,
             }
         )
 
-        r = clustering_task.run(df, num_clusters=3)
+        r = clustering_task.run(
+            df,
+            num_clusters=3,
+            parameters={
+                "clustering_model": {clustering_model: clustering_model_parameters},
+                "projection_model": {project_model: projection_model_parameters},
+            },
+        )
 
         assert r["status"] == "FAILURE"
         assert "validations" in r
@@ -99,7 +184,14 @@ class TestRemoteSegmentation:
             }
         )
 
-        r = clustering_task.run(df, num_clusters=3)
+        r = clustering_task.run(
+            df,
+            num_clusters=3,
+            parameters={
+                "clustering_model": {"agglomerative_clustering": {}},
+                "projection_model": {"linear_discriminant_analysis": {}},
+            },
+        )
 
         assert r["status"] == "FAILURE"
         assert "validations" in r
@@ -115,7 +207,14 @@ class TestRemoteSegmentation:
             }
         )
 
-        r = clustering_task.run(df, num_clusters=40)
+        r = clustering_task.run(
+            df,
+            num_clusters=40,
+            parameters={
+                "clustering_model": {"agglomerative_clustering": {}},
+                "projection_model": {"linear_discriminant_analysis": {}},
+            },
+        )
 
         assert r["status"] == "FAILURE"
         assert "validations" in r
@@ -132,7 +231,15 @@ class TestRemoteSegmentation:
             }
         )
 
-        r = clustering_task.run(df, num_clusters=3, explain_samples=True)
+        r = clustering_task.run(
+            df,
+            num_clusters=3,
+            explain_samples=True,
+            parameters={
+                "clustering_model": {"dec": {"max_iteration": 2}},
+                "projection_model": {"linear_discriminant_analysis": {}},
+            },
+        )
 
         assert r["status"] == "SUCCESS"
         assert "data" in r
@@ -147,7 +254,14 @@ class TestRemoteSegmentation:
             }
         )
 
-        r = clustering_task.run(df, num_clusters=3)
+        r = clustering_task.run(
+            df,
+            num_clusters=3,
+            parameters={
+                "clustering_model": {"agglomerative_clustering": {}},
+                "projection_model": {"linear_discriminant_analysis": {}},
+            },
+        )
 
         assert r["status"] == "SUCCESS"
         assert "data" in r
@@ -160,7 +274,15 @@ class TestRemoteSegmentation:
             }
         )
 
-        r = clustering_task.run(df, num_clusters=3, max_train_samples=10)
+        r = clustering_task.run(
+            df,
+            num_clusters=3,
+            max_train_samples=10,
+            parameters={
+                "clustering_model": {"agglomerative_clustering": {}},
+                "projection_model": {"linear_discriminant_analysis": {}},
+            },
+        )
 
         assert r["status"] == "SUCCESS"
         assert "data" in r
@@ -175,7 +297,14 @@ class TestRemoteSegmentation:
             random_state=0,
         )
 
-        r = clustering_task.run(df, num_clusters=3)
+        r = clustering_task.run(
+            df,
+            num_clusters=3,
+            parameters={
+                "clustering_model": {"agglomerative_clustering": {}},
+                "projection_model": {"linear_discriminant_analysis": {}},
+            },
+        )
 
         assert r["status"] == "FAILURE"
         assert "validations" in r

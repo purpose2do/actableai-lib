@@ -1,7 +1,8 @@
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Union, Type
 
 import pandas as pd
 from actableai.causal import has_categorical_column, prepare_sanitize_data
+from actableai.clustering.models import BaseClusteringModel
 from actableai.data_validation.base import (
     CAUSAL_INFERENCE_CATEGORICAL_MINIMUM_TREATMENT,
     CLASSIFICATION_ANALYTIC,
@@ -56,6 +57,7 @@ from actableai.data_validation.checkers import (
     UniqueDateTimeChecker,
     TimeSeriesTuningMetricChecker,
     CausalDiscoveryAlgoChecker,
+    IsClusteringModelCompatible,
 )
 from actableai.intervention.config import KFOLD_CATEGORICAL_OUTCOME
 from actableai.timeseries.utils import find_freq
@@ -645,8 +647,9 @@ class ClusteringDataValidator:
         n_cluster,
         explain_samples=False,
         max_train_samples: Optional[int] = None,
+        clustering_model_class: Optional[Type[BaseClusteringModel]] = None,
     ):
-        return [
+        validation_results = [
             ColumnsExistChecker(level=CheckLevels.CRITICAL).check(df, target),
             DoNotContainEmptyColumnsChecker(level=CheckLevels.WARNING).check(
                 df, target
@@ -667,6 +670,16 @@ class ClusteringDataValidator:
                 n_cluster=n_cluster, max_samples=max_train_samples
             ),
         ]
+
+        if clustering_model_class is not None:
+            validation_results.append(
+                IsClusteringModelCompatible(level=CheckLevels.WARNING).check(
+                    df=df,
+                    clustering_model_class=clustering_model_class,
+                )
+            )
+
+        return validation_results
 
 
 class CausalDataValidator:
