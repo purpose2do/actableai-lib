@@ -1,7 +1,5 @@
 from functools import lru_cache
 
-from sklearn.cluster import DBSCAN as _DBSCAN
-
 from actableai.clustering.models.base import ClusteringModelWrapperNoFit, Model
 from actableai.parameters.numeric import (
     FloatParameter,
@@ -138,6 +136,9 @@ class DBSCAN(ClusteringModelWrapperNoFit):
         )
 
     def _initialize_model(self):
+        from sklearn.cluster import DBSCAN as _DBSCAN
+
+        
         self.model = _DBSCAN(
             **self.parameters,
             n_jobs=1,

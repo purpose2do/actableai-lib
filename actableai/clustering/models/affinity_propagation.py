@@ -1,7 +1,5 @@
 from functools import lru_cache
 
-from sklearn.cluster import AffinityPropagation as _AffinityPropagation
-
 from actableai.clustering.models.base import ClusteringModelWrapper, Model
 from actableai.parameters.numeric import (
     FloatParameter,
@@ -69,6 +67,9 @@ class AffinityPropagation(ClusteringModelWrapper):
         )
 
     def _initialize_model(self):
+        from sklearn.cluster import AffinityPropagation as _AffinityPropagation
+
+        
         self.model = _AffinityPropagation(
             **self.parameters,
             copy=True,

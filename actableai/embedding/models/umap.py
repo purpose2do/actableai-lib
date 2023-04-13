@@ -1,7 +1,5 @@
 from functools import lru_cache
 
-from umap import UMAP as _UMAP
-
 from actableai.embedding.models.base import EmbeddingModelWrapper, Model
 from actableai.parameters.numeric import IntegerParameter, FloatParameter
 from actableai.parameters.options import OptionsParameter
@@ -220,6 +218,9 @@ class UMAP(EmbeddingModelWrapper):
         )
 
     def _initialize_model(self):
+        from umap import UMAP as _UMAP
+
+        
         self.model = _UMAP(
             n_components=self.embedding_size,
             **self.parameters,

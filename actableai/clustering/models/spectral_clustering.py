@@ -1,7 +1,5 @@
 from functools import lru_cache
 
-from sklearn.cluster import SpectralClustering as _SpectralClustering
-
 from actableai.clustering.models.base import ClusteringModelWrapperNoFit, Model
 from actableai.parameters.numeric import IntegerParameter, FloatParameter
 from actableai.parameters.options import OptionsParameter
@@ -123,6 +121,9 @@ class SpectralClustering(ClusteringModelWrapperNoFit):
         )
 
     def _initialize_model(self):
+        from sklearn.cluster import SpectralClustering as _SpectralClustering
+
+        
         self.model = _SpectralClustering(
             n_clusters=self.num_clusters,
             **self.parameters,

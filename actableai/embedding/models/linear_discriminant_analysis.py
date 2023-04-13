@@ -1,8 +1,5 @@
 from functools import lru_cache
 
-from sklearn.discriminant_analysis import (
-    LinearDiscriminantAnalysis as _LinearDiscriminantAnalysis,
-)
 import numpy as np
 
 from actableai.embedding.models.base import EmbeddingModelWrapper, Model
@@ -48,6 +45,11 @@ class LinearDiscriminantAnalysis(EmbeddingModelWrapper):
         )
 
     def _initialize_model(self):
+        from sklearn.discriminant_analysis import (
+            LinearDiscriminantAnalysis as _LinearDiscriminantAnalysis,
+        )
+
+        
         self.model = _LinearDiscriminantAnalysis(
             n_components=self.embedding_size,
             **self.parameters,

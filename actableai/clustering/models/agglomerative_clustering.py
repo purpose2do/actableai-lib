@@ -1,7 +1,5 @@
 from functools import lru_cache
 
-from sklearn.cluster import AgglomerativeClustering as _AgglomerativeClustering
-
 from actableai.clustering.models.base import ClusteringModelWrapperNoFit, Model
 from actableai.parameters.options import OptionsParameter
 from actableai.parameters.parameters import Parameters
@@ -94,6 +92,9 @@ class AgglomerativeClustering(ClusteringModelWrapperNoFit):
         )
 
     def _initialize_model(self):
+        from sklearn.cluster import AgglomerativeClustering as _AgglomerativeClustering
+
+        
         self.model = _AgglomerativeClustering(
             n_clusters=self.num_clusters,
             **self.parameters,

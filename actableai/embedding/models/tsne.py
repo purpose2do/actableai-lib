@@ -1,7 +1,6 @@
 from functools import lru_cache
 
 import numpy as np
-from openTSNE import TSNE as _TSNE
 
 from actableai.embedding.models.base import EmbeddingModelWrapper, Model
 from actableai.parameters.numeric import IntegerParameter, FloatParameter
@@ -169,6 +168,9 @@ class TSNE(EmbeddingModelWrapper):
         )
 
     def _initialize_model(self):
+        from openTSNE import TSNE as _TSNE
+
+        
         self.model = _TSNE(
             n_components=self.embedding_size,
             **self.parameters,
