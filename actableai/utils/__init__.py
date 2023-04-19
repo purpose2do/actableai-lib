@@ -318,3 +318,7 @@ def custom_precision_recall_curve(
 
     sl = slice(-1, None, -1)
     return precision[sl], recall[sl], thresholds[sl]
+
+def is_gpu_available():
+    import torch
+    return torch.cuda.is_available() and torch.cuda.device_count() > 0
