@@ -466,7 +466,7 @@ class AAIRegressionTask(AAIAutogluonTask):
         run_ice: bool = True,
         pdp_ice_grid_resolution: Optional[int] = 100,
         pdp_ice_n_samples: Optional[int] = 100,
-        num_trials: int = 8,
+        num_trials: int = 1,
     ) -> Dict[str, Any]:
         """Run this regression task and return results.
 
