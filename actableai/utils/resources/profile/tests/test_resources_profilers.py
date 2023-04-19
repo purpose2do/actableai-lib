@@ -1,6 +1,5 @@
 import logging
 import pytest
-import torch
 from pynvml import (
     nvmlInit,
     nvmlDeviceGetCount,
@@ -45,11 +44,6 @@ def _function(sleep=False, n_child=0, child_sleep=False, cpu=True, gpu=False):
         process.join()
 
     return True
-
-
-@pytest.fixture(scope="session")
-def is_gpu_available():
-    return torch.cuda.is_available() and torch.cuda.device_count() > 0
 
 
 @pytest.fixture(scope="session")

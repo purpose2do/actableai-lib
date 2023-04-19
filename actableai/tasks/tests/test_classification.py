@@ -10,7 +10,7 @@ from actableai.tasks.classification import (
     AAIClassificationTask,
 )
 from actableai.utils.dataset_generator import DatasetGenerator
-from actableai.utils.testing import unittest_hyperparameters
+from actableai.utils.testing import unittest_autogluon_hyperparameters
 
 
 @pytest.fixture(scope="function")
@@ -26,14 +26,14 @@ def run_classification_task(
     **kwargs,
 ):
     if "hyperparameters" not in kwargs:
-        kwargs["hyperparameters"] = unittest_hyperparameters()
+        kwargs["hyperparameters"] = unittest_autogluon_hyperparameters()
 
     return classification_task.run(
         *args,
         **kwargs,
         presets="medium_quality_faster_train",
         model_directory=tmp_path,
-        residuals_hyperparameters=unittest_hyperparameters(),
+        residuals_hyperparameters=unittest_autogluon_hyperparameters(),
         drop_duplicates=drop_duplicates,
         drop_unique=False,
         drop_useless_features=False,
@@ -837,7 +837,7 @@ class TestRemoteClassification:
         with patch.object(TabularPredictor, "fit", autospec=True) as mock_function:
 
             def side_effect_tabular_predictor_fit(self_, *args, **kwargs):
-                kwargs["hyperparameters"] = unittest_hyperparameters()
+                kwargs["hyperparameters"] = unittest_autogluon_hyperparameters()
 
                 return original_fit(self_, *args, **kwargs)
 
@@ -869,7 +869,7 @@ class TestRemoteClassification:
         with patch.object(TabularPredictor, "fit", autospec=True) as mock_function:
 
             def side_effect_tabular_predictor_fit(self_, *args, **kwargs):
-                kwargs["hyperparameters"] = unittest_hyperparameters()
+                kwargs["hyperparameters"] = unittest_autogluon_hyperparameters()
 
                 return original_fit(self_, *args, **kwargs)
 

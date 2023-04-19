@@ -9,7 +9,12 @@ from actableai.tasks.regression import (
     AAIRegressionTask,
 )
 from actableai.utils.dataset_generator import DatasetGenerator
-from actableai.utils.testing import unittest_hyperparameters
+from actableai.utils.testing import (
+    unittest_hyperparameters,
+    unittest_autogluon_hyperparameters,
+)
+
+from actableai.models.autogluon import model_params_dict
 
 
 @pytest.fixture(scope="function")
@@ -36,15 +41,35 @@ def run_regression_task(
     if "drop_duplicates" not in kwargs:
         kwargs["drop_duplicates"] = False
 
+    if "num_trials" not in kwargs:
+        kwargs["num_trials"] = 1
+
     return regression_task.run(
         *args,
         **kwargs,
         presets="medium_quality_faster_train",
         model_directory=tmp_path,
-        residuals_hyperparameters=unittest_hyperparameters(),
+        residuals_hyperparameters=unittest_autogluon_hyperparameters(),
         drop_unique=False,
         drop_useless_features=False,
     )
+
+
+def available_models(
+    problem_type,
+    gpu,
+    explain_samples=False,
+    ag_automm_enabled=False,
+    tabpfn_enabled=False,
+):
+    _available_models = AAIRegressionTask.get_available_models(
+        problem_type=problem_type,
+        explain_samples=explain_samples,
+        gpu=gpu,
+        ag_automm_enabled=ag_automm_enabled,
+        tabpfn_enabled=tabpfn_enabled,
+    )
+    return [m.value for m in _available_models]
 
 
 class TestRemoteRegression:
@@ -750,6 +775,234 @@ class TestRemoteRegression:
             assert "p_value" in feat
         assert "leaderboard" in r["data"]
         assert r["model"] is not None
+
+    def test_available_models_regression_gpu(self):
+        _available_models = available_models(
+            problem_type="regression",
+            gpu=True,
+            explain_samples=False,
+            ag_automm_enabled=True,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(
+            [
+                "gbm",
+                "cat",
+                "xgb_tree",
+                "rf",
+                "xt",
+                "knn",
+                "lr",
+                "nn_fastainn",
+                "nn_mxnet",
+                "ag_automm",
+            ]
+        )
+
+    def test_available_models_regression_gpu_noautomm(self):
+        _available_models = available_models(
+            problem_type="regression",
+            gpu=True,
+            explain_samples=False,
+            ag_automm_enabled=False,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(
+            [
+                "gbm",
+                "cat",
+                "xgb_tree",
+                "rf",
+                "xt",
+                "knn",
+                "lr",
+                "nn_fastainn",
+                "nn_mxnet",
+            ]
+        )
+
+    def test_available_models_regression_nogpu(self):
+        _available_models = available_models(
+            problem_type="regression",
+            gpu=False,
+            explain_samples=False,
+            ag_automm_enabled=True,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(
+            [
+                "gbm",
+                "cat",
+                "xgb_tree",
+                "rf",
+                "xt",
+                "knn",
+                "lr",
+                "nn_fastainn",
+                "nn_mxnet",
+            ]
+        )
+
+    def test_available_models_regression_explain(self):
+        _available_models = available_models(
+            problem_type="regression",
+            gpu=True,
+            explain_samples=True,
+            ag_automm_enabled=True,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(["gbm", "cat", "xgb_tree", "rf", "xt"])
+
+    def test_available_models_regression_nogpu_explain(self):
+        _available_models = available_models(
+            problem_type="regression",
+            gpu=False,
+            explain_samples=True,
+            ag_automm_enabled=True,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(["gbm", "cat", "xgb_tree", "rf", "xt"])
+
+    def test_available_models_quantile_gpu(self):
+        _available_models = available_models(
+            problem_type="quantile",
+            gpu=True,
+            explain_samples=False,
+            ag_automm_enabled=True,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(["nn_torch", "nn_fastainn", "rf"])
+
+    def test_available_models_quantile_nogpu(self):
+        _available_models = available_models(
+            problem_type="quantile",
+            gpu=False,
+            explain_samples=False,
+            ag_automm_enabled=True,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(["nn_torch", "nn_fastainn", "rf"])
+
+    # TODO: Use is_gpu_available to set gpu
+    @pytest.mark.parametrize(
+        "model_type",
+        available_models("regression", gpu=True, ag_automm_enabled=True),
+    )
+    def test_hpo_default_regression(
+        self, regression_task, tmp_path, model_type, is_gpu_available
+    ):
+        """Test default settings for HPO models for regression"""
+
+        # Skip testing the model if GPU is not available but the model requires the GPU
+        if not is_gpu_available and model_params_dict[model_type].gpu_required:
+            pytest.skip(
+                "Skipping test where GPU is required but no GPU is available",
+                allow_module_level=False,
+            )
+
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, None, None, 8, 9, 10] * 2,
+                "b": [
+                    "a a a",
+                    "b b b",
+                    "c c c",
+                    "d d d",
+                    "b b b",
+                    "c c c",
+                    "a a a",
+                    "a a a",
+                    "c c c",
+                    "e e e",
+                ]
+                * 2,
+                "y": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2,
+            }
+        )
+
+        hyperparameters = dict()
+        hyperparameters = {model_type: {}}
+
+        # Set n_neighbors to avoid error that it is larger than n_samples
+        # TODO: This should be handled internally by the function
+        if model_type == "knn":
+            hyperparameters[model_type] = {"n_neighbors": 5}
+
+        features = ["y", "b"]
+        if model_type == "nn_fastainn":
+            features = ["y"]
+
+        r = run_regression_task(
+            regression_task,
+            tmp_path,
+            df,
+            target="x",
+            features=features,
+            hyperparameters=hyperparameters,
+            ag_automm_enabled=True,
+            num_gpus=1 if is_gpu_available else 0,
+            num_trials=2,
+        )
+
+        assert r["status"] == "SUCCESS"
+
+    # TODO: Use is_gpu_available to set gpu
+    @pytest.mark.parametrize(
+        "model_type",
+        available_models("quantile", gpu=True, ag_automm_enabled=True),
+    )
+    def test_hpo_default_quantile(
+        self, regression_task, tmp_path, model_type, is_gpu_available
+    ):
+        # Skip testing the model if GPU is not available but the model requires the GPU
+        if not is_gpu_available and model_params_dict[model_type].gpu_required:
+            pytest.skip(
+                "Skipping test where GPU is required but no GPU is available",
+                allow_module_level=False,
+            )
+
+        """Test default settings for HPO models for quantile regression"""
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, None, None, 8, 9, 10] * 2,
+                "b": [
+                    "a a a",
+                    "b b b",
+                    "c c c",
+                    "d d d",
+                    "b b b",
+                    "c c c",
+                    "a a a",
+                    "a a a",
+                    "c c c",
+                    "e e e",
+                ]
+                * 2,
+                "y": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 2,
+            }
+        )
+
+        hyperparameters = dict()
+        hyperparameters = {model_type: {}}
+
+        features = ["y", "b"]
+        if model_type == "nn_fastainn":
+            features = ["y"]
+
+        r = run_regression_task(
+            regression_task,
+            tmp_path,
+            df,
+            target="x",
+            features=features,
+            prediction_quantiles=[5, 50, 95],
+            hyperparameters=hyperparameters,
+            ag_automm_enabled=True,
+            num_gpus=1 if is_gpu_available else 0,
+            num_trials=2,
+        )
+
+        assert r["status"] == "SUCCESS"
 
 
 class TestRemoteRegressionCrossValidation:

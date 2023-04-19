@@ -203,6 +203,7 @@ def memory_efficient_hyperparameters(
     # Returns autogluon tabular predictor's hyperparameters without the heavy-memory models
 
     hyperparameters = deepcopy(hyperparameter_config_dict["default"])
+
     if "NN_TORCH" in hyperparameters:
         del hyperparameters["NN_TORCH"]
 

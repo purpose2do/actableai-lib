@@ -3,7 +3,7 @@ from tempfile import mkdtemp
 
 from actableai.classification.cross_validation import run_cross_validation
 from actableai.tasks.classification import _AAIClassificationTrainTask
-from actableai.utils.testing import unittest_hyperparameters
+from actableai.utils.testing import unittest_autogluon_hyperparameters
 
 
 def test_run_cross_validation():
@@ -31,7 +31,7 @@ def test_run_cross_validation():
         kfolds=5,
         cross_validation_max_concurrency=1,
         presets="medium_quality_faster_train",
-        hyperparameters=unittest_hyperparameters(),
+        hyperparameters=unittest_autogluon_hyperparameters(),
         model_directory=mkdtemp(prefix="autogluon_model"),
         target="y",
         features=["x", "z"],

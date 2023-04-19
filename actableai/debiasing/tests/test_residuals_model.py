@@ -4,7 +4,7 @@ import pytest
 import shutil
 
 from actableai.debiasing.residuals_model import ResidualsModel
-from actableai.utils.testing import unittest_hyperparameters
+from actableai.utils.testing import unittest_autogluon_hyperparameters
 
 
 class TestLogLoss:
@@ -48,7 +48,7 @@ class TestResidualsModel:
         model = ResidualsModel(model_directory, biased_groups, debiased_features)
         model.fit(
             df,
-            hyperparameters=unittest_hyperparameters(),
+            hyperparameters=unittest_autogluon_hyperparameters(),
             presets="medium_quality_faster_train",
         )
         df_residuals, residuals_features, _ = model.predict(df)
@@ -78,7 +78,7 @@ class TestResidualsModel:
         model = ResidualsModel(model_directory, biased_groups, debiased_features)
         model.fit(
             df,
-            hyperparameters=unittest_hyperparameters(),
+            hyperparameters=unittest_autogluon_hyperparameters(),
             presets="medium_quality_faster_train",
         )
         df_residuals, residuals_features, _ = model.predict(df)
@@ -114,7 +114,7 @@ class TestResidualsModel:
         model = ResidualsModel(model_directory, biased_groups, debiased_features)
         model.fit(
             df,
-            hyperparameters=unittest_hyperparameters(),
+            hyperparameters=unittest_autogluon_hyperparameters(),
             presets="medium_quality_faster_train",
         )
         df_residuals, residuals_features, _ = model.predict(df)
@@ -143,7 +143,7 @@ class TestResidualsModel:
         model = ResidualsModel(model_directory, biased_groups, debiased_features)
         model.fit(
             df,
-            hyperparameters=unittest_hyperparameters(),
+            hyperparameters=unittest_autogluon_hyperparameters(),
             presets="medium_quality_faster_train",
         )
         model.persist_models()
@@ -175,7 +175,7 @@ class TestResidualsModel:
         model = ResidualsModel(model_directory, biased_groups, debiased_features)
         model.fit(
             df,
-            hyperparameters=unittest_hyperparameters(),
+            hyperparameters=unittest_autogluon_hyperparameters(),
             presets="medium_quality_faster_train",
         )
         model.unpersist_models()
@@ -201,7 +201,7 @@ class TestResidualsModel:
         model = ResidualsModel(model_directory, biased_groups, debiased_features)
         model.fit(
             df,
-            hyperparameters=unittest_hyperparameters(),
+            hyperparameters=unittest_autogluon_hyperparameters(),
             presets="medium_quality_faster_train",
         )
 

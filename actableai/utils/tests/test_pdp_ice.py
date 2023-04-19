@@ -2,7 +2,10 @@ import pandas as pd
 import pytest
 
 from actableai.utils.pdp_ice import get_pdp_and_ice
-from actableai.utils.testing import unittest_hyperparameters
+from actableai.utils.testing import (
+    unittest_hyperparameters,
+    unittest_autogluon_hyperparameters,
+)
 
 from actableai.tasks.regression import (
     AAIRegressionTask,
@@ -44,7 +47,7 @@ def test_pdp_ice_regression(regression_task, tmp_path):
         run_pdp=False,
         run_ice=False,
         model_directory=tmp_path,
-        residuals_hyperparameters=unittest_hyperparameters(),
+        residuals_hyperparameters=unittest_autogluon_hyperparameters(),
         presets="medium_quality_faster_train",
         drop_duplicates=False,
         hyperparameters=unittest_hyperparameters(),
@@ -100,7 +103,7 @@ def test_pdp_ice_regression_null(regression_task, tmp_path):
         run_pdp=False,
         run_ice=False,
         model_directory=tmp_path,
-        residuals_hyperparameters=unittest_hyperparameters(),
+        residuals_hyperparameters=unittest_autogluon_hyperparameters(),
         presets="medium_quality_faster_train",
         drop_duplicates=False,
         hyperparameters=unittest_hyperparameters(),
@@ -154,10 +157,10 @@ def test_pdp_ice_classification(classification_task, tmp_path):
         run_pdp=False,
         run_ice=False,
         model_directory=tmp_path,
-        residuals_hyperparameters=unittest_hyperparameters(),
+        residuals_hyperparameters=unittest_autogluon_hyperparameters(),
         presets="medium_quality_faster_train",
         drop_duplicates=False,
-        hyperparameters=unittest_hyperparameters(),
+        hyperparameters=unittest_autogluon_hyperparameters(),
         drop_unique=False,
         drop_useless_features=False,
     )
@@ -216,10 +219,10 @@ def test_pdp_ice_classification_null(classification_task, tmp_path):
         run_pdp=False,
         run_ice=False,
         model_directory=tmp_path,
-        residuals_hyperparameters=unittest_hyperparameters(),
+        residuals_hyperparameters=unittest_autogluon_hyperparameters(),
         presets="medium_quality_faster_train",
         drop_duplicates=False,
-        hyperparameters=unittest_hyperparameters(),
+        hyperparameters=unittest_autogluon_hyperparameters(),
         drop_unique=False,
         drop_useless_features=False,
     )

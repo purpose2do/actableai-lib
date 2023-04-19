@@ -104,7 +104,7 @@ class BaseParams:
             param_name: Name of the parameter.
 
         Returns:
-            Choose parameter value.
+            Chosen parameter value.
         """
         from actableai.parameters.numeric import FloatRangeSpace, IntegerRangeSpace
         from actableai.parameters.type import ParameterType, ValueType
@@ -142,7 +142,7 @@ class BaseParams:
             options: List to choose from.
 
         Returns:
-            Choose parameter value.
+            Chosen parameter value.
         """
         from hyperopt import hp
 
@@ -158,7 +158,7 @@ class BaseParams:
             options: Tuple representing the minimum and maximum (excluded) integer.
 
         Returns:
-            Choose parameter value.
+            Chosen parameter value.
         """
         from hyperopt import hp
 
@@ -176,7 +176,7 @@ class BaseParams:
             options: Tuple representing the minimum and maximum (excluded) float.
 
         Returns:
-            Choose parameter value.
+            Chosen parameter value.
         """
         from hyperopt import hp
 
@@ -366,7 +366,7 @@ class BaseParams:
 
 @unique
 class Model(str, Enum):
-    """Enum representing the different model available."""
+    """Enum representing the different models available."""
 
     constant_value = "constant_value"
     multivariate_constant_value = "multivariate_constant_value"

@@ -168,6 +168,7 @@ class _NumericRangeSpace(
     default: Optional[Union[NumericT, Tuple[NumericT, NumericT], List[NumericT]]] = None
     min_len: int = 1
     max_len: int = 3
+    _log: bool = False
 
     def process_parameter(self, value: Any) -> Any:
         """Process a value using the current parameter.
@@ -185,6 +186,9 @@ class _NumericRangeSpace(
             value = value[0]
 
         return value
+
+    def is_log(self) -> bool:
+        return self._log
 
 
 FloatParameter = _NumericParameter[float]

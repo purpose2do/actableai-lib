@@ -16,7 +16,7 @@ from actableai.data_imputation.auto_fixer.neighbor_fixer import NeighborFixer
 from actableai.data_imputation.data import DataFrame
 from actableai.data_imputation.meta import ColumnType
 from actableai.data_imputation.meta.column import RichColumnMeta
-from actableai.utils.testing import unittest_hyperparameters
+from actableai.utils.testing import unittest_autogluon_hyperparameters
 
 
 @pytest.mark.parametrize(
@@ -157,7 +157,10 @@ def test_auto_gluon_fix(broken_df, current_column, expect_fix_info_list):
 
     fixer = AutoGluonFixer()
     fix_info_list = fixer.fix(
-        broken_df, errors, current_column, ag_hyperparameters=unittest_hyperparameters()
+        broken_df,
+        errors,
+        current_column,
+        ag_hyperparameters=unittest_autogluon_hyperparameters(),
     )
 
     assert_fix_info_list(fix_info_list, expect_fix_info_list)

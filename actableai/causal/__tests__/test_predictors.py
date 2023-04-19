@@ -4,7 +4,7 @@ import pytest
 from autogluon.tabular import TabularPredictor
 
 from actableai.causal.predictors import DataFrameTransformer, SKLearnTabularWrapper
-from actableai.utils.testing import unittest_hyperparameters
+from actableai.utils.testing import unittest_autogluon_hyperparameters
 
 
 class TestDataFrameTransformer:
@@ -27,7 +27,7 @@ class TestSKLearnTabularWrapper:
         sklw = SKLearnTabularWrapper(
             TabularPredictor("y"),
             x_w_columns=["a", "b"],
-            hyperparameters=unittest_hyperparameters(),
+            hyperparameters=unittest_autogluon_hyperparameters(),
             presets="medium_quality_faster_train",
         )
 
@@ -41,7 +41,7 @@ class TestSKLearnTabularWrapper:
         sklw = SKLearnTabularWrapper(
             TabularPredictor("y"),
             x_w_columns=[str(i) for i in range(width)],
-            hyperparameters=unittest_hyperparameters(),
+            hyperparameters=unittest_autogluon_hyperparameters(),
             presets="medium_quality_faster_train",
         )
         X = np.random.randint(0, 100, size=(height, width))
@@ -56,7 +56,7 @@ class TestSKLearnTabularWrapper:
         sklw = SKLearnTabularWrapper(
             TabularPredictor("y"),
             x_w_columns=[str(i) for i in range(width)],
-            hyperparameters=unittest_hyperparameters(),
+            hyperparameters=unittest_autogluon_hyperparameters(),
             presets="medium_quality_faster_train",
         )
         X = np.random.randint(0, 100, size=(height, width))
@@ -72,7 +72,7 @@ class TestSKLearnTabularWrapper:
         sklw = SKLearnTabularWrapper(
             TabularPredictor("y"),
             x_w_columns=["a", "b", "c"],
-            hyperparameters=unittest_hyperparameters(),
+            hyperparameters=unittest_autogluon_hyperparameters(),
             presets="medium_quality_faster_train",
         )
 

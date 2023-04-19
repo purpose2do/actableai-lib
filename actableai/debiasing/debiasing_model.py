@@ -35,6 +35,7 @@ class DebiasingModel(AbstractModel):
         self.non_residuals_features = list(
             set(self.features).difference(set(self.debiased_features))
         )
+        self.hyperparameter_tune_kwargs = self.params_aux["hyperparameter_tune_kwargs"]
 
         # Initialize Models
         # Residuals Model is computing the residuals of the debiased_features
@@ -92,6 +93,7 @@ class DebiasingModel(AbstractModel):
             "hyperparameters_non_residuals": "default",
             "presets_non_residuals": "medium_quality_faster_train",
             "presets_final": "medium_quality_faster_train",
+            "hyperparameter_tune_kwargs": None,
         }
 
         default_auxiliary_params.update(extra_auxiliary_params)
@@ -143,6 +145,7 @@ class DebiasingModel(AbstractModel):
             ag_args_fit=self.params_aux,
             num_cpus=num_cpus,
             num_gpus=num_gpus,
+            hyperparameter_tune_kwargs=self.hyperparameter_tune_kwargs,
         )
 
     def _fit(self, X, y, X_val=None, y_val=None, **kwargs):

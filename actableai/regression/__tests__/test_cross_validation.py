@@ -3,7 +3,7 @@ from tempfile import mkdtemp
 
 from actableai.regression.cross_validation import run_cross_validation
 from actableai.tasks.regression import _AAIRegressionTrainTask
-from actableai.utils.testing import unittest_hyperparameters
+from actableai.utils.testing import unittest_autogluon_hyperparameters
 
 
 def test_cross_validation():
@@ -27,7 +27,7 @@ def test_cross_validation():
         cross_validation_max_concurrency=1,
         explain_samples=False,
         presets="medium_quality_faster_train",
-        hyperparameters=unittest_hyperparameters(),
+        hyperparameters=unittest_autogluon_hyperparameters(),
         model_directory=mkdtemp(prefix="autogluon_model"),
         target="y",
         features=["x"],
@@ -47,6 +47,8 @@ def test_cross_validation():
         drop_useless_features=False,
         feature_prune=True,
         feature_prune_time_limit=None,
+        num_trials=1,
+        problem_type="regression",
     )
 
     assert important_features is not None

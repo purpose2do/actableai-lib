@@ -1,8 +1,6 @@
-import numpy as np
 from sklearn.inspection import partial_dependence
 import logging
 
-from actableai.utils.categorical_numerical_convert import convert_categorical_to_num
 from actableai.causal.predictors import SKLearnTabularWrapper
 from actableai.utils import get_type_special
 
@@ -112,7 +110,7 @@ def get_pdp_and_ice(
     if model_type not in ["regression", "quantile", "multiclass", "binary"]:
         raise ValueError(
             "'model_type' must be either 'regression' (when doing regression), \
-            'quantile' (when doing quantiel regression)), 'classifier' (when \
+            'quantile' (when doing quantile regression)), 'classifier' (when \
             doing classification), or 'binary' (when doing binary classification)"
         )
 

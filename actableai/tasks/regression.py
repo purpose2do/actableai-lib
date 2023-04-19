@@ -4,7 +4,9 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from actableai.tasks import TaskType
 from actableai.tasks.base import AAITask
+from actableai.tasks.autogluon import AAIAutogluonTask
 from actableai.classification.utils import split_validation_by_datetime
+from actableai.parameters.models import ModelSpace
 
 
 class _AAIRegressionTrainTask(AAITask):
@@ -38,6 +40,8 @@ class _AAIRegressionTrainTask(AAITask):
         drop_useless_features: bool,
         feature_prune: bool,
         feature_prune_time_limit: Optional[float],
+        num_trials: int,
+        problem_type: str,
     ) -> Tuple[
         Any,
         List,
@@ -75,6 +79,8 @@ class _AAIRegressionTrainTask(AAITask):
             time_limit: Time limit of training
             feature_prune_time_limit: Time limit for feature pruning (in seconds)
                 if feature_prune is True
+            num_trials: The number of trials for hyperparameter optimization
+            problem_type: The type of the problem ('regression' or 'quantile')
 
         Returns:
             Tuple:
@@ -104,6 +110,15 @@ class _AAIRegressionTrainTask(AAITask):
         from actableai.debiasing.debiasing_model import DebiasingModel
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
 
+        # TODO: To finalise parameters
+        hyperparameter_tune_kwargs = (
+            {  # HPO is not performed unless hyperparameter_tune_kwargs is specified
+                "num_trials": num_trials,
+                "scheduler": "local",
+                "searcher": "auto",
+            }
+        )
+
         ag_args_fit = {"drop_unique": drop_unique}
         feature_generator_args = {}
         if "AG_AUTOMM" in hyperparameters:
@@ -124,6 +139,7 @@ class _AAIRegressionTrainTask(AAITask):
             ag_args_fit["hyperparameters_non_residuals"] = hyperparameters
             ag_args_fit["presets_non_residuals"] = presets
             ag_args_fit["drop_useless_features"] = drop_useless_features
+            ag_args_fit["hyperparameter_tune_kwargs"] = hyperparameter_tune_kwargs
 
             feature_generator_args = {
                 **feature_generator_args,
@@ -142,7 +158,7 @@ class _AAIRegressionTrainTask(AAITask):
         predictor = TabularPredictor(
             label=target,
             path=model_directory,
-            problem_type="regression" if prediction_quantiles is None else "quantile",
+            problem_type=problem_type,
             eval_metric=eval_metric,
             quantile_levels=prediction_quantiles,
         )
@@ -166,6 +182,7 @@ class _AAIRegressionTrainTask(AAITask):
             feature_prune_kwargs=feature_prune_kwargs,
             num_cpus=1,
             num_gpus=num_gpus,
+            hyperparameter_tune_kwargs=hyperparameter_tune_kwargs,
         )
 
         explainer = None
@@ -294,10 +311,121 @@ class _AAIRegressionTrainTask(AAITask):
         )
 
 
-class AAIRegressionTask(AAITask):
+class AAIRegressionTask(AAIAutogluonTask):
     """Regression task."""
 
-    @AAITask.run_with_ray_remote(TaskType.REGRESSION)
+    @classmethod
+    def get_hyperparameters_space(
+        cls,
+        dataset_len: int,
+        problem_type: str = "regression",
+        device: str = "cpu",
+        explain_samples: bool = False,
+        ag_automm_enabled: bool = False,
+        tabpfn_enabled: bool = False,
+    ) -> ModelSpace:
+        """Return the hyperparameters space of the task.
+
+        Args:
+            dataset_len: Len of the dataset (shape[0]).
+            problem_type: The type of the problem ('regression' or 'quantile')
+            device: Which device is being used, can be one of 'cpu' or 'gpu'
+            explain_samples: Boolean indicating if explanations for predictions
+                in test and validation will be generated.
+            ag_automm_enabled: Boolean indicating if AG_AUTOMM model should be used
+            tabpfn_enabled: Boolean indicating if TabPFN model should be used
+
+        Returns:
+            Hyperparameters space represented as a ModelSpace.
+        """
+        from actableai.models.autogluon.base import Model
+        from actableai.models.autogluon import model_params_dict
+
+        # Get list of available models for the given problem type
+        available_models = cls.get_available_models(
+            problem_type=problem_type,
+            explain_samples=explain_samples,
+            gpu=True if device == "gpu" else False,
+            ag_automm_enabled=ag_automm_enabled,
+            tabpfn_enabled=tabpfn_enabled,
+        )
+
+        # TODO: Check list of models
+        if problem_type == "quantile":
+            # TODO: Check list of default models
+            default_models = []
+            if Model.nn_torch in available_models:
+                default_models.append(Model.nn_torch)
+
+            if Model.nn_fastainn in available_models:
+                default_models.append(Model.nn_fastainn)
+
+            # TODO: Check if enable any models if dataset exceeds a certain size
+            if dataset_len <= 10000:
+                if Model.rf in available_models:
+                    default_models.append(Model.rf)
+
+        else:  # regression
+            # TODO: Check list of default models
+            default_models = [
+                Model.cat,
+                Model.xgb_tree,
+                Model.rf,
+                Model.gbm,
+                Model.xt,
+            ]
+            if not explain_samples:
+                default_models += [Model.nn_fastainn, Model.knn]
+
+            if ag_automm_enabled and (Model.ag_automm in available_models):
+                default_models.append(Model.ag_automm)
+
+            if tabpfn_enabled and (Model.tabpfn in available_models):
+                default_models.append(Model.tabpfn)
+
+        # TODO: Check if enable any models if dataset exceeds a certain size
+        # Use GBM if dataset >= 10000 (see https://neptune.ai/blog/lightgbm-parameters-guide)
+        # if dataset_len >= 10000:
+        #     default_models.append(Model.gbm)
+
+        options = {}
+        for model in available_models:
+            model_hyperparameters = model_params_dict[model].get_hyperparameters(
+                problem_type=problem_type, device=device, num_class=-1
+            )
+            options[model] = {
+                "display_name": model_hyperparameters.display_name,
+                "value": model_hyperparameters,
+            }
+
+        return ModelSpace(
+            name="regression_model_space",
+            display_name="Regression Model Space",
+            # TODO add description
+            description="description_model_space_todo",
+            default=default_models,
+            options=options,
+        )
+
+    @staticmethod
+    def compute_problem_type(prediction_quantiles: Optional[List[int]]) -> str:
+        """Determine the problem type ('regression' or 'quantile')
+
+        Args:
+            prediction_quantiles: List of quantiles. (in percentage)
+
+        Returns:
+            problem_type: String representation of the problem type: 'regression' or 'quantile'
+        """
+
+        if prediction_quantiles is None:
+            problem_type = "regression"
+        else:
+            problem_type = "quantile"
+
+        return problem_type
+
+    @AAIAutogluonTask.run_with_ray_remote(TaskType.REGRESSION)
     def run(
         self,
         df: pd.DataFrame,
@@ -338,12 +466,13 @@ class AAIRegressionTask(AAITask):
         run_ice: bool = True,
         pdp_ice_grid_resolution: Optional[int] = 100,
         pdp_ice_n_samples: Optional[int] = 100,
+        num_trials: int = 8,
     ) -> Dict[str, Any]:
         """Run this regression task and return results.
 
         Args:
             df: Input data frame
-            target: Target columns in df. If there are emtpy values in this columns,
+            target: Target columns in df. If there are empty values in this columns,
                 predictions will be generated for these rows.
             features: A list of features to be used for prediction. If None, all columns
                 except target are used as features
@@ -389,10 +518,11 @@ class AAIRegressionTask(AAITask):
             ag_automm_enabled: Whether to use autogluon multimodal model on text
                 columns.
             refit_full: Wether the model is completely refitted on validation at
-                the end of the task. Training time is divided by 2 to allow reffiting
+                the end of the task. Training time is divided by 2 to allow refitting
                 for the other half of the time
-            feature_prune: Wether feature pruning is enabled. Can increase accuracy
-                by removing hurtfull features for the model. If no training time left this step
+            feature_prune: Whether feature pruning is enabled. Can increase accuracy
+                by removing harmful features for the model (features that are
+                detrimental to the performance). If no training time left, this step
                 is skipped
             feature_prune_time_limit: Time limit for feature pruning.
             intervention_run_params: Parameters for running an intervention task.
@@ -409,6 +539,7 @@ class AAIRegressionTask(AAITask):
                 computation of the PDP and/or ICE
             pdp_ice_n_samples: The number of rows to sample in df_train. If 'None,
                 no sampling is performed.
+            num_trials: The number of trials for hyperparameter optimization
 
         Examples:
             >>> import pandas as pd
@@ -420,13 +551,13 @@ class AAIRegressionTask(AAITask):
             ... )
 
         Returns:
-            Dict: Dictionnary containing the results for this task
+            Dict: Dictionary containing the results for this task
                 - "status": "SUCCESS" if the task successfully ran else "FAILURE"
                 - "messenger": Message returned with the task
                 - "validations": List of validations on the data.
                     non-empty if the data presents a problem for the task
                 - "runtime": Execution time of the task
-                - "data": Dictionnary containing the data for the task
+                - "data": Dictionary containing the data for the task
                     - "validation_table": Validation table
                     - "prediction_table": Prediction table
                     - "predict_shaps": Shapley values for prediction table
@@ -447,11 +578,6 @@ class AAIRegressionTask(AAITask):
         from sklearn.neighbors import KernelDensity
         from autogluon.common.features.infer_types import check_if_nlp_feature
 
-        from actableai.utils import (
-            memory_efficient_hyperparameters,
-            explanation_hyperparameters,
-            quantile_regression_hyperparameters,
-        )
         from actableai.data_validation.params import RegressionDataValidator
         from actableai.data_validation.base import (
             CheckLevels,
@@ -467,6 +593,8 @@ class AAIRegressionTask(AAITask):
         from actableai.tasks.direct_causal import AAIDirectCausalFeatureSelection
 
         from actableai.utils.pdp_ice import get_pdp_and_ice
+
+        # TODO: Add check for num_trials (min and max values)
 
         start = time.time()
         # To resolve any issues of access rights make a copy
@@ -537,6 +665,36 @@ class AAIRegressionTask(AAITask):
             drop_unique=drop_unique,
             kfolds=kfolds,
         )
+
+        problem_type = self.compute_problem_type(prediction_quantiles)
+
+        # Determine GPU type
+        device = "gpu" if num_gpus > 0 else "cpu"
+
+        n_samples = df.shape[0]
+        any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
+        hyperparameters_space = self.get_hyperparameters_space(
+            dataset_len=n_samples,
+            problem_type=problem_type,
+            device=device,
+            explain_samples=explain_samples,
+            ag_automm_enabled=ag_automm_enabled and any_text_cols,
+            tabpfn_enabled=False,
+        )
+        hyperparameters_validation = None
+        if hyperparameters is None or len(hyperparameters) <= 0:
+            hyperparameters = hyperparameters_space.get_default()
+        else:
+            (
+                hyperparameters_validation,
+                hyperparameters,
+            ) = hyperparameters_space.validate_process_parameter(hyperparameters)
+
+        if hyperparameters_validation is not None:
+            data_validation_results += hyperparameters_validation.to_check_results(
+                name="HyperparametersChecker"
+            )
+
         failed_checks = [
             check for check in data_validation_results if check is not None
         ]
@@ -553,20 +711,13 @@ class AAIRegressionTask(AAITask):
                 "runtime": time.time() - start,
             }
 
+        # Convert hyperparameters to AutoGluon format
+        hyperparameters = self._hyperparameters_to_model_params(
+            hyperparameters, hyperparameters_space
+        )
+
         if prediction_quantiles is not None:
             eval_metric = "pinball_loss"
-
-        if hyperparameters is None:
-            if prediction_quantiles is not None:
-                hyperparameters = quantile_regression_hyperparameters()
-            elif explain_samples:
-                hyperparameters = explanation_hyperparameters()
-            else:
-                any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
-                hyperparameters = memory_efficient_hyperparameters(
-                    ag_automm_enabled=ag_automm_enabled and any_text_cols,
-                    tabpfn_enabled=False,
-                )
 
         # Split data
         df_train = df[pd.notnull(df[target])]
@@ -663,6 +814,8 @@ class AAIRegressionTask(AAITask):
                 drop_useless_features=drop_useless_features,
                 feature_prune=feature_prune,
                 feature_prune_time_limit=feature_prune_time_limit,
+                num_trials=num_trials,
+                problem_type=problem_type,
             )
         else:
             (
@@ -698,6 +851,8 @@ class AAIRegressionTask(AAITask):
                 drop_useless_features=drop_useless_features,
                 feature_prune=feature_prune,
                 feature_prune_time_limit=feature_prune_time_limit,
+                num_trials=num_trials,
+                problem_type=problem_type,
             )
 
         # Validation
@@ -892,6 +1047,8 @@ class AAIRegressionTask(AAITask):
                 drop_useless_features=drop_useless_features,
                 feature_prune=feature_prune,
                 feature_prune_time_limit=feature_prune_time_limit,
+                num_trials=1,
+                problem_type=problem_type,
             )
             predictor.refit_full(model="best", set_best_to_refit_full=True)
 

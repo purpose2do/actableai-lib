@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from actableai import AAIInterventionTask
-from actableai.utils.testing import unittest_hyperparameters
+from actableai.utils.testing import unittest_autogluon_hyperparameters
 
 
 @pytest.fixture(scope="function")
@@ -29,7 +29,7 @@ class TestIntervention:
             "current_intervention",
             "new_intervention",
             model_directory=tmp_path,
-            causal_hyperparameters=unittest_hyperparameters(),
+            causal_hyperparameters=unittest_autogluon_hyperparameters(),
             drop_unique=False,
             drop_useless_features=False,
         )
@@ -57,7 +57,7 @@ class TestIntervention:
             "new_intervention",
             model_directory=tmp_path,
             cate_alpha=0.5,
-            causal_hyperparameters=unittest_hyperparameters(),
+            causal_hyperparameters=unittest_autogluon_hyperparameters(),
             drop_unique=False,
             drop_useless_features=False,
         )
@@ -86,7 +86,7 @@ class TestIntervention:
             "current_intervention",
             "new_intervention",
             model_directory=tmp_path,
-            causal_hyperparameters=unittest_hyperparameters(),
+            causal_hyperparameters=unittest_autogluon_hyperparameters(),
             drop_unique=False,
             drop_useless_features=False,
         )
@@ -116,7 +116,7 @@ class TestIntervention:
             "new_intervention",
             model_directory=tmp_path,
             cate_alpha=0.5,
-            causal_hyperparameters=unittest_hyperparameters(),
+            causal_hyperparameters=unittest_autogluon_hyperparameters(),
             drop_unique=False,
             drop_useless_features=False,
         )
@@ -147,7 +147,7 @@ class TestIntervention:
             "new_intervention",
             common_causes=["y", "z"],
             model_directory=tmp_path,
-            causal_hyperparameters=unittest_hyperparameters(),
+            causal_hyperparameters=unittest_autogluon_hyperparameters(),
             drop_unique=False,
             drop_useless_features=False,
         )
@@ -179,7 +179,7 @@ class TestIntervention:
             common_causes=["y", "z"],
             model_directory=tmp_path,
             cate_alpha=0.5,
-            causal_hyperparameters=unittest_hyperparameters(),
+            causal_hyperparameters=unittest_autogluon_hyperparameters(),
             drop_unique=False,
             drop_useless_features=False,
         )
@@ -212,7 +212,7 @@ class TestIntervention:
             common_causes=["y", "z", "d"],
             model_directory=tmp_path,
             cate_alpha=0.5,
-            causal_hyperparameters=unittest_hyperparameters(),
+            causal_hyperparameters=unittest_autogluon_hyperparameters(),
             drop_unique=False,
             drop_useless_features=False,
         )
@@ -245,7 +245,7 @@ class TestIntervention:
             common_causes=[],
             model_directory=tmp_path,
             cate_alpha=0.5,
-            causal_hyperparameters=unittest_hyperparameters(),
+            causal_hyperparameters=unittest_autogluon_hyperparameters(),
             drop_unique=True,
             drop_useless_features=True,
         )
@@ -272,7 +272,7 @@ class TestIntervention:
             "current_intervention",
             "new_intervention",
             model_directory=tmp_path,
-            causal_hyperparameters=unittest_hyperparameters(),
+            causal_hyperparameters=unittest_autogluon_hyperparameters(),
             drop_unique=False,
             drop_useless_features=False,
         )
@@ -298,7 +298,7 @@ class TestIntervention:
             "current_intervention",
             "new_intervention",
             model_directory=tmp_path,
-            causal_hyperparameters=unittest_hyperparameters(),
+            causal_hyperparameters=unittest_autogluon_hyperparameters(),
             drop_unique=False,
             drop_useless_features=False,
         )
@@ -329,7 +329,7 @@ class TestIntervention:
             "new_intervention",
             common_causes=["y", "z"],
             model_directory=tmp_path,
-            causal_hyperparameters=unittest_hyperparameters(),
+            causal_hyperparameters=unittest_autogluon_hyperparameters(),
             drop_unique=False,
             drop_useless_features=False,
         )

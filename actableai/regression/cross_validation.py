@@ -31,6 +31,8 @@ def run_cross_validation(
     drop_useless_features: bool,
     feature_prune: bool,
     feature_prune_time_limit: Optional[float],
+    num_trials: int,
+    problem_type: str,
 ) -> Tuple[Dict, Dict, Union[List, Dict], List, List, List]:
     """Run cross validation on Regression Task. Data is divided in kfold groups and each
     run a regression. The returned values are means or lists of values from
@@ -60,6 +62,8 @@ def run_cross_validation(
         feature_prune: If True, features are pruned
         feature_prune_time_limit: Time limit for feature pruning (in seconds)
             If None, the remaining training time is used
+        num_trials: The number of trials for hyperparameter optimization
+        problem_type: The type of problem ('regression' or 'quantile')
 
     Returns:
         Tuple[Dict, Dict, List, List, List, List]:
@@ -112,6 +116,8 @@ def run_cross_validation(
                 "drop_useless_features": drop_useless_features,
                 "feature_prune": feature_prune,
                 "feature_prune_time_limit": feature_prune_time_limit,
+                "num_trials": num_trials,
+                "problem_type": problem_type,
             },
         )
         for kfold_index, (train_index, val_index) in enumerate(kfolds_index_list)

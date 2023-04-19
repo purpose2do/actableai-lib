@@ -12,7 +12,7 @@ class AAIForecastTask(AAITunableTask):
 
     @staticmethod
     def get_hyperparameters_space(dataset_len: int) -> ModelSpace:
-        """Return the hyperparameters space oof the task.
+        """Return the hyperparameters space of the task.
 
         Args:
             dataset_len: Len of the dataset (shape[0]).

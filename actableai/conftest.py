@@ -2,6 +2,8 @@ import numpy as np
 import pytest
 import ray
 
+import torch
+
 from actableai.utils.testing import init_ray as _init_ray
 
 
@@ -20,3 +22,8 @@ def init_ray():
         ray.shutdown()
     else:
         yield None
+
+
+@pytest.fixture(scope="session")
+def is_gpu_available():
+    return torch.cuda.is_available() and torch.cuda.device_count() > 0

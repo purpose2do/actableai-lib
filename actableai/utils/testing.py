@@ -8,8 +8,12 @@ import ray
 from actableai.timeseries.dataset import AAITimeSeriesDataset
 
 
-def unittest_hyperparameters():
+def unittest_autogluon_hyperparameters():
     return {"RF": {}}
+
+
+def unittest_hyperparameters():
+    return {"rf": {}}
 
 
 def init_ray(**kwargs):
