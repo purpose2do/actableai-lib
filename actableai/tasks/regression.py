@@ -593,6 +593,7 @@ class AAIRegressionTask(AAIAutogluonTask):
         from actableai.tasks.direct_causal import AAIDirectCausalFeatureSelection
 
         from actableai.utils.pdp_ice import get_pdp_and_ice
+        from actableai.utils import is_gpu_available
 
         # TODO: Add check for num_trials (min and max values)
 
@@ -669,7 +670,7 @@ class AAIRegressionTask(AAIAutogluonTask):
         problem_type = self.compute_problem_type(prediction_quantiles)
 
         # Determine GPU type
-        device = "gpu" if num_gpus > 0 else "cpu"
+        device = "gpu" if is_gpu_available() else "cpu"
 
         n_samples = df.shape[0]
         any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
