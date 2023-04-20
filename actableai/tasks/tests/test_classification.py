@@ -12,10 +12,29 @@ from actableai.tasks.classification import (
 from actableai.utils.dataset_generator import DatasetGenerator
 from actableai.utils.testing import unittest_autogluon_hyperparameters
 
+from actableai.models.autogluon import model_params_dict
+
 
 @pytest.fixture(scope="function")
 def classification_task():
     yield AAIClassificationTask(use_ray=False)
+
+
+def available_models(
+    problem_type,
+    gpu,
+    explain_samples=False,
+    ag_automm_enabled=False,
+    tabpfn_enabled=False,
+):
+    _available_models = AAIClassificationTask.get_available_models(
+        problem_type=problem_type,
+        explain_samples=explain_samples,
+        gpu=gpu,
+        ag_automm_enabled=ag_automm_enabled,
+        tabpfn_enabled=tabpfn_enabled,
+    )
+    return [m.value for m in _available_models]
 
 
 def run_classification_task(
@@ -887,6 +906,329 @@ class TestRemoteClassification:
 
         _, function_kwargs = mock_function.call_args
         assert TabPFNModel not in function_kwargs.get("hyperparameters", {})
+
+    def test_available_models_multiclass_gpu(self):
+        _available_models = available_models(
+            problem_type="multiclass",
+            gpu=True,
+            explain_samples=False,
+            ag_automm_enabled=True,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(
+            [
+                "gbm",
+                "cat",
+                "xgb_tree",
+                "rf",
+                "xt",
+                "knn",
+                "lr",
+                "nn_torch",
+                "nn_mxnet",
+                "nn_fastainn",
+                "ag_automm",
+                "fasttext",
+                "tabpfn",
+            ]
+        )
+
+    def test_available_models_multiclass_gpu_noautomm(self):
+        _available_models = available_models(
+            problem_type="multiclass",
+            gpu=True,
+            explain_samples=False,
+            ag_automm_enabled=False,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(
+            [
+                "gbm",
+                "cat",
+                "xgb_tree",
+                "rf",
+                "xt",
+                "knn",
+                "lr",
+                "nn_torch",
+                "nn_mxnet",
+                "nn_fastainn",
+                "fasttext",
+                "tabpfn",
+            ]
+        )
+
+    def test_available_models_multiclass_nogpu(self):
+        _available_models = available_models(
+            problem_type="multiclass",
+            gpu=False,
+            explain_samples=False,
+            ag_automm_enabled=True,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(
+            [
+                "gbm",
+                "cat",
+                "xgb_tree",
+                "rf",
+                "xt",
+                "knn",
+                "lr",
+                "nn_torch",
+                "nn_mxnet",
+                "nn_fastainn",
+                "fasttext",
+                "tabpfn",
+            ]
+        )
+
+    def test_available_models_multiclass_explain(self):
+        _available_models = available_models(
+            problem_type="multiclass",
+            gpu=True,
+            explain_samples=True,
+            ag_automm_enabled=True,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(["gbm", "cat", "xgb_tree", "rf", "xt"])
+
+    def test_available_models_multiclass_nogpu_explain(self):
+        _available_models = available_models(
+            problem_type="multiclass",
+            gpu=False,
+            explain_samples=True,
+            ag_automm_enabled=True,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(["gbm", "cat", "xgb_tree", "rf", "xt"])
+
+    def test_available_models_binary_gpu(self):
+        _available_models = available_models(
+            problem_type="binary",
+            gpu=True,
+            explain_samples=False,
+            ag_automm_enabled=True,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(
+            [
+                "gbm",
+                "cat",
+                "xgb_tree",
+                "rf",
+                "xt",
+                "knn",
+                "lr",
+                "nn_torch",
+                "nn_mxnet",
+                "nn_fastainn",
+                "ag_automm",
+                "fasttext",
+                "tabpfn",
+            ]
+        )
+
+    def test_available_models_binary_nogpu(self):
+        _available_models = available_models(
+            problem_type="binary",
+            gpu=False,
+            explain_samples=False,
+            ag_automm_enabled=True,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(
+            [
+                "gbm",
+                "cat",
+                "xgb_tree",
+                "rf",
+                "xt",
+                "knn",
+                "lr",
+                "nn_torch",
+                "nn_mxnet",
+                "nn_fastainn",
+                "fasttext",
+                "tabpfn",
+            ]
+        )
+
+    def test_available_models_binary_gpu_noautomm(self):
+        _available_models = available_models(
+            problem_type="binary",
+            gpu=True,
+            explain_samples=False,
+            ag_automm_enabled=False,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(
+            [
+                "gbm",
+                "cat",
+                "xgb_tree",
+                "rf",
+                "xt",
+                "knn",
+                "lr",
+                "nn_torch",
+                "nn_mxnet",
+                "nn_fastainn",
+                "fasttext",
+                "tabpfn",
+            ]
+        )
+
+    def test_available_models_binary_explain(self):
+        _available_models = available_models(
+            problem_type="binary",
+            gpu=True,
+            explain_samples=True,
+            ag_automm_enabled=True,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(["gbm", "cat", "xgb_tree", "rf", "xt"])
+
+    def test_available_models_binary_nogpu_explain(self):
+        _available_models = available_models(
+            problem_type="binary",
+            gpu=False,
+            explain_samples=True,
+            ag_automm_enabled=True,
+            tabpfn_enabled=True,
+        )
+        assert set(_available_models) == set(["gbm", "cat", "xgb_tree", "rf", "xt"])
+
+    # TODO: Use is_gpu_available to set gpu
+    @pytest.mark.parametrize(
+        "model_type",
+        available_models(
+            "multiclass", gpu=True, ag_automm_enabled=True, tabpfn_enabled=True
+        ),
+    )
+    def test_hpo_default_multiclass(
+        self, classification_task, tmp_path, model_type, is_gpu_available
+    ):
+        """Test default settings for HPO models for multiclass classification"""
+
+        # Skip testing the model if GPU is not available but the model requires the GPU
+        if not is_gpu_available and model_params_dict[model_type].gpu_required:
+            pytest.skip(
+                "Skipping test where GPU is required but no GPU is available",
+                allow_module_level=False,
+            )
+
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, None, None, 8, 9, 10] * 3,
+                "b": [
+                    "a a a",
+                    "b b b",
+                    "c c c",
+                    "d d d",
+                    "b b b",
+                    "c c c",
+                    "a a a",
+                    "a a a",
+                    "c c c",
+                    "a a a",
+                ]
+                * 3,
+                "y": [1, 2, 3, 3, 1, 2, 1, 1, 3, 2] * 3,
+            }
+        )
+
+        hyperparameters = dict()
+        hyperparameters = {model_type: {}}
+
+        # Set n_neighbors to avoid error that it is larger than n_samples
+        # TODO: This should be handled internally by the function
+        if model_type == "knn":
+            hyperparameters[model_type] = {"n_neighbors": 2}
+
+        features = ["x", "b"]
+        if model_type == "nn_fastainn":
+            features = ["x"]
+
+        r = run_classification_task(
+            classification_task,
+            tmp_path,
+            df,
+            target="y",
+            features=features,
+            hyperparameters=hyperparameters,
+            ag_automm_enabled=True,
+            num_gpus=1 if is_gpu_available else 0,
+            num_trials=2,
+            validation_ratio=0.5,
+        )
+
+        assert r["status"] == "SUCCESS"
+
+    # TODO: Use is_gpu_available to set gpu
+    @pytest.mark.parametrize(
+        "model_type",
+        available_models(
+            "binary", gpu=True, ag_automm_enabled=True, tabpfn_enabled=True
+        ),
+    )
+    def test_hpo_default_binary(
+        self, classification_task, tmp_path, model_type, is_gpu_available
+    ):
+        # Skip testing the model if GPU is not available but the model requires the GPU
+        if not is_gpu_available and model_params_dict[model_type].gpu_required:
+            pytest.skip(
+                "Skipping test where GPU is required but no GPU is available",
+                allow_module_level=False,
+            )
+
+        """Test default settings for HPO models for binary classification"""
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5, None, None, 8, 9, 10] * 3,
+                "b": [
+                    "a a a",
+                    "b b b",
+                    "c c c",
+                    "d d d",
+                    "b b b",
+                    "c c c",
+                    "a a a",
+                    "a a a",
+                    "c c c",
+                    "a a a",
+                ]
+                * 3,
+                "y": [1, 2, 1, 2, 1, 1, 2, 2, 2, 1] * 3,
+            }
+        )
+
+        hyperparameters = dict()
+        hyperparameters = {model_type: {}}
+
+        # Set n_neighbors to avoid error that it is larger than n_samples
+        # TODO: This should be handled internally by the function
+        if model_type == "knn":
+            hyperparameters[model_type] = {"n_neighbors": 2}
+
+        features = ["x", "b"]
+        if model_type == "nn_fastainn":
+            features = ["x"]
+
+        r = run_classification_task(
+            classification_task,
+            tmp_path,
+            df,
+            target="y",
+            features=features,
+            hyperparameters=hyperparameters,
+            ag_automm_enabled=True,
+            num_gpus=1 if is_gpu_available else 0,
+            num_trials=2,
+            validation_ratio=0.5,
+        )
+
+        assert r["status"] == "SUCCESS"
 
 
 class TestRemoteClassificationCrossValidation:
