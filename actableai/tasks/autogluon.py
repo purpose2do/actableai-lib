@@ -76,9 +76,7 @@ class AAIAutogluonTask(AAITunableTask, ABC):
             compatible with AutoGluon.
         Args:
             hyperparameters: Hyperparameters to convert.
-            problem_type: Defines the type of the problem (e.g. regression,
-                binary classification, etc.).
-            device: Which device is being used, can be one of 'cpu' or 'gpu'
+            hyperparameters_space: The full hyperparameters space of the model.
 
         Returns:
             List of model parameters.
