@@ -86,9 +86,9 @@ class _AAIClassificationTrainTask(AAITask):
             eval_metric: Metric to be optimized for.
             time_limit: Time limit for training (in seconds)
             drop_unique: Whether the classification algorithm drops columns that
-                only have a unique value accross all rows at fit time
+                only have a unique value across all rows at fit time
             drop_useless_features: Whether the classification algorithm drops columns that
-                only have a unique value accross all rows as preprocessing
+                only have a unique value across all rows as preprocessing
             feature_prune: Whether the feature_pruning is enabled or not.
                 This option improves results but extend the training time.
                 If there is no time specified to do feature_pruning the remaining
@@ -97,11 +97,11 @@ class _AAIClassificationTrainTask(AAITask):
             tabpfn_model_directory: TabPFN Model Directory.
 
         Returns:
-            Return dictionnary of results for classification :
+            Return dictionary of results for classification :
                 - AutoGluon's predictor
                 - Explainer for SHAP values
                 - List of important features
-                - Dictionnary of evaluated metrics
+                - Dictionary of evaluated metrics
                 - Class probabilities for predicted values
                 - Shap values on test set
                 - Leaderboard of the best trained models
@@ -408,7 +408,7 @@ class AAIClassificationTask(AAITask):
 
         Args:
             df: Input DataFrame
-            target: Target columns in df. If there are emtpy values in this columns,
+            target: Target columns in df. If there are empty values in this columns,
                 predictions will be generated for these rows.
             features: A list of features to be used for prediction. If None, all columns
                 except target are used as features. Defaults to None.
@@ -419,7 +419,7 @@ class AAIClassificationTask(AAITask):
             validation_ratio: The ratio to randomly split data for training and
                 validation. Defaults to 0.2.
             positive_label: If target contains only 2 different value, pick the positive
-                label by setting postive_label to one of them. Defaults to None.
+                label by setting positive_label to one of them. Defaults to None.
             explain_samples: If true, explanations for predictions in test and
                 validation will be generated. It takes significantly longer time to
                 run. Defaults to False.
@@ -477,13 +477,13 @@ class AAIClassificationTask(AAITask):
             >>> AAIClassificationTask(df, ["feature1", "feature2", "feature3"], "target")
 
         Returns:
-            Dict: Dictionnary containing the results
+            Dict: Dictionary containing the results
                 - "status": "SUCCESS" if the task successfully ran else "FAILURE"
                 - "messenger": Message returned with the task
                 - "validations": List of validations on the data.
                     non-empty if the data presents a problem for the task
                 - "runtime": Execution time of the task
-                - "data": Dictionnary containing the data for the task
+                - "data": Dictionary containing the data for the task
                     - "validation_table": Validation table
                     - "prediction_table": Prediction table
                     - "fields": Column names of the prediction table
@@ -530,7 +530,7 @@ class AAIClassificationTask(AAITask):
         pd.set_option("chained_assignment", "warn")
         start = time.time()
 
-        # To resolve any issues of acces rights make a copy
+        # To resolve any issues of access rights, make a copy
         df = df.copy()
         df = sanitize_timezone(df)
 
