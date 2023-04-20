@@ -38,7 +38,7 @@ class TSNE(EmbeddingModelWrapper):
                 description="Controls how tight natural clusters in the\
                 original space are in the embedded space and how much space will be\
                 between them.",
-                defeault=12,
+                default=12,
                 # TODO check constraints
             ),
             IntegerParameter(
