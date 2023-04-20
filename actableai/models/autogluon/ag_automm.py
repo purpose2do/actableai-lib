@@ -32,6 +32,8 @@ class AGAUTOMMParams(BaseParams):
         # from autogluon.text.text_prediction.presets import list_text_presets
         # simple_presets = list_text_presets(verbose=True)
         # parameters = simple_presets["multilingual"]
+        # Also check
+        #   https://github.com/autogluon/autogluon/blob/4696af87d90247002760bc5c74c565e34e5d8792/tabular/src/autogluon/tabular/models/automm/ft_transformer.py#L65
 
         # hyperparameters["AG_AUTOMM"]["env.per_gpu_batch_size"] = 4
 
@@ -80,6 +82,34 @@ class AGAUTOMMParams(BaseParams):
                 hidden=True,
                 # TODO check constraints
             ),
+            # The following parameters have been obtained from
+            #   https://github.com/autogluon/autogluon/blob/4696af87d90247002760bc5c74c565e34e5d8792/tabular/src/autogluon/tabular/models/automm/ft_transformer.py#L65
+            # TODO: Consider enabling
+            # FloatRangeSpace(
+            #     name="optimization.weight_decay",
+            #     display_name="Weight Decay",
+            #     description="Rate of linear weight decay for learning rate.",
+            #     default=1e-5,
+            #     min=0.0001,
+            #     # TODO check constraints
+            # ),
+            # IntegerParameter(
+            #     name="optimization.max_epochs",
+            #     display_name="Per-GPU Batch Size",
+            #     description="Per-GPU batch size.",
+            #     default=2000,
+            #     min=0,
+            #     hidden=True,
+            #     # TODO check constraints
+            # ),
+            # IntegerParameter(
+            #     name="optimization.max_epochs",
+            #     display_name="Maximum Number of Epochs",
+            #     description="The maximum number of epochs for training the model. Specify a large value to train until convergence.",
+            #     default=2000,
+            #     min=1,
+            #     # TODO check constraints (maximum)
+            # ),
         ]
 
         return Parameters(
