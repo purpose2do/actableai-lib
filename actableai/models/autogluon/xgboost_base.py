@@ -207,7 +207,7 @@ def get_parameters(problem_type: str, num_class: int) -> List[BaseParameter]:
                 name="objective",
                 display_name="Objective",
                 description="The learning objective used to optimize the model.",
-                default=["multi:sofprob"],
+                default=["multi:softprob"],
                 is_multi=True,
                 options={
                     "multi:softmax": {
