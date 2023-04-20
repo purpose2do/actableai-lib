@@ -13,7 +13,7 @@ class _AAIClassificationTrainTask(AAITask):
     """Sub class for ClassificationTask. Runs a classification without crossvalidation
 
     Args:
-        AAITask: Base Class for every tasks
+        AAITask: Base Class for every task
     """
 
     @AAITask.run_with_ray_remote(TaskType.CLASSIFICATION_TRAIN)
