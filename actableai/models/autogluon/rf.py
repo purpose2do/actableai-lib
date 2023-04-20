@@ -141,7 +141,7 @@ class RFParams(BaseParams):
                     name="criterion",
                     display_name="Quality of Split Criterion",
                     description="The function to measure the quality of a split.",
-                    default=["gini", "entropy"],
+                    default="gini",
                     is_multi=False,
                     options={
                         "gini": {"display_name": "Gini impurity", "value": "gini"},
