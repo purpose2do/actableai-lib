@@ -142,7 +142,7 @@ class _AAIClassificationTrainTask(AAITask):
         }
         feature_generator_args = {}
 
-        if "AG_AUTOMM" in hyperparameters:
+        if any(k in ["AG_AUTOMM", "FASTTEXT"] for k in hyperparameters):
             feature_generator_args["enable_raw_text_features"] = True
 
         if df_train.shape[0] > 1024 and TabPFNModel in hyperparameters:
