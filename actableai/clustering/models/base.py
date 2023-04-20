@@ -10,7 +10,7 @@ from actableai.models.base import AAIParametersModel
 from actableai.parameters.parameters import Parameters
 
 
-class BaseClusteringModel(AAIParametersModel, ABC):
+class BaseClusteringModel(AAIParametersModel[np.ndarray, np.ndarray], ABC):
     """
     TODO write documentation
     """

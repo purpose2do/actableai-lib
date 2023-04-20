@@ -10,3 +10,4 @@ from .tasks.intervention import AAIInterventionTask
 from .tasks.regression import AAIRegressionTask
 from .tasks.sentiment_analysis import AAISentimentAnalysisTask
 from .tasks.causal_discovery import AAICausalDiscoveryTask
+from .tasks.ocr import AAIOCRTask

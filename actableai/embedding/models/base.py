@@ -7,7 +7,7 @@ import numpy as np
 from actableai.models.base import AAIParametersModel
 
 
-class BaseEmbeddingModel(AAIParametersModel, ABC):
+class BaseEmbeddingModel(AAIParametersModel[np.ndarray, np.ndarray], ABC):
     has_fit = True
     has_transform = True
     has_predict = False
