@@ -24,6 +24,8 @@ class XGBoostLinearParams(BaseParams):
                 binary classification, etc.). See
                 cls.supported_problem_types
                 for list of accepted strings
+            num_class: The number of classes, used for multi-class
+                classification.
 
         Returns:
             The hyperparameters space.
