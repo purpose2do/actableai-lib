@@ -639,12 +639,21 @@ class AAIClassificationTask(AAIAutogluonTask):
             datetime_column=datetime_column,
             split_by_datetime=split_by_datetime,
         )
-        data_validation_check = self.check_validation_results(
-            data_validation_results=data_validation_results, start=start
-        )
-        if data_validation_check["status"] == "FAILURE":
-            return data_validation_check
-        validations = data_validation_check["validations"]
+        failed_checks = [
+            check for check in data_validation_results if check is not None
+        ]
+        validations = [
+            {"name": check.name, "level": check.level, "message": check.message}
+            for check in failed_checks
+        ]
+
+        if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
+            return {
+                "status": "FAILURE",
+                "data": {},
+                "validations": validations,
+                "runtime": time.time() - start,
+            }
 
         # Pre process data
         df = handle_boolean_features(df)
@@ -685,12 +694,23 @@ class AAIClassificationTask(AAIAutogluonTask):
                 name="HyperparametersChecker"
             )
 
-        data_validation_check = self.check_validation_results(
-            data_validation_results=data_validation_results, start=start
-        )
-        if data_validation_check["status"] == "FAILURE":
-            return data_validation_check
-        validations += data_validation_check["validations"]
+        failed_checks = [
+            check for check in data_validation_results if check is not None
+        ]
+        validations_hp = [
+            {"name": check.name, "level": check.level, "message": check.message}
+            for check in failed_checks
+        ]
+
+        if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
+            return {
+                "status": "FAILURE",
+                "data": {},
+                "validations": validations_hp,
+                "runtime": time.time() - start,
+            }
+
+        validations += validations_hp
 
         # Convert hyperparameters to AutoGluon format
         hyperparameters = self._hyperparameters_to_model_params(
