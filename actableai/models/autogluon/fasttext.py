@@ -58,7 +58,7 @@ class FASTTEXTParams(BaseParams):
                 # TODO check constraints
             ),
             IntegerRangeSpace(
-                name="num_epochs",
+                name="epoch",
                 display_name="Number of Epochs",
                 description="The number of epochs for training the model.",
                 default=50,
@@ -124,12 +124,11 @@ class FASTTEXTParams(BaseParams):
                     "hs": {"display_name": "hs", "value": "hs"},
                     "ova": {"display_name": "ova", "value": "ova"},
                 },
-                # TODO: Check if use options or IntegerRangeSpace; AutoGluon uses categories
             ),
             IntegerRangeSpace(
                 name="bucket",
                 display_name="Number of Buckets",
-                description="Number of buckets.",
+                description="The number of buckets.",
                 default=2000000,
                 min=1,
                 # TODO check constraints
@@ -145,9 +144,9 @@ class FASTTEXTParams(BaseParams):
             FloatRangeSpace(
                 name="t",
                 display_name="Sampling Threshold",
-                description="sampling threshold.",
+                description="The sampling threshold.",
                 default=0.0001,
-                min=1,
+                min=1e-6,
                 # TODO check constraints
             ),
         ]
