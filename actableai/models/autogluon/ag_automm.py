@@ -26,7 +26,6 @@ class AGAUTOMMParams(BaseParams):
         Returns:
             The hyperparameters space.
         """
-        # Change the batch size if we encounter memory issues
 
         # Parameters obtained from:
         # from autogluon.text.text_prediction.presets import list_text_presets
@@ -35,6 +34,7 @@ class AGAUTOMMParams(BaseParams):
         # Also check
         #   https://github.com/autogluon/autogluon/blob/4696af87d90247002760bc5c74c565e34e5d8792/tabular/src/autogluon/tabular/models/automm/ft_transformer.py#L65
 
+        # Change the batch size if memory issues are encountered
         # hyperparameters["AG_AUTOMM"]["env.per_gpu_batch_size"] = 4
 
         parameters = [
@@ -84,7 +84,7 @@ class AGAUTOMMParams(BaseParams):
             ),
             # The following parameters have been obtained from
             #   https://github.com/autogluon/autogluon/blob/4696af87d90247002760bc5c74c565e34e5d8792/tabular/src/autogluon/tabular/models/automm/ft_transformer.py#L65
-            # TODO: Consider enabling
+            # TODO: Consider enabling and adding other parameters
             # FloatRangeSpace(
             #     name="optimization.weight_decay",
             #     display_name="Weight Decay",
@@ -94,11 +94,11 @@ class AGAUTOMMParams(BaseParams):
             #     # TODO check constraints
             # ),
             # IntegerParameter(
-            #     name="optimization.max_epochs",
+            #     name="env.per_gpu_batch_size",
             #     display_name="Per-GPU Batch Size",
             #     description="Per-GPU batch size.",
-            #     default=2000,
-            #     min=0,
+            #     default=128,
+            #     min=1,
             #     hidden=True,
             #     # TODO check constraints
             # ),
