@@ -859,7 +859,7 @@ class TestRemoteClassification:
         with patch.object(TabularPredictor, "fit", autospec=True) as mock_function:
 
             def side_effect_tabular_predictor_fit(self_, *args, **kwargs):
-                kwargs["hyperparameters"] = unittest_hyperparameters()
+                kwargs["hyperparameters"] = unittest_autogluon_hyperparameters()
 
                 return original_fit(self_, *args, **kwargs)
 
@@ -872,7 +872,7 @@ class TestRemoteClassification:
                 "y",
                 ["x"],
                 validation_ratio=0.2,
-                hyperparameters={TabPFNModel: {}},
+                hyperparameters={"tabpfn": {}},
             )
 
         _, function_kwargs = mock_function.call_args
@@ -978,7 +978,6 @@ class TestRemoteClassification:
                 "xt",
                 "knn",
                 "lr",
-                "nn_torch",
                 "nn_mxnet",
                 "nn_fastainn",
                 "fasttext",
@@ -1023,7 +1022,6 @@ class TestRemoteClassification:
                 "xt",
                 "knn",
                 "lr",
-                "nn_torch",
                 "nn_mxnet",
                 "nn_fastainn",
                 "ag_automm",
@@ -1049,7 +1047,6 @@ class TestRemoteClassification:
                 "xt",
                 "knn",
                 "lr",
-                "nn_torch",
                 "nn_mxnet",
                 "nn_fastainn",
                 "fasttext",
@@ -1074,7 +1071,6 @@ class TestRemoteClassification:
                 "xt",
                 "knn",
                 "lr",
-                "nn_torch",
                 "nn_mxnet",
                 "nn_fastainn",
                 "fasttext",
