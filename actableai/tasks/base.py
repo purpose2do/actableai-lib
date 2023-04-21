@@ -11,6 +11,9 @@ from actableai.tasks import TaskType
 from actableai.utils.resources.predict import ResourcePredictorType
 from actableai.utils.resources.profile import ResourceProfilerType
 
+from actableai.data_validation.base import CheckLevels, CheckResult
+import time
+
 
 class AAITask(ABC):
     """
@@ -535,6 +538,46 @@ class AAITask(ABC):
         Abstract method called to run the task
         """
         raise NotImplementedError()
+
+    # TODO: Check type of 'start'
+    @classmethod
+    def check_validation_results(
+        cls, data_validation_results: List[Optional[CheckResult]], start: time
+    ) -> dict:
+        """Check validation results.
+
+        Args:
+            data_validation_results: Results of the data validation.
+            start: Time when function was started.
+
+        Returns:
+            Dictionary with result of validation: 'FAILURE' if an error was
+            detected, 'SUCCESS' otherwise.
+        """
+
+        failed_checks = [
+            check for check in data_validation_results if check is not None
+        ]
+
+        validations = [
+            {"name": check.name, "level": check.level, "message": check.message}
+            for check in failed_checks
+        ]
+
+        if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
+            return {
+                "status": "FAILURE",
+                "data": {},
+                "validations": validations,
+                "runtime": time.time() - start,
+            }
+
+        return {
+            "status": "SUCCESS",
+            "data": {},
+            "validations": validations,
+            "runtime": time.time() - start,
+        }
 
 
 class AAITunableTask(AAITask, ABC):
