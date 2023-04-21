@@ -432,10 +432,10 @@ class AAIClassificationTask(AAIAutogluonTask):
         if not explain_samples:
             default_models += [Model.nn_fastainn, Model.knn, Model.fasttext]
 
-        if ag_automm_enabled and ("ag_automm" in available_models):
+        if ag_automm_enabled and (Model.ag_automm in available_models):
             default_models += [Model.ag_automm]
 
-        if tabpfn_enabled and ("tabpfn" in available_models):
+        if tabpfn_enabled and (Model.tabpfn in available_models):
             default_models += [Model.tabpfn]
 
         # TODO: Check if enable any models if dataset exceeds a certain size
