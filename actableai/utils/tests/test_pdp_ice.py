@@ -160,7 +160,7 @@ def test_pdp_ice_classification(classification_task, tmp_path):
         residuals_hyperparameters=unittest_autogluon_hyperparameters(),
         presets="medium_quality_faster_train",
         drop_duplicates=False,
-        hyperparameters=unittest_autogluon_hyperparameters(),
+        hyperparameters=unittest_hyperparameters(),
         drop_unique=False,
         drop_useless_features=False,
     )
@@ -222,7 +222,7 @@ def test_pdp_ice_classification_null(classification_task, tmp_path):
         residuals_hyperparameters=unittest_autogluon_hyperparameters(),
         presets="medium_quality_faster_train",
         drop_duplicates=False,
-        hyperparameters=unittest_autogluon_hyperparameters(),
+        hyperparameters=unittest_hyperparameters(),
         drop_unique=False,
         drop_useless_features=False,
     )
