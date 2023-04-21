@@ -114,3 +114,122 @@ class AAIAutogluonTask(AAITunableTask, ABC):
                 model_params[model_name_ag].append(params)
 
         return model_params
+
+    @classmethod
+    def get_hyperparameters_space(
+        cls,
+        name: str,
+        display_name: str,
+        description: str,
+        dataset_len: int,
+        num_class: int,
+        problem_type: str,
+        device: str = "cpu",
+        explain_samples: bool = False,
+        ag_automm_enabled: bool = False,
+        tabpfn_enabled: bool = False,
+    ) -> ModelSpace:
+        """Return the hyperparameters space of the task.
+
+        Args:
+            name: Name of the model space.
+            display_name: The display name for the model space
+            description: The description of the model space.
+            dataset_len: Len of the dataset (shape[0]).
+            num_class: The number of classes in the target.
+            problem_type: The type of the problem
+            device: Which device is being used, can be one of 'cpu' or 'gpu'.
+            explain_samples: Boolean indicating if explanations for predictions
+                in test and validation will be generated.
+            ag_automm_enabled: Boolean indicating if AG_AUTOMM model should be used.
+            tabpfn_enabled: Boolean indicating if TabPFN model should be used.
+
+        Returns:
+            Hyperparameters space represented as a ModelSpace.
+        """
+        from actableai.models.autogluon.base import Model
+        from actableai.models.autogluon import model_params_dict
+
+        # Get list of available models for the given problem type
+        available_models = cls.get_available_models(
+            problem_type=problem_type,
+            explain_samples=explain_samples,
+            gpu=True if device == "gpu" else False,
+            ag_automm_enabled=ag_automm_enabled,
+            tabpfn_enabled=tabpfn_enabled,
+        )
+
+        # TODO: Consider raising error if problem type is not supported, instead
+        # of defaulting to classification
+        if problem_type == "quantile":
+            # TODO: Check list of default models
+            default_models = []
+            if Model.nn_torch in available_models:
+                default_models.append(Model.nn_torch)
+
+            if Model.nn_fastainn in available_models:
+                default_models.append(Model.nn_fastainn)
+
+            # TODO: Check if enable any models if dataset exceeds a certain size
+            if dataset_len <= 10000:
+                if Model.rf in available_models:
+                    default_models.append(Model.rf)
+
+        elif problem_type == "regression":
+            # TODO: Check list of default models
+            default_models = [
+                Model.cat,
+                Model.xgb_tree,
+                Model.rf,
+                Model.gbm,
+                Model.xt,
+            ]
+            if not explain_samples:
+                default_models += [Model.nn_fastainn, Model.knn]
+
+            # TODO: Check if enable any models if dataset exceeds a certain size
+            # Use GBM if dataset >= 10000 (see https://neptune.ai/blog/lightgbm-parameters-guide)
+            # if dataset_len >= 10000:
+            #     default_models.append(Model.gbm)
+
+        else:  # Multi-class/binary/soft-class classification
+            # TODO: Check list of default models
+            default_models = [
+                Model.cat,
+                Model.xgb_tree,
+                Model.rf,
+                Model.gbm,
+                Model.xt,
+            ]
+
+            if not explain_samples:
+                default_models += [Model.nn_fastainn, Model.knn, Model.fasttext]
+
+            # TODO: Check if enable any models if dataset exceeds a certain size
+            # Use GBM if dataset >= 10000 (see https://neptune.ai/blog/lightgbm-parameters-guide)
+            # if dataset_len >= 10000:
+            #     default_models.append(Model.gbm)
+
+        if ag_automm_enabled and (Model.ag_automm in available_models):
+            default_models += [Model.ag_automm]
+
+        if tabpfn_enabled and (Model.tabpfn in available_models):
+            default_models += [Model.tabpfn]
+
+        options = {}
+        for model in available_models:
+            model_hyperparameters = model_params_dict[model].get_hyperparameters(
+                problem_type=problem_type, device=device, num_class=num_class
+            )
+            options[model] = {
+                "display_name": model_hyperparameters.display_name,
+                "value": model_hyperparameters,
+            }
+
+        return ModelSpace(
+            name=name,
+            display_name=display_name,
+            description=description,
+            default=default_models,
+            options=options,
+        )

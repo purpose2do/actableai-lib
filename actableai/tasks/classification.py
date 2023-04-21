@@ -382,85 +382,6 @@ class AAIClassificationTask(AAIAutogluonTask):
         AAIAutogluonTask: Base Class for every AutoGluon task
     """
 
-    @classmethod
-    def get_hyperparameters_space(
-        cls,
-        dataset_len: int,
-        num_class: int,
-        problem_type: str = "multiclass",
-        device: str = "cpu",
-        explain_samples: bool = False,
-        ag_automm_enabled: bool = False,
-        tabpfn_enabled: bool = False,
-    ) -> ModelSpace:
-        """Return the hyperparameters space of the task.
-
-        Args:
-            dataset_len: Len of the dataset (shape[0]).
-            num_class: The number of classes in the target.
-            problem_type: The type of the problem ('multiclass' or 'binary')
-            device: Which device is being used, can be one of 'cpu' or 'gpu'
-            explain_samples: Boolean indicating if explanations for predictions
-                in test and validation will be generated.
-            ag_automm_enabled: Boolean indicating if AG_AUTOMM model should be used
-            tabpfn_enabled: Boolean indicating if TabPFN model should be used
-
-        Returns:
-            Hyperparameters space represented as a ModelSpace.
-        """
-        from actableai.models.autogluon.base import Model
-        from actableai.models.autogluon import model_params_dict
-
-        # Get list of available models for the given problem type
-        available_models = cls.get_available_models(
-            problem_type=problem_type,
-            explain_samples=explain_samples,
-            gpu=True if device == "gpu" else False,
-            ag_automm_enabled=ag_automm_enabled,
-            tabpfn_enabled=tabpfn_enabled,
-        )
-
-        # TODO: Check list of default models
-        default_models = [
-            Model.cat,
-            Model.xgb_tree,
-            Model.rf,
-            Model.gbm,
-            Model.xt,
-        ]
-
-        if not explain_samples:
-            default_models += [Model.nn_fastainn, Model.knn, Model.fasttext]
-
-        if ag_automm_enabled and (Model.ag_automm in available_models):
-            default_models += [Model.ag_automm]
-
-        if tabpfn_enabled and (Model.tabpfn in available_models):
-            default_models += [Model.tabpfn]
-
-        # TODO: Check if enable any models if dataset exceeds a certain size
-        # Use GBM if dataset >= 10000 (see https://neptune.ai/blog/lightgbm-parameters-guide)
-        # if dataset_len >= 10000:
-        #     default_models.append(Model.gbm)
-
-        options = {}
-        for model in available_models:
-            model_hyperparameters = model_params_dict[model].get_hyperparameters(
-                problem_type=problem_type, device=device, num_class=num_class
-            )
-            options[model] = {
-                "display_name": model_hyperparameters.display_name,
-                "value": model_hyperparameters,
-            }
-
-        return ModelSpace(
-            name="classification_model_space",
-            display_name="Classification Model Space",
-            description="The space of available and default classification models and parameters.",
-            default=default_models,
-            options=options,
-        )
-
     @staticmethod
     def get_num_class(df: pd.DataFrame, target: str) -> str:
         """Determine the number of classes of the target.
@@ -740,6 +661,9 @@ class AAIClassificationTask(AAIAutogluonTask):
             explain_samples=explain_samples,
             ag_automm_enabled=ag_automm_enabled and any_text_cols,
             tabpfn_enabled=True,
+            name="classification_model_space",
+            display_name="Classification Model Space",
+            description="The space of available and default classification models and parameters.",
         )
         hyperparameters_validation = None
         if hyperparameters is None or len(hyperparameters) <= 0:
