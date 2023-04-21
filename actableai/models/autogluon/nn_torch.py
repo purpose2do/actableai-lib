@@ -13,7 +13,7 @@ from .nn_base import get_parameters
 class NNTorchParams(BaseParams):
     """Parameter class for NN Model."""
 
-    # NOTE: "regression", "binary", "multiclass" supported but disabled since they can be memory-intensive
+    # NOTE: "regression", "binary", "multiclass", "softclass" supported but disabled since they can be memory-intensive
     supported_problem_types = ["quantile"]
     _autogluon_name = "NN_TORCH"
     explain_samples_supported = False

@@ -201,7 +201,7 @@ def get_parameters(problem_type: str, num_class: int) -> List[BaseParameter]:
             # ),
         ]
 
-    elif problem_type == "multiclass":
+    elif problem_type in ["multiclass", "softclass"]:
         parameters = [
             OptionsSpace[str](
                 name="objective",

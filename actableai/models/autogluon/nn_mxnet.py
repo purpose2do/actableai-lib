@@ -9,7 +9,11 @@ from .nn_base import get_parameters
 class NNMXNetParams(BaseParams):
     """Parameter class for NN Model."""
 
-    supported_problem_types = ["regression", "binary", "multiclass"]
+    supported_problem_types = [
+        "regression",
+        "binary",
+        "multiclass",
+    ]  # NOTE: "softclass" can also be supported
     _autogluon_name = "NN_MXNET"
     explain_samples_supported = False
 

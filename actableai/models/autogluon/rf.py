@@ -7,7 +7,12 @@ from actableai.parameters.parameters import Parameters
 class RFParams(BaseParams):
     """Parameter class for RF Model."""
 
-    supported_problem_types = ["regression", "quantile", "binary", "multiclass"]
+    supported_problem_types = [
+        "regression",
+        "quantile",
+        "binary",
+        "multiclass",
+    ]  # NOTE: "softclass" can also be supported
     _autogluon_name = "RF"
     explain_samples_supported = True
 
@@ -135,7 +140,7 @@ class RFParams(BaseParams):
                     },
                 ),
             ]
-        else:  # Binary/multi-class Classification
+        else:  # Binary/multi-class/soft-class classification
             parameters += [
                 OptionsParameter[str](
                     name="criterion",

@@ -8,7 +8,11 @@ from .xgboost_base import get_parameters
 class XGBoostTreeParams(BaseParams):
     """Parameter class for XGBoost Model when using a tree booster."""
 
-    supported_problem_types = ["regression", "binary", "multiclass"]
+    supported_problem_types = [
+        "regression",
+        "binary",
+        "multiclass",
+    ]  # NOTE: "softclass" can also be supported
     _autogluon_name = "XGB"
     explain_samples_supported = True
 
