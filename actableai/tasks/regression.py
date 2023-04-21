@@ -401,8 +401,7 @@ class AAIRegressionTask(AAIAutogluonTask):
         return ModelSpace(
             name="regression_model_space",
             display_name="Regression Model Space",
-            # TODO add description
-            description="description_model_space_todo",
+            description="The space of available and default regression models and parameters.",
             default=default_models,
             options=options,
         )
