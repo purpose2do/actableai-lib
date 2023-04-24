@@ -505,6 +505,7 @@ class AAIInterventionEffectPredictor:
                     feature_prune=False,
                     feature_prune_time_limit=None,
                     tabpfn_model_directory=self.tabpfn_model_directory,
+                    num_trials=1,
                 )
                 self.outcome_predictor = predictor
                 Y = pd.concat(df_val_cross_val_pred_prob).sort_index()
