@@ -2,7 +2,6 @@ from typing import Union, Dict, Any, Optional, List, Set
 
 from enum import Enum
 
-import pytesseract
 from ray.serve.config import AutoscalingConfig
 from PIL.Image import Image as ImageType
 
@@ -68,6 +67,8 @@ class TesseractServe(BaseOCRServe):
         model_type: TesseractModelType = TesseractModelType.normal,
         page_segmentation_mode: int = 3,
     ) -> Set[str]:
+        import pytesseract
+
         config = self._get_config(
             model_type,
             page_segmentation_mode=page_segmentation_mode,
