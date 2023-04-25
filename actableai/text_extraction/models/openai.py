@@ -33,11 +33,11 @@ class OpenAI(BaseTextExtractionModel):
                 display_name="Output JSON Schema",
                 description="Schema used for the output",
                 default="""[
-                    {{
-                        "field_name": "string",
-                        "field_value": "string" or "array of string"
-                    }}
-                ]""",
+    {
+        "field_name": "string",
+        "field_value": "string" or "array of string"
+    }
+]""",
             ),
             FloatParameter(
                 name="rate_limit_per_minute",
