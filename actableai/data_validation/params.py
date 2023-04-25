@@ -58,6 +58,7 @@ from actableai.data_validation.checkers import (
     TimeSeriesTuningMetricChecker,
     CausalDiscoveryAlgoChecker,
     IsClusteringModelCompatible,
+    FieldsToExtractChecker,
 )
 from actableai.intervention.config import KFOLD_CATEGORICAL_OUTCOME
 from actableai.timeseries.utils import find_freq
@@ -924,4 +925,16 @@ class CausalDiscoveryDataValidator:
     def validate(self, algo: str):
         return [
             CausalDiscoveryAlgoChecker(level=CheckLevels.CRITICAL).check(algo=algo),
+        ]
+
+
+class TextExtractionDataValidator:
+    def __init__(self):
+        pass
+
+    def validate(self, fields_to_extract: List[str]):
+        return [
+            FieldsToExtractChecker(level=CheckLevels.CRITICAL).check(
+                fields_to_extract=fields_to_extract
+            )
         ]
