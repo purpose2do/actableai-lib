@@ -932,9 +932,18 @@ class TextExtractionDataValidator:
     def __init__(self):
         pass
 
-    def validate(self, fields_to_extract: List[str]):
+    def validate(
+        self,
+        df: pd.DataFrame,
+        document_name_column: str,
+        text_column: str,
+        fields_to_extract: List[str],
+    ):
         return [
+            ColumnsExistChecker(level=CheckLevels.CRITICAL).check(
+                df, [document_name_column, text_column]
+            ),
             FieldsToExtractChecker(level=CheckLevels.CRITICAL).check(
                 fields_to_extract=fields_to_extract
-            )
+            ),
         ]

@@ -1,4 +1,6 @@
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional
+
+from pandas import DataFrame
 
 from actableai.parameters.options import OptionsParameter
 from actableai.parameters.parameters import Parameters
@@ -49,7 +51,9 @@ class AAITextExtractionTask(AAITask):
     @AAITask.run_with_ray_remote(TaskType.TEXT_EXTRACTION)
     def run(
         self,
-        document_list: List[str],
+        df: DataFrame,
+        document_name_column: str,
+        text_column: str,
         openai_api_key: str,
         openai_rate_limit_per_minute: float = None,
         parameters: Optional[Dict[str, Any]] = None,
@@ -102,6 +106,9 @@ class AAITextExtractionTask(AAITask):
         )
 
         data_validation_results += TextExtractionDataValidator().validate(
+            df=df,
+            document_name_column=document_name_column,
+            text_column=text_column,
             fields_to_extract=model_parameters["fields_to_extract"],
         )
 
@@ -119,11 +126,12 @@ class AAITextExtractionTask(AAITask):
 
         openai.api_key = openai_api_key
 
-        extracted_data = model.predict(data=document_list)
+        extracted_data = model.predict(data=df[text_column])
+        df["extracted_data"] = extracted_data
 
         return {
             "data": {
-                "extracted_data": extracted_data,
+                "extracted_data": df[[document_name_column, "extracted_data"]],
             },
             "status": "SUCCESS",
             "messenger": "",

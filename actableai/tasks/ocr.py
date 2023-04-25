@@ -1,5 +1,6 @@
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional
 
+import pandas as pd
 from PIL.Image import Image as ImageType
 
 from actableai.parameters.options import OptionsParameter
@@ -51,7 +52,7 @@ class AAIOCRTask(AAITask):
     @AAITask.run_with_ray_remote(TaskType.OCR)
     def run(
         self,
-        image_list: List[ImageType],
+        images: Dict[str, ImageType],
         parameters: Optional[Dict[str, Any]] = None,
     ):
         import time
@@ -95,11 +96,17 @@ class AAIOCRTask(AAITask):
             process_parameters=False,
         )
 
-        parsed_text = ocr_model.transform(data=image_list)
+        parsed_text = ocr_model.transform(data=images.values())
+        df_text = pd.DataFrame(
+            {
+                "image_name": images.keys(),
+                "parsed_text": parsed_text,
+            }
+        )
 
         return {
             "data": {
-                "parsed_text_list": parsed_text,
+                "parsed_text": df_text,
             },
             "status": "SUCCESS",
             "messenger": "",
