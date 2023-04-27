@@ -59,6 +59,7 @@ class OpenAI(BaseTextExtractionModel):
         import time
         import json
         import openai
+        from actableai.utils.openai import num_tokens_from_messages
 
         rate_limit_per_minute = self.parameters["rate_limit_per_minute"]
         delay = 60.0 / rate_limit_per_minute
@@ -71,21 +72,36 @@ class OpenAI(BaseTextExtractionModel):
         for document in data:
             prompt = f"""Extract the following fields from the provided document: {fields_to_extract}
 
-            Using this JSON format as a result:
+            Using this JSON format as a result, strictly respect this format and return only the JSON data:
             {output_schema}
             """
 
             time.sleep(delay)
+            messages = [
+                {"role": "system", "content": document},
+                {"role": "user", "content": prompt},
+            ]
+
+            num_tokens = num_tokens_from_messages(
+                messages=messages,
+                model=model,
+            )
+            max_tokens = 4096 - num_tokens - 1
+
             chat_completion_result = openai.ChatCompletion.create(
                 model=model,
-                messages=[
-                    {"role": "system", "content": document},
-                    {"role": "user", "content": prompt},
-                ],
+                messages=messages,
+                max_tokens=max_tokens,
             )
-            extracted_fields = json.loads(
-                chat_completion_result["choices"][0]["message"]["content"]
-            )
+
+            # TODO check if max tokens is reached
+
+            content = chat_completion_result["choices"][0]["message"]["content"]
+
+            try:
+                extracted_fields = json.loads(content)
+            except ValueError:
+                extracted_fields = content
 
             extracted_data.append(extracted_fields)
 
