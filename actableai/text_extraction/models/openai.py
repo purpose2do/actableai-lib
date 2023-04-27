@@ -72,9 +72,11 @@ class OpenAI(BaseTextExtractionModel):
         for document in data:
             prompt = f"""Extract the following fields from the provided document: {fields_to_extract}
 
-            Using this JSON format as a result, strictly respect this format and return only the JSON data:
-            {output_schema}
-            """
+Using this JSON format as a result:
+{output_schema}
+
+The JSON Object:
+"""
 
             time.sleep(delay)
             messages = [
