@@ -58,6 +58,7 @@ class AAITextExtractionTask(AAITask):
         openai_rate_limit_per_minute: float = None,
         parameters: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
+        import json
         import time
         import openai
         from actableai.data_validation.base import CheckLevels
@@ -127,11 +128,25 @@ class AAITextExtractionTask(AAITask):
         openai.api_key = openai_api_key
 
         extracted_data = model.predict(data=df[text_column])
-        df["extracted_data"] = extracted_data
+
+        def try_parse(data):
+            try:
+                return json.loads(data)
+            except ValueError:
+                return None
+
+        df["extracted_data_raw"] = extracted_data
+        df["extracted_data"] = df["extracted_data_raw"].apply(try_parse)
 
         return {
             "data": {
-                "extracted_data": df[[document_name_column, "extracted_data"]],
+                "extracted_data": df[
+                    [
+                        document_name_column,
+                        "extracted_data",
+                        "extracted_data_raw",
+                    ]
+                ],
             },
             "status": "SUCCESS",
             "messenger": "",

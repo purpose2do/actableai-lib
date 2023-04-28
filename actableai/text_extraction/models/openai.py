@@ -57,7 +57,6 @@ class OpenAI(BaseTextExtractionModel):
 
     def _predict(self, data: Iterable[str]) -> Iterable[JSONType]:
         import time
-        import json
         import openai
         from actableai.utils.openai import num_tokens_from_messages
 
@@ -99,12 +98,6 @@ The JSON Object:
             # TODO check if max tokens is reached
 
             content = chat_completion_result["choices"][0]["message"]["content"]
-
-            try:
-                extracted_fields = json.loads(content)
-            except ValueError:
-                extracted_fields = content
-
-            extracted_data.append(extracted_fields)
+            extracted_data.append(content)
 
         return extracted_data
