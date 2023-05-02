@@ -23,3 +23,5 @@ class TaskType(str, Enum):
     INTERVENTION = "intervention"
     ASSOCIATION_RULES = "association_rules"
     CAUSAL_DISCOVERY = "causal_discovery"
+    OCR = "ocr"
+    TEXT_EXTRACTION = "text_extraction"

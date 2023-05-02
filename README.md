@@ -86,6 +86,7 @@ This project is started and maintained by [Actable AI](https://actable.ai).
 * You need to have [R](https://www.r-project.org/) installed
 * You need to have multi_rake installed in your python env :
 One way to do so is `pip install git+https://github.com/Actable-AI/multi_rake@master#egg=multi_rake`
+* You need to have [tesseract](https://tesseract-ocr.github.io/tessdoc/Installation.html)
 * If you are using the gpu version, you need CUDA 11.0 installed for mxnet
 
 ### Installation
