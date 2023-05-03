@@ -340,7 +340,7 @@ class IsValidPredictionLengthChecker(IChecker):
             Optional[CheckResult]: Check result.
         """
         n_sample = len(df)
-        if prediction_length > len(df) / 5:
+        if prediction_length > n_sample / 5:
             return CheckResult(
                 name=self.name,
                 level=self.level,
