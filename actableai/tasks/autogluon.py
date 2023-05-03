@@ -185,7 +185,11 @@ class AAIAutogluonTask(AAITunableTask, ABC):
                 Model.xt,
             ]
             if not explain_samples:
-                default_models += [Model.nn_fastainn, Model.knn]
+                if Model.nn_fastainn in available_models:
+                    default_models.append(Model.nn_fastainn)
+
+                if Model.knn in available_models:
+                    default_models.append(Model.knn)
 
             # TODO: Check if enable any models if dataset exceeds a certain size
             # Use GBM if dataset >= 10000 (see https://neptune.ai/blog/lightgbm-parameters-guide)
@@ -203,7 +207,14 @@ class AAIAutogluonTask(AAITunableTask, ABC):
             ]
 
             if not explain_samples:
-                default_models += [Model.nn_fastainn, Model.knn, Model.fasttext]
+                if Model.nn_fastainn in available_models:
+                    default_models.append(Model.nn_fastainn)
+
+                if Model.knn in available_models:
+                    default_models.append(Model.knn)
+
+                if Model.fasttext in available_models:
+                    default_models.append(Model.fasttext)
 
             # TODO: Check if enable any models if dataset exceeds a certain size
             # Use GBM if dataset >= 10000 (see https://neptune.ai/blog/lightgbm-parameters-guide)
