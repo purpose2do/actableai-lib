@@ -42,6 +42,8 @@ class _AAIClassificationTrainTask(AAITask):
         feature_prune: bool,
         feature_prune_time_limit: Optional[float],
         tabpfn_model_directory: Optional[str],
+        infer_limit: float,
+        infer_limit_batch_size: int,
     ) -> Tuple[
         Any,
         Any,
@@ -95,6 +97,15 @@ class _AAIClassificationTrainTask(AAITask):
                 training time is used.
             feature_prune_time_limit: Time limit for feature_pruning (in seconds)
             tabpfn_model_directory: TabPFN Model Directory.
+            infer_limit: The time in seconds to predict 1 row of data. For
+                example, infer_limit=0.05 means 50 ms per row of data, or 20 rows /
+                second throughput.
+            infer_limit_batch_size: The amount of rows passed at once to be predicted
+                when calculating per-row speed. This is very important because
+                infer_limit_batch_size=1 (online-inference) is highly suboptimal as
+                various operations have a fixed cost overhead regardless of data
+                size. If you can pass your test data in bulk, you should specify
+                infer_limit_batch_size=10000.
 
         Returns:
             Return dictionnary of results for classification :
@@ -197,6 +208,8 @@ class _AAIClassificationTrainTask(AAITask):
             holdout_frac=holdout_frac,
             num_cpus=1,
             num_gpus=num_gpus,
+            infer_limit=infer_limit,
+            infer_limit_batch_size=infer_limit_batch_size,
         )
 
         explainer = None
@@ -403,12 +416,14 @@ class AAIClassificationTask(AAITask):
         pdp_ice_grid_resolution: Optional[int] = 100,
         pdp_ice_n_samples: Optional[int] = 100,
         tabpfn_model_directory: Optional[str] = None,
+        infer_limit: float = 60,
+        infer_limit_batch_size: int = 100,
     ) -> Dict:
         """Run this classification task and return results.
 
         Args:
             df: Input DataFrame
-            target: Target columns in df. If there are emtpy values in this columns,
+            target: Target columns in df. If there are empty values in this columns,
                 predictions will be generated for these rows.
             features: A list of features to be used for prediction. If None, all columns
                 except target are used as features. Defaults to None.
@@ -468,6 +483,16 @@ class AAIClassificationTask(AAITask):
             pdp_ice_n_samples: The number of rows to sample in df_train. If 'None,
                 no sampling is performed.
             tabpfn_model_directory: TabPFN Model Directory.
+            infer_limit: The time in seconds to predict 1 row of data. For
+                example, infer_limit=0.05 means 50 ms per row of data, or 20 rows /
+                second throughput.
+            infer_limit_batch_size: The amount of rows passed at once to be
+                predicted when calculating per-row speed. This is very important
+                because infer_limit_batch_size=1 (online-inference) is highly
+                suboptimal as various operations have a fixed cost overhead
+                regardless of data size. If you can pass your test data in bulk,
+                you should specify infer_limit_batch_size=10000. Must be an
+                integer greater than 0.
 
         Raises:
             Exception: If the target has less than 2 unique values.
@@ -685,6 +710,8 @@ class AAIClassificationTask(AAITask):
                 feature_prune=feature_prune,
                 feature_prune_time_limit=feature_prune_time_limit,
                 tabpfn_model_directory=tabpfn_model_directory,
+                infer_limit=infer_limit,
+                infer_limit_batch_size=infer_limit_batch_size,
             )
         else:
             (
@@ -721,6 +748,8 @@ class AAIClassificationTask(AAITask):
                 feature_prune=feature_prune,
                 feature_prune_time_limit=feature_prune_time_limit,
                 tabpfn_model_directory=tabpfn_model_directory,
+                infer_limit=infer_limit,
+                infer_limit_batch_size=infer_limit_batch_size,
             )
 
         if not use_cross_validation:
@@ -888,6 +917,8 @@ class AAIClassificationTask(AAITask):
                 feature_prune=feature_prune,
                 feature_prune_time_limit=feature_prune_time_limit,
                 tabpfn_model_directory=tabpfn_model_directory,
+                infer_limit=infer_limit,
+                infer_limit_batch_size=infer_limit_batch_size,
             )
             predictor.refit_full(model="best", set_best_to_refit_full=True)
 

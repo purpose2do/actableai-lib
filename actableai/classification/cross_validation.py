@@ -101,6 +101,8 @@ def run_cross_validation(
     feature_prune: bool,
     feature_prune_time_limit: Optional[float],
     tabpfn_model_directory: Optional[str],
+    infer_limit: float,
+    infer_limit_batch_size: int,
 ) -> Tuple[
     AverageEnsembleClassifier,
     list,
@@ -144,6 +146,16 @@ def run_cross_validation(
         feature_prune: Whether to prune features.
         feature_prune_time_limit: The time limit for feature pruning. (in seconds)
         tabpfn_model_directory: TabPFN Model Directory.
+        infer_limit: The time in seconds to predict 1 row of data. For
+            example, infer_limit=0.05 means 50 ms per row of data, or 20 rows /
+            second throughput.
+        infer_limit_batch_size: The amount of rows passed at once to be
+            predicted when calculating per-row speed. This is very important
+            because infer_limit_batch_size=1 (online-inference) is highly
+            suboptimal as various operations have a fixed cost overhead
+            regardless of data size. If you can pass your test data in bulk,
+            you should specify infer_limit_batch_size=10000. Must be an
+            integer greater than 0.
 
     Returns:
         Tuple: Result of the cross validation.
@@ -197,6 +209,8 @@ def run_cross_validation(
                 "feature_prune": feature_prune,
                 "feature_prune_time_limit": feature_prune_time_limit,
                 "tabpfn_model_directory": tabpfn_model_directory,
+                "infer_limit": infer_limit,
+                "infer_limit_batch_size": infer_limit_batch_size,
             },
         )
         for kfold_index, (train_index, val_index) in enumerate(kfolds_index_list)
