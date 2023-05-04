@@ -21,6 +21,7 @@ aiohttp==3.8.4
     #   aiohttp-cors
     #   datasets
     #   fsspec
+    #   openai
     #   ray
 aiohttp-cors==0.7.0
     # via ray
@@ -162,9 +163,7 @@ conllu==4.5.2
 contourpy==1.0.7
     # via matplotlib
 convertdate==2.4.0
-    # via
-    #   holidays
-    #   prophet
+    # via prophet
 cycler==0.11.0
     # via matplotlib
 cymem==2.0.7
@@ -178,7 +177,7 @@ dask==2021.11.2
     #   distributed
 databricks-cli==0.17.6
     # via mlflow
-datasets==2.11.0
+datasets==2.12.0
     # via evaluate
 decorator==5.1.1
     # via
@@ -252,7 +251,7 @@ flair==0.11.3
     # via -r requirements.in
 flake8==3.9.2
     # via -r requirements.in
-flask==2.2.4
+flask==2.2.5
     # via
     #   mlflow
     #   prometheus-flask-exporter
@@ -344,9 +343,9 @@ h5py==3.8.0
     #   tensorflow-gpu
 hijri-converter==2.3.1
     # via holidays
-hiredis==2.2.2
+hiredis==2.2.3
     # via aioredis
-holidays==0.23
+holidays==0.24
     # via
     #   gluonts
     #   prophet
@@ -368,7 +367,7 @@ idna==3.4
     #   anyio
     #   requests
     #   yarl
-imageio==2.28.0
+imageio==2.28.1
     # via scikit-image
 importlib-metadata==3.10.1
     # via
@@ -429,10 +428,14 @@ konoha==4.6.5
     # via flair
 korean-lunar-calendar==0.3.1
     # via holidays
-langcodes==3.3.0
-    # via spacy
+langcodes[data]==3.3.0
+    # via
+    #   -r requirements.in
+    #   spacy
 langdetect==1.0.9
     # via flair
+language-data==1.1
+    # via langcodes
 liac-arff==2.5.0
     # via openml
 libclang==16.0.0
@@ -447,7 +450,7 @@ linear-operator==0.4.0
     # via gpytorch
 lingam==1.5.5
     # via causica
-llvmlite==0.39.1
+llvmlite==0.40.0
     # via
     #   numba
     #   pynndescent
@@ -459,6 +462,8 @@ lxml==4.9.2
     # via flair
 mako==1.2.4
     # via alembic
+marisa-trie==0.7.8
+    # via language-data
 markdown==3.3.4
     # via
     #   model-index
@@ -562,7 +567,7 @@ nltk==3.7
     #   autogluon-multimodal
 nptyping==1.4.4
     # via autogluon-multimodal
-numba==0.56.4
+numba==0.57.0
     # via
     #   pynndescent
     #   shap
@@ -665,6 +670,8 @@ oauthlib==3.2.2
     #   requests-oauthlib
 omegaconf==2.1.2
     # via autogluon-multimodal
+openai==0.27.4
+    # via -r requirements.in
 opencensus==0.11.2
     # via ray
 opencensus-context==0.1.3
@@ -705,6 +712,7 @@ packaging==21.3
     #   mlflow
     #   mmcv
     #   plotly
+    #   pytesseract
     #   pytest
     #   pytorch-lightning
     #   scikit-image
@@ -776,10 +784,11 @@ pillow==9.0.1
     #   imageio
     #   matplotlib
     #   mmcv
+    #   pytesseract
     #   scikit-image
     #   tikzplotlib
     #   torchvision
-platformdirs==3.3.0
+platformdirs==3.5.0
     # via virtualenv
 plotly==5.14.1
     # via catboost
@@ -799,7 +808,7 @@ prometheus-client==0.13.1
     # via
     #   prometheus-flask-exporter
     #   ray
-prometheus-flask-exporter==0.22.3
+prometheus-flask-exporter==0.22.4
     # via mlflow
 prompt-toolkit==3.0.38
     # via ipython
@@ -837,7 +846,7 @@ pyabsa==1.15.7
     # via -r requirements.in
 pyarabic==0.6.15
     # via arabic-stopwords
-pyarrow==11.0.0
+pyarrow==12.0.0
     # via
     #   datasets
     #   openml
@@ -903,6 +912,8 @@ pyrsistent==0.19.3
     #   multi-rake
 pysocks==1.7.1
     # via requests
+pytesseract==0.3.10
+    # via -r requirements.in
 pytest==7.1.1
     # via
     #   -r requirements.in
@@ -965,14 +976,15 @@ ray[default,serve,tune]==2.0.0
     #   autogluon-core
 redis==3.5.3
     # via -r requirements.in
-regex==2023.3.23
+regex==2023.5.5
     # via
     #   flair
     #   multi-rake
     #   nltk
     #   segtok
+    #   tiktoken
     #   transformers
-requests[socks]==2.28.2
+requests[socks]==2.30.0
     # via
     #   autogluon-core
     #   autogluon-multimodal
@@ -990,6 +1002,7 @@ requests[socks]==2.28.2
     #   mlflow
     #   mxnet-cu110
     #   nlpaug
+    #   openai
     #   openmim
     #   openml
     #   ray
@@ -997,6 +1010,7 @@ requests[socks]==2.28.2
     #   responses
     #   spacy
     #   tensorboard
+    #   tiktoken
     #   torchtext
     #   torchvision
     #   transformers
@@ -1008,7 +1022,7 @@ responses==0.18.0
     # via
     #   datasets
     #   evaluate
-rich==13.3.4
+rich==13.3.5
     # via openmim
 river==0.8.0
     # via -r requirements.in
@@ -1233,7 +1247,7 @@ terminaltables==3.1.10
     # via mmdet
 text-unidecode==1.3
     # via autogluon-multimodal
-thinc==8.1.9
+thinc==8.1.10
     # via spacy
 threadpoolctl==3.1.0
     # via scikit-learn
@@ -1241,6 +1255,8 @@ tifffile==2023.4.12
     # via scikit-image
 tigramite @ git+https://github.com/WenboGong/tigramite.git@develop
     # via causica
+tiktoken==0.3.3
+    # via -r requirements.in
 tikzplotlib==0.10.1
     # via metric-visualizer
 timm==0.6.13
@@ -1315,6 +1331,7 @@ tqdm==4.64.1
     #   huggingface-hub
     #   hyperopt
     #   nltk
+    #   openai
     #   pgmpy
     #   prophet
     #   pyabsa
@@ -1376,7 +1393,7 @@ urllib3==1.26.15
     #   responses
 uvicorn==0.16.0
     # via ray
-virtualenv==20.22.0
+virtualenv==20.23.0
     # via ray
 visions==0.7.1
     # via -r requirements.in
@@ -1393,7 +1410,7 @@ webcolors==1.13
     # via tikzplotlib
 websocket-client==1.5.1
     # via docker
-werkzeug==2.3.0
+werkzeug==2.3.3
     # via
     #   flask
     #   tensorboard

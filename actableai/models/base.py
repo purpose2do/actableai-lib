@@ -1,17 +1,21 @@
 from __future__ import annotations
 
-
+from typing import Dict, Any, TypeVar, Generic, Iterable
 from abc import ABC, abstractmethod
 import logging
 from functools import lru_cache
-from typing import Dict, Any
 
 import numpy as np
+from PIL.Image import Image
 
 from actableai.parameters.parameters import Parameters
 
 
-class AAIBaseModel(ABC):
+InputDataType = TypeVar("InputDataType", np.ndarray, Iterable[Image])
+OutputDataType = TypeVar("OutputDataType", np.ndarray, Iterable[str])
+
+
+class AAIBaseModel(Generic[InputDataType, OutputDataType], ABC):
     has_fit: bool = True
     has_transform: bool = True
     has_predict: bool = True
@@ -19,29 +23,37 @@ class AAIBaseModel(ABC):
     def __init__(self):
         self.is_fit = False
 
-    def fit_transform(self, data: np.ndarray, target: np.ndarray = None) -> np.ndarray:
+    def fit_transform(
+        self, data: InputDataType, target: OutputDataType = None
+    ) -> OutputDataType:
         if not self.has_fit or not self.has_transform:
             logging.warning("Calling fit_transform has no effect.")
             return data
 
         return self._fit_transform(data, target)
 
-    def _fit_transform(self, data: np.ndarray, target: np.ndarray = None) -> np.ndarray:
+    def _fit_transform(
+        self, data: InputDataType, target: OutputDataType = None
+    ) -> OutputDataType:
         self.fit(data, target)
         return self.transform(data)
 
-    def fit_predict(self, data: np.ndarray, target: np.ndarray = None) -> np.ndarray:
+    def fit_predict(
+        self, data: InputDataType, target: OutputDataType = None
+    ) -> OutputDataType:
         if not self.has_fit or not self.has_predict:
             logging.warning("Calling fit_predict has no effect.")
             return target
 
         return self._fit_predict(data, target)
 
-    def _fit_predict(self, data: np.ndarray, target: np.ndarray = None) -> np.ndarray:
+    def _fit_predict(
+        self, data: InputDataType, target: OutputDataType = None
+    ) -> OutputDataType:
         self.fit(data, target)
         return self.predict(data)
 
-    def fit(self, data: np.ndarray, target: np.ndarray = None) -> "AAIBaseModel":
+    def fit(self, data: InputDataType, target: OutputDataType = None) -> "AAIBaseModel":
         if not self.has_fit:
             logging.warning("Calling fit has no effect.")
             return self
@@ -53,7 +65,7 @@ class AAIBaseModel(ABC):
 
         return self
 
-    def transform(self, data: np.ndarray) -> np.ndarray:
+    def transform(self, data: InputDataType) -> OutputDataType:
         if not self.has_transform:
             logging.warning("Calling transform has no effect.")
             return data
@@ -63,7 +75,7 @@ class AAIBaseModel(ABC):
 
         return self._transform(data)
 
-    def predict(self, data: np.ndarray) -> np.ndarray:
+    def predict(self, data: InputDataType) -> OutputDataType:
         if not self.has_predict:
             logging.warning("Calling predict has no effect.")
             return None
@@ -74,17 +86,21 @@ class AAIBaseModel(ABC):
         return self._predict(data)
 
     # Functions that need to be overriden
-    def _fit(self, data: np.ndarray, target: np.ndarray = None) -> bool:
+    def _fit(self, data: InputDataType, target: OutputDataType = None) -> bool:
         raise NotImplementedError()
 
-    def _transform(self, data: np.ndarray) -> np.ndarray:
+    def _transform(self, data: InputDataType) -> OutputDataType:
         raise NotImplementedError()
 
-    def _predict(self, data: np.ndarray) -> np.ndarray:
+    def _predict(self, data: InputDataType) -> OutputDataType:
         raise NotImplementedError()
 
 
-class AAIParametersModel(AAIBaseModel, ABC):
+class AAIParametersModel(
+    AAIBaseModel[InputDataType, OutputDataType],
+    Generic[InputDataType, OutputDataType],
+    ABC,
+):
     @staticmethod
     @abstractmethod
     @lru_cache(maxsize=None)

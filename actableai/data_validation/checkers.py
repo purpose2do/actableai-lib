@@ -6,7 +6,6 @@ from pandas.api.types import is_numeric_dtype
 from actableai.classification.utils import split_validation_by_datetime
 from actableai.clustering.models import BaseClusteringModel
 
-from actableai.data_imputation.error_detector.rule_parser import RulesBuilder
 from actableai.data_validation.base import (
     CLASSIFICATION_MINIMUM_NUMBER_OF_CLASS_SAMPLE,
     IChecker,
@@ -719,6 +718,7 @@ class RuleDoNotContainDatetimeChecker(IChecker):
         self.level = level
 
     def check(self, df, rules) -> Optional[CheckResult]:
+        from actableai.data_imputation.error_detector.rule_parser import RulesBuilder
         from actableai.utils import get_type_special
 
         datetime_columns = []
@@ -1295,3 +1295,17 @@ class IsClusteringModelCompatible(IChecker):
                 )
 
         return None
+
+
+class FieldsToExtractChecker(IChecker):
+    def __init__(self, level, name="FieldsToExtractChecker"):
+        super().__init__(name)
+        self.level = level
+
+    def check(self, fields_to_extract: List[str]) -> Optional[CheckResult]:
+        if len(fields_to_extract) <= 0:
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"No fields to extract",
+            )
