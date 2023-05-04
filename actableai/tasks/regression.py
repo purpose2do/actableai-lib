@@ -42,6 +42,8 @@ class _AAIRegressionTrainTask(AAITask):
         feature_prune_time_limit: Optional[float],
         num_trials: int,
         problem_type: str,
+        infer_limit: float,
+        infer_limit_batch_size: int,
     ) -> Tuple[
         Any,
         List,
@@ -81,6 +83,16 @@ class _AAIRegressionTrainTask(AAITask):
                 if feature_prune is True
             num_trials: The number of trials for hyperparameter optimization
             problem_type: The type of the problem ('regression' or 'quantile')
+            infer_limit: The time in seconds to predict 1 row of data. For
+                example, infer_limit=0.05 means 50 ms per row of data, or 20 rows /
+                second throughput.
+            infer_limit_batch_size: The amount of rows passed at once to be
+                predicted when calculating per-row speed. This is very important
+                because infer_limit_batch_size=1 (online-inference) is highly
+                suboptimal as various operations have a fixed cost overhead
+                regardless of data size. If you can pass your test data in bulk,
+                you should specify infer_limit_batch_size=10000. Must be an
+                integer greater than 0.
 
         Returns:
             Tuple:
@@ -183,6 +195,8 @@ class _AAIRegressionTrainTask(AAITask):
             num_cpus=1,
             num_gpus=num_gpus,
             hyperparameter_tune_kwargs=hyperparameter_tune_kwargs,
+            infer_limit=infer_limit,
+            infer_limit_batch_size=infer_limit_batch_size,
         )
 
         explainer = None
@@ -467,6 +481,8 @@ class AAIRegressionTask(AAIAutogluonTask):
         pdp_ice_grid_resolution: Optional[int] = 100,
         pdp_ice_n_samples: Optional[int] = 100,
         num_trials: int = 1,
+        infer_limit: float = 60,
+        infer_limit_batch_size: int = 100,
     ) -> Dict[str, Any]:
         """Run this regression task and return results.
 
@@ -540,6 +556,16 @@ class AAIRegressionTask(AAIAutogluonTask):
             pdp_ice_n_samples: The number of rows to sample in df_train. If 'None,
                 no sampling is performed.
             num_trials: The number of trials for hyperparameter optimization
+            infer_limit: The time in seconds to predict 1 row of data. For
+                example, infer_limit=0.05 means 50 ms per row of data, or 20 rows /
+                second throughput.
+            infer_limit_batch_size: The amount of rows passed at once to be
+                predicted when calculating per-row speed. This is very important
+                because infer_limit_batch_size=1 (online-inference) is highly
+                suboptimal as various operations have a fixed cost overhead
+                regardless of data size. If you can pass your test data in bulk,
+                you should specify infer_limit_batch_size=10000. Must be an
+                integer greater than 0.
 
         Examples:
             >>> import pandas as pd
@@ -817,6 +843,8 @@ class AAIRegressionTask(AAIAutogluonTask):
                 feature_prune_time_limit=feature_prune_time_limit,
                 num_trials=num_trials,
                 problem_type=problem_type,
+                infer_limit=infer_limit,
+                infer_limit_batch_size=infer_limit_batch_size,
             )
         else:
             (
@@ -854,6 +882,8 @@ class AAIRegressionTask(AAIAutogluonTask):
                 feature_prune_time_limit=feature_prune_time_limit,
                 num_trials=num_trials,
                 problem_type=problem_type,
+                infer_limit=infer_limit,
+                infer_limit_batch_size=infer_limit_batch_size,
             )
 
         # Validation
@@ -1050,6 +1080,8 @@ class AAIRegressionTask(AAIAutogluonTask):
                 feature_prune_time_limit=feature_prune_time_limit,
                 num_trials=1,
                 problem_type=problem_type,
+                infer_limit=infer_limit,
+                infer_limit_batch_size=infer_limit_batch_size,
             )
             predictor.refit_full(model="best", set_best_to_refit_full=True)
 
