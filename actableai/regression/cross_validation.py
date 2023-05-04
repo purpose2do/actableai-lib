@@ -33,6 +33,8 @@ def run_cross_validation(
     feature_prune_time_limit: Optional[float],
     num_trials: int,
     problem_type: str,
+    infer_limit: float,
+    infer_limit_batch_size: int,
 ) -> Tuple[Dict, Dict, Union[List, Dict], List, List, List]:
     """Run cross validation on Regression Task. Data is divided in kfold groups and each
     run a regression. The returned values are means or lists of values from
@@ -64,6 +66,16 @@ def run_cross_validation(
             If None, the remaining training time is used
         num_trials: The number of trials for hyperparameter optimization
         problem_type: The type of problem ('regression' or 'quantile')
+        infer_limit: The time in seconds to predict 1 row of data. For
+            example, infer_limit=0.05 means 50 ms per row of data, or 20 rows /
+            second throughput.
+        infer_limit_batch_size: The amount of rows passed at once to be
+            predicted when calculating per-row speed. This is very important
+            because infer_limit_batch_size=1 (online-inference) is highly
+            suboptimal as various operations have a fixed cost overhead
+            regardless of data size. If you can pass your test data in bulk,
+            you should specify infer_limit_batch_size=10000. Must be an
+            integer greater than 0.
 
     Returns:
         Tuple[Dict, Dict, List, List, List, List]:
@@ -118,6 +130,8 @@ def run_cross_validation(
                 "feature_prune_time_limit": feature_prune_time_limit,
                 "num_trials": num_trials,
                 "problem_type": problem_type,
+                "infer_limit": infer_limit,
+                "infer_limit_batch_size": infer_limit_batch_size,
             },
         )
         for kfold_index, (train_index, val_index) in enumerate(kfolds_index_list)

@@ -45,6 +45,8 @@ class _AAIClassificationTrainTask(AAITask):
         feature_prune_time_limit: Optional[float],
         tabpfn_model_directory: Optional[str],
         num_trials: int,
+        infer_limit: float,
+        infer_limit_batch_size: int,
     ) -> Tuple[
         Any,
         Any,
@@ -99,6 +101,15 @@ class _AAIClassificationTrainTask(AAITask):
             feature_prune_time_limit: Time limit for feature_pruning (in seconds)
             tabpfn_model_directory: TabPFN Model Directory.
             num_trials: The number of trials for hyperparameter optimization
+            infer_limit: The time in seconds to predict 1 row of data. For
+                example, infer_limit=0.05 means 50 ms per row of data, or 20 rows /
+                second throughput.
+            infer_limit_batch_size: The amount of rows passed at once to be predicted
+                when calculating per-row speed. This is very important because
+                infer_limit_batch_size=1 (online-inference) is highly suboptimal as
+                various operations have a fixed cost overhead regardless of data
+                size. If you can pass your test data in bulk, you should specify
+                infer_limit_batch_size=10000.
 
         Returns:
             Return dictionary of results for classification :
@@ -212,6 +223,8 @@ class _AAIClassificationTrainTask(AAITask):
             num_cpus=1,
             num_gpus=num_gpus,
             hyperparameter_tune_kwargs=hyperparameter_tune_kwargs,
+            infer_limit=infer_limit,
+            infer_limit_batch_size=infer_limit_batch_size,
         )
 
         explainer = None
@@ -470,6 +483,8 @@ class AAIClassificationTask(AAIAutogluonTask):
         pdp_ice_n_samples: Optional[int] = 100,
         tabpfn_model_directory: Optional[str] = None,
         num_trials: int = 1,
+        infer_limit: float = 60,
+        infer_limit_batch_size: int = 100,
     ) -> Dict:
         """Run this classification task and return results.
 
@@ -536,6 +551,16 @@ class AAIClassificationTask(AAIAutogluonTask):
                 no sampling is performed.
             tabpfn_model_directory: TabPFN Model Directory.
             num_trials: The number of trials for hyperparameter optimization
+            infer_limit: The time in seconds to predict 1 row of data. For
+                example, infer_limit=0.05 means 50 ms per row of data, or 20 rows /
+                second throughput.
+            infer_limit_batch_size: The amount of rows passed at once to be
+                predicted when calculating per-row speed. This is very important
+                because infer_limit_batch_size=1 (online-inference) is highly
+                suboptimal as various operations have a fixed cost overhead
+                regardless of data size. If you can pass your test data in bulk,
+                you should specify infer_limit_batch_size=10000. Must be an
+                integer greater than 0.
 
         Raises:
             Exception: If the target has less than 2 unique values.
@@ -790,6 +815,8 @@ class AAIClassificationTask(AAIAutogluonTask):
                 feature_prune_time_limit=feature_prune_time_limit,
                 tabpfn_model_directory=tabpfn_model_directory,
                 num_trials=num_trials,
+                infer_limit=infer_limit,
+                infer_limit_batch_size=infer_limit_batch_size,
             )
         else:
             (
@@ -827,6 +854,8 @@ class AAIClassificationTask(AAIAutogluonTask):
                 feature_prune_time_limit=feature_prune_time_limit,
                 tabpfn_model_directory=tabpfn_model_directory,
                 num_trials=num_trials,
+                infer_limit=infer_limit,
+                infer_limit_batch_size=infer_limit_batch_size,
             )
 
         if not use_cross_validation:
@@ -995,6 +1024,8 @@ class AAIClassificationTask(AAIAutogluonTask):
                 feature_prune_time_limit=feature_prune_time_limit,
                 tabpfn_model_directory=tabpfn_model_directory,
                 num_trials=1,
+                infer_limit=infer_limit,
+                infer_limit_batch_size=infer_limit_batch_size,
             )
             predictor.refit_full(model="best", set_best_to_refit_full=True)
 

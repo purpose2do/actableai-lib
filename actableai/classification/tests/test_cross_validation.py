@@ -52,6 +52,8 @@ def test_run_cross_validation():
         feature_prune_time_limit=None,
         tabpfn_model_directory=None,
         num_trials=1,
+        infer_limit=60,
+        infer_limit_batch_size=100,
     )
 
     assert important_features is not None
