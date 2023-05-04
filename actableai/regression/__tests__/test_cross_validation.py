@@ -49,6 +49,8 @@ def test_cross_validation():
         feature_prune_time_limit=None,
         num_trials=1,
         problem_type="regression",
+        infer_limit=60,
+        infer_limit_batch_size=100,
     )
 
     assert important_features is not None
