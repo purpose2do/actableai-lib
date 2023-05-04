@@ -77,9 +77,12 @@ class AAITextExtractionTask(AAITask):
                 parameters,
             ) = parameters_definition.validate_process_parameter(parameters)
 
-        data_validation_results = parameters_validation.to_check_results(
-            name="Parameters"
-        )
+        data_validation_results = []
+
+        if parameters_validation is not None:
+            data_validation_results += parameters_validation.to_check_results(
+                name="Parameters"
+            )
 
         failed_checks = [x for x in data_validation_results if x is not None]
         if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
