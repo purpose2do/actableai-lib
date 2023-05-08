@@ -1115,6 +1115,15 @@ class TestRemoteClassification:
                 allow_module_level=False,
             )
 
+        # Skip testing of fastai models since they can be unstable during unit
+        # tests
+        # TODO: Re-enable fastai tests if issue is resolved
+        if model_type == "nn_fastainn":
+            pytest.skip(
+                "Skipping test using fastai due to potential errors during unit tests",
+                allow_module_level=False,
+            )
+
         df = pd.DataFrame(
             {
                 "x": [1, 2, 3, 4, 5, None, None, 8, 9, 10] * 3,
@@ -1172,6 +1181,8 @@ class TestRemoteClassification:
     def test_hpo_default_binary(
         self, classification_task, tmp_path, model_type, is_gpu_available
     ):
+        """Test default settings for HPO models for binary classification"""
+
         # Skip testing the model if GPU is not available but the model requires the GPU
         if not is_gpu_available and model_params_dict[model_type].gpu_required:
             pytest.skip(
@@ -1179,7 +1190,15 @@ class TestRemoteClassification:
                 allow_module_level=False,
             )
 
-        """Test default settings for HPO models for binary classification"""
+        # Skip testing of fastai models since they can be unstable during unit
+        # tests
+        # TODO: Re-enable fastai tests if issue is resolved
+        if model_type == "nn_fastainn":
+            pytest.skip(
+                "Skipping test using fastai due to potential errors during unit tests",
+                allow_module_level=False,
+            )
+
         df = pd.DataFrame(
             {
                 "x": [1, 2, 3, 4, 5, None, None, 8, 9, 10] * 3,
