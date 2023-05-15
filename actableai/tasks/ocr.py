@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Iterable
 
 import pandas as pd
 from PIL.Image import Image as ImageType
@@ -52,7 +52,7 @@ class AAIOCRTask(AAITask):
     @AAITask.run_with_ray_remote(TaskType.OCR)
     def run(
         self,
-        images: Dict[str, ImageType],
+        images: Iterable[ImageType],
         parameters: Optional[Dict[str, Any]] = None,
     ):
         import time
@@ -99,10 +99,9 @@ class AAIOCRTask(AAITask):
             process_parameters=False,
         )
 
-        parsed_text = ocr_model.transform(data=images.values())
+        parsed_text = ocr_model.transform(data=images)
         df_text = pd.DataFrame(
             {
-                "image_name": images.keys(),
                 "parsed_text": parsed_text,
             }
         )
