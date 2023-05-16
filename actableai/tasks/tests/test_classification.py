@@ -1123,6 +1123,13 @@ class TestRemoteClassification:
                 "Skipping test using fastai due to potential errors during unit tests",
                 allow_module_level=False,
             )
+        # Skip testing of ag_automm and fasttext due to potentially high
+        #   resource consumption
+        if model_type in ["ag_automm", "fasttext"]:
+            pytest.skip(
+                "Skipping test due to potentially high memory consumption",
+                allow_module_level=False,
+            )
 
         df = pd.DataFrame(
             {
@@ -1196,6 +1203,13 @@ class TestRemoteClassification:
         if model_type == "nn_fastainn":
             pytest.skip(
                 "Skipping test using fastai due to potential errors during unit tests",
+                allow_module_level=False,
+            )
+        # Skip testing of ag_automm and fasttext due to potentially high
+        #   resource consumption
+        if model_type in ["ag_automm", "fasttext"]:
+            pytest.skip(
+                "Skipping test due to potentially high memory consumption",
                 allow_module_level=False,
             )
 

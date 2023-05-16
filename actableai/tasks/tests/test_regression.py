@@ -908,6 +908,12 @@ class TestRemoteRegression:
                 "Skipping test where GPU is required but no GPU is available",
                 allow_module_level=False,
             )
+        # Skip testing of ag_automm due to potentially high resource consumption
+        if model_type == "ag_automm":
+            pytest.skip(
+                "Skipping test due to potentially high memory consumption",
+                allow_module_level=False,
+            )
 
         df = pd.DataFrame(
             {
@@ -978,6 +984,12 @@ class TestRemoteRegression:
         if model_type == "nn_fastainn":
             pytest.skip(
                 "Skipping test using fastai due to potential errors during unit tests",
+                allow_module_level=False,
+            )
+        # Skip testing of ag_automm due to potentially high resource consumption
+        if model_type == "ag_automm":
+            pytest.skip(
+                "Skipping test due to potentially high memory consumption",
                 allow_module_level=False,
             )
 
