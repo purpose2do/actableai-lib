@@ -121,9 +121,8 @@ class AAIAutogluonTask(AAITunableTask, ABC):
     def get_base_hyperparameters_space(
         cls,
         df: pd.DataFrame,
-        task: str,
-        target: str,
-        prediction_quantiles: Optional[List[float]] = None,
+        num_class: int,
+        problem_type: str,
         device: str = "cpu",
         explain_samples: bool = False,
         ag_automm_enabled: bool = False,
@@ -133,11 +132,10 @@ class AAIAutogluonTask(AAITunableTask, ABC):
 
         Args:
             df: DataFrame containing the features
-            task: The type of the task, can be one of 'regression' or
-                'classification'
-            target: The target feature name (column to be predicted)
-            prediction_quantiles: List of quantiles (for regression task only),
-                as a percentage
+            num_class: The number of classes in the target column ('-1' can be
+                used for regression which does not use classes)
+            problem_type: The type of the problem
+                ('regression'/'quantile'/'multiclass'/'binary')
             device: Which device is being used, can be one of 'cpu' or 'gpu'.
             explain_samples: Boolean indicating if explanations for predictions
                 in test and validation will be generated.
@@ -151,19 +149,6 @@ class AAIAutogluonTask(AAITunableTask, ABC):
 
         from actableai.models.autogluon.base import Model
         from actableai.models.autogluon import model_params_dict
-        from actableai.tasks.regression import AAIRegressionTask
-        from actableai.tasks.classification import AAIClassificationTask
-
-        if task == "regression":
-            num_class = -1
-            problem_type = AAIRegressionTask.compute_problem_type(prediction_quantiles)
-
-        elif task == "classification":
-            num_class = AAIClassificationTask.get_num_class(df=df, target=target)
-            problem_type = AAIClassificationTask.compute_problem_type(
-                df=df, target=target, num_class=num_class
-            )
-        # TODO: Raise error on else ('task' is not valid)?
 
         # Get list of available models for the given problem type
         available_models = cls.get_available_models(
