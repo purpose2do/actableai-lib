@@ -328,6 +328,53 @@ class _AAIRegressionTrainTask(AAITask):
 class AAIRegressionTask(AAIAutogluonTask):
     """Regression task."""
 
+    @classmethod
+    def get_hyperparameters_space(
+        cls,
+        df: pd.DataFrame,
+        target: str,
+        prediction_quantiles: Optional[List[float]] = None,
+        device: str = "cpu",
+        explain_samples: bool = False,
+        ag_automm_enabled: bool = False,
+        tabpfn_enabled: bool = False,
+    ) -> ModelSpace:
+        """Return the hyperparameters space of the task.
+
+        Args:
+            df: DataFrame containing the features
+            target: The target feature name (column to be predicted)
+            prediction_quantiles: List of quantiles (for regression task only),
+                as a percentage
+            device: Which device is being used, can be one of 'cpu' or 'gpu'.
+            explain_samples: Boolean indicating if explanations for predictions
+                in test and validation will be generated.
+            ag_automm_enabled: Boolean indicating if AG_AUTOMM model should be used.
+            tabpfn_enabled: Boolean indicating if TabPFN model should be used.
+
+        Returns:
+            Hyperparameters space represented as a ModelSpace.
+        """
+
+        default_models, options = AAIAutogluonTask.get_base_hyperparameters_space(
+            df=df,
+            task="regression",
+            target=target,
+            prediction_quantiles=prediction_quantiles,
+            device=device,
+            explain_samples=explain_samples,
+            ag_automm_enabled=ag_automm_enabled,
+            tabpfn_enabled=tabpfn_enabled,
+        )
+
+        return ModelSpace(
+            name="regression_model_space",
+            display_name="Regression Model Space",
+            description="The space of available and default regression models and parameters.",
+            default=default_models,
+            options=options,
+        )
+
     @staticmethod
     def compute_problem_type(prediction_quantiles: Optional[List[int]]) -> str:
         """Determine the problem type ('regression' or 'quantile')
@@ -605,20 +652,15 @@ class AAIRegressionTask(AAIAutogluonTask):
         # Determine GPU type
         device = "gpu" if is_gpu_available() else "cpu"
 
-        n_samples = df.shape[0]
         any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
-        hyperparameters_space = self.get_base_hyperparameters_space(
+        hyperparameters_space = self.get_hyperparameters_space(
             df=df,
-            task='regression',
             target=target,
             prediction_quantiles=prediction_quantiles,
             device=device,
             explain_samples=explain_samples,
             ag_automm_enabled=ag_automm_enabled and any_text_cols,
             tabpfn_enabled=False,
-            name="regression_model_space",
-            display_name="Regression Model Space",
-            description="The space of available and default regression models and parameters.",
         )
         hyperparameters_validation = None
         if hyperparameters is None or len(hyperparameters) <= 0:

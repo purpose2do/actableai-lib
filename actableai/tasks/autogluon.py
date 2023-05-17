@@ -120,62 +120,6 @@ class AAIAutogluonTask(AAITunableTask, ABC):
     @classmethod
     def get_base_hyperparameters_space(
         cls,
-        name: str,
-        display_name: str,
-        description: str,
-        df: pd.DataFrame,
-        task: str,
-        target: str,
-        prediction_quantiles: Optional[List[float]] = None,
-        device: str = "cpu",
-        explain_samples: bool = False,
-        ag_automm_enabled: bool = False,
-        tabpfn_enabled: bool = False,
-    ) -> ModelSpace:
-        """Return the hyperparameters space of the task.
-
-        Args:
-            name: Name of the model space.
-            display_name: The display name for the model space
-            description: The description of the model space.
-            df: DataFrame containing the features
-            task: The type of the task, can be one of 'regression' or
-                'classification'
-            target: The target feature name (column to be predicted)
-            prediction_quantiles: List of quantiles (for regression task only),
-                as a percentage
-            device: Which device is being used, can be one of 'cpu' or 'gpu'.
-            explain_samples: Boolean indicating if explanations for predictions
-                in test and validation will be generated.
-            ag_automm_enabled: Boolean indicating if AG_AUTOMM model should be used.
-            tabpfn_enabled: Boolean indicating if TabPFN model should be used.
-
-        Returns:
-            Hyperparameters space represented as a ModelSpace.
-        """
-
-        default_models, options = cls.get_hyperparameters_space(
-            df=df,
-            task=task,
-            target=target,
-            prediction_quantiles=prediction_quantiles,
-            device=device,
-            explain_samples=explain_samples,
-            ag_automm_enabled=ag_automm_enabled,
-            tabpfn_enabled=tabpfn_enabled,
-        )
-
-        return ModelSpace(
-            name=name,
-            display_name=display_name,
-            description=description,
-            default=default_models,
-            options=options,
-        )
-
-    @classmethod
-    def get_hyperparameters_space(
-        cls,
         df: pd.DataFrame,
         task: str,
         target: str,
