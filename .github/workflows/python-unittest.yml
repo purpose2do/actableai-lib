@@ -14,18 +14,18 @@ on:
 
 jobs:
   build:
-    runs-on: [docker-hosted]
+    runs-on: [actableai]
     strategy:
       matrix:
         include:
-          - {runs-on: ubuntu-20.04, python-version: 3.8}
+          - {runs-on: ubuntu-22.04, python-version: 3.8}
 
     steps:
     - uses: webfactory/ssh-agent@v0.5.4
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
         submodules: recursive

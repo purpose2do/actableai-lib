@@ -7,17 +7,13 @@ on:
 
 jobs:
   build:
-    runs-on: [docker-hosted]
+    runs-on: [actableai]
     steps:
-      - name: cleanup #https://github.com/actions/checkout/issues/211
-        run: |
-          sudo chown -R runner:runner $GITHUB_WORKSPACE
-
       - uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
           submodules: recursive
@@ -33,7 +29,7 @@ jobs:
 
       - name: Azure login
         id: login
-        uses: azure/login@v1.4.3
+        uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -58,7 +54,7 @@ jobs:
           docker push ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/actableai-lib-docs:${{ env.TAG }}
 
       - name: Checkout GitOps repo
-        uses: actions/checkout@master
+        uses: actions/checkout@v3
         with:
           repository: Actable-AI/helmcharts
           token: ${{ secrets.GH_TOKEN }}
