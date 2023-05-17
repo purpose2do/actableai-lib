@@ -911,7 +911,7 @@ class TestRemoteRegression:
         # Skip testing of ag_automm due to potentially high resource consumption
         if model_type == "ag_automm":
             pytest.skip(
-                "Skipping test due to potentially high memory consumption",
+                "Skipping test due to potentially high resource consumption",
                 allow_module_level=False,
             )
 
@@ -989,7 +989,7 @@ class TestRemoteRegression:
         # Skip testing of ag_automm due to potentially high resource consumption
         if model_type == "ag_automm":
             pytest.skip(
-                "Skipping test due to potentially high memory consumption",
+                "Skipping test due to potentially high resource consumption",
                 allow_module_level=False,
             )
 

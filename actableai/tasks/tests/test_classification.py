@@ -1127,7 +1127,7 @@ class TestRemoteClassification:
         #   resource consumption
         if model_type in ["ag_automm", "fasttext"]:
             pytest.skip(
-                "Skipping test due to potentially high memory consumption",
+                "Skipping test due to potentially high resource consumption",
                 allow_module_level=False,
             )
 
@@ -1209,7 +1209,7 @@ class TestRemoteClassification:
         #   resource consumption
         if model_type in ["ag_automm", "fasttext"]:
             pytest.skip(
-                "Skipping test due to potentially high memory consumption",
+                "Skipping test due to potentially high resource consumption",
                 allow_module_level=False,
             )
 
