@@ -607,14 +607,15 @@ class AAIRegressionTask(AAIAutogluonTask):
 
         n_samples = df.shape[0]
         any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
-        hyperparameters_space = self.get_hyperparameters_space(
-            dataset_len=n_samples,
-            problem_type=problem_type,
+        hyperparameters_space = self.get_base_hyperparameters_space(
+            df=df,
+            task='regression',
+            target=target,
+            prediction_quantiles=prediction_quantiles,
             device=device,
             explain_samples=explain_samples,
             ag_automm_enabled=ag_automm_enabled and any_text_cols,
             tabpfn_enabled=False,
-            num_class=-1,
             name="regression_model_space",
             display_name="Regression Model Space",
             description="The space of available and default regression models and parameters.",

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Dict, List, Any, Union, TYPE_CHECKING, Type
+from typing import Dict, List, Any, Union, TYPE_CHECKING, Type, Optional
 
 from actableai.parameters.models import ModelSpace
 from actableai.parameters.parameters import Parameters
@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 from actableai.tasks.base import AAITunableTask
 from actableai.models.autogluon import Model
+
+import pandas as pd
 
 
 class AAIAutogluonTask(AAITunableTask, ABC):
@@ -116,14 +118,15 @@ class AAIAutogluonTask(AAITunableTask, ABC):
         return model_params
 
     @classmethod
-    def get_hyperparameters_space(
+    def get_base_hyperparameters_space(
         cls,
         name: str,
         display_name: str,
         description: str,
-        dataset_len: int,
-        num_class: int,
-        problem_type: str,
+        df: pd.DataFrame,
+        task: str,
+        target: str,
+        prediction_quantiles: Optional[List[float]] = None,
         device: str = "cpu",
         explain_samples: bool = False,
         ag_automm_enabled: bool = False,
@@ -135,9 +138,12 @@ class AAIAutogluonTask(AAITunableTask, ABC):
             name: Name of the model space.
             display_name: The display name for the model space
             description: The description of the model space.
-            dataset_len: Len of the dataset (shape[0]).
-            num_class: The number of classes in the target.
-            problem_type: The type of the problem
+            df: DataFrame containing the features
+            task: The type of the task, can be one of 'regression' or
+                'classification'
+            target: The target feature name (column to be predicted)
+            prediction_quantiles: List of quantiles (for regression task only),
+                as a percentage
             device: Which device is being used, can be one of 'cpu' or 'gpu'.
             explain_samples: Boolean indicating if explanations for predictions
                 in test and validation will be generated.
@@ -147,8 +153,73 @@ class AAIAutogluonTask(AAITunableTask, ABC):
         Returns:
             Hyperparameters space represented as a ModelSpace.
         """
+
+        default_models, options = cls.get_hyperparameters_space(
+            df=df,
+            task=task,
+            target=target,
+            prediction_quantiles=prediction_quantiles,
+            device=device,
+            explain_samples=explain_samples,
+            ag_automm_enabled=ag_automm_enabled,
+            tabpfn_enabled=tabpfn_enabled,
+        )
+
+        return ModelSpace(
+            name=name,
+            display_name=display_name,
+            description=description,
+            default=default_models,
+            options=options,
+        )
+
+    @classmethod
+    def get_hyperparameters_space(
+        cls,
+        df: pd.DataFrame,
+        task: str,
+        target: str,
+        prediction_quantiles: Optional[List[float]] = None,
+        device: str = "cpu",
+        explain_samples: bool = False,
+        ag_automm_enabled: bool = False,
+        tabpfn_enabled: bool = False,
+    ) -> ModelSpace:
+        """Return the hyperparameters space of the task.
+
+        Args:
+            df: DataFrame containing the features
+            task: The type of the task, can be one of 'regression' or
+                'classification'
+            target: The target feature name (column to be predicted)
+            prediction_quantiles: List of quantiles (for regression task only),
+                as a percentage
+            device: Which device is being used, can be one of 'cpu' or 'gpu'.
+            explain_samples: Boolean indicating if explanations for predictions
+                in test and validation will be generated.
+            ag_automm_enabled: Boolean indicating if AG_AUTOMM model should be used.
+            tabpfn_enabled: Boolean indicating if TabPFN model should be used.
+
+        Returns:
+            default: Default models and settings.
+            options: Display name and hyperparameters of the available models
+        """
+
         from actableai.models.autogluon.base import Model
         from actableai.models.autogluon import model_params_dict
+        from actableai.tasks.regression import AAIRegressionTask
+        from actableai.tasks.classification import AAIClassificationTask
+
+        if task == "regression":
+            num_class = -1
+            problem_type = AAIRegressionTask.compute_problem_type(prediction_quantiles)
+
+        elif task == "classification":
+            num_class = AAIClassificationTask.get_num_class(df=df, target=target)
+            problem_type = AAIClassificationTask.compute_problem_type(
+                df=df, target=target, num_class=num_class
+            )
+        # TODO: Raise error on else ('task' is not valid)?
 
         # Get list of available models for the given problem type
         available_models = cls.get_available_models(
@@ -158,6 +229,8 @@ class AAIAutogluonTask(AAITunableTask, ABC):
             ag_automm_enabled=ag_automm_enabled,
             tabpfn_enabled=tabpfn_enabled,
         )
+
+        dataset_len = df.shape[0]
 
         # TODO: Consider raising error if problem type is not supported, instead
         # of defaulting to classification
@@ -237,10 +310,4 @@ class AAIAutogluonTask(AAITunableTask, ABC):
                 "value": model_hyperparameters,
             }
 
-        return ModelSpace(
-            name=name,
-            display_name=display_name,
-            description=description,
-            default=default_models,
-            options=options,
-        )
+        return default_models, options

@@ -409,8 +409,9 @@ class AAIClassificationTask(AAIAutogluonTask):
 
         return df[target].nunique()
 
+    @classmethod
     def compute_problem_type(
-        self, df: pd.DataFrame, target: str, num_class: int = None
+        cls, df: pd.DataFrame, target: str, num_class: int = None
     ) -> str:
         """Determine the problem type ('multiclass' or 'binary'), using the
         values in the target column
@@ -426,7 +427,7 @@ class AAIClassificationTask(AAIAutogluonTask):
         """
 
         if num_class is None:
-            num_class = self.get_num_class(df=df, target=target)
+            num_class = cls.get_num_class(df=df, target=target)
 
         # Check classification type
         if num_class == 2:
@@ -693,10 +694,11 @@ class AAIClassificationTask(AAIAutogluonTask):
 
         n_samples = df.shape[0]
         any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
-        hyperparameters_space = self.get_hyperparameters_space(
-            dataset_len=n_samples,
-            num_class=num_class,
-            problem_type=problem_type,
+        hyperparameters_space = self.get_base_hyperparameters_space(
+            df=df,
+            task="classification",
+            target=target,
+            prediction_quantiles=None,
             device=device,
             explain_samples=explain_samples,
             ag_automm_enabled=ag_automm_enabled and any_text_cols,
