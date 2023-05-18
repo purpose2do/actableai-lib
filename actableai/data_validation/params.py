@@ -59,6 +59,7 @@ from actableai.data_validation.checkers import (
     CausalDiscoveryAlgoChecker,
     IsClusteringModelCompatible,
     FieldsToExtractChecker,
+    DoNotUseAdditionalFeatureAsGroupbyChecker,
 )
 from actableai.intervention.config import KFOLD_CATEGORICAL_OUTCOME
 from actableai.timeseries.utils import find_freq
@@ -507,6 +508,9 @@ class TimeSeriesDataValidator:
             ),
             TimeSeriesTuningMetricChecker(level=CheckLevels.CRITICAL).check(
                 tuning_metric
+            ),
+            DoNotUseAdditionalFeatureAsGroupbyChecker(level=CheckLevels.CRITICAL).check(
+                feature_columns, group_by
             ),
         ]
 
