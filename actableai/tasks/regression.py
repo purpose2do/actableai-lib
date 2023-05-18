@@ -332,7 +332,7 @@ class AAIRegressionTask(AAIAutogluonTask):
     def get_hyperparameters_space(
         cls,
         df: pd.DataFrame,
-        problem_type: str,
+        prediction_quantiles: Optional[List[float]] = None,
         device: str = "cpu",
         explain_samples: bool = False,
         ag_automm_enabled: bool = False,
@@ -342,7 +342,8 @@ class AAIRegressionTask(AAIAutogluonTask):
 
         Args:
             df: DataFrame containing the features
-            problem_type: The problem type ('regression' or 'quantile')
+            prediction_quantiles: List of quantiles (for regression task only),
+                as a percentage
             device: Which device is being used, can be one of 'cpu' or 'gpu'.
             explain_samples: Boolean indicating if explanations for predictions
                 in test and validation will be generated.
@@ -352,6 +353,8 @@ class AAIRegressionTask(AAIAutogluonTask):
         Returns:
             Hyperparameters space represented as a ModelSpace.
         """
+
+        problem_type = cls.compute_problem_type(prediction_quantiles)
 
         default_models, options = AAIAutogluonTask.get_base_hyperparameters_space(
             df=df,
@@ -643,15 +646,13 @@ class AAIRegressionTask(AAIAutogluonTask):
             kfolds=kfolds,
         )
 
-        problem_type = self.compute_problem_type(prediction_quantiles)
-
         # Determine GPU type
         device = "gpu" if is_gpu_available() else "cpu"
 
         any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
         hyperparameters_space = self.get_hyperparameters_space(
             df=df,
-            problem_type=problem_type,
+            prediction_quantiles=prediction_quantiles,
             device=device,
             explain_samples=explain_samples,
             ag_automm_enabled=ag_automm_enabled and any_text_cols,
@@ -751,6 +752,8 @@ class AAIRegressionTask(AAIAutogluonTask):
 
         # Train
         regression_train_task = _AAIRegressionTrainTask(**train_task_params)
+
+        problem_type = self.compute_problem_type(prediction_quantiles)
 
         y_pred = None
         predictor = None

@@ -399,8 +399,7 @@ class AAIClassificationTask(AAIAutogluonTask):
     def get_hyperparameters_space(
         cls,
         df: pd.DataFrame,
-        num_class: int,
-        problem_type: str,
+        target: str,
         device: str = "cpu",
         explain_samples: bool = False,
         ag_automm_enabled: bool = False,
@@ -411,8 +410,6 @@ class AAIClassificationTask(AAIAutogluonTask):
         Args:
             df: DataFrame containing the features
             target: The target feature name (column to be predicted)
-            num_class: The number of classes in the target column
-            problem_type: The problem type ('multiclass' or 'binary')
             device: Which device is being used, can be one of 'cpu' or 'gpu'.
             explain_samples: Boolean indicating if explanations for predictions
                 in test and validation will be generated.
@@ -422,6 +419,12 @@ class AAIClassificationTask(AAIAutogluonTask):
         Returns:
             Hyperparameters space represented as a ModelSpace.
         """
+
+        num_class = cls.get_num_class(df=df, target=target)
+
+        problem_type = cls.compute_problem_type(
+            df=df, target=target, num_class=num_class
+        )
 
         default_models, options = AAIAutogluonTask.get_base_hyperparameters_space(
             df=df,
@@ -730,19 +733,13 @@ class AAIClassificationTask(AAIAutogluonTask):
         # Pre process data
         df = handle_boolean_features(df)
 
-        num_class = self.get_num_class(df=df, target=target)
-        problem_type = self.compute_problem_type(
-            df=df, target=target, num_class=num_class
-        )
-
         # Determine GPU type
         device = "gpu" if num_gpus > 0 else "cpu"
 
         any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
         hyperparameters_space = self.get_hyperparameters_space(
             df=df,
-            num_class=num_class,
-            problem_type=problem_type,
+            target=target,
             device=device,
             explain_samples=explain_samples,
             ag_automm_enabled=ag_automm_enabled and any_text_cols,
@@ -818,6 +815,13 @@ class AAIClassificationTask(AAIAutogluonTask):
 
         leaderboard = None
         explainer = None
+
+        num_class = self.get_num_class(df=df, target=target)
+
+        problem_type = self.compute_problem_type(
+            df=df, target=target, num_class=num_class
+        )
+
         # Train
         classification_train_task = _AAIClassificationTrainTask(**train_task_params)
         if kfolds > 1:
