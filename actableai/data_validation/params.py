@@ -631,7 +631,7 @@ class TimeSeriesPredictionDataValidator:
                 CheckResult(
                     name="FrequenciesChecker",
                     level=CheckLevels.CRITICAL,
-                    messge="Frequencies must be the same for all the groups",  # type: ignore
+                    message="Frequencies must be the same for all the groups",  # type: ignore
                 )
             )
 
