@@ -893,7 +893,7 @@ class DoNotUseAdditionalFeatureAsGroupbyChecker(IChecker):
         """
 
         feats_in_both_lists = set(feature_columns).intersection(set(group_by))
-        if len(feats_in_both_lists):
+        if len(feats_in_both_lists) > 0:
             return CheckResult(
                 name=self.name,
                 level=self.level,
