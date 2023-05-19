@@ -31,6 +31,7 @@ class AAIInterventionTask(AAITask):
         drop_useless_features: bool = True,
         only_fit: bool = False,
         tabpfn_model_directory: Optional[str] = None,
+        cross_validation_hyperparameters: Optional[Dict] = None,
     ) -> Dict:
         """Run this intervention task and return the results.
 
@@ -54,6 +55,8 @@ class AAIInterventionTask(AAITask):
             drop_useless_features: Whether the classification algorithm drops columns that
                 only have a unique value accross all rows at preprocessing time
             tabpfn_model_directory: TabPFN Model Directory.
+            cross_validation_hyperparameters: Hyperparameters when running cross
+                validation
 
         Examples:
             >>> import pandas as pd
@@ -101,6 +104,11 @@ class AAIInterventionTask(AAITask):
         if causal_hyperparameters is None:
             causal_hyperparameters = memory_efficient_hyperparameters()
         causal_cv = 1 if causal_cv is None else causal_cv
+        cross_validation_hyperparameters = (
+            memory_efficient_hyperparameters()
+            if cross_validation_hyperparameters is None
+            else cross_validation_hyperparameters
+        )
 
         df = df.copy()
 
@@ -144,6 +152,7 @@ class AAIInterventionTask(AAITask):
             drop_unique=drop_unique,
             drop_useless_features=drop_useless_features,
             tabpfn_model_directory=tabpfn_model_directory,
+            cross_validation_hyperparameters=cross_validation_hyperparameters,
         )
 
         model._check_params(df)
