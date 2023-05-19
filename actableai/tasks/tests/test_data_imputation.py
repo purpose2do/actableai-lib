@@ -120,10 +120,8 @@ class TestDataImputation:
 
         assert r["status"] == "SUCCESS"
         assert len(r["data"]["records"]) == len(date_range)
-        res_records = r["data"]["records"]
         for idx in drop_indices:
-            res_date = res_records[idx]["text"]["Date"]
-            assert res_date == str(date_range[idx])
+            assert r["data"]["records"][idx]["text"]["Date"] == str(date_range[idx])
 
 
 @pytest.mark.parametrize(
