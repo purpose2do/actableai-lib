@@ -41,9 +41,7 @@ class BaseParams(ABC):
             options: The options of the parameter. Can be a list, Tuple
                 representing the minimum and maximum (excluded) integer/float, or a
                 single value.
-            problem_type: Defines the type of the problem (e.g. regression,
-                binary classification, etc.).
-            device: Which device is being used, can be one of 'cpu' or 'gpu'
+            parameter_space: The parameter space of a model.
 
         Returns:
             Chosen parameter value.
@@ -166,9 +164,7 @@ class BaseParams(ABC):
 
         Args:
             params: The hyperparameters to be used by the model
-            problem_type: Defines the type of the problem (e.g. regression,
-                binary classification, etc.).
-            device: Which device is being used, can be one of 'cpu' or 'gpu'
+            model_hyperparameters_space: The model's hyperparameter space
             process_hyperparameters: If True the hyperparameters will be validated and
                 processed (deactivate if they have already been validated).
 

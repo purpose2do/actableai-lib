@@ -7,7 +7,12 @@ from actableai.parameters.parameters import Parameters
 class RFParams(BaseParams):
     """Parameter class for RF Model."""
 
-    supported_problem_types = ["regression", "quantile", "binary", "multiclass"]
+    supported_problem_types = [
+        "regression",
+        "quantile",
+        "binary",
+        "multiclass",
+    ]  # NOTE: "softclass" can also be supported
     _autogluon_name = "RF"
     explain_samples_supported = True
 
@@ -135,13 +140,13 @@ class RFParams(BaseParams):
                     },
                 ),
             ]
-        else:  # Binary/multi-class Classification
+        else:  # Binary/multi-class/soft-class classification
             parameters += [
                 OptionsParameter[str](
                     name="criterion",
                     display_name="Quality of Split Criterion",
                     description="The function to measure the quality of a split.",
-                    default=["gini", "entropy"],
+                    default="gini",
                     is_multi=False,
                     options={
                         "gini": {"display_name": "Gini impurity", "value": "gini"},

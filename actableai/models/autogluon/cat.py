@@ -6,7 +6,11 @@ from actableai.parameters.parameters import Parameters
 class CATParams(BaseParams):
     """Parameter class for CAT Model."""
 
-    supported_problem_types = ["regression", "binary", "multiclass"]
+    supported_problem_types = [
+        "regression",
+        "binary",
+        "multiclass",
+    ]  # NOTE: "softclass" can also be supported
     _autogluon_name = "CAT"
     explain_samples_supported = True
 

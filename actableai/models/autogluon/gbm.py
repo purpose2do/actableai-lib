@@ -12,7 +12,11 @@ from actableai.parameters.parameters import Parameters
 class GBMParams(BaseParams):
     """Parameter class for GBM Model."""
 
-    supported_problem_types = ["regression", "binary", "multiclass"]
+    supported_problem_types = [
+        "regression",
+        "binary",
+        "multiclass",
+    ]  # NOTE: "softclass" can also be supported
     _autogluon_name = "GBM"
     explain_samples_supported = True
 
@@ -241,7 +245,7 @@ class GBMParams(BaseParams):
                 ),
             ]
 
-        elif problem_type == "multiclass":
+        elif problem_type in ["multiclass", "softclass"]:
             parameters += [
                 OptionsSpace[str](
                     name="objective",

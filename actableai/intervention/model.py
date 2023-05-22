@@ -43,6 +43,7 @@ class AAIInterventionEffectPredictor:
         drop_unique: bool = True,
         drop_useless_features: bool = False,
         tabpfn_model_directory: Optional[str] = None,
+        cross_validation_hyperparameters: Optional[Dict] = None,
     ) -> None:
         """Predictor for intervention effect
 
@@ -68,6 +69,8 @@ class AAIInterventionEffectPredictor:
             drop_useless_features: Whether the classification algorithm drops columns
                 that only have a unique value accross all rows at preprocessing time
             tabpfn_model_directory: TabPFN Model Directory.
+            cross_validation_hyperparameters: Hyperparameters when running cross
+                validation
         """
         self.target = target
         self.current_intervention_column = current_intervention_column
@@ -88,6 +91,7 @@ class AAIInterventionEffectPredictor:
         if not drop_useless_features:
             self.automl_pipeline_feature_parameters["pre_drop_useless"] = False
             self.automl_pipeline_feature_parameters["post_generators"] = []
+        self.cross_validation_hyperparameters = cross_validation_hyperparameters
 
     def _generate_model_t(self, X: Optional[pd.DataFrame], T: pd.DataFrame):
         """Generate the treatment model
@@ -481,7 +485,7 @@ class AAIInterventionEffectPredictor:
                     explain_samples=False,
                     positive_label=None,
                     presets="medium_quality_faster_train",
-                    hyperparameters=memory_efficient_hyperparameters(),
+                    hyperparameters=self.cross_validation_hyperparameters,
                     model_directory=mkdtemp(prefix="autogluon_model"),
                     target=self.target,
                     features=list(
@@ -505,6 +509,7 @@ class AAIInterventionEffectPredictor:
                     feature_prune=False,
                     feature_prune_time_limit=None,
                     tabpfn_model_directory=self.tabpfn_model_directory,
+                    num_trials=1,
                     infer_limit=60,
                     infer_limit_batch_size=100,
                 )
