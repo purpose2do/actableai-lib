@@ -79,13 +79,10 @@ class TesseractServe(BaseOCRServe):
         self,
         image: ImageType,
         model_type: Optional[TesseractModelType] = None,
-        language_list: Union[List[str], str] = "eng",
+        lang: str = "eng",
         page_segmentation_mode: int = 3,
     ) -> str:
         import pytesseract
-
-        if not isinstance(language_list, list):
-            language_list = [language_list]
 
         config = self._get_config(
             model_type=model_type,
@@ -96,10 +93,8 @@ class TesseractServe(BaseOCRServe):
             page_segmentation_mode=page_segmentation_mode,
         )
 
-        for language in language_list:
+        for language in lang.split('+'):
             if language not in available_languages:
                 raise ValueError(f"Invalid language: {language}")
-
-        lang = "+".join(language_list)
 
         return pytesseract.image_to_string(image=image, lang=lang, config=config)
