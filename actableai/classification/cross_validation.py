@@ -101,6 +101,7 @@ def run_cross_validation(
     feature_prune: bool,
     feature_prune_time_limit: Optional[float],
     tabpfn_model_directory: Optional[str],
+    num_trials: int,
     infer_limit: float,
     infer_limit_batch_size: int,
 ) -> Tuple[
@@ -146,6 +147,7 @@ def run_cross_validation(
         feature_prune: Whether to prune features.
         feature_prune_time_limit: The time limit for feature pruning. (in seconds)
         tabpfn_model_directory: TabPFN Model Directory.
+        num_trials: The number of trials for hyperparameter optimization
         infer_limit: The time in seconds to predict 1 row of data. For
             example, infer_limit=0.05 means 50 ms per row of data, or 20 rows /
             second throughput.
@@ -209,6 +211,7 @@ def run_cross_validation(
                 "feature_prune": feature_prune,
                 "feature_prune_time_limit": feature_prune_time_limit,
                 "tabpfn_model_directory": tabpfn_model_directory,
+                "num_trials": num_trials,
                 "infer_limit": infer_limit,
                 "infer_limit_batch_size": infer_limit_batch_size,
             },

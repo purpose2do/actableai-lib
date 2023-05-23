@@ -299,6 +299,7 @@ class TestIntervention:
             "new_intervention",
             model_directory=tmp_path,
             causal_hyperparameters=unittest_autogluon_hyperparameters(),
+            cross_validation_hyperparameters=unittest_autogluon_hyperparameters(),
             drop_unique=False,
             drop_useless_features=False,
         )
@@ -330,6 +331,7 @@ class TestIntervention:
             common_causes=["y", "z"],
             model_directory=tmp_path,
             causal_hyperparameters=unittest_autogluon_hyperparameters(),
+            cross_validation_hyperparameters=unittest_autogluon_hyperparameters(),
             drop_unique=False,
             drop_useless_features=False,
         )

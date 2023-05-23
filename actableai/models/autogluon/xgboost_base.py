@@ -161,53 +161,53 @@ def get_parameters(problem_type: str, num_class: int) -> List[BaseParameter]:
                 },
                 # TODO: Check if add more metrics
             ),
-            OptionsSpace[str](
-                name="eval_metric",
-                display_name="Evaluation Metric",
-                description="Evaluation metric(s) for validation data.",
-                default=["rmse"],
-                is_multi=True,
-                options={
-                    "logloss": {
-                        "display_name": "Negative log-likelihood (log loss)",
-                        "value": "logloss",
-                    },
-                    "error": {
-                        "display_name": "Error rate",
-                        "value": "error",
-                    },
-                    "auc": {
-                        "display_name": "Receiver Operating Characteristic Area under the Curve",
-                        "value": "auc",
-                    },  # NOTE: the objective should be binary:logistic or similar functions that work on probability.
-                    "aucpr": {
-                        "display_name": "Area under the PR Curve",
-                        "value": "aucpr",
-                    },
-                    "ndcg": {
-                        "display_name": "Normalized Discounted Cumulative Gain (NDCG)",
-                        "value": "ndcg",
-                    },
-                    "map": {
-                        "display_name": "Mean Average Precision (MAP)",
-                        "value": "map",
-                    },
-                },
-                # TODO: Check if include other metrics
-                # TODO: Check if this should be made available
-                # NOTE: From doc - Python users: remember to pass the metrics in as
-                # list of parameters pairs instead of map, so that latter
-                # eval_metric won’t override previous one
-            ),
+            # OptionsSpace[str](
+            #     name="eval_metric",
+            #     display_name="Evaluation Metric",
+            #     description="Evaluation metric(s) for validation data.",
+            #     default=["logloss"],
+            #     is_multi=True,
+            #     options={
+            #         "logloss": {
+            #             "display_name": "Negative log-likelihood (log loss)",
+            #             "value": "logloss",
+            #         },
+            #         "error": {
+            #             "display_name": "Error rate",
+            #             "value": "error",
+            #         },
+            #         "auc": {
+            #             "display_name": "Receiver Operating Characteristic Area under the Curve",
+            #             "value": "auc",
+            #         },  # NOTE: the objective should be binary:logistic or similar functions that work on probability.
+            #         "aucpr": {
+            #             "display_name": "Area under the PR Curve",
+            #             "value": "aucpr",
+            #         },
+            #         "ndcg": {
+            #             "display_name": "Normalized Discounted Cumulative Gain (NDCG)",
+            #             "value": "ndcg",
+            #         },
+            #         "map": {
+            #             "display_name": "Mean Average Precision (MAP)",
+            #             "value": "map",
+            #         },
+            #     },
+            #     # TODO: Check if include other metrics
+            #     # TODO: Check if this should be made available
+            #     # NOTE: From doc - Python users: remember to pass the metrics in as
+            #     # list of parameters pairs instead of map, so that latter
+            #     # eval_metric won’t override previous one
+            # ),
         ]
 
-    elif problem_type == "multiclass":
+    elif problem_type in ["multiclass", "softclass"]:
         parameters = [
             OptionsSpace[str](
                 name="objective",
                 display_name="Objective",
                 description="The learning objective used to optimize the model.",
-                default=["multi:sofprob"],
+                default=["multi:softprob"],
                 is_multi=True,
                 options={
                     "multi:softmax": {
@@ -242,44 +242,44 @@ def get_parameters(problem_type: str, num_class: int) -> List[BaseParameter]:
                 hidden=True,
                 # TODO: Check if should be hidden or visible
             ),
-            OptionsSpace[str](
-                name="eval_metric",
-                display_name="Evaluation Metric",
-                description="Evaluation metric(s) for validation data.",
-                default=["rmse"],
-                is_multi=True,
-                options={
-                    "mlogloss": {
-                        "display_name": "Negative log-likelihood (log loss)",
-                        "value": "mlogloss",
-                    },
-                    "merror": {
-                        "display_name": "Error rate",
-                        "value": "merror",
-                    },
-                    "auc": {
-                        "display_name": "Receiver Operating Characteristic Area under the Curve",
-                        "value": "auc",
-                    },  # NOTE: When used with multi-class classification, objective should be multi:softprob instead of multi:softmax, as the latter doesn’t output probability. Also the AUC is calculated by 1-vs-rest with reference class weighted by class prevalence.
-                    "aucpr": {
-                        "display_name": "Area under the PR Curve",
-                        "value": "aucpr",
-                    },
-                    "ndcg": {
-                        "display_name": "Normalized Discounted Cumulative Gain",
-                        "value": "ndcg",
-                    },
-                    "map": {
-                        "display_name": "Mean Average Precision",
-                        "value": "map",
-                    },
-                },
-                # TODO: Check if include other metrics
-                # TODO: Check if this should be made available
-                # NOTE: From doc - Python users: remember to pass the metrics in as
-                # list of parameters pairs instead of map, so that latter
-                # eval_metric won’t override previous one
-            ),
+            # OptionsSpace[str](
+            #     name="eval_metric",
+            #     display_name="Evaluation Metric",
+            #     description="Evaluation metric(s) for validation data.",
+            #     default=["mlogloss"],
+            #     is_multi=True,
+            #     options={
+            #         "mlogloss": {
+            #             "display_name": "Negative log-likelihood (log loss)",
+            #             "value": "mlogloss",
+            #         },
+            #         "merror": {
+            #             "display_name": "Error rate",
+            #             "value": "merror",
+            #         },
+            #         "auc": {
+            #             "display_name": "Receiver Operating Characteristic Area under the Curve",
+            #             "value": "auc",
+            #         },  # NOTE: When used with multi-class classification, objective should be multi:softprob instead of multi:softmax, as the latter doesn’t output probability. Also the AUC is calculated by 1-vs-rest with reference class weighted by class prevalence.
+            #         "aucpr": {
+            #             "display_name": "Area under the PR Curve",
+            #             "value": "aucpr",
+            #         },
+            #         "ndcg": {
+            #             "display_name": "Normalized Discounted Cumulative Gain",
+            #             "value": "ndcg",
+            #         },
+            #         "map": {
+            #             "display_name": "Mean Average Precision",
+            #             "value": "map",
+            #         },
+            #     },
+            #     # TODO: Check if include other metrics
+            #     # TODO: Check if this should be made available
+            #     # NOTE: From doc - Python users: remember to pass the metrics in as
+            #     # list of parameters pairs instead of map, so that latter
+            #     # eval_metric won’t override previous one
+            # ),
         ]
 
     return parameters

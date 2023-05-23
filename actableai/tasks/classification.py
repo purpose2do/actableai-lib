@@ -4,6 +4,8 @@ import logging
 from actableai.classification.config import MINIMUM_CLASSIFICATION_VALIDATION
 
 from actableai.tasks import TaskType
+from actableai.parameters.models import ModelSpace
+from actableai.tasks.autogluon import AAIAutogluonTask
 from actableai.tasks.base import AAITask
 
 
@@ -11,7 +13,7 @@ class _AAIClassificationTrainTask(AAITask):
     """Sub class for ClassificationTask. Runs a classification without crossvalidation
 
     Args:
-        AAITask: Base Class for every tasks
+        AAITask: Base Class for every task
     """
 
     @AAITask.run_with_ray_remote(TaskType.CLASSIFICATION_TRAIN)
@@ -42,6 +44,7 @@ class _AAIClassificationTrainTask(AAITask):
         feature_prune: bool,
         feature_prune_time_limit: Optional[float],
         tabpfn_model_directory: Optional[str],
+        num_trials: int,
         infer_limit: float,
         infer_limit_batch_size: int,
     ) -> Tuple[
@@ -88,15 +91,16 @@ class _AAIClassificationTrainTask(AAITask):
             eval_metric: Metric to be optimized for.
             time_limit: Time limit for training (in seconds)
             drop_unique: Whether the classification algorithm drops columns that
-                only have a unique value accross all rows at fit time
+                only have a unique value across all rows at fit time
             drop_useless_features: Whether the classification algorithm drops columns that
-                only have a unique value accross all rows as preprocessing
+                only have a unique value across all rows as preprocessing
             feature_prune: Whether the feature_pruning is enabled or not.
                 This option improves results but extend the training time.
                 If there is no time specified to do feature_pruning the remaining
                 training time is used.
             feature_prune_time_limit: Time limit for feature_pruning (in seconds)
             tabpfn_model_directory: TabPFN Model Directory.
+            num_trials: The number of trials for hyperparameter optimization
             infer_limit: The time in seconds to predict 1 row of data. For
                 example, infer_limit=0.05 means 50 ms per row of data, or 20 rows /
                 second throughput.
@@ -108,11 +112,11 @@ class _AAIClassificationTrainTask(AAITask):
                 infer_limit_batch_size=10000.
 
         Returns:
-            Return dictionnary of results for classification :
+            Return dictionary of results for classification :
                 - AutoGluon's predictor
                 - Explainer for SHAP values
                 - List of important features
-                - Dictionnary of evaluated metrics
+                - Dictionary of evaluated metrics
                 - Class probabilities for predicted values
                 - Shap values on test set
                 - Leaderboard of the best trained models
@@ -134,13 +138,22 @@ class _AAIClassificationTrainTask(AAITask):
         from actableai.explanation.autogluon_explainer import AutoGluonShapTreeExplainer
         from actableai.classification.models import TabPFNModel
 
+        # TODO: To finalise parameters
+        hyperparameter_tune_kwargs = (
+            {  # HPO is not performed unless hyperparameter_tune_kwargs is specified
+                "num_trials": num_trials,
+                "scheduler": "local",
+                "searcher": "auto",
+            }
+        )
+
         ag_args_fit: Dict[str, Any] = {
             "drop_unique": drop_unique,
             "tabpfn_model_directory": tabpfn_model_directory,
         }
         feature_generator_args = {}
 
-        if "AG_AUTOMM" in hyperparameters:
+        if any(k in set(["AG_AUTOMM", "FASTTEXT"]) for k in hyperparameters):
             feature_generator_args["enable_raw_text_features"] = True
 
         if df_train.shape[0] > 1024 and TabPFNModel in hyperparameters:
@@ -161,6 +174,7 @@ class _AAIClassificationTrainTask(AAITask):
             ag_args_fit["hyperparameters_non_residuals"] = hyperparameters
             ag_args_fit["presets_non_residuals"] = presets
             ag_args_fit["drop_useless_features"] = False
+            ag_args_fit["hyperparameter_tune_kwargs"] = hyperparameter_tune_kwargs
 
             feature_generator_args = {
                 **feature_generator_args,
@@ -208,6 +222,7 @@ class _AAIClassificationTrainTask(AAITask):
             holdout_frac=holdout_frac,
             num_cpus=1,
             num_gpus=num_gpus,
+            hyperparameter_tune_kwargs=hyperparameter_tune_kwargs,
             infer_limit=infer_limit,
             infer_limit_batch_size=infer_limit_batch_size,
         )
@@ -373,14 +388,115 @@ class _AAIClassificationTrainTask(AAITask):
         )
 
 
-class AAIClassificationTask(AAITask):
+class AAIClassificationTask(AAIAutogluonTask):
     """AAIClassificationTask class for classification
 
     Args:
-        AAITask: Base class for every tasks
+        AAIAutogluonTask: Base Class for every AutoGluon task
     """
 
-    @AAITask.run_with_ray_remote(TaskType.CLASSIFICATION)
+    @classmethod
+    def get_hyperparameters_space(
+        cls,
+        df: pd.DataFrame,
+        target: str,
+        device: str = "cpu",
+        explain_samples: bool = False,
+        ag_automm_enabled: bool = False,
+        tabpfn_enabled: bool = False,
+    ) -> ModelSpace:
+        """Return the hyperparameters space of the task.
+
+        Args:
+            df: DataFrame containing the features
+            target: The target feature name (column to be predicted)
+            device: Which device is being used, can be one of 'cpu' or 'gpu'.
+            explain_samples: Boolean indicating if explanations for predictions
+                in test and validation will be generated.
+            ag_automm_enabled: Boolean indicating if AG_AUTOMM model should be used.
+            tabpfn_enabled: Boolean indicating if TabPFN model should be used.
+
+        Returns:
+            Hyperparameters space represented as a ModelSpace.
+        """
+
+        num_class = cls.get_num_class(df=df, target=target)
+
+        problem_type = cls.compute_problem_type(
+            df=df, target=target, num_class=num_class
+        )
+
+        default_models, options = AAIAutogluonTask.get_base_hyperparameters_space(
+            df=df,
+            num_class=num_class,
+            problem_type=problem_type,
+            device=device,
+            explain_samples=explain_samples,
+            ag_automm_enabled=ag_automm_enabled,
+            tabpfn_enabled=tabpfn_enabled,
+        )
+
+        return ModelSpace(
+            name="classification_model_space",
+            display_name="Classification Model Space",
+            description="The space of available and default classification models and parameters.",
+            default=default_models,
+            options=options,
+        )
+
+    @staticmethod
+    def get_num_class(df: pd.DataFrame, target: str) -> str:
+        """Determine the number of classes of the target.
+
+        Args:
+            df: The dataset for which the problem type is inferred
+            target: Name of the target column in df
+
+        Returns:
+            String representation of the problem type: 'multiclass' or 'binary'
+        """
+
+        return df[target].nunique()
+
+    @classmethod
+    def compute_problem_type(
+        cls, df: pd.DataFrame, target: str, num_class: int = None
+    ) -> str:
+        """Determine the problem type ('multiclass' or 'binary'), using the
+        values in the target column
+
+        Args:
+            df: The dataset for which the problem type is inferred
+            target: Name of the target column in df
+            num_class: The number of classes. If None, it will be computed using
+                the target column in df
+
+        Returns:
+            String representation of the problem type: 'multiclass' or 'binary'
+        """
+
+        if num_class is None:
+            num_class = cls.get_num_class(df=df, target=target)
+
+        # Check classification type
+        if num_class == 2:
+            problem_type = "binary"
+        elif num_class > 2:
+            problem_type = "multiclass"
+        else:
+            # TODO proper exception
+            raise Exception()
+
+        # TODO: Consider using alternative implementation using AutoGluon in-built function:
+        # from autogluon.core.utils import infer_problem_type
+        # problem_type = infer_problem_type(df.loc[:, target])
+        # Ensure problem_type is valid for classification
+        # if problem_type not in ['binary', 'multiclass']:
+        #     problem_type = 'multiclass'
+
+        return problem_type
+
+    @AAIAutogluonTask.run_with_ray_remote(TaskType.CLASSIFICATION)
     def run(
         self,
         df: pd.DataFrame,
@@ -416,6 +532,7 @@ class AAIClassificationTask(AAITask):
         pdp_ice_grid_resolution: Optional[int] = 100,
         pdp_ice_n_samples: Optional[int] = 100,
         tabpfn_model_directory: Optional[str] = None,
+        num_trials: int = 1,
         infer_limit: float = 60,
         infer_limit_batch_size: int = 100,
     ) -> Dict:
@@ -434,7 +551,7 @@ class AAIClassificationTask(AAITask):
             validation_ratio: The ratio to randomly split data for training and
                 validation. Defaults to 0.2.
             positive_label: If target contains only 2 different value, pick the positive
-                label by setting postive_label to one of them. Defaults to None.
+                label by setting positive_label to one of them. Defaults to None.
             explain_samples: If true, explanations for predictions in test and
                 validation will be generated. It takes significantly longer time to
                 run. Defaults to False.
@@ -483,6 +600,7 @@ class AAIClassificationTask(AAITask):
             pdp_ice_n_samples: The number of rows to sample in df_train. If 'None,
                 no sampling is performed.
             tabpfn_model_directory: TabPFN Model Directory.
+            num_trials: The number of trials for hyperparameter optimization
             infer_limit: The time in seconds to predict 1 row of data. For
                 example, infer_limit=0.05 means 50 ms per row of data, or 20 rows /
                 second throughput.
@@ -502,13 +620,13 @@ class AAIClassificationTask(AAITask):
             >>> AAIClassificationTask(df, ["feature1", "feature2", "feature3"], "target")
 
         Returns:
-            Dict: Dictionnary containing the results
+            Dict: Dictionary containing the results
                 - "status": "SUCCESS" if the task successfully ran else "FAILURE"
                 - "messenger": Message returned with the task
                 - "validations": List of validations on the data.
                     non-empty if the data presents a problem for the task
                 - "runtime": Execution time of the task
-                - "data": Dictionnary containing the data for the task
+                - "data": Dictionary containing the data for the task
                     - "validation_table": Validation table
                     - "prediction_table": Prediction table
                     - "fields": Column names of the prediction table
@@ -530,11 +648,7 @@ class AAIClassificationTask(AAITask):
         from sklearn.model_selection import train_test_split
         from autogluon.common.features.infer_types import check_if_nlp_feature
 
-        from actableai.utils import (
-            memory_efficient_hyperparameters,
-            handle_boolean_features,
-            explanation_hyperparameters,
-        )
+        from actableai.utils import handle_boolean_features
         from actableai.data_validation.params import ClassificationDataValidator
         from actableai.data_validation.base import (
             CheckLevels,
@@ -555,7 +669,7 @@ class AAIClassificationTask(AAITask):
         pd.set_option("chained_assignment", "warn")
         start = time.time()
 
-        # To resolve any issues of acces rights make a copy
+        # To resolve any issues of access rights, make a copy
         df = df.copy()
         df = sanitize_timezone(df)
 
@@ -619,15 +733,54 @@ class AAIClassificationTask(AAITask):
         # Pre process data
         df = handle_boolean_features(df)
 
-        if hyperparameters is None:
-            if explain_samples:
-                hyperparameters = explanation_hyperparameters()
-            else:
-                any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
-                hyperparameters = memory_efficient_hyperparameters(
-                    ag_automm_enabled=ag_automm_enabled and any_text_cols,
-                    tabpfn_enabled=True,
-                )
+        # Determine GPU type
+        device = "gpu" if num_gpus > 0 else "cpu"
+
+        any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
+        hyperparameters_space = self.get_hyperparameters_space(
+            df=df,
+            target=target,
+            device=device,
+            explain_samples=explain_samples,
+            ag_automm_enabled=ag_automm_enabled and any_text_cols,
+            tabpfn_enabled=True,
+        )
+        hyperparameters_validation = None
+        if hyperparameters is None or len(hyperparameters) <= 0:
+            hyperparameters = hyperparameters_space.get_default()
+        else:
+            (
+                hyperparameters_validation,
+                hyperparameters,
+            ) = hyperparameters_space.validate_process_parameter(hyperparameters)
+
+        if hyperparameters_validation is not None:
+            data_validation_results = hyperparameters_validation.to_check_results(
+                name="HyperparametersChecker"
+            )
+
+        failed_checks = [
+            check for check in data_validation_results if check is not None
+        ]
+        validations_hp = [
+            {"name": check.name, "level": check.level, "message": check.message}
+            for check in failed_checks
+        ]
+
+        if CheckLevels.CRITICAL in [x.level for x in failed_checks]:
+            return {
+                "status": "FAILURE",
+                "data": {},
+                "validations": validations_hp,
+                "runtime": time.time() - start,
+            }
+
+        validations += validations_hp
+
+        # Convert hyperparameters to AutoGluon format
+        hyperparameters = self._hyperparameters_to_model_params(
+            hyperparameters, hyperparameters_space
+        )
 
         from actableai.utils import get_type_special
 
@@ -660,17 +813,15 @@ class AAIClassificationTask(AAITask):
         # If true it means that the classification needs to be run on test data
         run_model = df_test.shape[0] > 0
 
-        # Check classification type
-        if df[target].nunique() == 2:
-            problem_type = "binary"
-        elif df[target].nunique() > 2:
-            problem_type = "multiclass"
-        else:
-            # TODO proper exception
-            raise Exception()
-
         leaderboard = None
         explainer = None
+
+        num_class = self.get_num_class(df=df, target=target)
+
+        problem_type = self.compute_problem_type(
+            df=df, target=target, num_class=num_class
+        )
+
         # Train
         classification_train_task = _AAIClassificationTrainTask(**train_task_params)
         if kfolds > 1:
@@ -710,6 +861,7 @@ class AAIClassificationTask(AAITask):
                 feature_prune=feature_prune,
                 feature_prune_time_limit=feature_prune_time_limit,
                 tabpfn_model_directory=tabpfn_model_directory,
+                num_trials=num_trials,
                 infer_limit=infer_limit,
                 infer_limit_batch_size=infer_limit_batch_size,
             )
@@ -748,6 +900,7 @@ class AAIClassificationTask(AAITask):
                 feature_prune=feature_prune,
                 feature_prune_time_limit=feature_prune_time_limit,
                 tabpfn_model_directory=tabpfn_model_directory,
+                num_trials=num_trials,
                 infer_limit=infer_limit,
                 infer_limit_batch_size=infer_limit_batch_size,
             )
@@ -917,6 +1070,7 @@ class AAIClassificationTask(AAITask):
                 feature_prune=feature_prune,
                 feature_prune_time_limit=feature_prune_time_limit,
                 tabpfn_model_directory=tabpfn_model_directory,
+                num_trials=1,
                 infer_limit=infer_limit,
                 infer_limit_batch_size=infer_limit_batch_size,
             )

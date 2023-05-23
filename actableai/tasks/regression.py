@@ -331,8 +331,8 @@ class AAIRegressionTask(AAIAutogluonTask):
     @classmethod
     def get_hyperparameters_space(
         cls,
-        dataset_len: int,
-        problem_type: str = "regression",
+        df: pd.DataFrame,
+        prediction_quantiles: Optional[List[float]] = None,
         device: str = "cpu",
         explain_samples: bool = False,
         ag_automm_enabled: bool = False,
@@ -341,82 +341,35 @@ class AAIRegressionTask(AAIAutogluonTask):
         """Return the hyperparameters space of the task.
 
         Args:
-            dataset_len: Len of the dataset (shape[0]).
-            problem_type: The type of the problem ('regression' or 'quantile')
-            device: Which device is being used, can be one of 'cpu' or 'gpu'
+            df: DataFrame containing the features
+            prediction_quantiles: List of quantiles (for regression task only),
+                as a percentage
+            device: Which device is being used, can be one of 'cpu' or 'gpu'.
             explain_samples: Boolean indicating if explanations for predictions
                 in test and validation will be generated.
-            ag_automm_enabled: Boolean indicating if AG_AUTOMM model should be used
-            tabpfn_enabled: Boolean indicating if TabPFN model should be used
+            ag_automm_enabled: Boolean indicating if AG_AUTOMM model should be used.
+            tabpfn_enabled: Boolean indicating if TabPFN model should be used.
 
         Returns:
             Hyperparameters space represented as a ModelSpace.
         """
-        from actableai.models.autogluon.base import Model
-        from actableai.models.autogluon import model_params_dict
 
-        # Get list of available models for the given problem type
-        available_models = cls.get_available_models(
+        problem_type = cls.compute_problem_type(prediction_quantiles)
+
+        default_models, options = AAIAutogluonTask.get_base_hyperparameters_space(
+            df=df,
+            num_class=-1,
             problem_type=problem_type,
+            device=device,
             explain_samples=explain_samples,
-            gpu=True if device == "gpu" else False,
             ag_automm_enabled=ag_automm_enabled,
             tabpfn_enabled=tabpfn_enabled,
         )
 
-        # TODO: Check list of models
-        if problem_type == "quantile":
-            # TODO: Check list of default models
-            default_models = []
-            if Model.nn_torch in available_models:
-                default_models.append(Model.nn_torch)
-
-            if Model.nn_fastainn in available_models:
-                default_models.append(Model.nn_fastainn)
-
-            # TODO: Check if enable any models if dataset exceeds a certain size
-            if dataset_len <= 10000:
-                if Model.rf in available_models:
-                    default_models.append(Model.rf)
-
-        else:  # regression
-            # TODO: Check list of default models
-            default_models = [
-                Model.cat,
-                Model.xgb_tree,
-                Model.rf,
-                Model.gbm,
-                Model.xt,
-            ]
-            if not explain_samples:
-                default_models += [Model.nn_fastainn, Model.knn]
-
-            if ag_automm_enabled and (Model.ag_automm in available_models):
-                default_models.append(Model.ag_automm)
-
-            if tabpfn_enabled and (Model.tabpfn in available_models):
-                default_models.append(Model.tabpfn)
-
-        # TODO: Check if enable any models if dataset exceeds a certain size
-        # Use GBM if dataset >= 10000 (see https://neptune.ai/blog/lightgbm-parameters-guide)
-        # if dataset_len >= 10000:
-        #     default_models.append(Model.gbm)
-
-        options = {}
-        for model in available_models:
-            model_hyperparameters = model_params_dict[model].get_hyperparameters(
-                problem_type=problem_type, device=device, num_class=-1
-            )
-            options[model] = {
-                "display_name": model_hyperparameters.display_name,
-                "value": model_hyperparameters,
-            }
-
         return ModelSpace(
             name="regression_model_space",
             display_name="Regression Model Space",
-            # TODO add description
-            description="description_model_space_todo",
+            description="The space of available and default regression models and parameters.",
             default=default_models,
             options=options,
         )
@@ -693,16 +646,13 @@ class AAIRegressionTask(AAIAutogluonTask):
             kfolds=kfolds,
         )
 
-        problem_type = self.compute_problem_type(prediction_quantiles)
-
         # Determine GPU type
         device = "gpu" if is_gpu_available() else "cpu"
 
-        n_samples = df.shape[0]
         any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
         hyperparameters_space = self.get_hyperparameters_space(
-            dataset_len=n_samples,
-            problem_type=problem_type,
+            df=df,
+            prediction_quantiles=prediction_quantiles,
             device=device,
             explain_samples=explain_samples,
             ag_automm_enabled=ag_automm_enabled and any_text_cols,
@@ -802,6 +752,8 @@ class AAIRegressionTask(AAIAutogluonTask):
 
         # Train
         regression_train_task = _AAIRegressionTrainTask(**train_task_params)
+
+        problem_type = self.compute_problem_type(prediction_quantiles)
 
         y_pred = None
         predictor = None

@@ -10,7 +10,7 @@ class XGBoostLinearParams(BaseParams):
 
     # TODO: This model is currently disabled since it does not run; re-enable
     # when this is fixed
-    supported_problem_types = []  # ["regression", "binary", "multiclass"]
+    supported_problem_types = []  # ["regression", "binary", "multiclass", "softclass"]
     _autogluon_name = "XGB"
     explain_samples_supported = True
 
@@ -24,6 +24,8 @@ class XGBoostLinearParams(BaseParams):
                 binary classification, etc.). See
                 cls.supported_problem_types
                 for list of accepted strings
+            num_class: The number of classes, used for multi-class
+                classification.
 
         Returns:
             The hyperparameters space.
