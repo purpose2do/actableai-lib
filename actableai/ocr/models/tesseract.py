@@ -136,7 +136,7 @@ class Tesseract(BaseOCRModel):
                 serve_handle.options(method_name="transform").remote(
                     image=image,
                     model_type=model_type,
-                    language_list=language_list,
+                    lang='+'.join(language_list),
                     page_segmentation_mode=page_segmentation_mode,
                 )
             )
