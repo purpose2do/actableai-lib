@@ -83,6 +83,8 @@ autogluon-text==0.6.0
     # via -r requirements.in
 backcall==0.2.0
     # via ipython
+backoff==2.2.1
+    # via -r requirements.in
 beautifulsoup4==4.12.2
     # via gdown
 blessed==1.20.0
