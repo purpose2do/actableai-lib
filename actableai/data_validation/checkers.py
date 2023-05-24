@@ -879,6 +879,28 @@ class TimeSeriesTuningMetricChecker(IChecker):
             )
 
 
+class DoNotUseAdditionalFeatureAsGroupbyChecker(IChecker):
+    def __init__(self, level, name="DoNotUseAdditionalFeatureAsGroupbyChecker"):
+        self.name = name
+        self.level = level
+
+    def check(
+        self, feature_columns: List[str], group_by: List[str]
+    ) -> Optional[CheckResult]:
+        """
+        Check if there are any additional features that are also used as group
+        by features.
+        """
+
+        feats_in_both_lists = set(feature_columns).intersection(set(group_by))
+        if len(feats_in_both_lists) > 0:
+            return CheckResult(
+                name=self.name,
+                level=self.level,
+                message=f"The following features are being used both as 'additional features' and as 'group by' features: {feats_in_both_lists}",
+            )
+
+
 class MaxTrainSamplesChecker(IChecker):
     def __init__(self, level, name="MaxTrainSamplesChecker"):
         self.name = name
