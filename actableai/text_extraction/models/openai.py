@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Iterable, List
+from typing import Iterable, List, Dict, Tuple
 
 from actableai.parameters.numeric import FloatParameter
 from actableai.parameters.options import OptionsParameter
@@ -55,6 +55,54 @@ class OpenAI(BaseTextExtractionModel):
             parameters=parameters,
         )
 
+    def _prepare_message(self, model: str, document: str, prompt: str,) -> Tuple[List[Dict[str, str]], int]:
+        import tiktoken
+
+        messages = [
+            {"role": "system", "content": document},
+            {"role": "user", "content": prompt},
+        ]
+
+        try:
+            encoding = tiktoken.encoding_for_model(model)
+        except KeyError:
+            encoding = tiktoken.get_encoding("cl100k_base")
+
+        if (
+                model == "gpt-3.5-turbo-0301" or model == "gpt-3.5-turbo"
+        ):  # note: future models may deviate from this
+            max_tokens = 4096
+            document_max_token = 3000
+
+            num_tokens = 0
+            for message_index, message in enumerate(messages):
+                num_tokens += (
+                    4
+                # every message follows <im_start>{role/name}\n{content}<im_end>\n
+                )
+                for key, value in message.items():
+                    message_tokens = encoding.encode(value)
+                    message_num_tokens = len(message_tokens)
+
+                    if message_num_tokens > document_max_token:
+                        new_message = " ".join(str(e) for e in message_tokens[:document_max_token])
+                        messages[message_index][key] = new_message
+                        message_num_tokens = document_max_token
+
+                    num_tokens += message_num_tokens
+
+                    if key == "name":  # if there's a name, the role is omitted
+                        num_tokens += -1  # role is always required and always 1 token
+            num_tokens += 2  # every reply is primed with <im_start>assistant
+
+            return messages, max_tokens - num_tokens - 1
+
+        else:
+            raise NotImplementedError(
+                f"""num_tokens_from_messages() is not presently implemented for model {model}.
+        See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens."""
+            )
+
     def _open_ai_completion(
         self,
         fields_to_extract: List[str],
@@ -63,7 +111,6 @@ class OpenAI(BaseTextExtractionModel):
         model: str,
     ) -> str:
         import openai
-        from actableai.utils.openai import num_tokens_from_messages
 
         prompt = f"""Extract the following fields from the provided document: {fields_to_extract}
 
@@ -72,17 +119,8 @@ Using this JSON format as a result:
 
 The JSON Object:
 """
+        messages, max_tokens = self._prepare_message(model=model, document=document, prompt=prompt)
 
-        messages = [
-            {"role": "system", "content": document},
-            {"role": "user", "content": prompt},
-        ]
-
-        num_tokens = num_tokens_from_messages(
-            messages=messages,
-            model=model,
-        )
-        max_tokens = 4096 - num_tokens - 1
 
         chat_completion_result = openai.ChatCompletion.create(
             model=model,
