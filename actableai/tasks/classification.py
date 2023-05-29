@@ -453,7 +453,7 @@ class AAIClassificationTask(AAIAutogluonTask):
             target: Name of the target column in df
 
         Returns:
-            String representation of the problem type: 'multiclass' or 'binary'
+            An integer representing the number of classes of the target column.
         """
 
         return df[target].nunique()
