@@ -445,7 +445,7 @@ class AAIClassificationTask(AAIAutogluonTask):
         )
 
     @staticmethod
-    def get_num_class(df: pd.DataFrame, target: str) -> str:
+    def get_num_class(df: pd.DataFrame, target: str) -> int:
         """Determine the number of classes of the target.
 
         Args:
@@ -453,7 +453,7 @@ class AAIClassificationTask(AAIAutogluonTask):
             target: Name of the target column in df
 
         Returns:
-            String representation of the problem type: 'multiclass' or 'binary'
+            An integer representing the number of classes of the target column.
         """
 
         return df[target].nunique()
@@ -734,7 +734,7 @@ class AAIClassificationTask(AAIAutogluonTask):
         df = handle_boolean_features(df)
 
         # Determine GPU type
-        device = "gpu" if num_gpus > 0 else "cpu"
+        device = "gpu" if num_gpus == "auto" or num_gpus > 0 else "cpu"
 
         any_text_cols = df.apply(check_if_nlp_feature).any(axis=None)
         hyperparameters_space = self.get_hyperparameters_space(
