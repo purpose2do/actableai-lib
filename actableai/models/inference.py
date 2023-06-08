@@ -181,6 +181,7 @@ class AAIModelInference:
         return_probabilities=False,
         probability_threshold=0.5,
         positive_label=None,
+        explain_samples=False,
     ):
         return await self._predict_batched(
             {
@@ -189,6 +190,7 @@ class AAIModelInference:
                 "return_probabilities": return_probabilities,
                 "probability_threshold": probability_threshold,
                 "positive_label": positive_label,
+                "explain_samples": explain_samples,
             }
         )
 
@@ -204,8 +206,15 @@ class AAIModelInference:
             return_probabilities = e["return_probabilities"]
             probability_threshold = e["probability_threshold"]
             positive_label = e["positive_label"]
+            explain_samples = e["explain_samples"]
 
-            key = (task_id, return_probabilities, probability_threshold, positive_label)
+            key = (
+                task_id,
+                return_probabilities,
+                probability_threshold,
+                positive_label,
+                explain_samples,
+            )
 
             if key in task_data:
                 start_index = len(task_data[key])
@@ -228,13 +237,20 @@ class AAIModelInference:
 
         results_data = {}
         for key, df in task_data.items():
-            task_id, return_probabilities, probability_threshold, positive_label = key
+            (
+                task_id,
+                return_probabilities,
+                probability_threshold,
+                positive_label,
+                explain_samples,
+            ) = key
             results_data[key] = self._predict_one(
                 task_id=task_id,
                 df=df,
                 return_probabilities=return_probabilities,
                 probability_threshold=probability_threshold,
                 positive_label=positive_label,
+                explain_samples=explain_samples,
             )
 
         results = []
