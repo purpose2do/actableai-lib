@@ -206,14 +206,14 @@ class AAIModelInference:
             return_probabilities = e["return_probabilities"]
             probability_threshold = e["probability_threshold"]
             positive_label = e["positive_label"]
-            example_samples = e["explain_samples"]
+            explain_samples = e["explain_samples"]
 
             key = (
                 task_id,
                 return_probabilities,
                 probability_threshold,
                 positive_label,
-                example_samples,
+                explain_samples,
             )
 
             if key in task_data:
@@ -242,7 +242,7 @@ class AAIModelInference:
                 return_probabilities,
                 probability_threshold,
                 positive_label,
-                example_samples,
+                explain_samples,
             ) = key
             results_data[key] = self._predict_one(
                 task_id=task_id,
@@ -250,7 +250,7 @@ class AAIModelInference:
                 return_probabilities=return_probabilities,
                 probability_threshold=probability_threshold,
                 positive_label=positive_label,
-                example_samples=example_samples,
+                explain_samples=explain_samples,
             )
 
         results = []
