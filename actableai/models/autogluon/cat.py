@@ -127,6 +127,6 @@ class CATParams(BaseParams):
 
         return Parameters(
             name=Model.cat,
-            display_name="CATBoost",
+            display_name="CatBoost",
             parameters=parameters,
         )
