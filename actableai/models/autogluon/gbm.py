@@ -313,6 +313,6 @@ class GBMParams(BaseParams):
 
         return Parameters(
             name=Model.gbm,
-            display_name="GBM",
+            display_name="LightGBM",
             parameters=parameters,
         )
