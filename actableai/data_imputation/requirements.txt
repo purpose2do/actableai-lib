@@ -161,7 +161,7 @@ tqdm==4.61.1
 traitlets==5.0.5
 typer==0.3.2
 typing-extensions==3.10.0.0
-urllib3==1.26.5
+urllib3==1.26.17
 wasabi==0.8.2
 wcwidth==0.2.5
 webencodings==0.5.1
