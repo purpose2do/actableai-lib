@@ -109,7 +109,7 @@ protobuf==3.17.3
 psutil==5.8.0
 ptyprocess==0.7.0
 py==1.10.0
-pyarrow==4.0.1
+pyarrow==14.0.1
 pycodestyle==2.7.0
 pycparser==2.20
 pydantic==1.7.4
